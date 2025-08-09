@@ -4,7 +4,7 @@ TUNA
 
 ~~~~ Theoretical Unification of Nuclear Arrangements ~~~~
 
-An user-friendly quantum chemistry program for diatomics.
+A user-friendly quantum chemistry program for diatomics.
 
 """
 
