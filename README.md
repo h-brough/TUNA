@@ -19,7 +19,7 @@ The repository includes:
 
 ## Documentation
 
-A copy of the <a href="./TUNA%20Manual.pdf" style="color:black;">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed.
+A copy of the <a href="./TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed.
 
 ## Using TUNA
 
