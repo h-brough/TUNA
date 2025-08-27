@@ -15,6 +15,9 @@ setup(
     name="quantumtuna",
     version="0.7.2",
     packages=find_packages(include=["TUNA*", "TUNA.tuna_integrals*"]),
+    package_data={
+        "TUNA": ["*.bat", "*.pdf"],
+    },
     ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
     include_package_data=True,
     zip_safe=False,
