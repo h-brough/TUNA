@@ -8,7 +8,7 @@ extensions = [
     Extension(
         name="TUNA.tuna_integrals.tuna_integral",                # adjust name if your package dir is different
         sources=["TUNA/tuna_integrals/tuna_integral.pyx"],
-        include_dirs=[numpy.get_include(), scipy.getinclude()],
+        include_dirs=[numpy.get_include(), scipy.get_include()],
     )
 ]
 
