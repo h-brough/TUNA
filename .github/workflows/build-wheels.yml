@@ -3,7 +3,7 @@ name: Build and publish wheels
 on:
   push:
     tags:
-      - 'v*'   # e.g. v0.1.0
+      - 'v*'  
   workflow_dispatch:
 
 jobs:

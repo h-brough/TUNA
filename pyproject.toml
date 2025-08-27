@@ -32,11 +32,9 @@ classifiers = [
 ]
 
 
-[tool.hatch.build.targets.wheel]
-packages = ["TUNA"]
-
-[tool.hatch.version]
-path = "TUNA/__init__.py"
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["TUNA", "TUNA.tuna_integrals*"]
 
 [project.urls]
 Repository = "https://github.com/h-brough/TUNA"
