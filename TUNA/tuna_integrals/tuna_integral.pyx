@@ -8,7 +8,7 @@ import numpy as np
 cimport numpy as np
 from libc.math cimport exp, pow, tgamma, sqrt, abs
 from libc.stdlib cimport malloc, free
-from scipy.special.cython_special cimport hyp1f1 
+from scipy.special import hyp1f1 
 from scipy.special import factorial2
 from cpython.exc cimport PyErr_CheckSignals
 
@@ -57,7 +57,7 @@ cdef class Basis:
 
             cdef long view = <long> self.num_exps
 
-            return long(view) 
+            return view
 
     # Array of exponents
     property exps:
@@ -202,7 +202,7 @@ def gaussian_product_center(double a, A, double b, B):
 
 
 
-cdef inline double E(int i, int j, int t, double Qx, double a, double b, int n = 0, double Ax = 0.0, dict cache = None) nogil:
+cdef inline double E(int i, int j, int t, double Qx, double a, double b, int n = 0, double Ax = 0.0, dict cache = None):
 
     cdef double p = a + b
     cdef double u = a * b / p
@@ -232,7 +232,7 @@ cdef inline double E(int i, int j, int t, double Qx, double a, double b, int n =
 
 
 
-cdef inline double R(int t, int u, int v, int n, double p, double PCx, double PCy, double PCz, double RPC, dict cache = None) nogil:
+cdef inline double R(int t, int u, int v, int n, double p, double PCx, double PCy, double PCz, double RPC, dict cache = None):
 
     cdef double T = p * RPC * RPC
     cdef double val = 0.0
@@ -264,7 +264,7 @@ cdef inline double R(int t, int u, int v, int n, double p, double PCx, double PC
 
 
 
-cdef inline double boys(double m, double T, dict cache = None) nogil:
+cdef inline double boys(double m, double T, dict cache = None):
 
     """
     

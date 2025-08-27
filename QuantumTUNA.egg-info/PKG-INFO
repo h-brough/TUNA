@@ -1,0 +1,72 @@
+Metadata-Version: 2.4
+Name: QuantumTUNA
+Version: 0.7.0
+Summary: A user-friendly quantum chemistry program for diatomics.
+Author-email: Harry Brough <harry.brough@icloud.com>
+Project-URL: Repository, https://github.com/h-brough/TUNA
+Keywords: quantum chemistry,molecular physics,hartree-fock,mp2,dft,coupled cluster,theoretical chemistry
+Classifier: Development Status :: 3 - Alpha
+Classifier: Programming Language :: Python :: 3.12
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: Microsoft :: Windows :: Windows 11
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: termcolor
+Dynamic: license-file
+
+# TUNA
+
+Welcome to TUNA! A user-friendly quantum chemistry program for diatomics.
+
+<br>
+<p align="center"><img src="TUNA Logo.svg" alt="Fish swimming through a wavepacket." width=480 /></p>
+
+## Contents
+
+The repository includes:
+
+* This README file
+* The TUNA logo
+* The file LICENSE with the MIT license
+* The folder TUNA containing Python files
+* The installation file pyproject.toml
+* The TUNA manual
+* A changelog
+
+## Documentation
+
+A copy of the <a href="./TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed.
+
+## Using TUNA
+
+### Prerequisites
+The program requires Python 3.12 or higher and the following packages:
+
+* numpy
+* scipy
+* matplotlib
+* termcolor
+
+### Installation
+
+The simplest way to install TUNA is by running
+
+```
+pip install QuantumTUNA
+```
+
+### Running
+
+Add the folder where TUNA was installed to PATH, and then run ```TUNA --version``` which should print the correct version if TUNA has installed correctly.
+
+The syntax of the command to run a TUNA calculation is:
+
+```
+TUNA [Calculation] : [Atom A] [Atom B] [Distance] : [Method] [Basis]
+```
+
+Read the manual for details!
