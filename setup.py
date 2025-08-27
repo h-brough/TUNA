@@ -13,7 +13,7 @@ extensions = [
 
 setup(
     name="quantumtuna",
-    version="0.7.0",
+    version="0.7.1",
     packages=find_packages(),
     ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
     include_package_data=True,
