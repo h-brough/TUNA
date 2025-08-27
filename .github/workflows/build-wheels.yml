@@ -25,7 +25,7 @@ jobs:
       # Install prebuilt dependencies to avoid building from source
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install --upgrade --quiet pip wheel setuptools
           python -m pip install numpy scipy cython
 
       - name: Install cibuildwheel
