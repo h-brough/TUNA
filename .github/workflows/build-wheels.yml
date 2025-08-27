@@ -22,23 +22,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Install dependencies on Linux/macOS
-      - name: Install dependencies (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          python -m pip install --upgrade pip wheel setuptools
-          python -m pip install --upgrade numpy cython
-
-      # Install dependencies on Windows
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          python -m pip install --upgrade pip wheel setuptools
-          python -m pip install numpy cython
-          python -m pip install scipy==1.16.0
 
       - name: Install cibuildwheel
-        run: python -m pip install --upgrade cibuildwheel twine
+        run: python -m pip install --upgrade pip cibuildwheel twine
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
