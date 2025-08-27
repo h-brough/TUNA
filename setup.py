@@ -14,7 +14,9 @@ extensions = [
 setup(
     name="quantumtuna",
     version="0.7.2",
-    packages=find_packages(include=["TUNA*", "TUNA.tuna_integrals*"]),
+    packages=[
+        "TUNA",
+        "TUNA.tuna_integrals", ],    
     package_data={
         "TUNA": ["*.bat", "*.pdf"],
     },

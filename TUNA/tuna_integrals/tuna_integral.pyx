@@ -8,7 +8,7 @@ import numpy as np
 cimport numpy as np
 from libc.math cimport exp, pow, tgamma, sqrt, abs
 from libc.stdlib cimport malloc, free
-from scipy.special import hyp1f1 
+from scipy.special.cython_special cimport hyp1f1 
 from scipy.special import factorial2
 from cpython.exc cimport PyErr_CheckSignals
 
