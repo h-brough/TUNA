@@ -22,12 +22,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Install prebuilt dependencies to avoid building from source
+      # macOS: install gfortran to allow SciPy builds if necessary
+      - name: Install build tools (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc
+          brew install cmake
+
+      # Install pip and prebuilt dependencies to avoid building from source
       - name: Install dependencies
         run: |
           python -m pip install --upgrade --quiet pip wheel setuptools
           python -m pip install numpy cython
-          python -m pip install scipy==1.16.0
+          python -m pip install --prefer-binary scipy==1.16.0
 
       - name: Install cibuildwheel
         run: python -m pip install --upgrade cibuildwheel twine
