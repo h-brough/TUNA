@@ -2,6 +2,53 @@ import numpy as np
 from tuna_util import *
 
 
+
+def spin_block_core_Hamiltonian(H_core):
+
+    """
+    
+    Spin blocks core Hamiltonian.
+
+    Args:  
+        H_core (array): Core Hamiltonian in AO basis
+    
+    Returns:
+        H_core_spin_block (array): Spin blocked core Hamiltonian in AO basis
+    
+    """
+
+    H_core_spin_block = np.kron(np.eye(2), H_core)
+
+    return H_core_spin_block
+
+
+
+
+
+def build_spin_orbital_Fock_matrix(H_core_SO, g, o):
+
+    """
+    
+    Builds Fock matrix in SO basis.
+
+    Args:  
+        H_core_SO (array): Core Hamiltonian in SO basis
+        g (array): Antisymmetrised ERI in SO basis
+        o (slice): Occupied spin orbitals slice
+    
+    Returns:
+        F_SO (array): Fock matrix in SO basis
+    
+    """
+
+    F_SO = H_core_SO + np.einsum('piqi->pq', g[:, o, :, o], optimize=True)
+
+    return F_SO
+
+
+
+
+
 def antisymmetrise_integrals(ERI):
 
     """
@@ -19,6 +66,8 @@ def antisymmetrise_integrals(ERI):
     ERI_ansym = ERI - ERI.transpose(0,1,3,2)
 
     return ERI_ansym
+
+
 
 
 
@@ -72,7 +121,36 @@ def transform_ERI_AO_to_SO(ERI_AO, C_1, C_2):
 
 
 
-def build_epsilons_tensor(epsilons_1, epsilons_2, o_1, o_2, v_1, v_2):
+
+def build_singles_epsilons_tensor(epsilons, o, v):
+
+    """
+
+    Builds inverse epsilon tensor with shape ijab.
+
+    Args:   
+        epsilons (array): Orbital eigenvalues
+        o (slice): Occupied slice
+        v (slice): Virtual slice
+
+    Returns:
+        e_ia (array): Inverse epsilons tensor for single excitations with shape ia
+
+    """
+
+    n = np.newaxis
+
+    e_ia = 1 / (epsilons[o, n] - epsilons[n, v])
+
+    return e_ia
+
+
+
+
+
+
+
+def build_doubles_epsilons_tensor(epsilons_1, epsilons_2, o_1, o_2, v_1, v_2):
 
     """
 
@@ -101,7 +179,10 @@ def build_epsilons_tensor(epsilons_1, epsilons_2, o_1, o_2, v_1, v_2):
 
 
 
-def build_six_dimensional_epsilons_tensor(epsilons, o ,v):
+
+
+
+def build_triples_epsilons_tensor(epsilons, o, v):
 
     """
 
@@ -122,6 +203,7 @@ def build_six_dimensional_epsilons_tensor(epsilons, o ,v):
     e_ijkabc = 1 / (epsilons[o, n, n, n, n, n] + epsilons[n, o, n, n, n, n] + epsilons[n, n, o, n, n, n] - epsilons[n, n, n, v, n, n] - epsilons[n, n, n, n, v, n] - epsilons[n, n, n, n, n, v])
 
     return e_ijkabc
+
 
 
 
@@ -150,6 +232,8 @@ def build_MP2_t_amplitudes(ERI_SO, e_ijab):
 
 
 
+
+
 def transform_matrix_AO_to_SO(M, C):
 
     """
@@ -165,7 +249,7 @@ def transform_matrix_AO_to_SO(M, C):
 
     """
 
-    M_SO = C.T @ M @ C
+    M_SO = np.einsum("mi,mn,na->ia", C, M, C, optimize=True)
 
     return M_SO
 
@@ -206,7 +290,7 @@ def transform_P_SO_to_AO(P_SO, C_spin_block, n_SO):
 
 
 
-def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ):
+def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ, calculation, silent=False):
 
     """
 
@@ -218,7 +302,7 @@ def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ):
         n_occ (int): Number of occupied spin orbitals
 
     Returns:
-        ERI_SO_anysm (array): Electron repulsion integrals in SO basis
+        g (array): Electron repulsion integrals in SO basis
         C_spin_block (array): Spin blocked molecular orbitals in AO basis
         epsilons_sorted (array): Sorted array of Fock matrix eigenvalues
         ERI_spin_block (array): Spin-blocked electron repulsion integrals in AO basis
@@ -231,22 +315,53 @@ def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ):
     o = slice(None, n_occ)
     v = slice(n_occ, None)
 
+    epsilons_combined = SCF_output.epsilons_combined
+
+    log("\n Preparing transformation to spin-orbital basis...", calculation, 1, silent=silent)
+
     # Spin-blocks electron repulsion integrals
     ERI_spin_block = np.kron(np.eye(2), np.kron(np.eye(2), ERI_AO).T)
 
-    epsilons_combined = SCF_output.epsilons_combined
-
     # Spin-blocks molecular orbitals and transforms electron repulsion integrals
     C_spin_block = spin_block_molecular_orbitals(SCF_output.molecular_orbitals_alpha, SCF_output.molecular_orbitals_beta, epsilons_combined)
+
+    log("\n Transforming two-electron integrals...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
     ERI_SO = transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block)
 
+    log("[Done]", calculation, 1, silent=silent)
+
+    log(" Antisymmetrising two-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
     # Antisymmetrise electron repulsion integrals
-    ERI_SO_anysm = antisymmetrise_integrals(ERI_SO)
+    g = antisymmetrise_integrals(ERI_SO)
+
+    log("[Done]", calculation, 1, silent=silent)
 
     # Sorts epsilons
     epsilons_sorted = np.sort(epsilons_combined)
 
-    return ERI_SO_anysm, C_spin_block, epsilons_sorted, ERI_spin_block, o, v
+    # Tracks the spin state of each epsilon
+    spin_labels = ['a'] * len(SCF_output.molecular_orbitals_alpha) + ['b'] * len(SCF_output.molecular_orbitals_beta)
+    spin_labels_sorted = [spin_labels[i] for i in np.argsort(epsilons_combined)]
+
+    def prefix_counts(seq):
+
+        counts = {}
+        result = []
+
+        for x in seq:
+
+            c = counts.get(x, 0)
+            result.append(f"{c + 1}{x}")
+            counts[x] = c + 1
+
+        return result
+    
+
+    spin_orbital_labels_sorted = prefix_counts(spin_labels_sorted)
+
+    return g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels_sorted, spin_orbital_labels_sorted
 
 
 
@@ -254,7 +369,7 @@ def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ):
 
 
 
-def build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons, ERI_SO_ansym):
+def build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons, g):
     
     """
 
@@ -265,7 +380,7 @@ def build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons, ERI_SO_ansym):
         n_virt (int): Number of virtual spin orbitals
         n_SO (int): Number of spin orbitals
         epsilons (array): Fock matrix orbital eigenvalues
-        ERI_SO_ansym (array): Antisymmetrised electron repulsion integrals in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
 
     Returns:
         H_CIS (array): Shifted CIS Hamiltonian in determinantal basis
@@ -286,7 +401,7 @@ def build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons, ERI_SO_ansym):
     for p, (i, a) in enumerate(excitations):
         for q, (j, b) in enumerate(excitations):
         
-            H_CIS[p, q] = (epsilons[a] - epsilons[i]) * (i == j) * (a == b) + ERI_SO_ansym[a, j, i, b]
+            H_CIS[p, q] = (epsilons[a] - epsilons[i]) * (i == j) * (a == b) + g[a, j, i, b]
 
 
     return H_CIS, np.array(excitations)
@@ -448,6 +563,10 @@ def label_spin_orbital(index, calculation):
         labelled_SO += "a" if index % 2 == 0 else "b"
     
     return labelled_SO
+
+
+
+
 
 
 
@@ -653,7 +772,7 @@ def print_CIS_absorption_spectrum(molecule, excitation_energies_eV, calculation,
 
 
 
-def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, ERI_SO_ansym, o, v, b_ia, calculation, silent=False):
+def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, g, o, v, b_ia, calculation, silent=False):
 
     """
 
@@ -663,7 +782,7 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, ERI_SO_a
         excitation_energy (float): Excitation energy of state of interest
         epsilons (array): Fock matrix orbital eigenvalues
         root (int): State of interest
-        ERI_SO_ansym (array): Electron repulsion integrals in SO basis, antisymmetrised
+        g (array): Electron repulsion integrals in SO basis, antisymmetrised
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
         b_ia (array): Two-index weights matrix for state of interest
@@ -685,19 +804,19 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, ERI_SO_a
     log(f"\n  Building MP2 amplitudes...            ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
     # Builds and inverts inverse epsilons tensor, to upright e_ijab_inv
-    e_ijab_inv = 1 / build_epsilons_tensor(epsilons, epsilons, o, o, v, v)
+    e_ijab_inv = 1 / build_doubles_epsilons_tensor(epsilons, epsilons, o, o, v, v)
     e_ijab_inv_minus_w = 1 / (e_ijab_inv + excitation_energy)
 
-    t_ijab = build_MP2_t_amplitudes(ERI_SO_ansym[o, o, v, v], 1 / e_ijab_inv)
+    t_ijab = build_MP2_t_amplitudes(g[o, o, v, v], 1 / e_ijab_inv)
 
     log(f"  [Done]", calculation, 1, silent=silent)
 
     log(f"\n  Calculating direct contribution...  ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
-    u_1 = np.einsum("abcj,ic->ijab", ERI_SO_ansym[v, v, v, o], b_ia, optimize=True)
-    u_2 = np.einsum("abci,jc->ijab", ERI_SO_ansym[v, v, v, o], b_ia, optimize=True)
-    u_3 = np.einsum("kaij,kb->ijab", ERI_SO_ansym[o, v, o, o], b_ia, optimize=True)
-    u_4 = np.einsum("kbij,ka->ijab", ERI_SO_ansym[o, v, o, o], b_ia, optimize=True)
+    u_1 = np.einsum("abcj,ic->ijab", g[v, v, v, o], b_ia, optimize=True)
+    u_2 = np.einsum("abci,jc->ijab", g[v, v, v, o], b_ia, optimize=True)
+    u_3 = np.einsum("kaij,kb->ijab", g[o, v, o, o], b_ia, optimize=True)
+    u_4 = np.einsum("kbij,ka->ijab", g[o, v, o, o], b_ia, optimize=True)
 
     u_ijab = u_1 - u_2 + u_3 - u_4
 
@@ -705,9 +824,9 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, ERI_SO_a
 
     log(f"  Calculating indirect contribution...  ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
-    v_1 = (1 / 2) * np.einsum("jkbc,ib,jkca->ia", ERI_SO_ansym[o, o, v, v], b_ia, t_ijab, optimize=True)
-    v_2 = (1 / 2) * np.einsum("jkbc,ja,ikcb->ia", ERI_SO_ansym[o, o, v, v], b_ia, t_ijab, optimize=True)
-    v_3 = np.einsum("jkbc,jb,ikac->ia", ERI_SO_ansym[o, o, v, v], b_ia, t_ijab, optimize=True)
+    v_1 = (1 / 2) * np.einsum("jkbc,ib,jkca->ia", g[o, o, v, v], b_ia, t_ijab, optimize=True)
+    v_2 = (1 / 2) * np.einsum("jkbc,ja,ikcb->ia", g[o, o, v, v], b_ia, t_ijab, optimize=True)
+    v_3 = np.einsum("jkbc,jb,ikac->ia", g[o, o, v, v], b_ia, t_ijab, optimize=True)
 
     v_ia = v_1 + v_2 + v_3
 
@@ -759,19 +878,17 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     # Converting into computer counting from human counting
     root = calculation.root - 1
 
+
+    g, C_spin_block, epsilons_sorted, _, o, v, _, _ = begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ, calculation, silent=silent)
+
+
     log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
     log("         Configuration Interaction Singles", calculation, 1, silent=silent, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent=silent)
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
     
-    log("  Transforming two-electron integrals... ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
-
-    ERI_SO_ansym, C_spin_block, epsilons_sorted, _, o, v = begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ)
-
-    log(" [Done]", calculation, 1, silent=silent)
-
     log("\n  Building CIS Hamiltonian...             ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
 
-    H_CIS, excitations = build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons_sorted, ERI_SO_ansym)
+    H_CIS, excitations = build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons_sorted, g)
 
     log("[Done]", calculation, 1, silent=silent)
 
@@ -806,7 +923,7 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     log("[Done]", calculation, 1, silent=silent)
 
     log("\n  Printing excited state information...  ", calculation, 2, silent=silent)
-    log(f"  Contributions are printed if they are larger than {calculation.CIS_contribution_threshold:.1f} %.  ", calculation, 2, silent=silent)
+    log(f"  Printing contributions larger than {calculation.CIS_contribution_threshold:.1f}%.  ", calculation, 2, silent=silent)
 
     excitations_formatted = [(label_spin_orbital(i, calculation), label_spin_orbital(a, calculation)) for i, a in excitations]
 
@@ -829,11 +946,13 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     # Optionally applies doubles correction to transition energy for a specified state
     if "[D]" in calculation.method:
             
-        E_CIS_D = calculate_CIS_doubles_correction(E_transition, epsilons_sorted, root, ERI_SO_ansym, o, v, b_ia, calculation, silent=silent)
+        E_CIS_D = calculate_CIS_doubles_correction(E_transition, epsilons_sorted, root, g, o, v, b_ia, calculation, silent=silent)
 
         E_transition += E_CIS_D
 
     E_CIS = SCF_output.energy + E_transition
+
+
 
     return E_CIS, E_transition, P_CIS, P_CIS_a, P_CIS_b
 

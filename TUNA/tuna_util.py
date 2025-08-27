@@ -1,46 +1,254 @@
 import numpy as np
 import time, sys
-import tuna_basis as basis_sets
 from termcolor import colored
+import os
+from functools import partial
 
 
-calculation_types = {
 
-    "SPE": "Single point energy",
-    "OPT": "Geometry optimisation",
-    "FREQ": "Harmonic frequency",
-    "OPTFREQ": "Optimisation and harmonic frequency",
-    "SCAN": "Coordinate scan",
-    "MD": "Ab initio molecular dynamics"
+
+
+
+def process_keyword(key_strings, default_value, params=None, boolean=True, check_next_space=False, mandatory_value=False, associated_keyword_default=None, value_type=None, plot_path=False):
+
+    """
     
-    }
+    Processes new keywords and their parameters.
 
+    Args:
+        key_strings (list): List of different optional keywords per keyword
+        default_value (variable): Default value of keyword
+        params (list, optional): List of parameters
+        check_next_space (bool): Should the next space be checked
+        mandatory_value (bool): Does the parameter have a mandatory value
+        associated_keyword_default (variable): Secondary keyword's default value
+        value_type (variable): Type of optional parameter
+        plot_path (bool): Is this keyword to give a path for a plot
 
-
-method_types = {
+    Returns:
+        keyword (variable): The value of the keyword
+        associated_keyword (variable, optional): The value of the associated keyword
     
-    "HF": "Hartree-Fock theory", 
-    "RHF": "restricted Hartree-Fock theory", 
-    "UHF": "unrestricted Hartree-Fock theory", 
-    "MP2": "MP2 theory", 
-    "UMP2": "unrestricted MP2 theory", 
-    "SCS-MP2": "spin-component-scaled MP2 theory", 
-    "USCS-MP2": "unrestricted spin-component-scaled MP2 theory", 
-    "MP3": "MP3 theory", 
-    "UMP3": "unrestricted MP3 theory", 
-    "SCS-MP3": "spin-component-scaled MP3 theory", 
-    "USCS-MP3": "unrestricted spin-component-scaled MP3 theory", 
-    "OMP2": "orbital-optimised MP2 theory", 
-    "UOMP2": "unrestricted orbital-optimised MP2 theory",
-    "CIS": "configuration interaction singles",        
-    "UCIS": "unrestricted configuration interaction singles",
-    "CIS[D]": "configuration interaction singles with perturbative doubles",
-    "UCIS[D]": "unrestricted configuration interaction singles with perturbative doubles"
+    """
 
-    }
+    keyword = default_value
+    associated_keyword = associated_keyword_default
+
+    # If no type given, just use the default value
+    if value_type is None:
+        
+        value_type = type(default_value)
+
+    if params:
+
+        for i, param in enumerate(params):
+
+                if param in key_strings:
+                    
+                    # Simple boolean keywords
+                    if boolean:
+
+                        keyword = True
+
+                    if check_next_space:
+                        
+                        # Makes sure a param is given
+                        if i + 1 < len(params):
+
+                            next_value = params[i + 1]
+
+                            try:
+
+                                next_value = value_type(next_value)
+
+                                # Checks for string after keyword with certain extensions
+                                if plot_path: 
+
+                                    extensions = [".PNG", ".JPG", ".PDF", ".SVG", ".JPEG", ".TIF", ".TIFF", ".BMP", ".RAW", ".EPS", ".PS"]
+
+                                    if any(params[params.index("SAVEPLOT") + 1].endswith(ext) for ext in extensions):
+                                        
+                                        associated_keyword = str(params[params.index("SAVEPLOT") + 1]).lower()
+                                        keyword = True
+                                    
+                            # Error if wrong keyword value
+                            except ValueError:
+
+                                error(f"Parameter \"{param}\" must be of type {value_type.__name__}, got {type(next_value).__name__} instead!")
 
 
-basis_types = ["STO-3G", "STO-6G", "3-21G", "4-31G", "6-31G", "6-31+G", "6-31++G", "6-311G", "6-311+G", "6-311++G"]
+                            if boolean and not plot_path:
+
+                                associated_keyword = next_value
+
+                                # Lower cases the path given for plotting or trajectory
+
+                                if type(associated_keyword) == str:
+
+                                    if "." in associated_keyword:
+
+                                        associated_keyword = associated_keyword.lower()
+                                
+                            # Just takes the next value for certain parameters
+                            elif not boolean and not plot_path:
+
+                                keyword = next_value   
+
+                        else:
+
+                            if mandatory_value:
+
+                                error(f"Parameter \"{param}\" requested but no value specified!")
+                        
+
+    # Return either one or two keywords per keyword
+    if check_next_space and boolean:
+
+        return keyword, associated_keyword
+
+    return keyword
+
+
+
+
+
+
+
+
+
+class Calculation:
+
+    """
+
+    Processes and calculates from user-defined parameters specified at the start of a TUNA calculation.
+
+    Various default values for parameters are specified here. This object is created once per TUNA calculation.
+    
+    """
+
+    def __init__(self, calculation_type, method, start_time, params, basis, atoms):
+        
+        # Defines fundamental calculation parameters
+        self.calculation_type = calculation_type
+        self.method = method
+        self.start_time = start_time
+        self.params = params
+        self.basis = basis
+        self.atoms = atoms
+
+        # Prevents running "params" through every function call
+        keyword = partial(process_keyword, params=params)
+
+        # Simple boolean keywords
+        self.additional_print = keyword(["P"], False)
+        self.terse = keyword(["T"], False)
+        self.decontract = keyword(["DECONTRACT"], False)
+        self.damping = keyword(["DAMP"], True)
+        self.damping = not keyword(["NODAMP"], False)
+        self.slow_conv = keyword(["SLOWCONV"], False)
+        self.very_slow_conv = keyword(["VERYSLOWCONV"], False)
+        self.natural_orbitals = keyword(["NATORBS"], False)
+        self.no_natural_orbitals = keyword(["NONATORBS"], False)
+        self.no_singles = keyword(["NOSINGLES"], False)
+        self.MO_read_requested = keyword(["MOREAD"], False)
+        self.MO_read = keyword(["MOREAD"], False)
+        self.MO_read = not keyword(["NOMOREAD"], False)
+        self.no_MO_read = keyword(["NOMOREAD"], False)
+        self.D2 = keyword(["D2"], False)
+        self.calc_hess = keyword(["CALCHESS"], False)
+        self.opt_max = keyword(["OPTMAX"], False)
+        self.no_trajectory = keyword(["NOTRAJ"], False)
+        self.scan_plot = keyword(["SCANPLOT"], False)
+        self.plot_dashed_lines = keyword(["DASH"], False)
+        self.plot_dotted_lines = keyword(["DOT"], False)
+        self.add_plot = keyword(["ADDPLOT"], False)
+
+        if keyword(["DELPLOT"], False): delete_saved_plot()
+
+        # Convergence keywords with optional parameters
+        self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
+        if self.DIIS: self.DIIS = not keyword(["NODIIS"], False)
+
+        self.level_shift, self.level_shift_parameter = keyword(["LEVELSHIFT"], False, check_next_space=True, associated_keyword_default=0.2, value_type=float)
+        if self.level_shift: self.level_shift = not keyword(["NOLEVELSHIFT"], False)
+
+        # Keywords with mandatory parameters
+        self.charge = keyword(["CH", "CHARGE"], 0, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.multiplicity = keyword(["ML", "MULTIPLICITY"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.default_multiplicity = not keyword(["ML", "MULTIPLICITY"], False)
+        self.S_eigenvalue_threshold = keyword(["STHRESH"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.rotate_guess, self.theta = keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[0], keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[1] * np.pi / 180
+        self.no_rotate_guess = keyword(["NOROTATE"], False)
+
+        # Custom masses
+        self.custom_mass_1 = keyword(["M1"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.custom_mass_2 = keyword(["M2"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+
+        # Convergence and optimisation keywords
+        self.max_iter = keyword(["MAXITER"], 100, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.max_step = keyword(["MAXSTEP"], 0.2, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.default_Hessian = keyword(["DEFAULTHESS"], 0.25, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.geom_max_iter = keyword(["GEOMMAXITER", "MAXGEOMITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.scan_step = keyword(["STEP", "SCANSTEP"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.scan_number = keyword(["NUM", "SCANNUMBER"], None, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.timestep = keyword(["STEP", "TIMESTEP"], 0.1, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.MD_number_of_steps = keyword(["NUM", "MDNUMBER"], 50, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+
+        # Thermochemistry keywords
+        self.temperature = 0 if self.calculation_type == "MD" else 298.15
+        self.temperature = keyword(["TEMP", "TEMPERATURE"], self.temperature, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.pressure = keyword(["PRES", "PRESSURE"], 101325, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+
+        # Post-Hartree-Fock keywords
+        self.same_spin_scaling = keyword(["SSS"], 1 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.opposite_spin_scaling = keyword(["OSS"], 6 / 5, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.MP3_scaling = keyword(["MP3S", "MP3SCALING", "MP3SCAL"], 1 / 4, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.OMP2_conv = keyword(["OMP2CONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.OMP2_max_iter = keyword(["OMP2MAXITER"], 20, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.CC_conv = keyword(["CCCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.CC_max_iter = keyword(["CCMAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.cc_damp_requested, self.coupled_cluster_damping_parameter = keyword(["CCDAMP"], False, check_next_space=True, value_type=float, associated_keyword_default=0.25)
+        self.coupled_cluster_damping_parameter = self.coupled_cluster_damping_parameter if self.cc_damp_requested else 0
+
+        # Excited state keywords
+        self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.CIS_contribution_threshold = keyword(["CISTHRESH"], 1, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.n_states = keyword(["NSTATES"], 10, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+
+        # External printing keywords
+        self.trajectory, self.trajectory_path = keyword(["TRAJ"], False, boolean=True, check_next_space=True, mandatory_value=False, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
+        self.save_plot, self.save_plot_filepath = keyword(["SAVEPLOT"], False, check_next_space=True, associated_keyword_default="TUNA Plot.png", value_type=str, plot_path=True)
+        self.scan_plot_colour = next((code for name, code in color_map.items() if name in params), "b")
+
+        # Convergence keywords for SCF and optimisations
+        self.SCF_conv_requested = True if "LOOSE" in params or "LOOSESCF" in params or "MEDIUM" in params or "MEDIUMSCF" in params or "TIGHT" in params or "TIGHTSCF" in params or "EXTREME" in params or "EXTREMESCF" in params else False
+        self.geom_conv_requested = True if "LOOSEOPT" in params or "MEDIUMOPT" in params or "TIGHTOPT" in params or "EXTREMEOPT" in params else False
+
+        self.SCF_conv = constants.convergence_criteria_SCF["loose"] if "LOOSE" in params or "LOOSESCF" in params else constants.convergence_criteria_SCF["medium"]
+        self.SCF_conv = constants.convergence_criteria_SCF["medium"] if "MEDIUM" in params or "MEDIUMSCF"in params else self.SCF_conv
+        self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "TIGHT" in params or "TIGHTSCF" in params else self.SCF_conv
+        self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if "EXTREME" in params or "EXTREMESCF" in params else self.SCF_conv
+        
+        if not self.SCF_conv_requested:
+        
+            self.SCF_conv = constants.convergence_criteria_SCF["tight"] if self.calculation_type in ["OPT", "FREQ", "OPTFREQ", "MD"] and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
+            self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "CIS" in self.method and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
+
+        self.geom_conv = constants.convergence_criteria_optimisation["loose"] if "LOOSEOPT" in params else constants.convergence_criteria_optimisation["medium"]
+        self.geom_conv = constants.convergence_criteria_optimisation["medium"] if "MEDIUMOPT" in params else self.geom_conv
+        self.geom_conv = constants.convergence_criteria_optimisation["tight"] if "TIGHTOPT" in params else self.geom_conv
+        self.geom_conv = constants.convergence_criteria_optimisation["extreme"] if "EXTREMEOPT" in params else self.geom_conv
+        
+        if not self.geom_conv_requested:
+
+            self.geom_conv = constants.convergence_criteria_optimisation["tight"] if self.calculation_type == "OPTFREQ" and self.geom_conv != constants.convergence_criteria_optimisation["extreme"] else self.geom_conv
+
+        # Processes the NOSINGLES keyword
+        self.method = process_no_singles_keyword(self.method, self.no_singles)
+
+
+
+        
 
 
 
@@ -66,16 +274,17 @@ class Constants:
         # Non-quantum fundamental constants
         self.c_in_metres_per_second = 299792458
         self.k_in_joules_per_kelvin = 1.380649e-23
-        self.atomic_mass_unit_in_kg = 1.660539068911e-27
         self.avogadro = 6.02214076e23
 
         # Emergent unit conversions
+        self.atomic_mass_unit_in_kg = 0.001 / self.avogadro
         self.reduced_planck_constant_in_joules_seconds = self.planck_constant_in_joules_seconds / (2 * np.pi)
         self.bohr_in_metres = 4 * np.pi * self.permittivity_in_farad_per_metre * self.reduced_planck_constant_in_joules_seconds ** 2 / (self.electron_mass_in_kilograms * self.elementary_charge_in_coulombs ** 2)
         self.hartree_in_joules = self.reduced_planck_constant_in_joules_seconds ** 2 / (self.electron_mass_in_kilograms * self.bohr_in_metres ** 2)
         self.atomic_time_in_seconds = self.reduced_planck_constant_in_joules_seconds /  self.hartree_in_joules
         self.atomic_time_in_femtoseconds = self.atomic_time_in_seconds * 10 ** 15
         self.bohr_radius_in_angstrom = self.bohr_in_metres * 10 ** 10
+
         self.pascal_in_atomic_units = self.hartree_in_joules / self.bohr_in_metres ** 3
         self.per_cm_in_hartree = self.hartree_in_joules / (self.c_in_metres_per_second * self.planck_constant_in_joules_seconds * 10 ** 2)
         self.per_cm_in_GHz = self.hartree_in_joules / (self.planck_constant_in_joules_seconds * self.per_cm_in_hartree * 10 ** 9)
@@ -87,38 +296,6 @@ class Constants:
         self.k = self.k_in_joules_per_kelvin / self.hartree_in_joules
         self.h = self.planck_constant_in_joules_seconds / (self.hartree_in_joules * self.atomic_time_in_seconds)
 
-        self.atom_properties = {
-
-            "H" : {
-                "charge" : 1,
-                "mass" : 1.00782503223 * self.atomic_mass_unit_in_electron_mass,
-                "C6" : 2.4284,
-                "vdw_radius" : 1.8916
-            },
-
-            "XH" : {
-                "charge" : 0,
-                "mass" :0,
-                "C6" : 0,
-                "vdw_radius" : 0
-            },
-
-
-            "HE" : {
-                "charge" : 2,
-                "mass" : 4.00260325413 * self.atomic_mass_unit_in_electron_mass,
-                "C6" : 1.3876,
-                "vdw_radius" : 1.9124
-            },
-
-            "XHE" : {
-                "charge" : 0,
-                "mass" :0,
-                "C6" : 0,
-                "vdw_radius" : 0
-            }
-        }
-
 
         self.convergence_criteria_SCF = {
 
@@ -128,7 +305,6 @@ class Constants:
             "extreme" : {"delta_E": 0.00000000001, "max_DP": 0.0000000001, "RMS_DP": 0.00000000001, "orbital_gradient": 0.000000001, "name": "extreme"}   
             
         }
-
 
         self.convergence_criteria_optimisation = {
 
@@ -141,383 +317,10 @@ class Constants:
 
 
 
+
 constants = Constants()
 
 
-
-
-class Calculation:
-
-    """
-
-    Processes and calculates from user-defined parameters specified at the start of a TUNA calculation.
-
-    Various default values for parameters are specified here. This object is created once per TUNA calculation.
-    
-    """
-
-    def __init__(self, calculation_type, method, start_time, params, basis):
-
-        """
-
-        Initialises calculation object.
-
-        Args:   
-            calculation_type (string): Type of calculation
-            method (string): Electronic structure method
-            start_time (float): Calculation start time
-            params (list): List of user-specified parameters
-            basis (string): Basis set
-
-        Returns:
-            None : This function does not return anything
-
-        """
-
-        # Key calculation parameters
-        self.calculation_type = calculation_type
-        self.method = method
-        self.start_time = start_time
-        self.basis = basis
-        
-        # Secondary important factors to begin a calculation
-        self.no_rotate_guess = False
-        self.rotate_guess = False
-        self.theta = np.pi / 4
-        self.level_shift = False
-        self.level_shift_parameter = 0.2
-        self.trajectory_path = "tuna-trajectory.xyz"
-        
-        # Process the user-defined parameters
-        self.process_params(params)
-
-
-    def process_params(self, params):
-        
-        """
-
-        Processes user-defined parameters and sets default values.
-
-        Args:   
-            params (list): User-specified parameters
-
-        Returns:
-            None : This function does not return anything
-
-        """
-
-        # Processing of simple parameters, either on or off
-        self.additional_print = True if "P" in params else False
-        self.terse = True if "T" in params else False
-        self.decontract = True if "DECONTRACT" in params else False
-
-        self.DIIS = True if "DIIS" in params else True
-        self.DIIS_requested = True if "DIIS" in params else False
-        self.DIIS = False if "NODIIS" in params else True
-        self.damping = True if "DAMP" in params else True
-        self.damping = False if "NODAMP" in params else True
-        self.slow_conv = True if "SLOWCONV" in params else False
-        self.very_slow_conv = True if "VERYSLOWCONV" in params else False
-        self.no_levelshift = True if "NOLEVELSHIFT" in params else False
-
-        self.D2 = True if "D2" in params else False
-        self.calc_hess = True if "CALCHESS" in params else False
-        self.MO_read_requested = True if "MOREAD" in params else False
-        self.no_MO_read = True if "NOMOREAD" in params else False 
-        self.opt_max = True if "OPTMAX" in params else False
-        self.trajectory = True if "TRAJ" in params else False
-        self.no_trajectory = True if "NOTRAJ" in params else False
-
-        self.dens_plot = True if "DENSPLOT" in params else False
-        self.spin_dens_plot = True if "SPINDENSPLOT" in params else False
-        self.scan_plot = True if "SCANPLOT" in params else False
-
-        self.MO_read = False if self.no_MO_read else True
-
-        # Convergence criteria for SCF
-        if "LOOSE" in params or "LOOSESCF" in params: self.scf_conv = constants.convergence_criteria_SCF["loose"]
-        elif "MEDIUM" in params or "MEDIUMSCF" in params: self.scf_conv = constants.convergence_criteria_SCF["medium"]
-        elif "TIGHT" in params or "TIGHTSCF" in params: self.scf_conv = constants.convergence_criteria_SCF["tight"]  
-        elif "EXTREME" in params or "EXTREMESCF" in params: self.scf_conv = constants.convergence_criteria_SCF["extreme"]
-
-        elif self.calculation_type in ["OPT", "FREQ", "OPTFREQ", "MD"]: self.scf_conv = constants.convergence_criteria_SCF["tight"]  
-        else: self.scf_conv = constants.convergence_criteria_SCF["medium"]
-
-        if self.method in ["CIS", "CIS[D]", "UCIS", "UCIS[D]"]: self.scf_conv = constants.convergence_criteria_SCF["tight"]  
-
-        # Convergence criteria for geometry optimisation
-        if "LOOSEOPT" in params: self.geom_conv = constants.convergence_criteria_optimisation["loose"]
-        elif "MEDIUMOPT" in params: self.geom_conv = constants.convergence_criteria_optimisation["medium"]
-        elif "TIGHTOPT" in params: self.geom_conv = constants.convergence_criteria_optimisation["tight"]
-        elif "EXTREMEOPT" in params: self.geom_conv = constants.convergence_criteria_optimisation["extreme"] 
-
-        elif self.calculation_type == "OPTFREQ": self.geom_conv = constants.convergence_criteria_optimisation["tight"]  
-        else: self.geom_conv = constants.convergence_criteria_optimisation["medium"]
-
-
-
-        # Processing of parameters which have an optional value
-        if "LEVELSHIFT" in params: 
-
-            self.level_shift = True
-
-            try:
-
-                params.index("LEVELSHIFT")
-                self.level_shift_parameter = float(params[params.index("LEVELSHIFT") + 1])
-        
-            except:
-                pass
-        
-
-        if "ROTATE" in params: 
-
-            self.rotate_guess = True
-
-            try:
-
-                params.index("ROTATE")
-                self.theta = float(params[params.index("ROTATE") + 1]) * np.pi / 180
-        
-            except:
-                pass
-
-
-        elif "NOROTATE" in params: 
-
-            self.no_rotate_guess = True
-            self.MO_read = True     
-
-
-
-        # Automates error messages for parameters with required variables
-        def get_param_value(param_name, value_type):
-
-            """
-
-            Gets the requested parameter value, or throws an error if none is given.
-
-            Args:   
-                param_name (string): Parameter used could call
-                value_type (type): Type of value expected after parameter in list
-
-            Returns:
-                None : This function does not return anything
-
-            """
-
-            if param_name in params:
-
-                try: 
-                    return value_type(params[params.index(param_name) + 1])
-                   
-                
-                except IndexError: error(f"Parameter \"{param_name}\" requested but no value specified!")
-                except ValueError: error(f"Parameter \"{param_name}\" must be of type {value_type.__name__}!")
-            
-            return 
-        
-
-        # Processes parameters with a mandatory value
-        self.charge = get_param_value("CHARGE", int) if get_param_value("CHARGE", int) is not None else 0
-        self.charge = get_param_value("CH", int) if get_param_value("CH", int) is not None else 0 
-        self.multiplicity = get_param_value("MULTIPLICITY", int) if get_param_value("MULTIPLICITY", int) is not None else 1
-        self.multiplicity = get_param_value("ML", int) if get_param_value("ML", int) is not None else 1
-        self.default_multiplicity = False if "ML" in params or "MULTIPLICITY" in params else True
-
-        # Optimisation, coordinate scan and MD parameters
-        self.max_iter = get_param_value("MAXITER", int) or 100
-        self.max_step = get_param_value("MAXSTEP", float) or 0.2
-        self.default_Hessian = get_param_value("DEFAULTHESS", float) or 1 / 4
-        self.geom_max_iter = get_param_value("GEOMMAXITER", int) or 30
-        self.geom_max_iter = get_param_value("MAXGEOMITER", int) or 30
-        self.scan_step = get_param_value("SCANSTEP", float) or None
-        self.scan_number = get_param_value("SCANNUMBER", int) or None
-        self.MD_number_of_steps = get_param_value("MDNUMBER", int) or 50
-        self.timestep = get_param_value("TIMESTEP", float) or 0.1
-
-        # Thermochemical parameters
-        if self.calculation_type == "MD": self.temperature = 0
-        else: self.temperature = 298.15
-
-        self.temperature = get_param_value("TEMP", float) or self.temperature
-        self.temperature = get_param_value("TEMPERATURE", float) or self.temperature
-        self.pressure = get_param_value("PRES", float) or 101325
-        self.pressure = get_param_value("PRESSURE", float) or self.pressure
-        
-        # Correlated calculation parameters
-        self.same_spin_scaling = get_param_value("SSS", float) or 1 / 3
-        self.opposite_spin_scaling = get_param_value("OSS", float) or 6 / 5
-        self.MP3_scaling = get_param_value("MP3S", float) or 1 / 4
-        self.OMP2_conv = get_param_value("OMP2CONV", float) or 1e-8
-        self.OMP2_max_iter = get_param_value("OMP2MAXITER", int) or 20
-
-        # Excited state parameters
-        self.root = get_param_value("ROOT", int) or 1
-        self.CIS_contribution_threshold = get_param_value("CISTHRESH", float) or 1
-        self.n_states = get_param_value("NSTATES", int) or 10
-
-
-
-
-class Molecule:
-
-    """
-
-    Stores and calculates various widely used molecular properties.
-
-    This object can be created multiple times per TUNA calculation.
-    
-    """
-
-    def __init__(self, atoms, coordinates, calculation):
-
-        """
-
-        Initialises Molecule object.
-
-        Args:   
-            atoms (list): Atom symbol list
-            coordinates (array): Three-dimensional coordinate array
-            calculation (Calculation): Calculation object
-
-        Returns:
-            None : This function does not return anything
-
-        """
-
-        self.atoms = atoms
-        self.masses = np.array([constants.atom_properties[atom]["mass"] for atom in self.atoms])
-        self.charges = np.array([constants.atom_properties[atom]["charge"]for atom in self.atoms])
-
-        # Key molecular parameters
-        self.coordinates = coordinates
-        self.charge = calculation.charge
-        self.multiplicity = calculation.multiplicity
-        self.basis = calculation.basis
-
-        self.n_electrons = np.sum(self.charges) - self.charge
-
-        self.point_group = self.determine_point_group()
-        self.molecular_structure = self.determine_molecular_structure()
-
-        # Integral and related data
-        self.mol = [basis_sets.generate_atomic_orbitals(atom, self.basis, coord) for atom, coord in zip(self.atoms, self.coordinates)]    
-        self.AO_ranges = [len(basis_sets.generate_atomic_orbitals(atom, self.basis, coord)) for atom, coord in zip(self.atoms, self.coordinates)]
-        self.atomic_orbitals = [orbital for atom_orbitals in self.mol for orbital in atom_orbitals] 
-        self.primitive_Gaussians = [pg for atomic_orbital in self.atomic_orbitals for pg in atomic_orbital]
-
-        # Decontracts orbitals if DECONTRACT keyword is requested
-        if calculation.decontract: self.atomic_orbitals = [[pg] for pg in self.primitive_Gaussians]
-
-        # If a molecule is supplied, calculate the bond length and centre of mass
-        if len(self.atoms) == 2: 
-            
-            self.bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
-
-            if not any("X" in atom for atom in self.atoms):
-
-                self.centre_of_mass = calculate_centre_of_mass(self.masses, self.coordinates)
-
-            else: self.centre_of_mass = 0
-
-        else: 
-
-            self.bond_length = "N/A"
-            self.centre_of_mass = 0
-
-        # If multiplicity not specified but molecule has an odd number of electrons, set it to a doublet
-        if calculation.default_multiplicity and self.n_electrons % 2 != 0: self.multiplicity = 2
-
-        # Set the reference determinant to be used
-        if self.multiplicity == 1 and "U" not in calculation.method: calculation.reference = "RHF"
-        else: calculation.reference = "UHF"
-    
-        # Sets information about alpha and beta electrons for UHF
-        self.n_unpaired_electrons = self.multiplicity - 1
-        self.n_alpha = int((self.n_electrons + self.n_unpaired_electrons) / 2)
-        self.n_beta = int(self.n_electrons - self.n_alpha)
-        self.n_doubly_occ = min(self.n_alpha, self.n_beta)
-        self.n_occ = self.n_alpha + self.n_beta
-        self.n_SO = 2 * len(self.atomic_orbitals)
-        self.n_virt = self.n_SO - self.n_occ
-
-        # Sets off errors for invalid molecular configurations
-        if self.n_electrons % 2 == 0 and self.multiplicity % 2 == 0: error("Impossible charge and multiplicity combination (both even)!")
-        if self.n_electrons % 2 != 0 and self.multiplicity % 2 != 0: error("Impossible charge and multiplicity combination (both odd)!")
-        if self.n_electrons - self.multiplicity < -1: error("Multiplicity too high for number of electrons!")
-        if self.multiplicity < 1: error("Multiplicity must be at least 1!")
-
-        # Sets off errors for invalid use of restricted Hartree-Fock
-        if calculation.reference == "RHF":
-
-            if self.n_electrons % 2 != 0: error("Restricted Hartree-Fock is not compatible with an odd number of electrons!")
-            if self.multiplicity != 1: error("Restricted Hartree-Fock is not compatible non-singlet states!")
-
-        # Sets 2 electrons per orbital for RHF, otherwise 1 for UHF
-        calculation.n_electrons_per_orbital = 2 if calculation.reference == "RHF" else 1
-
-
-        calculation.MO_read = False if calculation.reference == "UHF" and self.multiplicity == 1 and not calculation.MO_read_requested and not calculation.no_rotate_guess or calculation.no_MO_read or calculation.rotate_guess else True
-
-
-
-    def determine_point_group(self):
-
-        """
-
-        Determines point group of a molecule.
-
-        Args:   
-            None : This function does not require arguments
-
-        Returns:
-            point_group (string) : Molecular point group
-
-        """
-
-        # Two same atoms -> Dinfh, two different atoms -> Cinfv, single atom -> K
-        if len(self.atoms) == 2 and "X" not in self.atoms[0] and "X" not in self.atoms[1]:
-
-            point_group = "Dinfh" if self.atoms[0] == self.atoms[1] else "Cinfv"
-
-        elif "X" in self.atoms[0] and "X" in self.atoms[1]: point_group = "None"
-
-        else: point_group = "K"
-
-        return point_group
-
-
-
-
-    def determine_molecular_structure(self):
-
-        """
-
-        Determines molecular structure of a molecule.
-
-        Args:   
-            None : This function does not require arguments
-
-        Returns:
-            molecular_structure (string) : Molecular structure representation
-
-        """
-
-        if len(self.atoms) == 2:
-            
-            # Puts a line between two atoms if two atoms are given, formats symbols nicely
-            if "X" not in self.atoms[0] and "X" not in self.atoms[1]: molecular_structure = f"{self.atoms[0].lower().capitalize()} --- {self.atoms[1].lower().capitalize()}"
-            elif "X" in self.atoms[0] and "X" in self.atoms[1]: molecular_structure = "None" 
-
-            elif "X" in self.atoms[0]: molecular_structure = f"{self.atoms[1].lower().capitalize()}"
-            elif "X" in self.atoms[1]: molecular_structure = f"{self.atoms[0].lower().capitalize()}"
-
-        else:
-
-            molecular_structure = self.atoms[0].lower().capitalize()
-
-        return molecular_structure
 
 
 
@@ -586,6 +389,79 @@ class Output:
 
 
 
+def delete_saved_plot():
+
+    """
+    
+    Deletes a pickle plot, if it exists.
+    
+    """
+
+
+    file_path = "TUNA-plot-temp.pkl"
+
+    if os.path.exists(file_path):
+        
+        os.remove(file_path)
+        warning(f"The file {file_path} has been deleted due to the DELPLOT keyword.\n",space=0)
+
+    else:
+        
+        warning(f"Plot deletion requested but {file_path} could not be found!\n",space=0)
+
+
+
+
+
+
+def process_no_singles_keyword(method, no_singles):
+
+    """"
+    
+    Processes the NOSINGLES keyword.
+
+    Args:
+        method (str): Electronic structure method
+        no_singles (bool): NOSINGLES keyword used?
+
+    Returns:
+        method (str): Updated electronic structure method
+    
+    """
+
+    prefix = ""
+
+    # Makes sure U is not lost o
+    if method.startswith("U"):
+
+        prefix = "U"
+        method = method[1:]  
+
+    if "CEPA" in method: 
+        
+        # CEPA0 defaults to LCCSD, but turns into LCCD if NOSINGLES is used
+        method = "LCCSD"
+
+    if no_singles:
+
+        # CCSD methods become CCD if NOSINGLES is used
+        if method == "LCCSD": method = "LCCD"
+        elif method == "CCSD": method = "CCD"
+        elif method == "CCSD[T]": method = "CCD"
+        elif method == "CCSDT": method = "CCD"
+
+
+    method = prefix + method  
+
+    return method
+
+
+
+
+
+
+
+
 def rotate_coordinates_to_z_axis(difference_vector):
 
     """
@@ -638,6 +514,8 @@ def rotate_coordinates_to_z_axis(difference_vector):
 
 
 
+
+
 def bohr_to_angstrom(length): 
     
     """
@@ -653,6 +531,9 @@ def bohr_to_angstrom(length):
     """
     
     return constants.bohr_radius_in_angstrom * length
+
+
+
 
 
 
@@ -676,6 +557,9 @@ def angstrom_to_bohr(length):
 
 
 
+
+
+
 def one_dimension_to_three(coordinates_1D): 
     
     """
@@ -693,6 +577,9 @@ def one_dimension_to_three(coordinates_1D):
     coordinates_3D = np.array([[0, 0, coord] for coord in coordinates_1D])
     
     return coordinates_3D
+
+
+
 
 
 
@@ -720,6 +607,9 @@ def three_dimensions_to_one(coordinates_3D):
 
 
 
+
+
+
 def finish_calculation(calculation):
 
     """
@@ -737,12 +627,26 @@ def finish_calculation(calculation):
     # Calculates total time for the TUNA calculation
     end_time = time.perf_counter()
     total_time = end_time - calculation.start_time
+    
+    if total_time > 120:
+
+        minutes = total_time / 60
+        seconds = total_time % 60
+
+        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
     # Prints the finale message
-    log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n","white"), calculation, 1)
+    else:
+        
+        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n","white"), calculation, 1)
     
     # Exits the program
     sys.exit()
+
+
+
+
+
 
 
 
@@ -768,6 +672,12 @@ def calculate_centre_of_mass(masses, coordinates):
 
 
 
+
+
+
+
+
+
 def print_trajectory(molecule, energy, coordinates, trajectory_path):
 
     """
@@ -784,9 +694,8 @@ def print_trajectory(molecule, energy, coordinates, trajectory_path):
         None : This function does not return anything
 
     """
-
     atoms = molecule.atoms
-
+    
     with open(trajectory_path, "a") as file:
         
         # Prints energy and atoms
@@ -801,6 +710,10 @@ def print_trajectory(molecule, energy, coordinates, trajectory_path):
             file.write(f"  {atoms[i]}      {coordinates_angstrom[i][0]:6f}      {coordinates_angstrom[i][1]:6f}      {coordinates_angstrom[i][2]:6f}\n")
 
     file.close()
+
+
+
+
 
 
 
@@ -829,6 +742,9 @@ def calculate_one_electron_property(P, M):
 
 
 
+
+
+
 def calculate_two_electron_property(D, M):
 
     """
@@ -847,6 +763,11 @@ def calculate_two_electron_property(D, M):
     property = (1 / 4) * np.einsum('ijkl,ijkl->', D, M, optimize=True)
 
     return property
+
+
+
+
+
 
 
 
@@ -873,6 +794,11 @@ def error(message):
 
 
 
+
+
+
+
+
 def warning(message, space=1): 
     
     """
@@ -889,6 +815,12 @@ def warning(message, space=1):
     """
     
     print(colored(f"\n{" " * space}WARNING: {message}", "light_yellow"))
+
+
+
+
+
+
 
 
 
@@ -918,4 +850,356 @@ def log(message, calculation, priority=1, end="\n", silent=False, colour="light_
         elif priority == 3 and calculation.additional_print: print(colored(message, colour), end=end)
 
 
+
+
+
+
+
+
+
+
+
+
+def scan_plot(calculation, bond_lengths, energies):
+
+    """
+
+    Interfaces with matplotlib to plot energy as a function of bond length.
+
+    Args:
+        calculation (Calculation): Calculation object
+        bond_lengths (array): List of bond lengths  
+        energies (array): List of energies at each bond length
+
+    Returns:
+        None: Nothing is returned
+
+    """
+
+    log("\nPlotting energy profile diagram...      ", calculation, 1, end=""); sys.stdout.flush()
+    
+    import matplotlib.pyplot as plt
+    import matplotlib
+    import pickle
+    from matplotlib import font_manager as fm
+
+    plot_font = "Consolas"
+
+    matplotlib.rcParams['font.family'] = plot_font
+
+    # Saves temporary file if ADDPLOT used
+    if calculation.add_plot:
+
+        try:
+        
+            with open("TUNA-plot-temp.pkl", "rb") as f:
+                fig = pickle.load(f)
+                ax = fig.axes[0]
+
+        except:
+
+            fig, ax = plt.subplots(figsize=(10,6))    
+    
+    else: 
+        
+        fig, ax = plt.subplots(figsize=(10,6))   
+
+
+    def mag_then_sign(n):
+
+        if n == 1: return '+'
+        if n == -1: return '-'
+        
+        return f"{abs(n)}{'+' if n > 0 else '-'}"
+
+
+    legend_label = f"{calculation.method}/{calculation.basis}" if "CIS" not in calculation.method else f"{calculation.method}/{calculation.basis}, ROOT {calculation.root}"
+
+
+    charge = "" if calculation.charge == 0 else mag_then_sign(calculation.charge)
+    
+    linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
+
+    font_prop = fm.FontProperties(family=plot_font, size=12)
+
+    plt.plot(bond_lengths, energies, color=calculation.scan_plot_colour,linewidth=1.75, label=legend_label, linestyle=linestyle)
+    plt.xlabel("Bond Length (Angstrom)", fontweight="bold", labelpad=10, fontfamily=plot_font,fontsize=14)
+    plt.ylabel("Energy (Hartree)",labelpad=10, fontweight="bold", fontfamily=plot_font,fontsize=14)
+    plt.legend(loc="upper right", fontsize=12, frameon=False, handlelength=4, prop=font_prop)
+    plt.title(f"TUNA Calculation on "f"{calculation.atoms[0].capitalize()}—"f"{calculation.atoms[1].capitalize()}"rf"$^{{{charge}}}$ Molecule",fontweight="bold",fontsize=16,fontfamily=plot_font,pad=15)
+    ax.tick_params(axis='both', which='major', labelsize=11, width=1.25, length=6, direction='out')
+    ax.tick_params(axis='both', which='minor', labelsize=11, width=1.25, length=3, direction='out')
+    
+    for spine in ax.spines.values(): spine.set_linewidth(1.25)
+    
+    plt.minorticks_on()
+    plt.tight_layout() 
+
+    log("[Done]", calculation, 1)
+
+    if calculation.add_plot:
+
+        with open("TUNA-plot-temp.pkl", "wb") as f:
+
+            pickle.dump(fig, f)
+
+    log("Saving energy profile diagram...      ", calculation, 1, end=""); sys.stdout.flush()
+    
+    if calculation.save_plot:
+
+        plt.savefig(calculation.save_plot_filepath, dpi=1200, transparent=True)
+
+    log("  [Done]", calculation, 1)
+
+    log(f"\nSaved plot as \"{calculation.save_plot_filepath}\"", calculation, 1)    
+    
+    # Shows the coordinate scan plot
+    plt.show()
+
+
+
+
+
+
+
+
+calculation_types = {
+
+    "SPE": "Single point energy",
+    "OPT": "Geometry optimisation",
+    "FREQ": "Harmonic frequency",
+    "OPTFREQ": "Optimisation and harmonic frequency",
+    "SCAN": "Coordinate scan",
+    "MD": "Ab initio molecular dynamics"
+    
+    }
+
+
+
+method_types = {
+    
+    "HF": "Hartree-Fock theory", 
+    "RHF": "restricted Hartree-Fock theory", 
+    "UHF": "unrestricted Hartree-Fock theory", 
+    "MP2": "MP2 theory", 
+    "UMP2": "unrestricted MP2 theory", 
+    "SCS-MP2": "spin-component-scaled MP2 theory", 
+    "USCS-MP2": "unrestricted spin-component-scaled MP2 theory", 
+    "MP3": "MP3 theory", 
+    "UMP3": "unrestricted MP3 theory", 
+    "SCS-MP3": "spin-component-scaled MP3 theory", 
+    "USCS-MP3": "unrestricted spin-component-scaled MP3 theory", 
+    "OMP2": "orbital-optimised MP2 theory", 
+    "UOMP2": "unrestricted orbital-optimised MP2 theory",
+    "OOMP2": "orbital-optimised MP2 theory", 
+    "UOOMP2": "unrestricted orbital-optimised MP2 theory",
+    "CIS": "configuration interaction singles",        
+    "UCIS": "unrestricted configuration interaction singles",
+    "CIS[D]": "configuration interaction singles with perturbative doubles",
+    "UCIS[D]": "unrestricted configuration interaction singles with perturbative doubles",
+    "CCD": "coupled cluster doubles",
+    "UCCD": "unrestricted coupled cluster doubles",
+    "CEPA0": "coupled electron pair approximation",
+    "UCEPA0": "unrestricted coupled electron pair approximation",
+    "LCCD": "linearised coupled cluster doubles",
+    "ULCCD": "unrestricted linearised coupled cluster doubles",
+    "LCCSD": "linearised coupled cluster singles and doubles",
+    "ULCCSD": "unrestricted linearised coupled cluster singles and doubles",
+    "CEPA": "coupled electron pair approximation",
+    "UCEPA": "unrestricted coupled electron pair approximation",
+    "CEPA[0]": "coupled electron pair approximation",
+    "UCEPA[0]": "unrestricted coupled electron pair approximation",
+    "CCSD": "coupled cluster singles and doubles",
+    "UCCSD": "unrestricted coupled cluster singles and doubles",
+    "CCSD[T]": "coupled cluster singles, doubles and perturbative triples",
+    "UCCSD[T]": "unrestricted coupled cluster singles, doubles and perturbative triples",
+    "CCSDT": "coupled cluster singles, doubles and triples",
+    "UCCSDT": "unrestricted coupled cluster singles, doubles and triples"
+
+    }
+
+
+
+
+
+basis_types = {
+
+    "STO-3G" : "STO-3G",
+    "STO-6G" : "STO-6G",
+    "3-21G" : "3-21G",
+    "4-31G" : "4-31G",
+    "6-31G" : "6-31G",
+    "6-31+G" : "6-31+G",
+    "6-31++G" : "6-31++G",
+    "6-311G" : "6-311G",
+    "6-311+G" : "6-311+G",
+    "6-311++G" : "6-311++G",
+    "6-31G*" : "6-31G*",
+    "6-31G**" : "6-31G**",
+    "6-311G*" : "6-311G*",
+    "6-311G**" : "6-311G**",
+    "CC-PVDZ" : "cc-pVDZ",
+    "CC-PVTZ" : "cc-pVTZ",
+    "CC-PVQZ" : "cc-pVQZ",
+    "CC-PV5Z" : "cc-pV5Z",
+    "CC-PV6Z" : "cc-pV6Z",
+
+}
+
+
+
+
+color_map = {
+
+    "RED": "r",
+    "GREEN": "g",
+    "BLUE": "b",
+    "CYAN": "c",
+    "MAGENTA": "m",
+    "YELLOW": "y",
+    "BLACK": "k",
+    "WHITE": "w",
+}
+
+
+
+
+
+
+atomic_properties = {
+            
+    "X" : {
+        "charge" : 0,
+        "mass" : 0,
+        "C6" : 0,
+        "vdw_radius" : 0
+    },
+
+    "H" : {
+        "charge" : 1,
+        "mass" : 1.007825,
+        "C6" : 2.4283,
+        "vdw_radius" : 1.8916
+    },
+
+    "HE" : {
+        "charge" : 2,
+        "mass" : 4.002603,
+        "C6" : 1.3876,
+        "vdw_radius" : 1.9124
+    },
+
+    "LI" : {
+        "charge" : 3,
+        "mass" : 7.016004,
+        "C6" : 27.92545,
+        "vdw_radius" : 1.55902
+    },
+
+    "BE" : {
+        "charge" : 4,
+        "mass" : 9.012182,
+        "C6" : 27.92545,
+        "vdw_radius" : 2.66073
+    },
+
+    "B" : {
+        "charge" : 5,
+        "mass" : 11.009305,
+        "C6" : 54.28985,
+        "vdw_radius" : 2.80624
+    },
+
+    "C" : {
+        "charge" : 6,
+        "mass" : 12.000000,
+        "C6" : 30.35375,
+        "vdw_radius" : 2.74388
+    },
+
+    "N" : {
+        "charge" : 7,
+        "mass" : 14.003074,
+        "C6" : 21.33435,
+        "vdw_radius" : 2.63995
+    },
+
+    "O" : {
+        "charge" : 8,
+        "mass" : 15.994915,
+        "C6" : 12.1415,
+        "vdw_radius" : 2.53601
+    },
+
+    "F" : {
+        "charge" : 9,
+        "mass" : 18.998403,
+        "C6" : 13.00875,
+        "vdw_radius" : 2.43208
+    },
+
+    "NE" : {
+        "charge" : 10,
+        "mass" : 19.992440,
+        "C6" : 10.92735,
+        "vdw_radius" : 2.34893
+    },
+
+    "NA" : {
+        "charge" : 11,
+        "mass" : 22.989770,
+        "C6" : 99.03995,
+        "vdw_radius" : 2.16185
+    },
+
+    "MG" : {
+        "charge" : 12,
+        "mass" : 23.985042,
+        "C6" : 99.03995,
+        "vdw_radius" : 2.57759
+    },
+
+    "AL" : {
+        "charge" : 13,
+        "mass" : 26.981538,
+        "C6" : 187.15255,
+        "vdw_radius" : 3.09726
+    },
+
+    "SI" : {
+        "charge" : 14,
+        "mass" : 27.976927,
+        "C6" : 160.09435,
+        "vdw_radius" : 3.24277
+    },
+
+    "P" : {
+        "charge" : 15,
+        "mass" : 30.973762,
+        "C6" : 135.9848,
+        "vdw_radius" : 3.22198
+    },
+
+    "S" : {
+        "charge" : 16,
+        "mass" : 31.972071,
+        "C6" : 96.61165,
+        "vdw_radius" : 3.18041
+    },
+
+    "CL" : {
+        "charge" : 17,
+        "mass" : 34.968853,
+        "C6" : 87.93915,
+        "vdw_radius" : 3.09726
+    },
+
+    "AR" : {
+        "charge" : 18,
+        "mass" : 39.962383,
+        "C6" : 79.96045,
+        "vdw_radius" : 3.01411
+    }
+
+}
 

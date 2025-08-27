@@ -3,18 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "QuantumTuna"
+name = "QuantumTUNA"
 dynamic = ["version"]
 authors = [
   { name="Harry Brough", email = "harry.brough@icloud.com"}
 ]
-keywords = ["quantum chemistry", "molecular physics", "hartree-fock", "mp2", "dft"]
+keywords = ["quantum chemistry", "molecular physics", "hartree-fock", "mp2", "dft", "coupled cluster", "theoretical chemistry"]
 dependencies = [
   "numpy",
   "scipy",
   "matplotlib",
-  "plotly",
-  "scikit-image",
   "termcolor",
 ]
 
@@ -36,4 +34,4 @@ packages = ["TUNA"]
 path = "TUNA/__init__.py"
 
 [project.urls]
-Repository = "https://github.com/harry-brough/TUNA"
+Repository = "https://github.com/h-brough/TUNA"

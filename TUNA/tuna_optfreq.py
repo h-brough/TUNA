@@ -4,7 +4,6 @@ import tuna_energy as energ
 import sys
 from termcolor import colored
 import tuna_postscf as postscf
-import tuna_scf as scf
 import tuna_thermo as thermo
 
 
@@ -332,7 +331,7 @@ def optimise_geometry(calculation, atoms, coordinates):
             log(colored(f" Optimisation converged in {iteration} iterations!","white"), calculation, 1)
             log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
 
-            postscf.post_SCF_output(molecule, calculation, SCF_output.epsilons, SCF_output.molecular_orbitals, P, SCF_output.S, molecule.AO_ranges, SCF_output.D, SCF_output.P_alpha, SCF_output.P_beta, SCF_output.epsilons_alpha, SCF_output.epsilons_beta, SCF_output.molecular_orbitals_alpha, SCF_output.molecular_orbitals_beta)
+            postscf.post_SCF_output(molecule, calculation, SCF_output.epsilons, SCF_output.molecular_orbitals, P, SCF_output.S, molecule.partition_ranges, SCF_output.D, SCF_output.P_alpha, SCF_output.P_beta, SCF_output.epsilons_alpha, SCF_output.epsilons_beta, SCF_output.molecular_orbitals_alpha, SCF_output.molecular_orbitals_beta)
           
             log(f"\n Optimisation converged in {iteration} iterations to bond length of {bohr_to_angstrom(bond_length):.6f} angstroms!", calculation, 1)
             log(f"\n Final single point energy: {energy:.10f}", calculation, 1)
@@ -374,7 +373,7 @@ def optimise_geometry(calculation, atoms, coordinates):
 
 
 
-def calculate_frequency(calculation, atoms=None, coordinates=None, molecule=None, energy=None):
+def calculate_frequency(calculation, atomic_symbols=None, coordinates=None, molecule=None, energy=None):
 
     """
 
@@ -382,7 +381,7 @@ def calculate_frequency(calculation, atoms=None, coordinates=None, molecule=None
 
     Args:   
         calculation (Calculation): Calculation object
-        atoms (list, optional): List of atomic symbols
+        atomic_symbols (list, optional): List of atomic symbols
         coordinates (array, optional): Atomic coordinates
         molecule (Molecule): Molecule object
         energy (float): Total molecular energy
@@ -395,12 +394,12 @@ def calculate_frequency(calculation, atoms=None, coordinates=None, molecule=None
     # If "FREQ" keyword has been used, calculates the energy using the supplied atoms and coordinates, otherwise uses the supplied molecule and energy
     if calculation.calculation_type == "FREQ":
           
-        _, molecule, energy, _ = energ.calculate_energy(calculation, atoms, coordinates)
+        _, molecule, energy, _ = energ.calculate_energy(calculation, atomic_symbols, coordinates)
     
     # Unpacks useful molecular quantities
     point_group = molecule.point_group
     bond_length = molecule.bond_length
-    atoms = molecule.atoms
+    atomic_symbols = molecule.atomic_symbols
     coordinates = molecule.coordinates
     masses = molecule.masses
 
@@ -414,10 +413,10 @@ def calculate_frequency(calculation, atoms=None, coordinates=None, molecule=None
     log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
 
     
-    log(f"\n Hessian will be calculated at a bond length of {bohr_to_angstrom(bond_length):.5f} angstroms.", calculation, 1)
+    log(f"\n Hessian will be calculated at a bond length of {bohr_to_angstrom(bond_length):.6f} angstroms.", calculation, 1)
     
     # Spring stiffness is calculated as the Hessian, through numerical second derivatives
-    k, SCF_output_forward, P_forward, SCF_output_backward, P_backward = calculate_Hessian(coordinates, calculation, atoms)
+    k, SCF_output_forward, P_forward, SCF_output_backward, P_backward = calculate_Hessian(coordinates, calculation, atomic_symbols)
 
     # Reduced mass calculated in order to calculate frequency of harmonic oscillator
     reduced_mass = postscf.calculate_reduced_mass(masses)
@@ -457,8 +456,14 @@ def calculate_frequency(calculation, atoms=None, coordinates=None, molecule=None
     dipole_derivative_squared_C_squared_per_kg = dipole_derivative_squared * 2 * frequency_hartree * (constants.elementary_charge_in_coulombs) ** 2 / constants.electron_mass_in_kilograms
     transition_intensity_km_per_mol = dipole_derivative_squared_C_squared_per_kg * constants.avogadro / (12 * constants.permittivity_in_farad_per_metre * constants.c_in_metres_per_second ** 2 * 1000)
 
-
-    log(" Using masses of most abundant isotopes.", calculation, 1)
+    if calculation.custom_mass_1 is not None or calculation.custom_mass_2 is not None:
+       
+        log(f"\n Using atomic mass of {(masses[0] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[0].capitalize()}, {(masses[1] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[1].capitalize()}.", calculation, 1)
+    
+    else:
+       
+        log(" Using masses of most abundant isotopes.", calculation, 1)
+    
     log(" Dipole moment derivative already includes vibrational overlap.\n", calculation, 1)
 
 

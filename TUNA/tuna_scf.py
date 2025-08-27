@@ -234,6 +234,7 @@ def construct_RHF_Fock_matrix(H_core, ERI_AO, P):
 
     """
 
+
     J = np.einsum('ijkl,kl->ij', ERI_AO, P, optimize=True)
     K = np.einsum('ilkj,kl->ij', ERI_AO, P, optimize=True)
 
@@ -446,14 +447,14 @@ def update_DIIS(DIIS_error_vector, Fock_vector, n_alpha, n_beta, X, n_electrons_
 
 
 
-def check_convergence(scf_conv_params, step, delta_E, max_DP, RMS_DP, orbital_gradient, calculation, silent=False):
+def check_convergence(SCF_conv_params, step, delta_E, max_DP, RMS_DP, orbital_gradient, calculation, silent=False):
 
     """
 
     Checks the convergence of the SCF loop.
 
     Args:
-        scf_conv (dict): Dictionary of SCF convergence thresholds
+        SCF_conv (dict): Dictionary of SCF convergence thresholds
         step (int): Iteration of SCF
         delta_E (float): Change in energy since last step
         max_DP (float): Maximum change in density matrix
@@ -469,7 +470,7 @@ def check_convergence(scf_conv_params, step, delta_E, max_DP, RMS_DP, orbital_gr
     
     converged = False
 
-    if abs(delta_E) < scf_conv_params["delta_E"] and abs(max_DP) < scf_conv_params["max_DP"] and abs(RMS_DP) < scf_conv_params["RMS_DP"] and abs(orbital_gradient) < scf_conv_params["orbital_gradient"]: 
+    if abs(delta_E) < SCF_conv_params["delta_E"] and abs(max_DP) < SCF_conv_params["max_DP"] and abs(RMS_DP) < SCF_conv_params["RMS_DP"] and abs(orbital_gradient) < SCF_conv_params["orbital_gradient"]: 
 
         log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
         log(f"\n Self-consistent field converged in {step} cycles!\n", calculation, 1, silent=silent)
@@ -529,8 +530,10 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
     # Unpacks useful molecular quantities
     n_doubly_occ = molecule.n_doubly_occ
+
     n_alpha = molecule.n_alpha
     n_beta = molecule.n_beta
+
 
     orbital_gradient = 1
 
@@ -580,7 +583,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             delta_E, maxDP, rmsDP = calculate_SCF_changes(E, E_old, P, P_old)
 
             # Clears old Fock matrices if Fock vector is too old
-            if len(Fock_vector) > 10: 
+            if len(Fock_vector) > calculation.max_DIIS_matrices: 
                 
                 del Fock_vector[0]
                 del DIIS_error_vector[0]
@@ -607,7 +610,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             format_output_line(E_total, delta_E, maxDP, rmsDP, damping_factor, step, orbital_gradient, calculation, silent=silent)
 
             # Check for convergence of energy and density
-            if check_convergence(calculation.scf_conv, step, delta_E, maxDP, rmsDP, orbital_gradient, calculation, silent=silent): 
+            if check_convergence(calculation.SCF_conv, step, delta_E, maxDP, rmsDP, orbital_gradient, calculation, silent=silent): 
 
                 kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy = calculate_energy_components(None, None, T, V_NE, None, None, None, None, P, J, K, reference)
 
@@ -674,7 +677,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             delta_E, maxDP, rmsDP = calculate_SCF_changes(E, E_old, P, P_old)
 
             # Clears old Fock matrices if Fock vector is too old
-            if len(Fock_vector) > 10: 
+            if len(Fock_vector) > calculation.max_DIIS_matrices: 
                 
                 del Fock_vector[0]
                 del DIIS_error_vector[0]
@@ -704,7 +707,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             
 
             # Check for convergence of energy and density
-            if check_convergence(calculation.scf_conv, step, delta_E, maxDP, rmsDP, orbital_gradient, calculation, silent=silent): 
+            if check_convergence(calculation.SCF_conv, step, delta_E, maxDP, rmsDP, orbital_gradient, calculation, silent=silent): 
 
                 kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy = calculate_energy_components(P_alpha, P_beta, T, V_NE, J_alpha, J_beta, K_alpha, K_beta, P, None, None, reference)
                 

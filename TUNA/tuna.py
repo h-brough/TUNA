@@ -3,10 +3,9 @@ version_number = init.__version__
 from termcolor import colored
 
 # Prints big fish logo
-print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white")+ colored(" ~~~~~~","light_grey")+colored(" | |  | |  | |  \\| |  /  \\","white")+colored(" ~~~~~~~~","light_grey")+colored(" / .      \\/ ) ","white")+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white")+colored(" ~~~~~~","light_grey")+colored(" (     ))    (","white")+colored(" ~~~~~\n ~~~~~~","light_grey")+colored(" | |  | |__| | |\\  |/ ____ \\ ","white")+colored("~~~~~~","light_grey")+colored(" \\___  ___/\\_) ","white")+colored("~~~~","light_grey")+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white"))
-print("\n")
+print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white") + colored(" ~~~~~~","light_grey")+colored(" | |  | |  | |  \\| |  /  \\","white")+colored(" ~~~~~~~~","light_grey")+colored(" / .      \\/ ) ","white")+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white")+colored(" ~~~~~~","light_grey")+colored(" (     ))    (","white")+colored(" ~~~~~\n ~~~~~~","light_grey")+colored(" | |  | |__| | |\\  |/ ____ \\ ","white")+colored("~~~~~~","light_grey")+colored(" \\___  ___/\\_) ","white")+colored("~~~~","light_grey")+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white"))
 
-print(f"Welcome to version {version_number} of TUNA (Theoretical Unification of Nuclear Arrangements)!\n")
+print(f"\n\nWelcome to version {version_number} of TUNA!\n")
 print("Importing required libraries...  ",end="")
 
 import sys; sys.stdout.flush()
@@ -28,21 +27,20 @@ def parse_input():
 
     Parses the input line in the console and returns extracted quantities.
 
-    Args:
-        None: Nothing is required
 
     Returns:
         calculation_type (string): Type of calculation
         method (string): Electronic structure method
         basis (string): Basis set
-        atoms (list): List of atomic symbols
+        atomic_symbols (list): List of atomic symbols
         coordinates (array): Array of atomic coordinates
         params (list): User-specified parameters
 
     """
 
     # Allowed options for the input line
-    atom_options = constants.atom_properties.keys() 
+    atom_options = atomic_properties.keys() 
+    ghost_options = [f"X{key}" for key in atomic_properties.keys()]
     calculation_options = calculation_types.keys()
     method_options = method_types.keys()
 
@@ -66,7 +64,7 @@ def parse_input():
     except: error("Input line formatted incorrectly! Read the manual for help.")
 
     # Creates a list of atoms, either one or two long
-    atoms = [atom.strip() for atom in geometry_section.split(" ")[0:2] if atom.strip()]
+    atomic_symbols = [atom.strip() for atom in geometry_section.split(" ")[0:2] if atom.strip()]
     
     try:
         
@@ -78,22 +76,22 @@ def parse_input():
     # Checks if requested calculation, method, basis, etc. are in the allowed options, then gives relevant error message if not 
     if calculation_type not in calculation_options: error(f"Calculation type \"{calculation_type}\" is not supported.")
     if method not in method_options: error(f"Calculation method \"{method}\" is not supported.")
-    if basis not in basis_types: error(f"Basis set \"{basis}\" is not supported.")
-    if not all(atom in atom_options for atom in atoms): error("One or more atom types not recognised! Available atoms are H, He and ghost atoms XH and XHe")
-    if len(atoms) != len(coordinates_1D): error("Two atoms requested without a bond length!")
+    if basis not in basis_types.keys(): error(f"Basis set \"{basis}\" is not supported.")
+    if not all(atom in atom_options or atom in ghost_options for atom in atomic_symbols): error("One or more atom types not recognised! Check the manual for available atoms.")
+    if len(atomic_symbols) != len(coordinates_1D): error("Two atoms requested without a bond length!")
 
     # Rejects requests for tiny bond lengths, such as two atoms on top of each other
-    if len(coordinates_1D) == 2 and coordinates_1D[1] < 0.05: error(f"Bond length ({coordinates_1D[1]} angstroms) too small! Minimum bond length is 0.05 angstroms.")
+    if len(coordinates_1D) == 2 and coordinates_1D[1] < 0.05: error(f"Bond length ({coordinates_1D[1]} angstroms) is too small! Minimum bond length is 0.05 angstroms.")
 
     # Converts 1D coordinate array in angstroms to 3D array ion bohr
     coordinates = one_dimension_to_three(angstrom_to_bohr(np.array(coordinates_1D)))
 
-    return calculation_type, method, basis, atoms, coordinates, params
+    return calculation_type, method, basis, atomic_symbols, coordinates, params
 
 
 
 
-def run_calculation(calculation_type, calculation, atoms, coordinates):
+def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
 
     """
 
@@ -102,7 +100,7 @@ def run_calculation(calculation_type, calculation, atoms, coordinates):
     Args:
         calculation_type (string): Calculation type
         calculation (Calculation): Calculation object
-        atoms (list): List of atomic symbols
+        atomic_symbols (list): List of atomic symbols
         coordinates (array): Atomic coordinates
 
     Returns:
@@ -110,10 +108,12 @@ def run_calculation(calculation_type, calculation, atoms, coordinates):
 
     """
 
+    ghost_atom_present = any("X" in atom for atom in atomic_symbols)
+
     # Single point energy
     if calculation_type == "SPE": 
         
-        energ.calculate_energy(calculation, atoms, coordinates)
+        energ.calculate_energy(calculation, atomic_symbols, coordinates)
 
 
     # Coordinate scan
@@ -122,18 +122,18 @@ def run_calculation(calculation_type, calculation, atoms, coordinates):
         if calculation.scan_step:
             if calculation.scan_number: 
                 
-                energ.scan_coordinate(calculation, atoms, coordinates)
+                energ.scan_coordinate(calculation, atomic_symbols, coordinates)
                 
-            else: error(f"Coordinate scan requested but no number of steps given by keyword \"SCANNUMBER\"!")
-        else: error(f"Coordinate scan requested but no step size given by keyword \"SCANSTEP\"!")
+            else: error(f"Coordinate scan requested but no number of steps given by keyword \"NUM\"!")
+        else: error(f"Coordinate scan requested but no step size given by keyword \"STEP\"!")
         
 
     # Geometry optimisation
     elif calculation_type == "OPT":
         
-        if not len(atoms) == 1 and not any("X" in atom for atom in atoms): 
+        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            optfreq.optimise_geometry(calculation, atoms, coordinates)
+            optfreq.optimise_geometry(calculation, atomic_symbols, coordinates)
         
         else: error("Geometry optimisation requested for single atom!")
         
@@ -141,9 +141,9 @@ def run_calculation(calculation_type, calculation, atoms, coordinates):
     # Harmonic frequency
     elif calculation_type == "FREQ":
 
-        if not len(atoms) == 1 and not any("X" in atom for atom in atoms): 
+        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            optfreq.calculate_frequency(calculation, atoms=atoms, coordinates=coordinates)
+            optfreq.calculate_frequency(calculation, atoms=atomic_symbols, coordinates=coordinates)
         
         else: error("Harmonic frequency requested for single atom!")
         
@@ -151,9 +151,9 @@ def run_calculation(calculation_type, calculation, atoms, coordinates):
     # Geometry optimisation and harmonic frequency
     elif calculation_type == "OPTFREQ":
 
-        if not len(atoms) == 1 and not any("X" in atom for atom in atoms): 
+        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            optimised_molecule, optimised_energy = optfreq.optimise_geometry(calculation, atoms, coordinates)
+            optimised_molecule, optimised_energy = optfreq.optimise_geometry(calculation, atomic_symbols, coordinates)
             optfreq.calculate_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
 
         else: error("Geometry optimisation requested for single atom!")
@@ -165,14 +165,12 @@ def run_calculation(calculation_type, calculation, atoms, coordinates):
         # Turns on printing the trajectory only if NOTRAJ parameter has not been used
         if not calculation.no_trajectory: calculation.trajectory = True
 
-        if not len(atoms) == 1 and not any("X" in atom for atom in atoms): 
+        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            md.run_MD(calculation, atoms, coordinates)
+            md.run_MD(calculation, atomic_symbols, coordinates)
         
         else: error("Molecular dynamics simulation requested for single atom!")
         
-        
-
         
 
 def main(): 
@@ -181,25 +179,19 @@ def main():
 
     Sets off TUNA calculation by parsing input line, building calculation object and handing off to relevant modules.
 
-    Args:
-        None: Nothing is required
-
-    Returns:
-        None: Nothing is returned
-
     """
 
     # Reads input line, makes sure it's okay and extracts the desired parameters
     calculation_type, method, basis, atoms, coordinates, params = parse_input()
 
-    print(f"{calculation_types.get(calculation_type)} calculation in \"{basis}\" basis set via {method_types.get(method)} requested.")
+    print(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set via {method_types.get(method)} requested.")
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
-    calculation = Calculation(calculation_type, method, start_time, params, basis)
+    calculation = Calculation(calculation_type, method, start_time, params, basis, atoms)
 
     # If a decontracted basis has been requested, this is printed to the console
-    if calculation.decontract: print("Setting up calculation using fully decontracted basis set.")
-    else: print("Setting up calculation using partially contracted basis set.")
+    contraction = "fully decontracted" if calculation.decontract else "partially contracted"
+    print(f"Setting up calculation using {contraction} basis set.")
 
     print(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.")
 
@@ -211,17 +203,18 @@ def main():
 
 
 
-if __name__ == "__main__": main()
 
 
+if __name__ == "__main__": 
 
-"""
-TODO
+    try:
 
-0.7.0
-Copy HarPy integrals
-Add anharmonic frequencies
-Add CCSD
-MP4
+        while True:
 
-"""
+            main()
+
+    except KeyboardInterrupt: 
+        
+        error("The TUNA calculation has been interrupted by the user. Goodbye!")
+    
+

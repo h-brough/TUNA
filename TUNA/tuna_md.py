@@ -307,8 +307,7 @@ def run_MD(calculation, atoms, coordinates):
 
         # Cycle begins again as new energy components are printed
         potential_energy, kinetic_energy, total_energy, temperature, bond_length, drift = calculate_MD_components(molecule, masses, velocities, initial_energy, degrees_of_freedom, electronic_energy)
-        log(f"  {(i + 1):3.0f}     {time:5.2f}     {bond_length:.4f}      {temperature:8.2f}      {potential_energy:9.6f}     {kinetic_energy:9.6f}     {total_energy:9.6f}      {drift:9.6f}", calculation, 1)
-
+        log(f" {(i + 1):4.0f}     {time:5.2f}     {bond_length:.4f}      {temperature:8.2f}      {potential_energy:9.6f}     {kinetic_energy:9.6f}     {total_energy:9.6f}      {drift:9.6f}", calculation, 1)
         # By default prints trajectory to file, can be viewed with Jmol
         if calculation.trajectory: 
             

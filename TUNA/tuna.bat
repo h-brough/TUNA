@@ -1,5 +1,6 @@
 @echo off
-setlocal
+SETLOCAL
+BREAK OFF  REM Disable Ctrl+C prompt
 
 set "scriptDir=%~dp0"
 
@@ -9,6 +10,7 @@ if "%1"=="--version" (
         call :stripQuotes
     )
 ) else (
+	REM Run Python without showing Ctrl+C prompt
     python "%scriptDir%tuna.py" %*
 )
 

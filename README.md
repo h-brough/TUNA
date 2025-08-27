@@ -3,7 +3,7 @@
 Welcome to TUNA! A user-friendly quantum chemistry program for diatomics.
 
 <br>
-<p align="center"><img src="TUNA Logo.svg" alt="Fish swimming through a wavepacket" width=480 /></p>
+<p align="center"><img src="TUNA Logo.svg" alt="Fish swimming through a wavepacket." width=480 /></p>
 
 ## Contents
 
@@ -29,8 +29,6 @@ The program requires Python 3.12 or higher and the following packages:
 * numpy
 * scipy
 * matplotlib
-* plotly
-* scikit-image
 * termcolor
 
 ### Installation

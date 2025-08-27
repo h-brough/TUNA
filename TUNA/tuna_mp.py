@@ -7,7 +7,7 @@ from tuna_util import *
 
 
 
-def calculate_MP2_energy(t_ijab, ERI_SO):
+def calculate_t_amplitude_energy(t_ijab, ERI_SO):
 
     """
 
@@ -31,7 +31,9 @@ def calculate_MP2_energy(t_ijab, ERI_SO):
 
 
 
-def build_MP2_density_contribution(n_atomic_orbitals, t_ijab, o, v):
+
+
+def build_t_amplitude_density_contribution(n_atomic_orbitals, t_ijab, o, v):
 
     """
 
@@ -55,6 +57,8 @@ def build_MP2_density_contribution(n_atomic_orbitals, t_ijab, o, v):
     P_MP2[o, o] += - (1 / 2) * np.einsum('jkab,ikab->ij', t_ijab, t_ijab, optimize=True)
 
     return P_MP2
+
+
 
 
 
@@ -124,12 +128,15 @@ def calculate_natural_orbitals(P, X, calculation, silent=False):
 
     natural_orbitals = natural_orbitals[:, natural_orbital_occupancies.argsort()] 
 
-    log("\n  Natural orbital occupancies: \n", calculation, 2, silent=silent)
+    # This ensures consistent spacing across UHF and correlated calculations
+    if calculation.method != "UHF": log("", calculation, 2, silent=silent)
+
+    log("  Natural orbital occupancies: \n", calculation, 2, silent=silent)
 
     # Prints out all the natural orbital occupancies, the sum and the trace of the density matrix
     for i in range(len(natural_orbital_occupancies)): 
         
-        log(f"    {i + 1}.   {natural_orbital_occupancies[i]:.8f}", calculation, 2, silent=silent)
+        log(f"    {(i + 1):2.0f}.   {natural_orbital_occupancies[i]:.8f}", calculation, 2, silent=silent)
 
     log(f"\n  Sum of natural orbital occupancies: {sum_of_occupancies:.6f}", calculation, 2, silent=silent)
     log(f"  Trace of density matrix: {np.trace(P_orthogonal):.6f}", calculation, 2, silent=silent)
@@ -142,7 +149,9 @@ def calculate_natural_orbitals(P, X, calculation, silent=False):
 
 
 
-def calculate_MP3_energy(e_ijab, ERI_SO_ansym, o, v, calculation, silent=False):
+
+
+def calculate_MP3_energy(e_ijab, g, o, v, calculation, silent=False):
 
     """
 
@@ -150,7 +159,7 @@ def calculate_MP3_energy(e_ijab, ERI_SO_ansym, o, v, calculation, silent=False):
 
     Args:
         e_ijab (array): Epsilions inverse tensor shape ijab
-        ERI_SO_ansym (array): Antisymmetrised electron repulsion integrals in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
         calculation (Calculation): Calculation object
@@ -163,13 +172,15 @@ def calculate_MP3_energy(e_ijab, ERI_SO_ansym, o, v, calculation, silent=False):
 
     log("  Calculating MP3 correlation energy...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
         
-    E_MP3 = (1 / 8) * np.einsum('ijab,klij,abkl,ijab,klab->', ERI_SO_ansym[o, o, v, v], ERI_SO_ansym[o, o, o, o], ERI_SO_ansym[v, v, o, o], e_ijab, e_ijab, optimize=True)
-    E_MP3 += (1 / 8) * np.einsum('ijab,abcd,cdij,ijab,ijcd->', ERI_SO_ansym[o, o, v, v], ERI_SO_ansym[v, v, v, v], ERI_SO_ansym[v, v, o, o], e_ijab, e_ijab, optimize=True)
-    E_MP3 += np.einsum('ijab,kbcj,acik,ijab,ikac->', ERI_SO_ansym[o, o, v, v], ERI_SO_ansym[o, v, v, o], ERI_SO_ansym[v, v, o, o], e_ijab, e_ijab, optimize=True)
+    E_MP3 = (1 / 8) * np.einsum('ijab,klij,abkl,ijab,klab->', g[o, o, v, v], g[o, o, o, o], g[v, v, o, o], e_ijab, e_ijab, optimize=True)
+    E_MP3 += (1 / 8) * np.einsum('ijab,abcd,cdij,ijab,ijcd->', g[o, o, v, v], g[v, v, v, v], g[v, v, o, o], e_ijab, e_ijab, optimize=True)
+    E_MP3 += np.einsum('ijab,kbcj,acik,ijab,ikac->', g[o, o, v, v], g[o, v, v, o], g[v, v, o, o], e_ijab, e_ijab, optimize=True)
 
     log(f"[Done]\n\n  MP3 correlation energy:             {E_MP3:13.10f}", calculation, 1, silent=silent)
 
     return E_MP3
+
+
 
 
 
@@ -200,11 +211,13 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
 
     """
 
+
     molecular_orbitals_alpha = SCF_output.molecular_orbitals_alpha
     molecular_orbitals_beta = SCF_output.molecular_orbitals_beta
 
     epsilons_alpha = SCF_output.epsilons_alpha
     epsilons_beta = SCF_output.epsilons_beta
+
 
     n_occ_alpha = molecule.n_alpha
     n_occ_beta = molecule.n_beta
@@ -237,8 +250,8 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
     ERI_SO_ab = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_alpha, C_spin_block_beta)
 
     # Antisymmetrises alpha and beta spins, but not alpha-beta spins
-    ERI_SO_ansym_a = ci.antisymmetrise_integrals(ERI_SO_a)
-    ERI_SO_ansym_b = ci.antisymmetrise_integrals(ERI_SO_b)
+    g_a = ci.antisymmetrise_integrals(ERI_SO_a)
+    g_b = ci.antisymmetrise_integrals(ERI_SO_b)
 
     log("    [Done]", calculation, 1, silent=silent)
 
@@ -248,14 +261,14 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
     epsilons_beta = np.sort(epsilons_beta)
 
     # Slicing out occupied and virtual parts of alpha-alpha, beta-beta and alpha-beta contributions to ERI
-    ERI_SO_aa = ERI_SO_ansym_a[o_a, o_a, v_a, v_a]
-    ERI_SO_bb = ERI_SO_ansym_b[o_b, o_b, v_b, v_b]
+    ERI_SO_aa = g_a[o_a, o_a, v_a, v_a]
+    ERI_SO_bb = g_b[o_b, o_b, v_b, v_b]
     ERI_SO_ab = ERI_SO_ab[o_a, o_b, v_a, v_b]
 
     # Epsilons tensor for alpha-alpha, beta-beta and alpha-beta spin pairs
-    e_ijab_aa = ci.build_epsilons_tensor(epsilons_alpha, epsilons_alpha, o_a, o_a, v_a, v_a)
-    e_ijab_bb = ci.build_epsilons_tensor(epsilons_beta, epsilons_beta, o_b, o_b, v_b, v_b)
-    e_ijab_ab = ci.build_epsilons_tensor(epsilons_alpha, epsilons_beta, o_a, o_b, v_a, v_b)
+    e_ijab_aa = ci.build_doubles_epsilons_tensor(epsilons_alpha, epsilons_alpha, o_a, o_a, v_a, v_a)
+    e_ijab_bb = ci.build_doubles_epsilons_tensor(epsilons_beta, epsilons_beta, o_b, o_b, v_b, v_b)
+    e_ijab_ab = ci.build_doubles_epsilons_tensor(epsilons_alpha, epsilons_beta, o_a, o_b, v_a, v_b)
 
     # MP2 amplitudes for alpha-alpha, beta-beta, alpha-beta and beta-alpha pairs 
     t_ijab_aa = ci.build_MP2_t_amplitudes(ERI_SO_aa, e_ijab_aa)
@@ -264,12 +277,13 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
     t_ijab_ba = t_ijab_ab.transpose(1,0,3,2) 
     
     # Calculates MP2 energy for alpha-alpha, beta-beta and alpha-beta pairs
-    E_aa = calculate_MP2_energy(t_ijab_aa, ERI_SO_aa)
-    E_bb = calculate_MP2_energy(t_ijab_bb, ERI_SO_bb)
-    E_ab = 4 * calculate_MP2_energy(t_ijab_ab, ERI_SO_ab)
+    E_aa = calculate_t_amplitude_energy(t_ijab_aa, ERI_SO_aa)
+    E_bb = calculate_t_amplitude_energy(t_ijab_bb, ERI_SO_bb)
+    E_ab = 4 * calculate_t_amplitude_energy(t_ijab_ab, ERI_SO_ab)
 
     # Calculates same-spin and opposite-spin contributions
     E_MP2_SS = E_aa + E_bb
+
     E_MP2_OS = E_ab
 
     log("     [Done]\n", calculation, 1, silent=silent)
@@ -281,7 +295,6 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
 
 
     E_MP2 = E_MP2_SS + E_MP2_OS
-
 
     log(f"  Energy from alpha-alpha pairs:      {E_aa:13.10f}", calculation, 1, silent=silent)
     log(f"  Energy from beta-beta pairs:        {E_bb:13.10f}", calculation, 1, silent=silent)
@@ -301,12 +314,12 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
     np.fill_diagonal(P_MP2_b[:n_occ_beta, :n_occ_beta], 1)
 
     # Finds alpha-alpha and alpha-beta density contributions
-    P_MP2_aa = build_MP2_density_contribution(n_SO // 2, t_ijab_aa, o_a, v_a)
-    P_MP2_ab = build_MP2_density_contribution(n_SO // 2, t_ijab_ab, o_a, v_a) 
+    P_MP2_aa = build_t_amplitude_density_contribution(n_SO // 2, t_ijab_aa, o_a, v_a)
+    P_MP2_ab = build_t_amplitude_density_contribution(n_SO // 2, t_ijab_ab, o_a, v_a) 
 
     # Finds beta-beta and beta-alpha density contributions
-    P_MP2_bb = build_MP2_density_contribution(n_SO // 2, t_ijab_bb, o_b, v_b)
-    P_MP2_ba = build_MP2_density_contribution(n_SO // 2, t_ijab_ba, o_b, v_b)
+    P_MP2_bb = build_t_amplitude_density_contribution(n_SO // 2, t_ijab_bb, o_b, v_b)
+    P_MP2_ba = build_t_amplitude_density_contribution(n_SO // 2, t_ijab_ba, o_b, v_b)
 
     # Optionally applies spin scaling to density
     if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"]:
@@ -328,7 +341,7 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
     log("     [Done]", calculation, 1, silent=silent)
     
     # Calculates and prints natural orbital occupancies
-    calculate_natural_orbitals(P, X, calculation, silent=silent)
+    if not calculation.no_natural_orbitals: calculate_natural_orbitals(P, X, calculation, silent=silent)
 
     return E_MP2, P, P_alpha, P_beta
 
@@ -338,7 +351,7 @@ def run_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=F
 
 
 
-def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_SO, X, E_HF, ERI_spin_block, o, v, silent=False):
+def run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, E_HF, ERI_spin_block, o, v, silent=False):
 
     """
 
@@ -347,7 +360,7 @@ def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_
     Args:
         molecule (Molecule): Molecule object
         calculation (Calculation): Calculation object
-        ERI_SO_anysm (array): Antisymmetrised electron repulsion integrals in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
         C_spin_block (array): Spin-blocked molecular integrals in AO basis
         H_core (array): Core hamiltonian matrix in AO basis
         V_NN (float): Nuclear-nuclear repulsion energy
@@ -392,7 +405,7 @@ def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_
     n = np.newaxis
 
     # Spin blocks and transforms core Hamiltonian to spin-orbital basis
-    H_core_spin_block = np.kron(np.eye(2), H_core)
+    H_core_spin_block = ci.spin_block_core_Hamiltonian(H_core)
     H_core_SO = ci.transform_matrix_AO_to_SO(H_core_spin_block, C_spin_block)
 
     # Sets up matrices based on number of spin orbitals
@@ -411,25 +424,25 @@ def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_
     for iteration in range(1, OMP2_max_iter + 1):
 
         # Build Fock matrix from core Hamiltonian and two-electron integrals, in spin-orbital basis
-        F = H_core_SO + np.einsum('piqi->pq', ERI_SO_anysm[:, o, :, o], optimize=True)
-
+        F = ci.build_spin_orbital_Fock_matrix(H_core_SO, g, o)
+        
         # Build off-diagonal Fock matrix, epsilons obtained from diagonal elements
         F_prime = F.copy()
         np.fill_diagonal(F_prime, 0)
         epsilons_combined = F.diagonal()
 
         # Full t amplitudes for MP2, with permutations 
-        t_1 = ERI_SO_anysm[v, v, o, o]
+        t_1 = g[v, v, o, o]
         t_2 = np.einsum('ac,cbij->abij', F_prime[v, v], t_abij, optimize=True)
         t_3 = np.einsum('ki,abkj->abij', F_prime[o, o], t_abij, optimize=True)
         t_abij = t_1 + t_2 - t_2.transpose((1, 0, 2, 3)) - t_3 + t_3.transpose((0, 1, 3, 2))
         
         # Epsilons tensor built and transposed to abij shape, forms final t amplitudes by multiplication
-        e_abij = ci.build_epsilons_tensor(epsilons_combined, epsilons_combined, o, o, v, v).transpose(2,3,0,1) 
+        e_abij = ci.build_doubles_epsilons_tensor(epsilons_combined, epsilons_combined, o, o, v, v).transpose(2,3,0,1) 
         t_abij *= e_abij
 
         # Build one-particle reduced density matrix, using t_ijab
-        P_corr = build_MP2_density_contribution(n_SO, t_abij.transpose(2,3,0,1), o, v)
+        P_corr = build_t_amplitude_density_contribution(n_SO, t_abij.transpose(2,3,0,1), o, v)
 
         # Add to reference P, which is diagonal of ones up to number of occupied spin orbitals
         P_OMP2 = P_corr + P_ref 
@@ -446,7 +459,7 @@ def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_
         D = D_corr + D_2 - D_2.transpose(1, 0, 2, 3) - D_2.transpose(0, 1, 3, 2) + D_2.transpose(1, 0, 3, 2) + D_3 - D_3.transpose(1, 0, 2, 3)
 
         # Forms generalised Fock matrix
-        F = np.einsum('pr,rq->pq', H_core_SO, P_OMP2, optimize=True) + (1 / 2) * np.einsum('prst,stqr->pq', ERI_SO_anysm, D, optimize=True)
+        F = np.einsum('pr,rq->pq', H_core_SO, P_OMP2, optimize=True) + (1 / 2) * np.einsum('prst,stqr->pq', g, D, optimize=True)
 
         # Only consider rotations between occupied and virtual orbitals, as only these change the energy
         R[v, o] = (F - F.T)[v, o] / (epsilons_combined[n, o] - epsilons_combined[v, n])
@@ -460,10 +473,10 @@ def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_
         # Uses new orbitals to form new core Hamiltonian and antisymmetrised two-electron integrals
         H_core_SO = ci.transform_matrix_AO_to_SO(H_core_spin_block, C_spin_block)
         ERI_SO = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block)
-        ERI_SO_anysm = ci.antisymmetrise_integrals(ERI_SO)
+        g = ci.antisymmetrise_integrals(ERI_SO)
 
         # Calculates total energy from one-electron and two-electron contractions with one- and two-electron Hamiltonians
-        E_OMP2 = V_NN + scf.calculate_one_electron_property(P_OMP2, H_core_SO) + scf.calculate_two_electron_property(D, ERI_SO_anysm)
+        E_OMP2 = V_NN + scf.calculate_one_electron_property(P_OMP2, H_core_SO) + scf.calculate_two_electron_property(D, g)
 
         # Determines change in energy, and correlation energy by removing original reference (HF) energy
         E_OMP2 = E_OMP2 - E_HF
@@ -490,10 +503,10 @@ def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_
     
     P, P_alpha, P_beta = ci.transform_P_SO_to_AO(P_OMP2, C_spin_block, n_SO)
 
-    log("      [Done]", calculation, 1, silent=silent)
+    log("      [Done]\n", calculation, 1, silent=silent)
 
     # Calculates natural orbitals from OMP2 density
-    calculate_natural_orbitals(P, X, calculation, silent=silent)
+    if not calculation.no_natural_orbitals: calculate_natural_orbitals(P, X, calculation, silent=silent)
 
     return E_OMP2, P, P_alpha, P_beta
 
@@ -502,7 +515,7 @@ def run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_
 
 
 
-def run_MP3(calculation, ERI_SO_anysm, epsilons_sorted, E_MP2, o, v, silent=False):
+def run_MP3(calculation, g, epsilons_sorted, E_MP2, o, v, silent=False):
 
     """
 
@@ -510,7 +523,7 @@ def run_MP3(calculation, ERI_SO_anysm, epsilons_sorted, E_MP2, o, v, silent=Fals
 
     Args:
         calculation (Calculation): Calculation object
-        ERI_SO_anysm (array): Antisymmetrised electron repulsion integrals in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
         epsilons_sorted (array): Sorted array of Fock matrix eigenvalues
         E_MP2 (float): MP2 correlation energy
         o (slice): Occupied orbital slice
@@ -527,9 +540,9 @@ def run_MP3(calculation, ERI_SO_anysm, epsilons_sorted, E_MP2, o, v, silent=Fals
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)    
 
 
-    e_ijab = ci.build_epsilons_tensor(epsilons_sorted, epsilons_sorted, o, o, v, v)
+    e_ijab = ci.build_doubles_epsilons_tensor(epsilons_sorted, epsilons_sorted, o, o, v, v)
 
-    E_MP3 = calculate_MP3_energy(e_ijab, ERI_SO_anysm, o, v, calculation, silent=silent)
+    E_MP3 = calculate_MP3_energy(e_ijab, g, o, v, calculation, silent=silent)
 
 
     # Applies Grimme's default scaling to MP3 energy if SCS-MP3 is requested, then prints this information
@@ -581,12 +594,12 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
     n_SO = molecule.n_SO
 
     # Calculates useful quantities for all spin orbital calculations
-    ERI_SO_anysm, C_spin_block, epsilons_sorted, ERI_spin_block, o, v = ci.begin_spin_orbital_calculation(ERI_AO, SCF_output, molecule.n_occ)
+    g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, _, _ = ci.begin_spin_orbital_calculation(ERI_AO, SCF_output, molecule.n_occ, calculation, silent=silent)
     
 
-    if method in ["OMP2", "UOMP2"]: 
+    if method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: 
         
-        E_MP2, P, P_alpha, P_beta = run_OMP2(molecule, calculation, ERI_SO_anysm, C_spin_block, H_core, V_NN, n_SO, X, SCF_output.energy, ERI_spin_block, o, v, silent=silent)
+        E_MP2, P, P_alpha, P_beta = run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, SCF_output.energy, ERI_spin_block, o, v, silent=silent)
 
     elif method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "MP3", "UMP3", "SCS-MP3", "USCS-MP3"]:
         
@@ -594,7 +607,7 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
 
          if method in ["MP3", "UMP3", "SCS-MP3", "USCS-MP3"]: 
              
-             E_MP3 =  run_MP3(calculation, ERI_SO_anysm, epsilons_sorted, E_MP2, o, v, silent=silent)
+             E_MP3 =  run_MP3(calculation, g, epsilons_sorted, E_MP2, o, v, silent=silent)
 
 
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
