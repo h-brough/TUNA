@@ -18,7 +18,7 @@ extensions = [
 
 setup(
     name="quantumtuna",
-    version="0.7.2",
+    version="0.7.3",
     packages=[
         "TUNA",
         "TUNA.tuna_integrals", ],    
