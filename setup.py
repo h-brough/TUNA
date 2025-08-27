@@ -2,12 +2,13 @@
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 import numpy
+import scipy
 
 extensions = [
     Extension(
         name="TUNA.tuna_integrals.tuna_integral",                # adjust name if your package dir is different
         sources=["TUNA/tuna_integrals/tuna_integral.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=[numpy.get_include(), scipy.getinclude()],
     )
 ]
 
