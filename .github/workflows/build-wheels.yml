@@ -3,7 +3,7 @@ name: Build and publish wheels
 on:
   push:
     tags:
-      - 'v*'  
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -22,10 +22,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Install prebuilt dependencies to avoid building from source
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install numpy scipy cython
+
       - name: Install cibuildwheel
-        run: python -m pip install --upgrade pip cibuildwheel twine
+        run: python -m pip install --upgrade cibuildwheel twine
 
       - name: Build wheels
+        env:
+          CIBW_SKIP: "pp* cp3* manylinux*"  # optional: skip platforms you don’t want
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload to PyPI
