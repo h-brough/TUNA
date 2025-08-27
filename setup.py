@@ -5,7 +5,7 @@ import numpy
 
 extensions = [
     Extension(
-        name="tuna_integral",                # adjust name if your package dir is different
+        name="TUNA.tuna_integrals.tuna_integral",                # adjust name if your package dir is different
         sources=["TUNA/tuna_integrals/tuna_integral.pyx"],
         include_dirs=[numpy.get_include()],
     )
@@ -13,8 +13,8 @@ extensions = [
 
 setup(
     name="quantumtuna",
-    version="0.7.1",
-    packages=find_packages(),
+    version="0.7.2",
+    packages=find_packages(include=["TUNA*", "TUNA.tuna_integrals*"]),
     ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
     include_package_data=True,
     zip_safe=False,
