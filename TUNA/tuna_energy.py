@@ -14,6 +14,252 @@ import tuna_molecule as mol
 
 
 
+
+
+def log_convergence_acceleration(calculation, silent=False):
+
+    """
+    
+    Logs information about convergence acceleration.
+
+    Args:
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+    
+    """
+
+    DIIS = calculation.DIIS
+    damping = calculation.damping
+    damping_factor = calculation.damping_factor
+    level_shift = calculation.level_shift
+
+
+    if DIIS:
+
+        log(f" Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration", calculation, silent=silent, end="")
+
+        if damping:
+            
+            if damping_factor: 
+                
+                log(f", with static damping.", calculation, silent=silent)
+
+            else: 
+                
+                log(f", with dynamic damping.", calculation, silent=silent)
+
+        else:
+
+            log(f".", calculation, silent=silent)
+            
+    else:
+
+        if damping:
+            
+            if damping_factor: 
+
+                log(f" Using static damping for convergence acceleration.", calculation, silent=silent)
+
+            else:
+                
+                log(f" Using dynamic damping for convergence acceleration.", calculation, silent=silent)
+
+
+    if level_shift:
+
+        log(f" Using level shift for convergence acceleration with parameter {calculation.level_shift_parameter:.2f}.", calculation, silent=silent)
+
+    if not DIIS and not damping and not level_shift:
+
+        log(" No convergence acceleration used.", calculation, 1, silent=silent)
+
+
+    log("", calculation, silent=silent)
+
+
+    return
+
+
+
+
+
+
+
+
+def calculate_extrapolated_energy(basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3):
+
+    """
+    
+    Calculates the extrapolated energy, from input energies.
+
+    Args:
+        basis (str): Basis to extrapolate
+        E_SCF_2 (float): SCF Energy from double-zeta basis
+        E_SCF_3 (float): SCF Energy from triple-zeta basis
+        E_corr_2 (float): Correlation energy from double-zeta basis
+        E_corr_3 (float): Correlation energy from triple-zeta basis
+    
+    Returns:
+        E_extrapolated (float): Extrapolated energy
+        E_SCF_extrapolated (float): Extrapolated SCF energy
+        E_corr_extrapolated (float): Extrapolated correlation energy
+    
+    
+    """
+
+    # Values from ORCA manual
+    alpha_values = {
+
+        "CC-PVDZ" : 4.42,
+        "AUG-CC-PVDZ" : 4.30,
+        "PC-2": 7.02,
+        "DEF2-SVP" : 10.39,
+        "DEF2-SVPD" : 10.39,
+        "ANO-PVDZ" : 5.41,
+        "AUG-ANO-PVDZ": 5.12
+    }
+
+    beta_values = {
+
+        "CC-PVDZ" : 2.46,
+        "AUG-CC-PVDZ" : 2.51,
+        "PC-2": 2.01,
+        "DEF2-SVP" : 2.40,
+        "DEF2-SVPD" : 2.40,
+        "ANO-PVDZ" : 2.43,
+        "AUG-ANO-PVDZ" : 2.41
+    }
+
+    alpha = alpha_values.get(basis)
+    beta = beta_values.get(basis)
+
+    # Same SCF extrapolation as used in ORCA
+    E_SCF_extrapolated = E_SCF_2 + (E_SCF_3 - E_SCF_2) / (1 - np.exp(alpha * (np.sqrt(2) - np.sqrt(3))))
+
+    # Same correlation energy extrapolation as used in ORCA
+    E_corr_extrapolated = (2 ** beta * E_corr_2 - 3 ** beta  * E_corr_3) / (2 ** beta - 3 ** beta)
+
+    E_extrapolated = E_SCF_extrapolated + E_corr_extrapolated
+
+    return E_extrapolated, E_SCF_extrapolated, E_corr_extrapolated
+
+
+
+
+
+
+
+
+
+
+def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False):
+    
+    """
+    
+    Calculates the extrapolated energy, from two energy calculations.
+
+    Args:
+        calculation (Calculation): Calculation object
+        atomic_symbols (list): List of atomic symbols
+        coordinates (array): Coordinates
+        P_guess (array, optional): Guess density matrix
+        P_guess_alpha (array, optional): Guess alpha density matrix
+        P_guess_beta (array, optional): Guess beta density matrix
+        E_guess (float, optional): Guess energy
+        silent (bool, optional): Should anything be printed
+        terse (bool, optional): Should properties be calculated
+
+    Returns:
+        SCF_output_2 (Output): Double-zeta SCF output
+        molecule_2 (Molecule): Double-zeta Molecule object
+        E_extrapolated (float): Extrapolated total energy
+        P_2 (array): Double-zeta density matrix
+
+    """
+
+    basis_pairs = {
+
+        "CC-PVDZ" : "CC-PVTZ",
+        "AUG-CC-PVDZ" : "AUG-CC-PVTZ",
+        "PC-2": "PC-3",
+        "DEF2-SVP" : "DEF2-TZVP",
+        "DEF2-SVPD" : "DEF2-TZVPD",
+        "ANO-PVDZ" : "ANO-PVTZ",
+        "AUG-ANO-PVDZ" : "AUG-ANO-PVTZ"
+    }
+
+    # Takes out original and secondary basis set
+    first_basis = calculation.original_basis
+    second_basis = basis_pairs.get(first_basis)
+
+    if not second_basis: error(f"Basis set extrapolation is not available for \"{first_basis}\". Check the manual for compatible basis sets!")
+
+
+    log(f"\nBeginning basis set extrapolation with double- and triple- zeta basis sets...", calculation, 1, silent=silent)
+    log(f"Double-zeta basis is {basis_types.get(first_basis)}, triple-zeta basis is {basis_types.get(second_basis)}.", calculation, 1, silent=silent)
+
+    log_spacer(calculation, silent=silent, start="\n")
+    log(f"               Double-zeta Calculation", calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation, silent=silent)
+
+    calculation.basis = first_basis
+
+    # Calculates the energy with the first basis, using the guess densities
+    SCF_output_2, molecule_2, E_total_2, P_2  = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse, silent=silent)
+
+    calculation.basis = second_basis
+
+    log_spacer(calculation, silent=silent, start="\n")
+    log(f"               Triple-zeta Calculation", calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation, silent=silent)
+
+    # Calculates the energy with the second basis
+    SCF_output_3, _, E_total_3, _  = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, silent=silent)
+
+    E_SCF_2 = SCF_output_2.energy
+    E_SCF_3 = SCF_output_3.energy
+
+    E_corr_2 = E_total_2 - E_SCF_2
+    E_corr_3 = E_total_3 - E_SCF_3
+
+    # Extrapolates the energies
+    E_extrapolated, E_SCF_extrapolated, E_corr_extrapolated = calculate_extrapolated_energy(first_basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3)
+
+    log_spacer(calculation, silent=silent, start="\n")
+    log(f"              Basis Set Extrapolation", calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation, silent=silent)
+
+    log(f"  Double-zeta SCF energy:          {E_SCF_2:16.10f}", calculation, 1, silent=silent)
+    log(f"  Triple-zeta SCF energy:          {E_SCF_3:16.10f}", calculation, 1, silent=silent)
+
+    if calculation.method not in ["RHF", "HF", "UHF"]:
+
+        log(f"\n  Double-zeta correlation energy:  {E_corr_2:16.10f}", calculation, 1, silent=silent)
+        log(f"  Triple-zeta correlation energy:  {E_corr_3:16.10f}", calculation, 1, silent=silent)
+
+    log(f"\n  Extrapolated SCF energy:         {E_SCF_extrapolated:16.10f}", calculation, 1, silent=silent)
+
+    if calculation.method not in ["RHF", "HF", "UHF"]:
+        
+        log(f"  Extrapolated correlation energy: {E_corr_extrapolated:16.10f}", calculation, 1, silent=silent)
+
+    log(f"  Extrapolated total energy:       {E_extrapolated:16.10f}", calculation, 1, silent=silent)
+
+    log_spacer(calculation, silent=silent)
+
+
+    return SCF_output_2, molecule_2, E_extrapolated, P_2
+    
+
+
+
+
+
+
+
+
+
+
 def calculate_one_electron_integrals(atoms, n_basis, basis_functions, centre_of_mass):
 
     """"
@@ -40,6 +286,7 @@ def calculate_one_electron_integrals(atoms, n_basis, basis_functions, centre_of_
 
             T[i, j] = T[j, i] = ints.T(basis_functions[i], basis_functions[j])
 
+            # This only takes the z-components of the dipole (the others are always zero for diatomics)
             M[2, i, j] = M[2, j, i] = ints.Mu(basis_functions[i], basis_functions[j], np.array([0, 0, centre_of_mass]), "z")
 
             for atom in atoms:
@@ -469,8 +716,27 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     log("  Number of occupied orbitals: " + str(n_occ_print), calculation, 1, silent=silent)
     log("  Number of virtual orbitals: " + str(n_virt_print), calculation, 1, silent=silent)
     log(f"\n  Point group: {molecule.point_group}", calculation, 1, silent=silent)
-    if len(atomic_symbols) == 2: log(f"  Bond length: {bohr_to_angstrom(bond_length):.4f} ", calculation, 1, silent=silent)
+    if len(atomic_symbols) == 2: log(f"  Bond length: {bohr_to_angstrom(bond_length):.5f} ", calculation, 1, silent=silent)
+
+    for atom in atoms:
+
+        if len(atoms) == 2 and atoms[0].basis_charge == atoms[1].basis_charge and atom == atoms[1]: break
+
+        log(f"\n  Basis set for {atom.symbol_formatted} :\n", calculation, 3, silent=silent)
+
+        values = molecule.basis_data[atom.basis_charge]
+
+        for orbital, params in values:
+
+            log(f"   {orbital}", calculation, 3, silent=silent)
+
+            for exponent, coefficient in params:
+
+                log(f"      {exponent:15.7f}     {coefficient:10.7f}", calculation, 3, silent=silent)
+
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent=silent)
+
+
 
 
     # Nuclear repulsion and dispersion energy are only calculated if there are two real atoms present
@@ -544,12 +810,18 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         log(" Calculating two-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-        ERI_AO = calculate_two_electron_integrals(n_basis, basis_functions)
+        try:
+
+            ERI_AO = calculate_two_electron_integrals(n_basis, basis_functions)
+
+        except np._core._exceptions._ArrayMemoryError:
+
+            error("Not enough memory to build two-electron integrals array! Uh oh!")
 
         log("[Done]", calculation, 1, silent=silent)
 
         # Calculates Fock transformation matrix from overlap matrix
-        log("\n Constructing Fock transformation matrix...     ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+        log("\n Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
         X, smallest_S_eigenvalue = calculate_Fock_transformation_matrix(S)
 
@@ -566,15 +838,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         log(f" Using \"{calculation.SCF_conv["name"]}\" SCF convergence criteria.", calculation, 1, silent=silent)
 
         # Prints the chosen SCF convergence acceleration options
-        if calculation.DIIS and not calculation.damping: log(f" Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration.", calculation, 1, silent=silent)
-        elif calculation.DIIS and calculation.damping: log(f" Using initial dynamic damping and DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration.", calculation, 1, silent=silent)
-        elif calculation.damping and not calculation.slow_conv and not calculation.very_slow_conv: log(" Using permanent dynamic damping for convergence acceleration.", calculation, 1, silent=silent)  
-        if calculation.slow_conv: log(" Using strong static damping for convergence acceleration.", calculation, 1, silent=silent)  
-        elif calculation.very_slow_conv: log(" Using very strong static damping for convergence acceleration.", calculation, 1, silent=silent)  
-        if calculation.level_shift: log(f" Using level shift for convergence acceleration with parameter {calculation.level_shift_parameter:.2f}.", calculation, 1, silent=silent)
-        if not calculation.DIIS and not calculation.damping and not calculation.level_shift: log(" No convergence acceleration used.", calculation, 1, silent=silent)
-
-        log("", calculation, 1, silent=silent)
+        log_convergence_acceleration(calculation, silent=silent)
 
         # Starts SCF cycle for two-electron energy
         SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent)
@@ -621,7 +885,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
             
             if n_virt <= 0 and reference == "RHF" or n_virt <= 1 and reference == "UHF": error("Correlated calculation requested on system with insufficient virtual orbitals!")
 
-            E_MP2, E_MP3, P, P_alpha, P_beta = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
+            E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
             postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "MP2", silent=silent)
 
         # If a coupled-cluster calculation is requested, calculates the energy
@@ -688,6 +952,31 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         log(" Final single point energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
 
+    elif method in ["MP4", "MP4[SDQ]", "MP4[DQ]", "MP4[SDTQ]"]:
+        
+        final_energy += E_MP2 + E_MP3 + E_MP4
+
+        if method == "MP4" or method == "MP4[SDTQ]":
+
+            log(f" Correlation energy from MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP3: " + f"{E_MP3:.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP4: " + f"{E_MP4:.10f}\n", calculation, 1, silent=silent)
+
+        elif method == "MP4[SDQ]":
+
+            log(f" Correlation energy from MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP3: " + f"{E_MP3:.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP4(SDQ): " + f"{E_MP4:.10f}\n", calculation, 1, silent=silent)
+
+        elif method == "MP4[DQ]":
+
+            log(f" Correlation energy from MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP3: " + f"{E_MP3:.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP4(DQ): " + f"{E_MP4:.10f}\n", calculation, 1, silent=silent)
+ 
+
+        log(" Final single point energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
+
 
     elif "CC" in method or "CEPA" in method:
 
@@ -741,7 +1030,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
 
-def scan_coordinate(calculation, atoms, starting_coordinates):
+def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
 
     """
 
@@ -749,7 +1038,7 @@ def scan_coordinate(calculation, atoms, starting_coordinates):
 
     Args:
         calculation (Calculation): Calculation object
-        atoms (list): List of atomic symbols
+        atomic_symbols (list): List of atomic symbols
         starting_coordinates (array): Atomic coordinates to being coordinate scan calculation in 3D
 
     Returns:
@@ -780,12 +1069,19 @@ def scan_coordinate(calculation, atoms, starting_coordinates):
         
         bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
-        log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-        log(f"Starting scan step {step} of {number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.4f} angstroms...", calculation, 1)
-        log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+        log_big_spacer(calculation, start="\n",space="")
+        log(f"Starting scan step {step} of {number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1)
+        log_big_spacer(calculation,space="")
         
         #Calculates the energy at the coordinates (in bohr) specified
-        SCF_output, _, energy, _ = calculate_energy(calculation, atoms, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True)
+        if calculation.extrapolate:
+
+            SCF_output, _, energy, _ = extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True)
+
+        else:
+            
+            SCF_output, _, energy, _  = calculate_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True)
+
 
         #If MOREAD keyword is used, then the energy and densities are used for the next calculation
         if calculation.MO_read: 
@@ -802,21 +1098,23 @@ def scan_coordinate(calculation, atoms, starting_coordinates):
         # Builds new coordinates by adding step size on
         coordinates = np.array([coordinates[0], [0, 0, bond_length + step_size]])
         
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)    
+    log_big_spacer(calculation, start="\n",space="")    
     
     log("\nCoordinate scan calculation finished!\n\n Printing energy as a function of bond length...\n", calculation, 1)
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-    log("            Coordinate Scan", calculation, 1, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-    log("    Bond Length           Energy", calculation, 1)
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+    log_spacer(calculation)
+    log("                    Coordinate Scan", calculation, 1, colour="white")
+    log_spacer(calculation)
+    log("  Step          Bond Length               Energy", calculation, 1)
+    log_spacer(calculation)
 
     # Prints a table of bond lengths and corresponding energies
-    for energy, bond_length in zip(energies, bond_lengths):
+    for i, (energy, bond_length) in enumerate(zip(energies, bond_lengths)):
         
-        log(f"      {bohr_to_angstrom(bond_length):.4f}          {energy:13.10f}", calculation, 1)
+        step = i + 1
 
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+        log(f" {step:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1)
+
+    log_spacer(calculation)
     
     # If SCANPLOT keyword is used, plots and shows a matplotlib graph of the data
     if calculation.scan_plot: 

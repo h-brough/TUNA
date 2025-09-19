@@ -34,16 +34,29 @@ def calculate_gradient(coordinates, calculation, atoms, silent=False):
 
     log(" Calculating energy on displaced geometry 1 of 2...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
-    _, _, energy_forward, _ = energ.calculate_energy(calculation, atoms, forward_coords, silent=True)
-    
+    if calculation.extrapolate:
+
+        _, _, energy_forward, _ = energ.extrapolate_energy(calculation, atoms, forward_coords, silent=True)
+
+    else:
+        
+        _, _, energy_forward, _ = energ.calculate_energy(calculation, atoms, forward_coords, silent=True)
+
     log("[Done]", calculation, 1, silent=silent)
 
     log(" Calculating energy on displaced geometry 2 of 2...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
-    _, _, energy_backward, _ = energ.calculate_energy(calculation, atoms, backward_coords, silent=True)
-    
+    if calculation.extrapolate:
+
+        _, _, energy_backward, _ = energ.extrapolate_energy(calculation, atoms, backward_coords, silent=True)
+
+    else:
+        
+        _, _, energy_backward, _ = energ.calculate_energy(calculation, atoms, backward_coords, silent=True)
+
     log("[Done]", calculation, 1, silent=silent)
-    
+
+
     gradient = (energy_forward - energy_backward) / (2 * prod)
 
     return gradient
@@ -109,31 +122,61 @@ def calculate_Hessian(coordinates, calculation, atoms, silent=False):
 
     log("\n Calculating energy on displaced geometry 1 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    _, _,  energy_far_forward, _ = energ.calculate_energy(calculation, atoms, far_forward_coords, silent=True)
+    if calculation.extrapolate:
+
+        _, _, energy_far_forward, _ = energ.extrapolate_energy(calculation, atoms, far_forward_coords, silent=True)
+
+    else:
+        
+        _, _, energy_far_forward, _ = energ.calculate_energy(calculation, atoms, far_forward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)   
 
     log(" Calculating energy on displaced geometry 2 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    SCF_output_forward, _, energy_forward, P_forward = energ.calculate_energy(calculation, atoms, forward_coords, silent=True)
+    if calculation.extrapolate:
+
+        SCF_output_forward, _, energy_forward, P_forward = energ.extrapolate_energy(calculation, atoms, forward_coords, silent=True)
+
+    else:
+        
+        SCF_output_forward, _, energy_forward, P_forward = energ.calculate_energy(calculation, atoms, forward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)   
 
     log(" Calculating energy on displaced geometry 3 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    _, _, energy, _ = energ.calculate_energy(calculation, atoms, coordinates, silent=True)
+    if calculation.extrapolate:
+
+        _, _, energy, _ = energ.extrapolate_energy(calculation, atoms, coordinates, silent=True)
+
+    else:
+        
+        _, _, energy, _ = energ.calculate_energy(calculation, atoms, coordinates, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)   
 
     log(" Calculating energy on displaced geometry 4 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    SCF_output_backward, _, energy_backward, P_backward = energ.calculate_energy(calculation, atoms, backward_coords, silent=True)
+    if calculation.extrapolate:
+
+        SCF_output_backward, _, energy_backward, P_backward = energ.extrapolate_energy(calculation, atoms, backward_coords, silent=True)
+
+    else:
+        
+        SCF_output_backward, _, energy_backward, P_backward = energ.calculate_energy(calculation, atoms, backward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)   
 
     log(" Calculating energy on displaced geometry 5 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    _, _,  energy_far_backward, _  = energ.calculate_energy(calculation, atoms, far_backward_coords, silent=True)
+    if calculation.extrapolate:
+
+        _, _, energy_far_backward, _ = energ.extrapolate_energy(calculation, atoms, far_backward_coords, silent=True)
+
+    else:
+        
+        _, _, energy_far_backward, _ = energ.calculate_energy(calculation, atoms, far_backward_coords, silent=True)
 
     log("[Done]\n", calculation, 1, silent=silent)   
 
@@ -238,26 +281,33 @@ def optimise_geometry(calculation, atoms, coordinates):
     if calc_hess: log(f"Using exact Hessian in convex region, Hessian of {default_Hessian:.3f} outside.\n", calculation, 1)
     else: log(f"Using approximate Hessian in convex region, Hessian of {default_Hessian:.3f} outside.\n", calculation, 1)
 
+    log(f"Convergence criteria for gradient is {geom_conv_criteria.get("gradient"):.8f}, step convergence is {geom_conv_criteria.get("step"):.8f} angstroms.", calculation, 1)
+    log(f"Geometry iterations will not exceed {max_geom_iter}, maximum step is {bohr_to_angstrom(maximum_step)} angstroms.", calculation, 1)
 
-    log(f"Gradient convergence: {geom_conv_criteria.get("gradient"):.7f}", calculation, 1)
-    log(f"Step convergence: {geom_conv_criteria.get("step"):.7f}", calculation, 1)
-    log(f"Maximum iterations: {max_geom_iter}", calculation, 1)
-    log(f"Maximum step: {bohr_to_angstrom(maximum_step):.5f}", calculation, 1)
 
-    P_guess = None; 
-    E_guess = None; 
-    P_guess_alpha = None; 
+    P_guess = None
+    E_guess = None
+    P_guess_alpha = None
     P_guess_beta = None
+
+    bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
     for iteration in range(1, max_geom_iter + 1):
 
-        log(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-        log(f"Beginning energy and gradient calculation on geometry iteration number {iteration}...", calculation, 1)
-        log(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+        log_big_spacer(calculation, start="\n",space="")
+        log(f"Beginning energy and gradient iteration {iteration} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1)
+        log_big_spacer(calculation, space="")
 
-        if calculation.additional_print: SCF_output, molecule, energy, P = energ.calculate_energy(calculation, atoms, coordinates, P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=False)
-        else: SCF_output, molecule, energy, P = energ.calculate_energy(calculation, atoms, coordinates, P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=True)
+        terse = not calculation.additional_print
+
+        if calculation.extrapolate:
+
+            SCF_output, molecule, energy, P = energ.extrapolate_energy(calculation, atoms, coordinates, P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse)
+
+        else:
         
+            SCF_output, molecule, energy, P = energ.calculate_energy(calculation, atoms, coordinates, P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse)
+
 
         if calculation.MO_read:
 
@@ -265,11 +315,11 @@ def optimise_geometry(calculation, atoms, coordinates):
             P_guess_alpha = SCF_output.P_alpha
             P_guess_beta = SCF_output.P_beta
 
-            E_guess = energy
+            E_guess = SCF_output.energy
 
         # Calculates gradient at each point
         log("\n Beginning numerical gradient calculation...  \n", calculation, 1)
-        gradient = calculate_gradient(coordinates, calculation, atoms)
+        gradient = calculate_gradient(coordinates, calculation, atoms, silent=False)
 
         bond_length = molecule.bond_length
         Hessian = default_Hessian
@@ -281,7 +331,7 @@ def optimise_geometry(calculation, atoms, coordinates):
 
                 log("\n Beginning calculation of exact Hessian...    ", calculation, 1); sys.stdout.flush()
 
-                hess, _, _, _, _ = calculate_Hessian(coordinates, calculation, atoms)
+                hess, _, _, _, _ = calculate_Hessian(coordinates, calculation, atoms, silent=False)
 
             else: 
 
@@ -314,12 +364,12 @@ def optimise_geometry(calculation, atoms, coordinates):
         converged_step = True if np.abs(step) < geom_conv_criteria.get("step") else False
 
         
-        log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-        log("   Factor       Value      Conv. Criteria    Converged?", calculation, 1)
-        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-        log(f"  Gradient    {gradient:.8f}     {geom_conv_criteria.get("gradient"):.8f}        {bool_to_word(converged_grad)} ", calculation, 1)
-        log(f"    Step      {step:.8f}     {geom_conv_criteria.get("step"):.8f}        {bool_to_word(converged_step)} ", calculation, 1)
-        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+        log_spacer(calculation, start="\n")
+        log("   Factor        Value       Criteria    Converged?", calculation, 1)
+        log_spacer(calculation)
+        log(f"  Gradient   {gradient:11.8f}   {geom_conv_criteria.get("gradient"):11.8f}      {bool_to_word(converged_grad)} ", calculation, 1)
+        log(f"    Step     {step:11.8f}   {geom_conv_criteria.get("step"):11.8f}      {bool_to_word(converged_step)} ", calculation, 1)
+        log_spacer(calculation)
 
         # Prints trajectory to file if TRAJ keyword has been used
         if calculation.trajectory: print_trajectory(molecule, energy, coordinates, trajectory_path)
@@ -327,13 +377,13 @@ def optimise_geometry(calculation, atoms, coordinates):
         # If optimisation is converged, begin post SCF output and print to console, then finish calculation
         if converged_grad and converged_step: 
 
-            log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)           
-            log(colored(f" Optimisation converged in {iteration} iterations!","white"), calculation, 1)
-            log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+            log_spacer(calculation, start="\n",space="")
+            log(colored(f"      Optimisation converged in {iteration} iterations!","white"), calculation, 1)
+            log_spacer(calculation,space="")
 
             postscf.post_SCF_output(molecule, calculation, SCF_output.epsilons, SCF_output.molecular_orbitals, P, SCF_output.S, molecule.partition_ranges, SCF_output.D, SCF_output.P_alpha, SCF_output.P_beta, SCF_output.epsilons_alpha, SCF_output.epsilons_beta, SCF_output.molecular_orbitals_alpha, SCF_output.molecular_orbitals_beta)
           
-            log(f"\n Optimisation converged in {iteration} iterations to bond length of {bohr_to_angstrom(bond_length):.6f} angstroms!", calculation, 1)
+            log(f"\n Optimisation converged in {iteration} iterations to bond length of {bohr_to_angstrom(bond_length):.5f} angstroms!", calculation, 1)
             log(f"\n Final single point energy: {energy:.10f}", calculation, 1)
 
             return molecule, energy
@@ -394,8 +444,14 @@ def calculate_frequency(calculation, atomic_symbols=None, coordinates=None, mole
     # If "FREQ" keyword has been used, calculates the energy using the supplied atoms and coordinates, otherwise uses the supplied molecule and energy
     if calculation.calculation_type == "FREQ":
           
-        _, molecule, energy, _ = energ.calculate_energy(calculation, atomic_symbols, coordinates)
-    
+        if calculation.extrapolate:
+
+            _, molecule, energy, _ = energ.extrapolate_energy(calculation, atomic_symbols, coordinates)
+
+        else:
+        
+            _, molecule, energy, _ = energ.calculate_energy(calculation, atomic_symbols, coordinates)
+
     # Unpacks useful molecular quantities
     point_group = molecule.point_group
     bond_length = molecule.bond_length
@@ -409,11 +465,11 @@ def calculate_frequency(calculation, atomic_symbols=None, coordinates=None, mole
 
 
     log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-    log("Beginning TUNA harmonic frequency calculation...", calculation, 1, colour="white")
+    log(" Beginning harmonic frequency calculation...", calculation, 1, colour="white")
     log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
 
     
-    log(f"\n Hessian will be calculated at a bond length of {bohr_to_angstrom(bond_length):.6f} angstroms.", calculation, 1)
+    log(f"\n Hessian will be calculated at a bond length of {bohr_to_angstrom(bond_length):.5f} angstroms.", calculation, 1)
     
     # Spring stiffness is calculated as the Hessian, through numerical second derivatives
     k, SCF_output_forward, P_forward, SCF_output_backward, P_backward = calculate_Hessian(coordinates, calculation, atomic_symbols)
@@ -468,7 +524,7 @@ def calculate_frequency(calculation, atomic_symbols=None, coordinates=None, mole
 
 
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-    log("           Harmonic Frequency                         Transition Intensity", calculation, 1)
+    log("           Harmonic Frequency                         Transition Intensity", calculation, 1, colour="white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
     log(f"  Force constant: {k:.5f}                    Dipole moment derivative: {dipole_derivative:.5f}", calculation, 1)
     log(f"  Reduced mass: {reduced_mass:7.2f}                      Squared derivative: {dipole_derivative_squared:.5f}", calculation, 1)
@@ -492,12 +548,14 @@ def calculate_frequency(calculation, atomic_symbols=None, coordinates=None, mole
     log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
     log("                                   Thermochemistry", calculation, 2, colour="white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
-    log(f"  Electronic energy:     {energy:13.10f}       Electronic entropy:     {temperature*electronic_entropy:13.10f}", calculation, 2)
-    log(f"\n  Translational energy:  {translational_internal_energy:13.10f}       Translational entropy:  {temperature*translational_entropy:13.10f}", calculation, 2)
-    log(f"  Rotational energy:     {rotational_internal_energy:13.10f}       Rotational entropy:     {temperature*rotational_entropy:13.10f}", calculation, 2)
-    log(f"  Vibrational energy:    {vibrational_internal_energy:13.10f}       Vibrational entropy:    {temperature*vibrational_entropy:13.10f}  ", calculation, 2)
-    log(f"  Zero-point energy:     {ZPE:13.10f}", calculation, 2)
-    log(f"\n  Internal energy:       {U:13.10f}", calculation, 2)
-    log(f"  Enthalpy:              {H:13.10f}       Entropy:                {temperature*S:13.10f}", calculation, 2)
-    log(f"\n  Gibbs free energy:     {G:13.10f}       Non-electronic energy:  {energy - G:13.10f}", calculation, 2)
+    log(f"  Electronic energy:   {energy:16.10f}     Electronic entropy:   {temperature*electronic_entropy:16.10f}", calculation, 2)
+    log(f"\n  Translational energy:{translational_internal_energy:16.10f}     Translational entropy:{temperature*translational_entropy:16.10f}", calculation, 2)
+    log(f"  Rotational energy:   {rotational_internal_energy:16.10f}     Rotational entropy:   {temperature*rotational_entropy:16.10f}", calculation, 2)
+    log(f"  Vibrational energy:  {vibrational_internal_energy:16.10f}     Vibrational entropy:  {temperature*vibrational_entropy:16.10f}  ", calculation, 2)
+    log(f"  Zero-point energy:   {ZPE:16.10f}", calculation, 2)
+    log(f"\n  Internal energy:     {U:16.10f}", calculation, 2)
+    log(f"  Enthalpy:            {H:16.10f}     Entropy:              {temperature*S:16.10f}", calculation, 2)
+    log(f"\n  Gibbs free energy:   {G:16.10f}     Non-electronic energy:{energy - G:16.10f}", calculation, 2)
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+
+    

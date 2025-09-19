@@ -113,7 +113,13 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
     # Single point energy
     if calculation_type == "SPE": 
         
-        energ.calculate_energy(calculation, atomic_symbols, coordinates)
+        if calculation.extrapolate:
+
+            energ.extrapolate_energy(calculation, atomic_symbols, coordinates)
+
+        else:
+            
+            energ.calculate_energy(calculation, atomic_symbols, coordinates)
 
 
     # Coordinate scan
@@ -143,7 +149,7 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
 
         if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            optfreq.calculate_frequency(calculation, atoms=atomic_symbols, coordinates=coordinates)
+            optfreq.calculate_frequency(calculation, atomic_symbols=atomic_symbols, coordinates=coordinates)
         
         else: error("Harmonic frequency requested for single atom!")
         
@@ -194,6 +200,7 @@ def main():
     print(f"Setting up calculation using {contraction} basis set.")
 
     print(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.")
+
 
     # Sets off the desired calculation with the requested parameters
     run_calculation(calculation_type, calculation, atoms, coordinates)

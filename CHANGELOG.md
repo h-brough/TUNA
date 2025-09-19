@@ -1,5 +1,48 @@
 # Changelog
 
+## TUNA 0.8.0 — 20/09/2025
+
+### Added
+
+- Restricted MP4, MP4(SDQ) and MP4(DQ) energy
+- Spatial orbital (SCS-)MP2 energy and density and (SCS-)MP3 energy, speeds up calculations on RHF references
+- Core electrons can now be frozen for correlated calculations using the `FREEZECORE` keyword, with optional number of orbitals to freeze
+- Amplitude convergence for coupled cluster calculations via `AMPCONV` keyword
+- Improved (non-arbitrary) dynamic damping scheme, now uses Zerner-Hehenberger scheme based on Mulliken gross populations
+- New `DAMP` keyword, followed by a number between 0 and 1 to define a static damping parameter
+- Custom basis sets using `CUSTOM` basis with `BASIS [filename.tuna]` keyword
+- Extrapolation to complete basis set limit compatible with all calculations via `EXTRAPOLATE` keyword
+- New basis sets: STO-2G, STO-4G, STO-5G, 6-31+G*, 6-31++G*, 6-31+G**, 6-31++G**, 6-311+G*, 6-311++G*, 6-311+G**, 6-311++G**
+- New basis sets: def2-SVP, def2-SVPD, def2-TZVP, def2-TZVPD, def2-TZVPP, def2-TZVPPD, def2-QZVP, def2-QZVPD, def2-QZVPP, def2-QZVPPD
+- New basis sets: 6-31G(d,p), 6-31G(2df,p), 6-31G(3df,3pd), 6-311G(d,p), 6-311G(2df,2pd), 6-311+G(2d,p), 6-311++G(2d,2p), 6-311++G(3df,3pd)
+- New basis sets: pc-0, pc-1, pc-2, pc-3, pc-4, aug-pc-0, aug-pc-1, aug-pc-2, aug-pc-3, aug-pc-4
+- New basis sets: pcseg-0, pcseg-1, pcseg-2, pcseg-3, pcseg-4, aug-pcseg-0, aug-pcseg-1, aug-pcseg-2, aug-pcseg-3, aug-pcseg-4
+- New basis sets: aug-cc-pVDZ, aug-cc-pVTZ, aug-cc-pVQZ, aug-cc-pV5Z, aug-cc-pV6Z, d-aug-cc-pVDZ, d-aug-cc-pVTZ, d-aug-cc-pVQZ, d-aug-cc-pV5Z, d-aug-cc-pV6Z
+- New basis sets: cc-pCVDZ, cc-pCVTZ, cc-pCVQZ, cc-pCV5Z, aug-cc-pCVDZ, aug-cc-pCVTZ, aug-cc-pCVQZ, aug-cc-pCV5Z 
+- New basis sets: cc-pwCVDZ, cc-pwCVTZ, cc-pwCVQZ, cc-pwCV5Z, aug-cc-pwCVDZ, aug-cc-pwCVTZ, aug-cc-pwCVQZ, aug-cc-pwCV5Z 
+- New basis sets: ano-pVDZ, ano-pVTZ, ano-pVQZ, ano-pV5Z, aug-ano-pVDZ, aug-ano-pVTZ, aug-ano-pVQZ, aug-ano-pV5Z
+- New basis sets: 6-31G(d), 6-31G(d,p), 6-31+G(d), 6-31+G(d,p), 6-31++G(d), 6-31++G(d,p), 6-311G(d), 6-311G(d,p), 6-311+G(d), 6-311+G(d,p), 6-311++G(d), 6-311++G(d,p)
+
+### Changed
+
+- Dunning basis sets have been rotated and had redundant functions removed, increasing computational efficiency
+- Decimals points now align nicely for all calculations with all elements
+- Removed repeated logging of transforming integrals in MP2
+- Nicer logging at the start of a geometry optimisation
+- Basis information is now printed with the additional print keyword, `P`
+- Design of logging is now more consistent
+- Increased default orbital-optimised MP2 iterations to 30 (originally 20)
+
+### Fixed
+
+- Distributions for MacOS and Linux now work correctly
+- Python 3.13 is now supported in addition to Python 3.12
+- Frequency calculations on a fixed geometry were not working at all
+- Ghost atoms were not working correctly under some circumstances
+- Convergence acceleration logging was sometimes contradictory
+
+<br>
+
 ## TUNA 0.7.0 — 27/08/2025
 
 ### Added

@@ -26,7 +26,7 @@ def format_output_line(E, delta_E, max_DP, RMS_DP, damping_factor, step, orbital
     
     damping_factor = f"{damping_factor:.3f}" if damping_factor != 0 else " ---"
 
-    log(f" {step:3.0f}     {E:13.10f}     {delta_E:13.10f}     {RMS_DP:13.10f}     {max_DP:13.10f}     {orbital_gradient:13.10f}    {damping_factor}", calculation, 1, silent=silent)   
+    log(f"  {step:3.0f}  {E:16.10f}  {delta_E:16.10f} {RMS_DP:16.10f} {max_DP:16.10f} {orbital_gradient:16.10f}     {damping_factor}", calculation, 1, silent=silent)   
 
 
 
@@ -285,39 +285,115 @@ def construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta):
     
 
 
-def apply_damping(P, P_old, orbital_gradient, calculation):
+
+
+
+
+
+def apply_damping(P_before_damping, P_old_damp, orbital_gradient, calculation, P_old_before_damping, P_very_old_damped, S, partition_ranges, atoms):
 
     """
-
-    Applys damping to density matrix based on calculation parameters.
+    
+    Applies damping to a density matrix, using the old density matrices.
 
     Args:
-        P (array): Density matrix for in AO basis
-        P_old (array): Density matrix for in AO basis
-        orbital_gradient (float): Orbital gradient, measure of SCF error
+        P_before_damping (array): Density matrix from current iteration before damping
+        P_old_damp (array): Density matrix from previous iteration after damping
+        orbital_gradient (float): RMS([F,PS])
         calculation (Calculation): Calculation object
-
+        P_old_before_damping (array): Density matrix from previous iteration before damping
+        P_very_old_damped (array): Density matrix from two iterations ago after damping
+        S (array): Overlap matrix in AO basis
+        partition_ranges (list): List of number of atomic orbitals on each atom
+        atoms (list): List of atoms
+    
     Returns:
-        P_damped (array): Damped density matrix
-        damping_factor (float): Proportion of old density matrix in new one
-
+        P_damped (array): Damped density matrix for current iteration
+        damping_factor (float): Damping factor, between zero and one
+    
     """
-    
+
     damping_factor = 0
+
+
+    def calculate_gross_Mulliken_atomic_population(P):
+
+        """
+        
+        Calculates the Mulliken gross atomic populations for a given density.
+        
+        """
+
+        populations_Mulliken = [0, 0]
+        PS = P @ S
+
+        for atom in range(len(atoms)):
+
+                # Sets up the lists for atomic_ranges
+                if atom == 0: atomic_ranges = list(range(partition_ranges[0]))
+                elif atom == 1: atomic_ranges = list(range(partition_ranges[0], partition_ranges[0] + partition_ranges[1]))
+
+                for i in atomic_ranges:
+                    
+                    populations_Mulliken[atom] += PS[i,i]
+
+        return np.array(populations_Mulliken)
     
+
+
     if calculation.damping:
 
-        if orbital_gradient > 0.01: damping_factor = 0.7 * np.tanh(orbital_gradient)  
+        if calculation.damping_factor != None: 
 
-        if calculation.slow_conv: damping_factor = 0.5
-        elif calculation.very_slow_conv: damping_factor = 0.85       
+            try:
+                
+                # Tries to convert damping factor to a float
+                damping_factor = float(calculation.damping_factor)
+
+            except ValueError:
+
+                pass
+
+        else:
+
+            if orbital_gradient > 0.01: 
+                
+                # Equations taken from Zerner and Hehenberger paper
+                A_n_out = calculate_gross_Mulliken_atomic_population(P_before_damping)
+                A_n1_in = calculate_gross_Mulliken_atomic_population(P_old_damp)
+                A_n1_out = calculate_gross_Mulliken_atomic_population(P_old_before_damping)
+                A_n2_in = calculate_gross_Mulliken_atomic_population(P_very_old_damped)
+            
+                denominator = A_n_out - A_n1_out - A_n1_in + A_n2_in
+
+
+                alpha = (A_n_out - A_n1_out) / denominator if denominator.all() != 0 else [0, 0]
+
+                for a in range(len(alpha)):
+
+                    # Makes sure the damping factor is always between zero and one
+                    if alpha[a] < 0 or alpha[a] > 1: alpha[a] = 0
+
+                if len(partition_ranges) == 2: damping_factor = (alpha[0] * partition_ranges[0] + alpha[1] * partition_ranges[1]) / (partition_ranges[0] + partition_ranges[1])
+                else: damping_factor = alpha[0] * partition_ranges[0]
+
+
+        if damping_factor >= 1 or damping_factor < 0:
+
+            error("Damping factor must be between zero and one!")
+
 
     # Mixes old density with new, in proportion of damping factor
-    P_damped = damping_factor * P_old + (1 - damping_factor) * P
+    P_damped = damping_factor * P_old_damp + (1 - damping_factor) * P_before_damping
     
 
     return P_damped, damping_factor
         
+
+
+
+
+
 
 
 
@@ -359,6 +435,7 @@ def calculate_DIIS_error(F, P, S, X):
     Returns:
         orthogonalised_DIIS_error (array): DIIS error matrix for this F and P
         orbital_gradient (float): Root-mean-square of DIIS error
+
     """
 
     # Orthogonalises DIIS error to remove issues from linear dependencies
@@ -389,10 +466,10 @@ def update_DIIS(DIIS_error_vector, Fock_vector, n_alpha, n_beta, X, n_electrons_
         silent (bool, optional): Not silent by default
 
     Returns:
-        - P_alpha (array): Updated alpha density matrix
-        - P_beta (array): Updated beta density matrix
-        - Fock_vector (array): Updated Fock vector
-        - DIIS_error_vector (array): Updated DIIS error vectors
+        P_alpha (array): Updated alpha density matrix
+        P_beta (array): Updated beta density matrix
+        Fock_vector (array): Updated Fock vector
+        DIIS_error_vector (array): Updated DIIS error vectors
     """
 
     n_DIIS = len(DIIS_error_vector)
@@ -472,7 +549,7 @@ def check_convergence(SCF_conv_params, step, delta_E, max_DP, RMS_DP, orbital_gr
 
     if abs(delta_E) < SCF_conv_params["delta_E"] and abs(max_DP) < SCF_conv_params["max_DP"] and abs(RMS_DP) < SCF_conv_params["RMS_DP"] and abs(orbital_gradient) < SCF_conv_params["orbital_gradient"]: 
 
-        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+        log_big_spacer(calculation, silent=silent)
         log(f"\n Self-consistent field converged in {step} cycles!\n", calculation, 1, silent=silent)
 
         converged = True
@@ -510,12 +587,11 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
         - Throws an error if the SCF cycle does not converge in the maximum number of iterations
 
     """
-
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
-    log("                                            SCF Cycle Iterations", calculation, 1, silent=silent, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
-    log("  Step         E                 DE              RMS(DP)          MAX(DP)            [F,PS]      Damping", calculation, 1, silent=silent)
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_big_spacer(calculation, silent=silent)
+    log("                                    Self-consistent Field Cycle Iterations", calculation, 1, silent=silent, colour="white")
+    log_big_spacer(calculation, silent=silent)
+    log("  Step          E                DE              RMS(DP)          MAX(DP)          [F,PS]       Damping", calculation, 1, silent=silent)
+    log_big_spacer(calculation, silent=silent)
 
 
     # Build core Hamiltonian and initial guess Fock matrix
@@ -534,6 +610,13 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
     n_alpha = molecule.n_alpha
     n_beta = molecule.n_beta
 
+    P_old = np.zeros_like(P)
+    P_old_alpha = np.zeros_like(P)
+    P_old_beta = np.zeros_like(P)
+
+    P_before_damping = np.zeros_like(P)
+    P_before_damping_alpha = np.zeros_like(P)
+    P_before_damping_beta = np.zeros_like(P)
 
     orbital_gradient = 1
 
@@ -546,6 +629,8 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
         for step in range(1, maximum_iterations):
             
             E_old = E
+            P_very_old = P_old
+            P_old_before_damping = P_before_damping
             P_old = P 
       
             # Constructs Fock matrix
@@ -601,7 +686,9 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
                     P = (P_alpha + P_beta) / 2
                 
             # Damping factor is applied to the density matrix
-            P, damping_factor = apply_damping(P, P_old, orbital_gradient, calculation)
+            P_before_damping = P
+
+            P, damping_factor = apply_damping(P, P_old, orbital_gradient, calculation, P_old_before_damping, P_very_old, S, molecule.partition_ranges, molecule.atoms)
 
             # Energy is sum of electronic and nuclear energies
             E_total = E + V_NN  
@@ -614,9 +701,9 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
                 kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy = calculate_energy_components(None, None, T, V_NE, None, None, None, None, P, J, K, reference)
 
-                scf_output = Output(E_total, S, P, P / 2, P / 2, molecular_orbitals, molecular_orbitals, molecular_orbitals, epsilons, epsilons, epsilons, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy)
+                SCF_output = Output(E_total, S, P, P / 2, P / 2, molecular_orbitals, molecular_orbitals, molecular_orbitals, epsilons, epsilons, epsilons, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy)
                
-                return scf_output
+                return SCF_output
 
 
     elif reference == "UHF":
@@ -630,10 +717,17 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
         for step in range(1, maximum_iterations):
 
             E_old = E
+
+            P_very_old_alpha = P_old_alpha
+            P_very_old_beta = P_old_beta
+            P_old_before_damping_alpha = P_before_damping_alpha
+            P_old_before_damping_beta = P_before_damping_beta
+
             P_old = P
 
             P_old_alpha = P_alpha
             P_old_beta = P_beta
+            
 
             # Constructs Fock matrices
             F_alpha, F_beta, J_alpha, J_beta, K_alpha, K_beta = construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta)
@@ -692,9 +786,12 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
 
             # Damping factor is applied to the density matrix
-            P_alpha, damping_factor_alpha = apply_damping(P_alpha, P_old_alpha, orbital_gradient_alpha, calculation)
-            P_beta, damping_factor_beta = apply_damping(P_beta, P_old_beta, orbital_gradient_beta, calculation)
-            
+            P_before_damping_alpha = P_alpha
+            P_before_damping_beta = P_beta
+
+            P_alpha, damping_factor_alpha = apply_damping(P_alpha, P_old_alpha, orbital_gradient_alpha, calculation, P_old_before_damping_alpha, P_very_old_alpha, S, molecule.partition_ranges, molecule.atoms)
+            P_beta, damping_factor_beta = apply_damping(P_beta, P_old_beta, orbital_gradient_beta, calculation, P_old_before_damping_beta, P_very_old_beta, S, molecule.partition_ranges, molecule.atoms)
+
             P = P_alpha + P_beta
 
             damping_factor = max(damping_factor_alpha, damping_factor_beta)
@@ -718,9 +815,9 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
                 molecular_orbitals = molecular_orbitals_combined[:, np.argsort(epsilons_combined)]
 
                 # Builds SCF Output object with useful quantities
-                scf_output = Output(E_total, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy )
+                SCF_output = Output(E_total, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy )
 
-                return scf_output
+                return SCF_output
             
 
     error(f"Self-consistent field not converged in {maximum_iterations} iterations! Increase maximum iterations or give up.")

@@ -411,8 +411,6 @@ cdef double electron_repulsion(double a, long *lmn1, double *A, double b, long *
                     for nu in range(m3 + m4 + 1):
                         for phi in range(n3 + n4 + 1):
     
-                            
-
                             val += E(l1, l2, t, A[0] - B[0], a, b) * E(m1, m2, u, A[1] - B[1], a, b) * E(n1, n2, v, A[2] - B[2], a, b) * E(l3, l4, tau, C[0] - D[0], c, d) * E(m3, m4, nu, C[1] - D[1], c, d) * E(n3, n4, phi, C[2] - D[2], c, d) * pow(-1,tau + nu + phi) * R(t + tau, u + nu, v + phi, 0, alpha, Px - Qx, Py - Qy, Pz - Qz, RPQ) 
 
     val *= 2 * pow(pi, 2.5) / (p * q * sqrt(p + q))

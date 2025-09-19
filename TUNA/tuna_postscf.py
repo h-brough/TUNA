@@ -23,7 +23,6 @@ def calculate_reduced_mass(masses):
 
 
 
-
  
 
 def calculate_nuclear_dipole_moment(centre_of_mass, charges, coordinates): 
@@ -161,10 +160,9 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
     
     virial_ratio = -1 * (total_energy - kinetic_energy) / kinetic_energy
            
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)      
+    log_spacer(calculation, priority=2)
     log("                  Energy Components       ", calculation, 2, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
-            
+    log_spacer(calculation, priority=2)            
     log(f"  Kinetic energy:                   {kinetic_energy:15.10f}", calculation, 2)
 
     log(f"  Coulomb energy:                   {coulomb_energy:15.10f}", calculation, 2)
@@ -178,8 +176,7 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
     log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2)
             
     log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2)
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)  
-
+    log_spacer(calculation, priority=2)
 
 
 
@@ -229,15 +226,15 @@ def calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculatio
 
 
     
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority, silent=silent)
+    log_spacer(calculation, silent=silent, priority=priority)
     log(f"   {space1}       {title} Spin Contamination       ", calculation, priority, silent=silent, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority, silent=silent)
+    log_spacer(calculation, silent=silent, priority=priority)
 
     log(f"  Exact S^2 expectation value:            {s_squared_exact:9.6f}", calculation, priority, silent=silent)
     log(f"  {type} S^2 expectation value:  {space2}{s_squared:9.6f}", calculation, priority, silent=silent)
     log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, priority, silent=silent)
 
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, priority, silent=silent)
+    log_spacer(calculation, silent=silent, priority=priority)
 
 
 
@@ -384,9 +381,9 @@ def print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_
     """
 
 
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
+    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
     log("     Molecular Orbital Eigenvalues", calculation, 3, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
 
     def print_eigenvalue_header(calculation):
         
@@ -486,9 +483,9 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
     """
 
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
+    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
     log("     Molecular Orbital Coefficients", calculation, 3, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
     
     # Initialises various quantities
     symbol_list = []
@@ -717,7 +714,7 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
         print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, n_list, epsilons, n_doubly_occ, formatted_angular_momentum_list)
 
 
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
+    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
 
 
 
@@ -768,7 +765,7 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
     # Specifies which density matrix is used for the property calculations
     if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2"]: log("\n Using the MP2 unrelaxed density for property calculations.", calculation, 1)
     elif method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
-    elif method in ["MP3", "SCS-MP3", "UMP3", "USCS-MP3"]: warning("Using the unrelaxed MP2 density for property calculations.")
+    elif method in ["MP3", "SCS-MP3", "UMP3", "USCS-MP3", "MP4", "MP4[SDQ]"]: warning("Using the unrelaxed MP2 density for property calculations.")
     if "CC" in method or "CEPA" in method: log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
     if method in ["CCSD[T]", "UCCSD[T]"]: warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")
 
@@ -799,16 +796,16 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
         # Calculates centre of mass for dipole moment calculations
         centre_of_mass = calculate_centre_of_mass(masses, coordinates)
 
-        log(f"\n Dipole moment origin is the centre of mass, {bohr_to_angstrom(centre_of_mass):.4f} angstroms from the first atom.", calculation, 2)
+        log(f"\n Dipole moment origin is the centre of mass, {bohr_to_angstrom(centre_of_mass):.5f} angstroms from the first atom.", calculation, 2)
 
         total_dipole, D_nuclear, D_electronic = calculate_dipole_moment(centre_of_mass, charges, coordinates, P, D)
 
-        log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
-        log("                 Dipole Moment", calculation, 2, colour="white")
-        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+        log_spacer(calculation, priority=2, start="\n")
+        log("                    Dipole Moment", calculation, 2, colour="white")
+        log_spacer(calculation, priority=2)
 
-        log(f"  Nuclear: {D_nuclear:.6f}    Electronic: {D_electronic:.6f}\n", calculation, 2)
-        log(f"  Total: {total_dipole:.6f}", calculation, 2, end="")
+        log(f"  Nuclear: {D_nuclear:11.8f}      Electronic: {D_electronic:11.8f}\n", calculation, 2)
+        log(f"  Total: {total_dipole:11.8f}     ", calculation, 2, end="")
 
         # Prints direction of dipole moment, where plus indicates positive side    
         if total_dipole > 0.00001:
@@ -824,7 +821,7 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
         # If there's no dipole moment, just print out the molecular structure
         else: log(f"           {molecular_structure}", calculation, 2)
 
-        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
         
         # Builds spin density matrix
         R = P_alpha - P_beta if n_alpha + n_beta != 1 else P
@@ -841,11 +838,11 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
             atoms_formatted.append(atom)
 
 
-        log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
-        log("      Mulliken Charges                Lowdin Charges              Mayer Free, Bonded, Total Valence", calculation, 2, colour="white")
-        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+        log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+        log("      Mulliken Charges                Lowdin Charges                Mayer Free, Bonded, Total Valence", calculation, 2, colour="white")
+        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
         log(f"  {atoms_formatted[0]} {charges_Mulliken[0]:8.5f}                  {atoms_formatted[0]} {charges_Lowdin[0]:8.5f}                  {atoms_formatted[0]} {free_valences[0]:8.5f},  {bond_order_Mayer:8.5f},  {total_valences[0]:8.5f}", calculation, 2)
         log(f"  {atoms_formatted[1]} {charges_Mulliken[1]:8.5f}                  {atoms_formatted[1]} {charges_Lowdin[1]:8.5f}                  {atoms_formatted[1]} {free_valences[1]:8.5f},  {bond_order_Mayer:8.5f},  {total_valences[1]:8.5f}", calculation, 2)
         log(f"\n  Sum of charges: {total_charges_Mulliken:8.5f}       Sum of charges: {total_charges_Lowdin:8.5f}", calculation, 2) 
         log(f"  Bond order: {bond_order_Mulliken:8.5f}           Bond order: {bond_order_Lowdin:8.5f}           Bond order: {bond_order_Mayer:8.5f}", calculation, 2) 
-        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)

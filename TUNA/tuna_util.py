@@ -73,9 +73,13 @@ def process_keyword(key_strings, default_value, params=None, boolean=True, check
                                     
                             # Error if wrong keyword value
                             except ValueError:
+                                
+                                if mandatory_value:
 
-                                error(f"Parameter \"{param}\" must be of type {value_type.__name__}, got {type(next_value).__name__} instead!")
-
+                                    error(f"Parameter \"{param}\" must be of type {value_type.__name__}, got {type(next_value).__name__} instead!")
+                                
+                                else:
+                                    pass
 
                             if boolean and not plot_path:
 
@@ -95,6 +99,8 @@ def process_keyword(key_strings, default_value, params=None, boolean=True, check
                                 keyword = next_value   
 
                         else:
+                            
+                            associated_keyword = associated_keyword_default
 
                             if mandatory_value:
 
@@ -134,6 +140,7 @@ class Calculation:
         self.start_time = start_time
         self.params = params
         self.basis = basis
+        self.original_basis = basis
         self.atoms = atoms
 
         # Prevents running "params" through every function call
@@ -143,10 +150,7 @@ class Calculation:
         self.additional_print = keyword(["P"], False)
         self.terse = keyword(["T"], False)
         self.decontract = keyword(["DECONTRACT"], False)
-        self.damping = keyword(["DAMP"], True)
-        self.damping = not keyword(["NODAMP"], False)
-        self.slow_conv = keyword(["SLOWCONV"], False)
-        self.very_slow_conv = keyword(["VERYSLOWCONV"], False)
+
         self.natural_orbitals = keyword(["NATORBS"], False)
         self.no_natural_orbitals = keyword(["NONATORBS"], False)
         self.no_singles = keyword(["NOSINGLES"], False)
@@ -162,7 +166,8 @@ class Calculation:
         self.plot_dashed_lines = keyword(["DASH"], False)
         self.plot_dotted_lines = keyword(["DOT"], False)
         self.add_plot = keyword(["ADDPLOT"], False)
-
+        self.extrapolate = keyword(["EXTRAPOLATE"], False)
+        
         if keyword(["DELPLOT"], False): delete_saved_plot()
 
         # Convergence keywords with optional parameters
@@ -172,6 +177,13 @@ class Calculation:
         self.level_shift, self.level_shift_parameter = keyword(["LEVELSHIFT"], False, check_next_space=True, associated_keyword_default=0.2, value_type=float)
         if self.level_shift: self.level_shift = not keyword(["NOLEVELSHIFT"], False)
 
+        self.damping, self.damping_factor = keyword(["DAMP"], True, check_next_space=True, associated_keyword_default=None, value_type=float)
+        if self.damping: self.damping = not keyword(["NODAMP"], False)
+        if keyword(["SLOWCONV"], False): self.damping_factor = 0.5
+        if keyword(["VERYSLOWCONV"], False): self.damping_factor = 0.85
+
+        self.damping = keyword(["DAMP"], True)
+        self.damping = not keyword(["NODAMP"], False)
         # Keywords with mandatory parameters
         self.charge = keyword(["CH", "CHARGE"], 0, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.multiplicity = keyword(["ML", "MULTIPLICITY"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -204,11 +216,13 @@ class Calculation:
         self.opposite_spin_scaling = keyword(["OSS"], 6 / 5, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.MP3_scaling = keyword(["MP3S", "MP3SCALING", "MP3SCAL"], 1 / 4, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.OMP2_conv = keyword(["OMP2CONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.OMP2_max_iter = keyword(["OMP2MAXITER"], 20, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.OMP2_max_iter = keyword(["OMP2MAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.CC_conv = keyword(["CCCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.amp_conv = keyword(["AMPCONV"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.CC_max_iter = keyword(["CCMAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.cc_damp_requested, self.coupled_cluster_damping_parameter = keyword(["CCDAMP"], False, check_next_space=True, value_type=float, associated_keyword_default=0.25)
         self.coupled_cluster_damping_parameter = self.coupled_cluster_damping_parameter if self.cc_damp_requested else 0
+        self.freeze_core, self.freeze_n_orbitals = keyword(["FREEZECORE"], False, boolean=True, check_next_space=True, value_type=int, mandatory_value=False, associated_keyword_default=None)
 
         # Excited state keywords
         self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -219,6 +233,7 @@ class Calculation:
         self.trajectory, self.trajectory_path = keyword(["TRAJ"], False, boolean=True, check_next_space=True, mandatory_value=False, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
         self.save_plot, self.save_plot_filepath = keyword(["SAVEPLOT"], False, check_next_space=True, associated_keyword_default="TUNA Plot.png", value_type=str, plot_path=True)
         self.scan_plot_colour = next((code for name, code in color_map.items() if name in params), "b")
+        self.custom_basis_file = keyword(["BASIS"], None, boolean=False, check_next_space=True, mandatory_value=True, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
 
         # Convergence keywords for SCF and optimisations
         self.SCF_conv_requested = True if "LOOSE" in params or "LOOSESCF" in params or "MEDIUM" in params or "MEDIUMSCF" in params or "TIGHT" in params or "TIGHTSCF" in params or "EXTREME" in params or "EXTREMESCF" in params else False
@@ -694,20 +709,20 @@ def print_trajectory(molecule, energy, coordinates, trajectory_path):
         None : This function does not return anything
 
     """
-    atoms = molecule.atoms
+    atomic_symbols = molecule.atomic_symbols
     
     with open(trajectory_path, "a") as file:
         
-        # Prints energy and atoms
-        file.write(f"{len(atoms)}\n")
+        # Prints energy and atomic_symbols
+        file.write(f"{len(atomic_symbols)}\n")
         file.write(f"Coordinates from TUNA calculation, E = {energy:.10f}\n")
 
         coordinates_angstrom = bohr_to_angstrom(coordinates)
 
         # Prints coordinates
-        for i in range(len(atoms)):
+        for i in range(len(atomic_symbols)):
 
-            file.write(f"  {atoms[i]}      {coordinates_angstrom[i][0]:6f}      {coordinates_angstrom[i][1]:6f}      {coordinates_angstrom[i][2]:6f}\n")
+            file.write(f"  {atomic_symbols[i]}      {coordinates_angstrom[i][0]:6f}      {coordinates_angstrom[i][1]:6f}      {coordinates_angstrom[i][2]:6f}\n")
 
     file.close()
 
@@ -857,6 +872,18 @@ def log(message, calculation, priority=1, end="\n", silent=False, colour="light_
 
 
 
+def log_spacer(calculation, priority=1, start="", end="", space=" ", silent=False):
+
+    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent=silent)
+
+
+
+def log_big_spacer(calculation, priority=1, start="", end="", space=" ", silent=False):
+
+    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent=silent)
+
+
+
 
 
 
@@ -989,6 +1016,10 @@ method_types = {
     "UMP3": "unrestricted MP3 theory", 
     "SCS-MP3": "spin-component-scaled MP3 theory", 
     "USCS-MP3": "unrestricted spin-component-scaled MP3 theory", 
+    "MP4": "MP4 theory",
+    "MP4[SDTQ]": "MP4 theory",
+    "MP4[SDQ]": "MP4 theory with singles, doubles and quadruples",
+    "MP4[DQ]": "MP4 theory with doubles and quadruples",
     "OMP2": "orbital-optimised MP2 theory", 
     "UOMP2": "unrestricted orbital-optimised MP2 theory",
     "OOMP2": "orbital-optimised MP2 theory", 
@@ -1024,7 +1055,11 @@ method_types = {
 
 basis_types = {
 
+    "CUSTOM" : "custom",
+    "STO-2G" : "STO-2G",
     "STO-3G" : "STO-3G",
+    "STO-4G" : "STO-4G",
+    "STO-5G" : "STO-5G",
     "STO-6G" : "STO-6G",
     "3-21G" : "3-21G",
     "4-31G" : "4-31G",
@@ -1038,12 +1073,102 @@ basis_types = {
     "6-31G**" : "6-31G**",
     "6-311G*" : "6-311G*",
     "6-311G**" : "6-311G**",
+    "6-31+G*" : "6-31+G*",
+    "6-311+G*" : "6-311+G*",
+    "6-31+G**" : "6-31+G**",
+    "6-311+G**" : "6-311+G**",
+    "6-31++G*" : "6-31++G*",
+    "6-311++G*" : "6-311++G*",
+    "6-31++G**" : "6-31++G**",
+    "6-311++G**" : "6-311++G**",
     "CC-PVDZ" : "cc-pVDZ",
     "CC-PVTZ" : "cc-pVTZ",
     "CC-PVQZ" : "cc-pVQZ",
     "CC-PV5Z" : "cc-pV5Z",
     "CC-PV6Z" : "cc-pV6Z",
-
+    "DEF2-SVP" : "def2-SVP",
+    "DEF2-SVPD" : "def2-SVPD",
+    "DEF2-TZVP" : "def2-TZVP",
+    "DEF2-TZVPD" : "def2-TZVPD",
+    "DEF2-TZVPP" : "def2-TZVPP",
+    "DEF2-TZVPPD" : "def2-TZVPPD",
+    "DEF2-QZVP" : "def2-QZVP",
+    "DEF2-QZVPD" : "def2-QZVPD",
+    "DEF2-QZVPP" : "def2-QZVPP",
+    "DEF2-QZVPPD" : "def2-QZVPPD",
+    "6-31G[D]" : "6-31G[d,p]",
+    "6-31+G[D]" : "6-31+G[d,p]",
+    "6-31++G[D]" : "6-31++G[d,p]",
+    "6-311G[D]" : "6-311G[d,p]",
+    "6-311+G[D]" : "6-311+G[d,p]",
+    "6-311++G[D]" : "6-311++G[d,p]",
+    "6-31G[D,P]" : "6-31G[d,p]",
+    "6-31+G[D,P]" : "6-31+G[d,p]",
+    "6-31++G[D,P]" : "6-31++G[d,p]",
+    "6-311G[D,P]" : "6-311G[d,p]",
+    "6-311+G[D,P]" : "6-311+G[d,p]",
+    "6-311++G[D,P]" : "6-311++G[d,p]",
+    "6-31G[2DF,P]" : "6-31G[2df,p]",
+    "6-31G[3DF,3PD]" : "6-31G[3df,3pd]",
+    "6-311G[D,P]" : "6-311G[d,p]",
+    "6-311G[2DF,2PD]" : "6-311G[2df,2pd]",
+    "6-311+G[2D,P]" : "6-311+G[2d,p]",
+    "6-311++G[2D,2P]" : "6-311++G[2d,2p]",
+    "6-311++G[3DF,3PD]" : "6-311++G[3df,3pd]",
+    "PC-0" : "pc-0",
+    "PC-1" : "pc-1",
+    "PC-2" : "pc-2",
+    "PC-3" : "pc-3",
+    "PC-4" : "pc-4",
+    "AUG-PC-0" : "aug-pc-0",
+    "AUG-PC-1" : "aug-pc-1",
+    "AUG-PC-2" : "aug-pc-2",
+    "AUG-PC-3" : "aug-pc-3",
+    "AUG-PC-4" : "aug-pc-4",
+    "PCSEG-0" : "pcseg-0",
+    "PCSEG-1" : "pcseg-1",
+    "PCSEG-2" : "pcseg-2",
+    "PCSEG-3" : "pcseg-3",
+    "PCSEG-4" : "pcseg-4",
+    "AUG-PCSEG-0" : "aug-pcseg-0",
+    "AUG-PCSEG-1" : "aug-pcseg-1",
+    "AUG-PCSEG-2" : "aug-pcseg-2",
+    "AUG-PCSEG-3" : "aug-pcseg-3",
+    "AUG-PCSEG-4" : "aug-pcseg-4",
+    "AUG-CC-PVDZ" : "aug-cc-pVDZ",
+    "AUG-CC-PVTZ" : "aug-cc-pVTZ",
+    "AUG-CC-PVQZ" : "aug-cc-pVQZ",
+    "AUG-CC-PV5Z" : "aug-cc-pV5Z",
+    "AUG-CC-PV6Z" : "aug-cc-pV6Z",
+    "D-AUG-CC-PVDZ" : "d-aug-cc-pVDZ",
+    "D-AUG-CC-PVTZ" : "d-aug-cc-pVTZ",
+    "D-AUG-CC-PVQZ" : "d-aug-cc-pVQZ",
+    "D-AUG-CC-PV5Z" : "d-aug-cc-pV5Z",
+    "D-AUG-CC-PV6Z" : "d-aug-cc-pV6Z",
+    "CC-PCVDZ" : "cc-pCVDZ",
+    "CC-PCVTZ" : "cc-pCVTZ",
+    "CC-PCVQZ" : "cc-pCVQZ",
+    "CC-PCV5Z" : "cc-pCV5Z",
+    "AUG-CC-PCVDZ" : "aug-cc-pCVDZ",
+    "AUG-CC-PCVTZ" : "aug-cc-pCVTZ",
+    "AUG-CC-PCVQZ" : "aug-cc-pCVQZ",
+    "AUG-CC-PCV5Z" : "aug-cc-pCV5Z",
+    "CC-PWCVDZ" : "cc-pwCVDZ",
+    "CC-PWCVTZ" : "cc-pwCVTZ",
+    "CC-PWCVQZ" : "cc-pwCVQZ",
+    "CC-PWCV5Z" : "cc-pwCV5Z",
+    "AUG-CC-PWCVDZ" : "aug-cc-pwCVDZ",
+    "AUG-CC-PWCVTZ" : "aug-cc-pwCVTZ",
+    "AUG-CC-PWCVQZ" : "aug-cc-pwCVQZ",
+    "AUG-CC-PWCV5Z" : "aug-cc-pwCV5Z",
+    "ANO-PVDZ" : "ano-pVDZ",
+    "ANO-PVTZ" : "ano-pVTZ",
+    "ANO-PVQZ" : "ano-pVQZ",
+    "ANO-PV5Z" : "ano-pV5Z",
+    "AUG-ANO-PVDZ" : "aug-ano-pVDZ",
+    "AUG-ANO-PVTZ" : "aug-ano-pVTZ",
+    "AUG-ANO-PVQZ" : "aug-ano-pVQZ",
+    "AUG-ANO-PV5Z" : "aug-ano-pV5Z",
 }
 
 
@@ -1072,133 +1197,171 @@ atomic_properties = {
         "charge" : 0,
         "mass" : 0,
         "C6" : 0,
-        "vdw_radius" : 0
+        "vdw_radius" : 0,
+        "core_orbitals": 0,
+        "name" : "ghost"
     },
 
     "H" : {
         "charge" : 1,
         "mass" : 1.007825,
         "C6" : 2.4283,
-        "vdw_radius" : 1.8916
+        "vdw_radius" : 1.8916,
+        "core_orbitals": 0,
+        "name" : "hydrogen"
     },
 
     "HE" : {
         "charge" : 2,
         "mass" : 4.002603,
         "C6" : 1.3876,
-        "vdw_radius" : 1.9124
+        "vdw_radius" : 1.9124,
+        "core_orbitals": 0,
+        "name" : "helium"
     },
 
     "LI" : {
         "charge" : 3,
         "mass" : 7.016004,
         "C6" : 27.92545,
-        "vdw_radius" : 1.55902
+        "vdw_radius" : 1.55902,
+        "core_orbitals": 0,
+        "name" : "lithium"
     },
 
     "BE" : {
         "charge" : 4,
         "mass" : 9.012182,
         "C6" : 27.92545,
-        "vdw_radius" : 2.66073
+        "vdw_radius" : 2.66073,
+        "core_orbitals": 0,
+        "name" : "beryllium"
     },
 
     "B" : {
         "charge" : 5,
         "mass" : 11.009305,
         "C6" : 54.28985,
-        "vdw_radius" : 2.80624
+        "vdw_radius" : 2.80624,
+        "core_orbitals": 1,
+        "name" : "boron"
     },
 
     "C" : {
         "charge" : 6,
         "mass" : 12.000000,
         "C6" : 30.35375,
-        "vdw_radius" : 2.74388
+        "vdw_radius" : 2.74388,
+        "core_orbitals": 1,
+        "name" : "carbon"
     },
 
     "N" : {
         "charge" : 7,
         "mass" : 14.003074,
         "C6" : 21.33435,
-        "vdw_radius" : 2.63995
+        "vdw_radius" : 2.63995,
+        "core_orbitals": 1,
+        "name" : "nitrogen"
     },
 
     "O" : {
         "charge" : 8,
         "mass" : 15.994915,
         "C6" : 12.1415,
-        "vdw_radius" : 2.53601
+        "vdw_radius" : 2.53601,
+        "core_orbitals": 1,
+        "name" : "oxygen"
     },
 
     "F" : {
         "charge" : 9,
         "mass" : 18.998403,
         "C6" : 13.00875,
-        "vdw_radius" : 2.43208
+        "vdw_radius" : 2.43208,
+        "core_orbitals": 1,
+        "name" : "fluorine"
     },
 
     "NE" : {
         "charge" : 10,
         "mass" : 19.992440,
         "C6" : 10.92735,
-        "vdw_radius" : 2.34893
+        "vdw_radius" : 2.34893,
+        "core_orbitals": 1,
+        "name" : "neon"
     },
 
     "NA" : {
         "charge" : 11,
         "mass" : 22.989770,
         "C6" : 99.03995,
-        "vdw_radius" : 2.16185
+        "vdw_radius" : 2.16185,
+        "core_orbitals": 1,
+        "name" : "sodium"
     },
 
     "MG" : {
         "charge" : 12,
         "mass" : 23.985042,
         "C6" : 99.03995,
-        "vdw_radius" : 2.57759
+        "vdw_radius" : 2.57759,
+        "core_orbitals": 1,
+        "name" : "magnesium"
     },
 
     "AL" : {
         "charge" : 13,
         "mass" : 26.981538,
         "C6" : 187.15255,
-        "vdw_radius" : 3.09726
+        "vdw_radius" : 3.09726,
+        "core_orbitals": 5,
+        "name" : "aluminium"
     },
 
     "SI" : {
         "charge" : 14,
         "mass" : 27.976927,
         "C6" : 160.09435,
-        "vdw_radius" : 3.24277
+        "vdw_radius" : 3.24277,
+        "core_orbitals": 5,
+        "name" : "silicon"
     },
 
     "P" : {
         "charge" : 15,
         "mass" : 30.973762,
         "C6" : 135.9848,
-        "vdw_radius" : 3.22198
+        "vdw_radius" : 3.22198,
+        "core_orbitals": 5,        
+        "name" : "phosphorus"
     },
 
     "S" : {
         "charge" : 16,
         "mass" : 31.972071,
         "C6" : 96.61165,
-        "vdw_radius" : 3.18041
+        "vdw_radius" : 3.18041,
+        "core_orbitals": 5,
+        "name" : "sulfur"
     },
 
     "CL" : {
         "charge" : 17,
         "mass" : 34.968853,
         "C6" : 87.93915,
-        "vdw_radius" : 3.09726
+        "vdw_radius" : 3.09726,
+        "core_orbitals": 5,
+        "name" : "chlorine"
     },
 
     "AR" : {
         "charge" : 18,
         "mass" : 39.962383,
         "C6" : 79.96045,
-        "vdw_radius" : 3.01411
+        "vdw_radius" : 3.01411,
+        "core_orbitals": 5,
+        "name" : "argon"
     }
 
 }

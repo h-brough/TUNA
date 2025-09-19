@@ -237,14 +237,20 @@ def run_MD(calculation, atoms, coordinates):
         # Clears and recreates output file
         open(trajectory_path, "w").close()
 
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+    log_big_spacer(calculation, start="\n")
     log("                                  Ab Initio Molecular Dynamics Simulation", calculation, 1, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-    log("  Step    Time    Distance    Temperature    Pot. Energy   Kin. Energy      Energy         Drift", calculation, 1)
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
+    log_big_spacer(calculation)
+    log("  Step    Time    Distance    Temperature    Pot. Energy     Kin. Energy        Energy          Drift", calculation, 1)
+    log_big_spacer(calculation)
 
     # Remains silent to prevent too much printing, just prints to table
-    SCF_output, molecule, electronic_energy, _ = energ.calculate_energy(calculation, atoms, coordinates, silent=True)
+    if calculation.extrapolate:
+
+        SCF_output, molecule, electronic_energy, _ = energ.extrapolate_energy(calculation, atoms, coordinates, silent=True)
+
+    else:
+        
+        SCF_output, molecule, electronic_energy, _ = energ.calculate_energy(calculation, atoms, coordinates, silent=True)
 
     # Calculates inverse mass array for acceleration calculation
     masses = molecule.masses
@@ -260,7 +266,7 @@ def run_MD(calculation, atoms, coordinates):
 
     # Calculates various energy components and MD quantities, then prints these
     potential_energy, kinetic_energy, total_energy, temperature, bond_length, drift = calculate_MD_components(molecule, masses, velocities, initial_energy, degrees_of_freedom, electronic_energy)
-    log(f"  {1:3.0f}     {time:5.2f}     {bond_length:.4f}      {temperature:8.2f}      {potential_energy:9.6f}     {kinetic_energy:9.6f}     {total_energy:9.6f}      {drift:9.6f}", calculation, 1)
+    log(f"  {1:3.0f}    {time:5.2f}     {bond_length:.4f}    {temperature:10.2f}     {potential_energy:12.6f}   {kinetic_energy:12.6f}     {total_energy:12.6f}   {drift:12.6f}", calculation, 1)
 
     # Iterates over MD steps, up to the number of steps specified, in MD simulation
     for i in range(1, n_steps):
@@ -294,7 +300,13 @@ def run_MD(calculation, atoms, coordinates):
         aligned_coordinates = np.array([[0.0, 0.0, 0.0], -1 * difference_vector_rotated])
 
         # Additional print makes a big mess - prints all energy calculations to console
-        SCF_output, molecule, electronic_energy, _ = energ.calculate_energy(calculation, atoms, aligned_coordinates, P_guess=P_guess, E_guess=E_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, silent=not(calculation.additional_print))  
+        if calculation.extrapolate:
+
+            SCF_output, molecule, electronic_energy, _ = energ.extrapolate_energy(calculation, atoms, aligned_coordinates, P_guess=P_guess, E_guess=E_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, silent=not(calculation.additional_print))
+
+        else:
+            
+            SCF_output, molecule, electronic_energy, _ = energ.calculate_energy(calculation, atoms, aligned_coordinates, P_guess=P_guess, E_guess=E_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, silent=not(calculation.additional_print))
 
         forces = calculate_forces(aligned_coordinates, calculation, atoms, rotation_matrix)
 
@@ -307,7 +319,8 @@ def run_MD(calculation, atoms, coordinates):
 
         # Cycle begins again as new energy components are printed
         potential_energy, kinetic_energy, total_energy, temperature, bond_length, drift = calculate_MD_components(molecule, masses, velocities, initial_energy, degrees_of_freedom, electronic_energy)
-        log(f" {(i + 1):4.0f}     {time:5.2f}     {bond_length:.4f}      {temperature:8.2f}      {potential_energy:9.6f}     {kinetic_energy:9.6f}     {total_energy:9.6f}      {drift:9.6f}", calculation, 1)
+        log(f" {(i + 1):4.0f}    {time:5.2f}     {bond_length:.4f}    {temperature:10.2f}     {potential_energy:12.6f}   {kinetic_energy:12.6f}     {total_energy:12.6f}   {drift:12.6f}", calculation, 1)
+        
         # By default prints trajectory to file, can be viewed with Jmol
         if calculation.trajectory: 
             
@@ -315,5 +328,4 @@ def run_MD(calculation, atoms, coordinates):
         
 
 
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-
+    log_big_spacer(calculation)

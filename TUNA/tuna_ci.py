@@ -41,6 +41,7 @@ def build_spin_orbital_Fock_matrix(H_core_SO, g, o):
     
     """
 
+
     F_SO = H_core_SO + np.einsum('piqi->pq', g[:, o, :, o], optimize=True)
 
     return F_SO
@@ -122,6 +123,35 @@ def transform_ERI_AO_to_SO(ERI_AO, C_1, C_2):
 
 
 
+
+
+
+def transform_ERI_AO_to_MO(ERI_AO, C):
+
+    """
+
+    Transforms electron repulsion integrals from the AO basis to the SO basis.
+
+    Args:   
+        ERI_AO (array): Electron repulsion integrals in AO basis
+        C (array): Molecular orbitals in AO basis
+
+    Returns:
+        ERI_MO (array): Electron repulsion integrals in MO basis
+
+    """
+
+    ERI_MO = np.einsum("mi,nj,mnkl,ka,lb->ijab", C, C, ERI_AO, C, C, optimize=True)       
+
+    return ERI_MO
+
+
+
+
+
+
+
+
 def build_singles_epsilons_tensor(epsilons, o, v):
 
     """
@@ -143,6 +173,8 @@ def build_singles_epsilons_tensor(epsilons, o, v):
     e_ia = 1 / (epsilons[o, n] - epsilons[n, v])
 
     return e_ia
+
+
 
 
 
@@ -210,6 +242,8 @@ def build_triples_epsilons_tensor(epsilons, o, v):
 
 
 
+
+
 def build_MP2_t_amplitudes(ERI_SO, e_ijab):
 
     """
@@ -234,6 +268,9 @@ def build_MP2_t_amplitudes(ERI_SO, e_ijab):
 
 
 
+
+
+
 def transform_matrix_AO_to_SO(M, C):
 
     """
@@ -252,6 +289,9 @@ def transform_matrix_AO_to_SO(M, C):
     M_SO = np.einsum("mi,mn,na->ia", C, M, C, optimize=True)
 
     return M_SO
+
+
+
 
 
 
@@ -290,7 +330,13 @@ def transform_P_SO_to_AO(P_SO, C_spin_block, n_SO):
 
 
 
-def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ, calculation, silent=False):
+
+
+
+
+
+
+def begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, n_occ, calculation, silent=False):
 
     """
 
@@ -312,7 +358,18 @@ def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ, calculation, silen
     """
     
     # Defines occupied and virtual slices
-    o = slice(None, n_occ)
+    minimum_orbital = molecule.n_core_spin_orbitals if calculation.freeze_core else 0
+
+
+    if molecule.n_core_spin_orbitals > molecule.n_electrons:
+
+        error("Not enough spin-orbitals to freeze!")
+
+    if molecule.n_core_orbitals < 0:
+
+        error("Cannot freeze a negative number of orbitals!")
+
+    o = slice(minimum_orbital, n_occ)
     v = slice(n_occ, None)
 
     epsilons_combined = SCF_output.epsilons_combined
@@ -361,7 +418,92 @@ def begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ, calculation, silen
 
     spin_orbital_labels_sorted = prefix_counts(spin_labels_sorted)
 
+
+    if calculation.freeze_core and molecule.n_core_spin_orbitals != 0: 
+
+        log(f"\n The {molecule.n_core_spin_orbitals} lowest energy spin-orbitals will be frozen.", calculation, 1, silent=silent)
+
+    else:
+        
+        log(f"\n All electrons will be correlated.", calculation, 1, silent=silent)
+
+
     return g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels_sorted, spin_orbital_labels_sorted
+
+
+
+
+
+
+
+
+
+
+
+
+def begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=False):
+
+    """
+    
+    Sets up useful quantities for a spatial orbital calculation.
+
+    Args:
+        molecule (Molecule): Molecule object
+        ERI_AO (array): Electron-repulsion integrals in AO basis
+        SCF_output (Output): SCF Output object
+        n_doubly_occ (int): Number of doubly occupied orbitals
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+    
+    Returns:
+        ERI_MO (array): Molecular integrals in spatial MO basis
+        molecular_orbitals (array): Molecular orbitals in AO basis
+        epsilons (array): Fock eigenvalues
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+
+    """
+
+    # Checks if orbitals need freezing
+    minimum_orbital = molecule.n_core_orbitals if calculation.freeze_core else 0
+
+    if molecule.n_core_orbitals * 2 > molecule.n_electrons:
+
+        error("Not enough spatial orbitals to freeze!")
+
+    if molecule.n_core_orbitals < 0:
+
+        error("Cannot freeze a negative number of orbitals!")
+
+    # Builds slices
+    o = slice(minimum_orbital, n_doubly_occ)
+    v = slice(n_doubly_occ, None)
+
+    # Recovers SCF output objects
+    molecular_orbitals = SCF_output.molecular_orbitals
+    epsilons = SCF_output.epsilons
+
+    log("\n Preparing transformation to spatial-orbital basis...", calculation, 1, silent=silent)
+
+    log("\n Transforming two-electron integrals...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    ERI_MO = transform_ERI_AO_to_MO(ERI_AO, molecular_orbitals)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    # Logs information about freezing orbitals
+    if calculation.freeze_core and molecule.n_core_orbitals != 0: 
+
+        log(f"\n The {molecule.n_core_orbitals} lowest energy spatial-orbitals will be frozen.", calculation, 1, silent=silent)
+
+    else:
+        
+        log(f"\n All electrons will be correlated.", calculation, 1, silent=silent)
+
+
+    return ERI_MO, molecular_orbitals, epsilons, o, v
+
+
 
 
 
@@ -751,11 +893,11 @@ def print_CIS_absorption_spectrum(molecule, excitation_energies_eV, calculation,
    
     log(f"\n\n Transition dipole moment origin is the centre of mass, {bohr_to_angstrom(molecule.centre_of_mass):.4f} angstroms from the first atom.", calculation, 1, silent=silent)
     
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_big_spacer(calculation, silent=silent, start="\n")
     log("                                          CIS Absorption Spectrum", calculation, 1, silent=silent, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_big_spacer(calculation, silent=silent)
     log("   State     Energy (eV)     Freq. (per cm)     Wavelength (nm)     Osc. Strength     Transition Dipole", calculation, 1, silent=silent)
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_big_spacer(calculation, silent=silent)
 
     for state in range(len(excitation_energies_eV)):
 
@@ -766,7 +908,7 @@ def print_CIS_absorption_spectrum(molecule, excitation_energies_eV, calculation,
 
             log(f"  {gap}{(state + 1):2}{state_type}       {excitation_energies_eV[state]:7.4f}          {frequencies_per_cm[state]:8.1f}            {wavelengths_nm[state]:5.1f}              {oscillator_strengths[state]:.6f}          {transition_dipoles[state]:10.7f}", calculation, 1, silent=silent)
 
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_big_spacer(calculation, silent=silent)
 
 
 
@@ -795,13 +937,13 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, g, o, v,
     """
 
     # Equations taken from Head-Gordon paper
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_spacer(calculation, silent=silent, start="\n")
     log("          CIS(D) Perturbative Correction", calculation, 1, silent=silent, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_spacer(calculation, silent=silent)
 
     log(f"  Applying doubles correction to state {root + 1} only.", calculation, 1, silent=silent)
    
-    log(f"\n  Building MP2 amplitudes...            ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"\n  Building MP2 amplitudes...               ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
     # Builds and inverts inverse epsilons tensor, to upright e_ijab_inv
     e_ijab_inv = 1 / build_doubles_epsilons_tensor(epsilons, epsilons, o, o, v, v)
@@ -820,7 +962,7 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, g, o, v,
 
     u_ijab = u_1 - u_2 + u_3 - u_4
 
-    log(f"    [Done]", calculation, 1, silent=silent)
+    log(f"       [Done]", calculation, 1, silent=silent)
 
     log(f"  Calculating indirect contribution...  ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
@@ -830,20 +972,20 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, g, o, v,
 
     v_ia = v_1 + v_2 + v_3
 
-    log(f"  [Done]", calculation, 1, silent=silent)
+    log(f"     [Done]", calculation, 1, silent=silent)
 
     log(f"\n  Calculating CIS(D) correction...      ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
     E_CIS_D = (1 / 4) * np.einsum("ijab,ijab,ijab->", u_ijab, u_ijab, e_ijab_inv_minus_w, optimize=True) + np.einsum("ia,ia->", b_ia, v_ia, optimize=True)
 
-    log(f"  [Done]", calculation, 1, silent=silent)
+    log(f"     [Done]", calculation, 1, silent=silent)
     
     # Correction energy in eV prints if P used
-    log(f"\n  Excitation energy from CIS:      {excitation_energy:13.10f}", calculation, 1, silent=silent)
-    log(f"  Correction energy from CIS(D):   {E_CIS_D:13.10f}", calculation, 1, silent=silent)
-    log(f"  Correction energy (eV):          {(E_CIS_D * constants.eV_in_hartree):13.10f}", calculation, 3, silent=silent)
-    log(f"\n  Excitation energy from CIS(D):   {(E_CIS_D + excitation_energy):13.10f}", calculation, 1, silent=silent)
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log(f"\n  Excitation energy from CIS:         {excitation_energy:13.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy from CIS(D):      {E_CIS_D:13.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy (eV):             {(E_CIS_D * constants.eV_in_hartree):13.10f}", calculation, 3, silent=silent)
+    log(f"\n  Excitation energy from CIS(D):      {(E_CIS_D + excitation_energy):13.10f}", calculation, 1, silent=silent)
+    log_spacer(calculation, silent=silent)
   
     return E_CIS_D
 
@@ -879,20 +1021,20 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     root = calculation.root - 1
 
 
-    g, C_spin_block, epsilons_sorted, _, o, v, _, _ = begin_spin_orbital_calculation(ERI_AO, SCF_output, n_occ, calculation, silent=silent)
+    g, C_spin_block, epsilons_sorted, _, o, v, _, _ = begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, n_occ, calculation, silent=silent)
 
 
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_spacer(calculation, silent=silent, start="\n")
     log("         Configuration Interaction Singles", calculation, 1, silent=silent, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
+    log_spacer(calculation, silent=silent)
     
-    log("\n  Building CIS Hamiltonian...             ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log("\n  Building CIS Hamiltonian...                ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
 
     H_CIS, excitations = build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons_sorted, g)
 
     log("[Done]", calculation, 1, silent=silent)
 
-    log("  Diagonalising CIS Hamiltonian...        ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log("  Diagonalising CIS Hamiltonian...           ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
 
     excitation_energies, weights = np.linalg.eigh(H_CIS)
 
@@ -901,7 +1043,7 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     log("[Done]", calculation, 1, silent=silent)
 
 
-    log("  Calculating transition dipoles...       ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log("  Calculating transition dipoles...          ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
 
     transition_dipoles = calculate_transition_dipoles(SCF_output.D, weights, excitations, C_spin_block)
     oscillator_strengths = calculate_oscillator_strengths(transition_dipoles, excitation_energies)
@@ -909,7 +1051,7 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     log("[Done]", calculation, 1, silent=silent)
 
 
-    log(f"  Constructing density matrix...          ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"  Constructing density matrix...             ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
     try:
         weights_of_interest = weights[:, root]

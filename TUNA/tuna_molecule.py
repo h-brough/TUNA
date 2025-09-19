@@ -7,7 +7,7 @@ import numpy as np
 
 class Atom:
 
-    def __init__(self, basis_charge, mass, origin, C6, vdw_radius, symbol, ghost=False):
+    def __init__(self, basis_charge, mass, origin, C6, vdw_radius, symbol, core_orbitals, ghost=False):
 
         """
 
@@ -36,9 +36,22 @@ class Atom:
         # Defines capitalised atomic symbol
         self.symbol = symbol
         
+        if "X" in symbol:
+
+            if len(symbol) == 2: self.symbol_formatted = self.symbol.upper()
+            elif len(symbol) == 3: self.symbol_formatted = "X" + self.symbol[1].upper() + self.symbol[2].lower()
+
+        else:
+
+            self.symbol_formatted = self.symbol.lower().capitalize() 
+
+
         # Defines whether this is a ghost atom
         self.ghost = ghost
         
+        # Defines number of core orbitals
+        self.core_orbitals = core_orbitals
+
         # The nuclear charge will be the same as the basis charge, unless this is a ghost atom with zero charge
         self.charge = self.basis_charge if not ghost else 0
 
@@ -67,6 +80,7 @@ class Molecule:
         # Defines key molecular parameters
         self.atomic_symbols = atomic_symbols
         self.basis = calculation.basis
+
         self.coordinates = coordinates
         self.charge = calculation.charge
         self.multiplicity = calculation.multiplicity
@@ -81,13 +95,13 @@ class Molecule:
                 atom_data = atomic_properties["X"]
                 which_ghost = atomic_properties[symbol.split("X")[1]]
 
-                atom = Atom(which_ghost["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], symbol, ghost=True)
+                atom = Atom(which_ghost["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], symbol, atom_data["core_orbitals"], ghost=True)
             
             else:
 
                 atom_data = atomic_properties[symbol]
 
-                atom = Atom(atom_data["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], symbol, ghost=False)
+                atom = Atom(atom_data["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], symbol, atom_data["core_orbitals"], ghost=False)
                 
             self.atoms.append(atom)
 
@@ -98,15 +112,21 @@ class Molecule:
         self.masses = np.array([atom.mass for atom in self.atoms], dtype=float) * constants.atomic_mass_unit_in_electron_mass
 
         # Generates basis data for one type of atom
-        self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0])
+        self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0], calculation)
 
         # If two types of atom are present, generate data for both and combine them into one dictionary
         if len(self.atoms) == 2 and self.basis_charges[0] != self.basis_charges[1]: 
             
-            self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0]) | bas.generate_basis(self.basis, self.basis_charges[1])
+            self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0], calculation) | bas.generate_basis(self.basis, self.basis_charges[1], calculation)
 
         # Number of, and list of, basis functions made using form_basis function, accounting for optional decontraction
-        self.n_basis, self.basis_functions = self.form_basis(self.atoms, self.basis_data, calculation.decontract)
+        try:
+
+            self.n_basis, self.basis_functions = self.form_basis(self.atoms, self.basis_data, calculation.decontract)
+
+        except:
+
+            error("Basis set malformed! If using a custom basis set, check the file format carefully.")
 
         # Decomposes basis functions list into array of number of exponents in each basis function
         self.primitive_Gaussians = [basis_function.num_exps for basis_function in self.basis_functions]
@@ -115,6 +135,7 @@ class Molecule:
         self.partitioned_basis_functions = [[bf for bf in self.basis_functions if np.allclose(bf.origin, atom.origin)] for atom in self.atoms]
         self.partition_ranges = [len(group) for group in self.partitioned_basis_functions]
         self.angular_momentum_list = self.generate_angular_momentum_list(self.basis_functions)
+        self.n_atomic_orbitals = len(self.basis_functions)
 
         # If custom masses are used, convert these to electron mass units before updating the mass array
         if calculation.custom_mass_1 is not None: self.masses[0] = calculation.custom_mass_1 * constants.atomic_mass_unit_in_electron_mass
@@ -169,8 +190,25 @@ class Molecule:
         self.n_beta = int(self.n_electrons - self.n_alpha)
         self.n_doubly_occ = min(self.n_alpha, self.n_beta)
         self.n_occ = self.n_alpha + self.n_beta
-        self.n_SO = 2 * len(self.basis_functions)
+        self.n_SO = 2 * self.n_atomic_orbitals
         self.n_virt = self.n_SO - self.n_occ
+
+        # Number of core electrons is the same as number of orbitals for UHF, double for RHF
+        if calculation.freeze_core:
+        
+            self.n_core_orbitals = self.atoms[0].core_orbitals if len(self.atoms) == 1 else sum(atom.core_orbitals for atom in self.atoms)
+
+        else:
+            
+            self.n_core_orbitals = 0
+
+        self.n_core_alpha_electrons = self.n_core_orbitals
+        self.n_core_beta_electrons = self.n_core_orbitals
+        self.n_core_spin_orbitals = self.n_core_orbitals * 2
+        self.n_core_spin_orbitals = calculation.freeze_n_orbitals if type(calculation.freeze_n_orbitals) == int else self.n_core_spin_orbitals
+        self.n_core_orbitals = calculation.freeze_n_orbitals if type(calculation.freeze_n_orbitals) == int else self.n_core_orbitals
+
+        if "OMP2" in calculation.method and calculation.reference == "RHF": self.n_core_spin_orbitals *= 2
 
         # Sets off errors for invalid molecular configurations
         if self.n_electrons % 2 == 0 and self.multiplicity % 2 == 0: error("Impossible charge and multiplicity combination (both even)!")
@@ -185,14 +223,16 @@ class Molecule:
             if self.n_electrons % 2 != 0: error("Restricted Hartree-Fock is not compatible with an odd number of electrons!")
             if self.multiplicity != 1: error("Restricted Hartree-Fock is not compatible non-singlet states!")
 
+        if calculation.method in ["MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]"] and calculation.reference == "UHF":
+                
+            error(f"The {calculation.method} method is only implemented for spin-restricted references!")
+
         # Sets 2 electrons per orbital for RHF, otherwise 1 for UHF
         calculation.n_electrons_per_orbital = 2 if calculation.reference == "RHF" else 1
 
 
         # Determines whether the density should be read in between steps
         calculation.MO_read = False if calculation.reference == "UHF" and self.multiplicity == 1 and not calculation.MO_read_requested and not calculation.no_rotate_guess or calculation.no_MO_read or calculation.rotate_guess else True
-
-
 
 
 
