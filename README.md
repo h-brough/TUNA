@@ -1,5 +1,9 @@
 # TUNA
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/quantumtuna.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/QuantumTUNA)
+[![License](https://img.shields.io/github/license/tuna/tuna.svg)](LICENSE)
+
+<br>
+
 Welcome to TUNA! A user-friendly quantum chemistry program for diatomics.
 
 <br>
