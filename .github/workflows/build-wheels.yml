@@ -11,9 +11,25 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.12, 3.13]
-        cibw_build: [cp312-*, cp313-*]
+        include:
+          - os: ubuntu-latest
+            python-version: 3.12
+            cibw-build: cp312-*
+          - os: ubuntu-latest
+            python-version: 3.13
+            cibw-build: cp313-*
+          - os: macos-latest
+            python-version: 3.12
+            cibw-build: cp312-*
+          - os: macos-latest
+            python-version: 3.13
+            cibw-build: cp313-*
+          - os: windows-latest
+            python-version: 3.12
+            cibw-build: cp312-*
+          - os: windows-latest
+            python-version: 3.13
+            cibw-build: cp313-*
 
     steps:
       - uses: actions/checkout@v4
