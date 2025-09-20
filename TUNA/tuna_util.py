@@ -645,10 +645,19 @@ def finish_calculation(calculation):
     
     if total_time > 120:
 
-        minutes = total_time / 60
+        minutes = total_time // 60
         seconds = total_time % 60
 
-        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+        if total_time > 7200:
+            
+            hours = total_time // 3600
+            extra_minutes = (total_time % 3600) // 60
+
+            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+
+        else:
+            
+            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
     # Prints the finale message
     else:

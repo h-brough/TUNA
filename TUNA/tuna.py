@@ -14,8 +14,8 @@ if len(sys.argv) == 2 and sys.argv[1] in ["-version", "--version"]:
 # Prints big fish logo
 print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white", force_color = True) + colored(" ~~~~~~","light_grey", force_color = True)+colored(" | |  | |  | |  \\| |  /  \\","white", force_color = True)+colored(" ~~~~~~~~","light_grey", force_color = True)+colored(" / .      \\/ ) ","white", force_color = True)+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white", force_color = True)+colored(" ~~~~~~","light_grey", force_color = True)+colored(" (     ))    (","white", force_color = True)+colored(" ~~~~~\n ~~~~~~","light_grey", force_color = True)+colored(" | |  | |__| | |\\  |/ ____ \\ ","white", force_color = True)+colored("~~~~~~","light_grey", force_color = True)+colored(" \\___  ___/\\_) ","white", force_color = True)+colored("~~~~","light_grey", force_color = True)+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white", force_color = True))
 
-print(f"\n\nWelcome to version {version_number} of TUNA!\n")
-print("Importing required libraries...  ",end="")
+print(colored(f"\n\nWelcome to version {version_number} of TUNA!\n", "light_grey", force_color=True))
+print(colored("Importing required libraries...  ", "light_grey", force_color=True),end="")
 
 
 import numpy as np; sys.stdout.flush()
@@ -25,7 +25,7 @@ import tuna_energy as energ
 import tuna_optfreq as optfreq
 import tuna_md as md
 
-print("[Done]\n")
+print(colored("[Done]\n", "light_grey", force_color=True))
 
 start_time = time.perf_counter()
 
@@ -199,16 +199,16 @@ def main():
     # Reads input line, makes sure it's okay and extracts the desired parameters
     calculation_type, method, basis, atoms, coordinates, params = parse_input()
 
-    print(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set via {method_types.get(method)} requested.")
+    print(colored(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set via {method_types.get(method)} requested.", "light_grey", force_color=True))
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
     calculation = Calculation(calculation_type, method, start_time, params, basis, atoms)
 
     # If a decontracted basis has been requested, this is printed to the console
     contraction = "fully decontracted" if calculation.decontract else "partially contracted"
-    print(f"Setting up calculation using {contraction} basis set.")
+    print(colored(f"Setting up calculation using {contraction} basis set.", "light_grey", force_color=True))
 
-    print(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.")
+    print(colored(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey", force_color=True))
 
 
     # Sets off the desired calculation with the requested parameters

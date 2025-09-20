@@ -517,7 +517,7 @@ def update_DIIS(DIIS_error_vector, Fock_vector, n_alpha, n_beta, X, n_electrons_
         P_alpha = None
         P_beta = None
 
-        log("   (Resetting DIIS)", calculation, 1, end="", silent=silent)
+        log("\n                                       ~~~~~~ Resetting DIIS ~~~~~~", calculation, end="\n\n",silent=silent)
 
     return P_alpha, P_beta, Fock_vector, DIIS_error_vector
 
@@ -588,7 +588,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
     """
     log_big_spacer(calculation, silent=silent)
-    log("                                    Self-consistent Field Cycle Iterations", calculation, 1, silent=silent, colour="white")
+    log("                                   Self-consistent Field Cycle Iterations", calculation, 1, silent=silent, colour="white")
     log_big_spacer(calculation, silent=silent)
     log("  Step          E                DE              RMS(DP)          MAX(DP)          [F,PS]       Damping", calculation, 1, silent=silent)
     log_big_spacer(calculation, silent=silent)
