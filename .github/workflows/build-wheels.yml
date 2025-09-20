@@ -14,22 +14,22 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: 3.12
-            cibw-build: cp312-*
+            cibw-build: cp312-manylinux_x86_64
           - os: ubuntu-latest
             python-version: 3.13
-            cibw-build: cp313-*
+            cibw-build: cp313-manylinux_x86_64
           - os: macos-latest
             python-version: 3.12
-            cibw-build: cp312-*
+            cibw-build: cp312-macosx_*
           - os: macos-latest
             python-version: 3.13
-            cibw-build: cp313-*
+            cibw-build: cp313-macosx_*
           - os: windows-latest
             python-version: 3.12
-            cibw-build: cp312-*
+            cibw-build: cp312-win_amd64
           - os: windows-latest
             python-version: 3.13
-            cibw-build: cp313-*
+            cibw-build: cp313-win_amd64
 
     steps:
       - uses: actions/checkout@v4
