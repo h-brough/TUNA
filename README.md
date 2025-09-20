@@ -1,7 +1,9 @@
 # TUNA
 
+[![PyPI version](https://img.shields.io/pypi/v/quantumtuna.svg?logo=pypi&logoColor=FFE873)](https://pypi.org/project/QuantumTUNA)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/quantumtuna.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/QuantumTUNA)
 [![License](https://img.shields.io/github/license/h-brough/TUNA.svg)](LICENSE)
+[![PyPI downloads](https://img.shields.io/pypi/dm/quantumtuna.svg)](https://pypistats.org/packages/QuantumTUNA)
 
 <br>
 
