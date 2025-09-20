@@ -13,7 +13,9 @@ The repository includes:
 * The TUNA logo
 * The file LICENSE with the MIT license
 * The folder TUNA containing Python files
+* A folder with the GitHub workflows for publishing
 * The installation file pyproject.toml
+* The installation file setup.py
 * The TUNA manual
 * A changelog
 
@@ -31,9 +33,10 @@ The program requires Python 3.12 or higher and the following packages:
 * matplotlib
 * termcolor
 
+
 ### Installation
 
-The simplest way to install TUNA is by running
+The simplest way to install TUNA and its dependencies is by running
 
 ```
 pip install QuantumTUNA
@@ -41,11 +44,8 @@ pip install QuantumTUNA
 
 Find the path to where TUNA is installed, `*/TUNA/`, with the other Python site packages.
 
-On Windows, add this folder to PATH. One way to do this is with PowerShell, by
+On Windows, add this folder to PATH by editing the system environment variables.
 
-```
-setx PATH "C:\*\TUNA;%PATH%"
-```
 
 On MacOS, find this folder's path and from a terminal, run
 

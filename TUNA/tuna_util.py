@@ -861,8 +861,8 @@ def log(message, calculation, priority=1, end="\n", silent=False, colour="light_
     if not silent:
 
         if priority == 1: print(colored(message, colour), end=end)
-        elif priority == 2 and not calculation.terse: print(colored(message, colour), end=end)
-        elif priority == 3 and calculation.additional_print: print(colored(message, colour), end=end)
+        elif priority == 2 and not calculation.terse: print(colored(message, colour, force_color = True), end=end)
+        elif priority == 3 and calculation.additional_print: print(colored(message, colour, force_color = True), end=end)
 
 
 
