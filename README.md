@@ -1,6 +1,7 @@
 # TUNA
+
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/quantumtuna.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/QuantumTUNA)
-[![License](https://img.shields.io/github/license/TUNA/tuna.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/TUNA/TUNA.svg)](LICENSE)
 
 <br>
 
