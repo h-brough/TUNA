@@ -9,7 +9,7 @@
 Welcome to TUNA! A user-friendly quantum chemistry program for diatomics.
 
 <br>
-<p align="center"><img src="TUNA Logo.svg" alt="Fish swimming through a wavepacket." width=480 /></p>
+<p align="center"><img src="https://github.com/h-brough/TUNA/blob/main/TUNA%20Logo.svg" alt="Fish swimming through a wavepacket." width=480 /></p>
 
 ## Contents
 
@@ -27,7 +27,7 @@ The repository includes:
 
 ## Documentation
 
-A copy of the <a href="./TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed.
+A copy of the <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed.
 
 ## Using TUNA
 
