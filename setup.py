@@ -17,14 +17,6 @@ extensions = [
 ]
 
 setup(
-    name="QuantumTUNA",
-    version="0.7.8",
-    packages=[
-        "TUNA",
-        "TUNA.tuna_integrals", ],    
-    package_data={
-        "TUNA": ["*.bat", "*.pdf"],
-    },
     ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
     include_package_data=True,
     zip_safe=False,
