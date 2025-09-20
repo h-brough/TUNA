@@ -24,10 +24,16 @@ dependencies = [
 
 description = "A user-friendly quantum chemistry program for diatomics."
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Operating System :: OS Independent",
+	"Programming Language :: Python",
+	"Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3.13",
+	"Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: MIT License",
 ]
 
