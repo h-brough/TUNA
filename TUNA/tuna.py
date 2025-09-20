@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import __init__ as init
 import sys
 version_number = init.__version__
