@@ -49,8 +49,4 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload to PyPI
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: python -m twine upload wheelhouse/*
+        uses: pypa/gh-action-pypi-publish@release/v1
