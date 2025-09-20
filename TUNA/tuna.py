@@ -1,6 +1,13 @@
 import __init__ as init
+import sys
 version_number = init.__version__
 from termcolor import colored
+
+if len(sys.argv) == 2 and sys.argv[1] in ["-version", "--version"]:
+
+    print(f"TUNA {version_number}")
+    sys.exit(0)
+
 
 # Prints big fish logo
 print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white") + colored(" ~~~~~~","light_grey")+colored(" | |  | |  | |  \\| |  /  \\","white")+colored(" ~~~~~~~~","light_grey")+colored(" / .      \\/ ) ","white")+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white")+colored(" ~~~~~~","light_grey")+colored(" (     ))    (","white")+colored(" ~~~~~\n ~~~~~~","light_grey")+colored(" | |  | |__| | |\\  |/ ____ \\ ","white")+colored("~~~~~~","light_grey")+colored(" \\___  ___/\\_) ","white")+colored("~~~~","light_grey")+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white"))
@@ -8,8 +15,8 @@ print(colored("\n      _______ _    _ _   _                     ___           \n
 print(f"\n\nWelcome to version {version_number} of TUNA!\n")
 print("Importing required libraries...  ",end="")
 
-import sys; sys.stdout.flush()
-import numpy as np
+
+import numpy as np; sys.stdout.flush()
 import time
 from tuna_util import *
 import tuna_energy as energ

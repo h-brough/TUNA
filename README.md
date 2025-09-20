@@ -39,11 +39,27 @@ The simplest way to install TUNA is by running
 pip install QuantumTUNA
 ```
 
+Find the path to where TUNA is installed, `*/TUNA/`, with the other Python site packages.
+
+On Windows, add this folder to PATH. One way to do this is with PowerShell, by
+
+```
+setx PATH "C:\*\TUNA;%PATH%"
+```
+
+On MacOS, find this folder's path and from a terminal, run
+
+```
+echo "alias tuna=/*/TUNA/tuna.py" >> ~/.zshrc
+echo "alias TUNA=/*/TUNA/tuna.py" >> ~/.zshrc
+source ~/.zshrc
+```
+
+Then, in a new terminal, run ```TUNA --version``` which should print the correct version if TUNA has installed correctly.
+
 ### Running
 
-Add the folder where TUNA was installed to PATH, and then run ```TUNA --version``` which should print the correct version if TUNA has installed correctly.
-
-The syntax of the command to run a TUNA calculation is:
+The syntax of the command to run a TUNA calculation is
 
 ```
 TUNA [Calculation] : [Atom A] [Atom B] [Distance] : [Method] [Basis]
