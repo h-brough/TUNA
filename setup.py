@@ -10,15 +10,15 @@ scipy_include = pathlib.Path(scipy.__file__).parent / "special" / "cython"
 
 extensions = [
     Extension(
-        name="TUNA.tuna_integrals.tuna_integral",                # adjust name if your package dir is different
+        name="TUNA.tuna_integrals.tuna_integral",
         sources=["TUNA/tuna_integrals/tuna_integral.pyx"],
         include_dirs=[numpy.get_include(), str(scipy_include)],
     )
 ]
 
 setup(
-    name="quantumtuna",
-    version="0.8.0",
+    name="QuantumTUNA",
+    version="0.7.8",
     packages=[
         "TUNA",
         "TUNA.tuna_integrals", ],    

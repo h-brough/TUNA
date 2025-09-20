@@ -8,5 +8,5 @@ A user-friendly quantum chemistry program for diatomics.
 
 """
 
-__version__ = "0.8.0"
+__version__ = "0.7.8"
 __author__ = "Harry Brough"
