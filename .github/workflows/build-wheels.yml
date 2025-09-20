@@ -5,7 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-
+  
+permissions:
+    contents: read
+    id-token: write
+    
 jobs:
   build-wheels:
     runs-on: ${{ matrix.os }}
@@ -21,11 +25,7 @@ jobs:
           - os: windows-latest
             python-version: 3.12
             cibw-build: cp312-win_amd64
-            
-    permissions:
-      id-token: write
-      contents: read
-      
+
     steps:
       - uses: actions/checkout@v4
 
@@ -46,11 +46,14 @@ jobs:
           CIBW_ARCHS_WINDOWS: "AMD64"
 
           CIBW_SKIP: "*-win32"
-          # ensure SciPy/Numpy are binary wheels and available before build
+
           CIBW_BEFORE_BUILD: >
             python -m pip install -U pip setuptools wheel cython &&
             python -m pip install --only-binary=:all: numpy>=1.26 scipy>=1.11.0
         run: python -m cibuildwheel --output-dir wheelhouse
 
-      - name: Upload to PyPI
+      - name: Publish to PyPI (Trusted Publisher)
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+            packages-dir: wheelhouse
+            skip-existing: true
