@@ -13,6 +13,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.12, 3.13]
+        cibw_build: [cp312-*, cp313-*]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +30,7 @@ jobs:
       - name: Build wheels
         env:
 
-          CIBW_BUILD: "cp${{ matrix.python-version//./ }}-*"
+          CIBW_BUILD: ${{ matrix.cibw_build }}
 
           CIBW_ARCHS_WINDOWS: "AMD64"
 
