@@ -919,7 +919,7 @@ def scan_plot(calculation, bond_lengths, energies):
     import pickle
     from matplotlib import font_manager as fm
 
-    plot_font = "Consolas"
+    plot_font = ["Consolas", "Liberation Mono", "DejaVu San"]
 
     matplotlib.rcParams['font.family'] = plot_font
 
