@@ -1104,7 +1104,7 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
     log_spacer(calculation)
     log("                    Coordinate Scan", calculation, 1, colour="white")
     log_spacer(calculation)
-    log("  Step          Bond Length               Energy", calculation, 1)
+    log("  Step         Bond Length               Energy", calculation, 1)
     log_spacer(calculation)
 
     # Prints a table of bond lengths and corresponding energies
