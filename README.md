@@ -56,8 +56,8 @@ On Windows, add this folder to PATH by editing the system environment variables.
 On MacOS and Linux, find this folder's path and from a terminal, run
 
 ```
-echo "alias tuna='python3 /*/TUNA/tuna.py'" >> ~/.zshrc
-echo "alias TUNA='python3 /*/TUNA/tuna.py'" >> ~/.zshrc
+echo "alias tuna='noglob python3 /*/TUNA/tuna.py'" >> ~/.zshrc
+echo "alias TUNA='noglob python3 /*/TUNA/tuna.py'" >> ~/.zshrc
 source ~/.zshrc
 ```
 

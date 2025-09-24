@@ -369,18 +369,13 @@ def apply_damping(P_before_damping, P_old_damp, orbital_gradient, calculation, P
 
                 alpha = (A_n_out - A_n1_out) / denominator if denominator.all() != 0 else [0, 0]
 
-                for a in range(len(alpha)):
-
-                    # Makes sure the damping factor is always between zero and one
-                    if alpha[a] < 0 or alpha[a] > 1: alpha[a] = 0
-
                 if len(partition_ranges) == 2: damping_factor = (alpha[0] * partition_ranges[0] + alpha[1] * partition_ranges[1]) / (partition_ranges[0] + partition_ranges[1])
                 else: damping_factor = alpha[0] * partition_ranges[0]
 
+                if damping_factor < 0 or damping_factor > 1: 
+                    
+                    damping_factor = 0
 
-        if damping_factor >= 1 or damping_factor < 0:
-
-            error("Damping factor must be between zero and one!")
 
 
     # Mixes old density with new, in proportion of damping factor
