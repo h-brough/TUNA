@@ -32,11 +32,12 @@
 - Basis information is now printed with the additional print keyword, `P`
 - Design of logging is now more consistent
 - Increased default orbital-optimised MP2 iterations to 30 (originally 20)
+- Improved PyPI publishing page and README
 
 ### Fixed
 
 - Distributions for MacOS and Linux now work correctly
-- Python 3.13 is now supported in addition to Python 3.12
+- Python 3.13 and Python 3.14 are now supported in addition to Python 3.12
 - Frequency calculations on a fixed geometry were not working at all
 - Ghost atoms were not working correctly under some circumstances
 - Convergence acceleration logging was sometimes contradictory
