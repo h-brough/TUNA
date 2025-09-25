@@ -626,9 +626,11 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
 
     # Prints out coefficients for each orbital, as well as if each is occupied or virtual
-    def print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, n_list, eps, n, formatted_ang_mom):
+    def print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, n_list, eps, n, formatted_ang_mom, n_doubly_occ):
+        
+        n_orbitals_to_print = min(len(eps), n_alpha + 10)
 
-        for mo in range(len(eps)):
+        for mo in range(n_orbitals_to_print):
             
             if n > mo: occ = "(Occupied)"
             else: occ = "(Virtual)"
@@ -637,8 +639,10 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
                 
             has_printed_1 = False    
             has_printed_2 = False    
+            
+            n_orbitals_to_print = min([len(molecular_orbitals.T[mo]), 10])
 
-            for k in range(len(molecular_orbitals.T[mo])):
+            for k in range(n_orbitals_to_print):
 
                 # Formats ghost atoms nicely, ignores decontracting basis
                 try:
@@ -656,7 +660,9 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
             
             log("\n  Alpha coefficients:          Beta coefficients:", calculation, 3)
 
-            for mo in range(len(epsilons_alpha)):
+            n_orbitals_to_print = min(len(epsilons_alpha), n_alpha + 10)
+
+            for mo in range(n_orbitals_to_print):
                 
                 if n_alpha > mo: occ = "(Occupied)"
                 else: occ = "(Virtual)"
@@ -668,6 +674,7 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
                     
                 has_printed_1 = False    
                 has_printed_2 = False    
+                
 
                 for k in range(len(molecular_orbitals.T[mo])):
 
@@ -684,8 +691,10 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
             log("\n  Alpha coefficients:         ", calculation, 3)
 
+            n_orbitals_to_print = min(len(epsilons_alpha), n_alpha + 10)
+
             # If there's only one electron, just print the alpha coefficients
-            for mo in range(len(epsilons_alpha)):
+            for mo in range(n_orbitals_to_print):
                 
                 if n_alpha > mo: occ = "(Occupied)"
                 else: occ = "(Virtual)"
@@ -711,7 +720,7 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
     # For RHF calculations, do all of the above for the combined doubly occupied orbitals
     else:
         
-        print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, n_list, epsilons, n_doubly_occ, formatted_angular_momentum_list)
+        print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, n_list, epsilons, n_doubly_occ, formatted_angular_momentum_list, n_doubly_occ)
 
 
     log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)

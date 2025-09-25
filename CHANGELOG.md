@@ -1,6 +1,6 @@
 # Changelog
 
-## TUNA 0.8.0 — 24/09/2025
+## TUNA 0.8.0 — 25/09/2025
 
 ### Added
 
@@ -32,7 +32,9 @@
 - Basis information is now printed with the additional print keyword, `P`
 - Design of logging is now more consistent
 - Increased default orbital-optimised MP2 iterations to 30 (originally 20)
-- Improved PyPI publishing page and README
+- Improved PyPI publishing page, README and manual
+- For rotated guesses, the degrees by which the HOMO and LUMO are rotated is now printed
+- Only the first 10 virtual orbitals are now printed when `P` is used
 
 ### Fixed
 

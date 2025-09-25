@@ -585,7 +585,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
     log_big_spacer(calculation, silent=silent)
     log("                                   Self-consistent Field Cycle Iterations", calculation, 1, silent=silent, colour="white")
     log_big_spacer(calculation, silent=silent)
-    log("  Step          E                DE              RMS(DP)          MAX(DP)          [F,PS]       Damping", calculation, 1, silent=silent)
+    log("  Step          E                DE              RMS(DP)          MAX(DP)           Error       Damping", calculation, 1, silent=silent)
     log_big_spacer(calculation, silent=silent)
 
 

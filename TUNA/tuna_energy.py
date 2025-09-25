@@ -419,7 +419,7 @@ def check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=False):
 
 
 
-def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
+def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta, calculation, silent=False):
     
     """
 
@@ -434,6 +434,8 @@ def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
         rotated_molecular_orbitals (array): Molecular orbitals with HOMO and LUMO rotated
 
     """
+
+    theta_degrees = theta * np.pi / 180.0
 
     homo_index = n_occ - 1
     lumo_index = n_occ
@@ -450,6 +452,7 @@ def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
 
     # Rotates molecular orbitals with this matrix
     rotated_molecular_orbitals = molecular_orbitals @ rotation_matrix
+
 
     return rotated_molecular_orbitals
 
@@ -533,7 +536,7 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
             guess_epsilons, guess_mos = scf.diagonalise_Fock_matrix(H_core, X)
 
             # Rotate the alpha MOs if this is requested, otherwise take the alpha guess to equal the beta guess
-            guess_mos_alpha = rotate_molecular_orbitals(guess_mos, n_alpha, calculation.theta) if rotate_guess_mos else guess_mos
+            guess_mos_alpha = rotate_molecular_orbitals(guess_mos, n_alpha, calculation.theta, calculation, silent=silent) if rotate_guess_mos else guess_mos
 
             # Construct density matrices (1 electron per orbital) for the alpha and beta guesses
             P_guess_alpha = scf.construct_density_matrix(guess_mos_alpha, n_alpha, 1)
@@ -549,7 +552,7 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
 
             if rotate_guess_mos: 
                 
-                log(" Initial guess density uses rotated molecular orbitals.\n", calculation, silent=silent)
+                log(f" Initial guess density uses molecular orbitals rotated by {(calculation.theta / np.pi * 180):.1f} degrees.\n", calculation, silent=silent)
 
 
     return E_guess, P_guess, P_guess_alpha, P_guess_beta, guess_epsilons, guess_mos

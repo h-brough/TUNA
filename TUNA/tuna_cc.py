@@ -667,7 +667,7 @@ def find_largest_amplitudes(t_ijab, t_ia, spin_orbital_labels_sorted, calculatio
 
         if counter < 10 and np.abs(final_values[counter]) > 0.0000001:
 
-            log(f"    {indices:<22.22}   :   {np.abs(final_values[counter]):.6f}", calculation, 2, silent=silent)
+            log(f"    {indices:<22.22}   :   {np.abs(final_values[counter]):9.6f}", calculation, 2, silent=silent)
 
 
     return
