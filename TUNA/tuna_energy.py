@@ -112,7 +112,7 @@ def calculate_extrapolated_energy(basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3):
 
         "CC-PVDZ" : 4.42,
         "AUG-CC-PVDZ" : 4.30,
-        "PC-2": 7.02,
+        "PC-1": 7.02,
         "DEF2-SVP" : 10.39,
         "DEF2-SVPD" : 10.39,
         "ANO-PVDZ" : 5.41,
@@ -123,7 +123,7 @@ def calculate_extrapolated_energy(basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3):
 
         "CC-PVDZ" : 2.46,
         "AUG-CC-PVDZ" : 2.51,
-        "PC-2": 2.01,
+        "PC-1": 2.01,
         "DEF2-SVP" : 2.40,
         "DEF2-SVPD" : 2.40,
         "ANO-PVDZ" : 2.43,
@@ -181,9 +181,9 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
 
         "CC-PVDZ" : "CC-PVTZ",
         "AUG-CC-PVDZ" : "AUG-CC-PVTZ",
-        "PC-2": "PC-3",
-        "DEF2-SVP" : "DEF2-TZVP",
-        "DEF2-SVPD" : "DEF2-TZVPD",
+        "PC-1": "PC-2",
+        "DEF2-SVP" : "DEF2-TZVPP",
+        "DEF2-SVPD" : "DEF2-TZVPPD",
         "ANO-PVDZ" : "ANO-PVTZ",
         "AUG-ANO-PVDZ" : "AUG-ANO-PVTZ"
     }
