@@ -48,5 +48,5 @@ include = ["TUNA", "TUNA.tuna_integrals*"]
 
 [project.urls]
 Repository = "https://github.com/h-brough/TUNA"
-Documentation = "https://github.com/h-brough/TUNA/blob/fcd6f29558f08d47b464dec3016e2aee94125ab5/TUNA%20Manual.pdf"
+Documentation = "https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf"
 Changelog = "https://github.com/h-brough/TUNA/blob/main/CHANGELOG.md"

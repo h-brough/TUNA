@@ -34,3 +34,5 @@ setup(
     include_package_data=True,
     zip_safe=False,
 )
+
+#Need to include PDF next time too as well as bat
