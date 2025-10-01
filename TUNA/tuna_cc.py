@@ -42,6 +42,44 @@ def calculate_coupled_cluster_energy(o, v, g, t_ijab, t_ia=np.zeros(1), F=None):
 
 
 
+
+
+def calculate_restricted_coupled_cluster_energy(o, v, L, t_ijab, t_ia=np.zeros(1)):
+
+    """
+    
+    Calculates the restricted coupled cluster energy.
+
+    Args:
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        L (array): Coupled cluster (Eq. 13.7.15)
+        t_ijab (array): Doubles amplitudes
+        t_ia (array, optional): Singles amplitudes
+
+    Returns:
+        E_CC (float): Coupled cluster energy
+        E_connected_doubles (float): Energy due to connected doubles
+        E_disconnected_doubles (float): Energy due to disconnected doubles
+    
+    """
+
+    E_connected_doubles = np.einsum("ijab,ijab->", L[o, v, o, v], t_ijab, optimize=True)
+    E_disconnected_doubles = np.einsum("iajb,ia,jb->", L[o, v, o, v], t_ia, t_ia, optimize=True) if t_ia.all() != 0 else 0
+
+    E_CC = E_connected_doubles + E_disconnected_doubles
+
+    return E_CC, E_connected_doubles, E_disconnected_doubles
+
+
+
+
+
+
+
+
+
+
 def coupled_cluster_initial_print(t_ijab, g, method, o, v, calculation, silent=False):
 
     """
@@ -1139,7 +1177,7 @@ def calculate_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, s
 
 
 
-def calculate_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent=False):
+def calculate_unrestricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent=False):
 
     """ 
     
@@ -1193,6 +1231,74 @@ def calculate_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent
     # Final contraction for the CCSD(T) energy using the connected and disconnected approximate triples amplitudes
     E_CCSD_T = (1 / 36) * np.einsum("ijkabc,ijkabc->", t_ijkabc_c / e_ijkabc, t_ijkabc_c + t_ijkabc_d, optimize=True)
 
+    log(f"[Done]\n\n  CCSD(T) correlation energy:         {E_CCSD_T:13.10f}", calculation, 1, silent=silent) 
+
+
+    return E_CCSD_T
+
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent=False):
+
+
+    # THIS FUNCTION HAS NOT BEEN TESTED
+
+
+    """ 
+    
+    Calculates the perturbative triples energy for restricted CCSD(T).
+
+    Args:
+        g (array): Non-antisymmetrised ERI in spatial MO basis
+        e_ijkabc (array): Triples epsilon tensor
+        t_ia (array): Converged singles amplitudes
+        t_ijab (array): Converged doubles amplitudes
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Cancel logging
+
+    
+    Returns:
+        E_CCSD_T (float): Restricted CCSD(T) energy
+
+    """
+
+    log_spacer(calculation, silent=silent, start="\n")
+    log("                   CCSD(T) Energy  ", calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation, silent=silent)
+
+
+    def P_ijkabc(array):
+
+        # Three index permutation per Lee
+
+        return array + array.transpose(1, 0, 2, 4, 3, 5) + array.transpose(2, 1, 0, 5, 4, 3) + array.transpose(0, 2, 1, 3, 5, 4) + array.transpose(2, 0, 1, 5, 3, 4) + array.transpose(1, 2, 0, 4, 5, 3)
+
+
+    log("  Forming intermediate tensors...    ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    # Calculation of key intermediate tensors
+    V_ijkabc = np.einsum("jbkc,ia->ijkabc", g[o, v, o, v], t_ia, optimize=True) + np.einsum("iakc,jb->ijkabc", g[o, v, o, v], t_ia, optimize=True) + np.einsum("iajb,kc->ijkabc", g[o, v, o, v], t_ia, optimize=True)
+
+    W_ijkabc = P_ijkabc(np.einsum("iabf,kjcf->ijkabc", g[o, v, v, v], t_ijab, optimize=True) - np.einsum("iajm,mkbc->ijkabc", g[o, v, o, o], t_ijab, optimize=True))
+
+    W = 4 * W_ijkabc + W_ijkabc.transpose(2, 0, 1, 3, 4, 5) + W_ijkabc.transpose(1, 2, 0, 3, 4, 5) - 4 * W_ijkabc.transpose(2, 1, 0, 3, 4, 5) - W_ijkabc.transpose(0, 2, 1, 3, 4, 5) - W_ijkabc.transpose(1, 0, 2, 3, 4, 5)
+    
+    log(f"[Done]", calculation, 1, silent=silent)
+
+    log("\n  Calculating CCSD(T) correlation energy...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    E_CCSD_T = (1 / 3) * np.einsum("ijkabc,ijkabc,ijkabc->", W_ijkabc + V_ijkabc, W, e_ijkabc, optimize=True)
+    
     log(f"[Done]\n\n  CCSD(T) correlation energy:         {E_CCSD_T:13.10f}", calculation, 1, silent=silent) 
 
 
@@ -1683,7 +1789,7 @@ def calculate_coupled_cluster(method, molecule, SCF_output, ERI_AO, X, H_core, c
 
     if "CCSD[T]" in method:
 
-        E_CCSD_T = calculate_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent=silent)
+        E_CCSD_T = calculate_unrestricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent=silent)
 
 
     log_spacer(calculation, silent=silent)

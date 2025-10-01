@@ -1,5 +1,18 @@
 # Changelog
 
+## TUNA 0.8.1 — 28/10/2025
+
+### Added
+
+- Spin-adapted closed shell CCSD(T), speeding up restricted reference calculations
+
+### Fixed
+
+- Manual is now distributed using PyPI
+- Improved PyPI page formatting
+
+<br>
+
 ## TUNA 0.8.0 — 28/09/2025
 
 ### Added
