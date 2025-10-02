@@ -4,7 +4,9 @@
 
 ### Added
 
-- Spin-adapted closed shell CCSD(T), speeding up restricted reference calculations
+- Spin-adapted closed shell LCCD, LCCSD, CCD, CCSD, and CCSD(T), speeding up restricted reference calculations
+- Spin-unrestricted and spin-adapted QCISD
+- Using additional print keyword, `P`, to get a more detailed breakdown of time taken
 
 ### Fixed
 

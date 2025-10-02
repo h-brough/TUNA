@@ -44,32 +44,16 @@ def calculate_coupled_cluster_energy(o, v, g, t_ijab, t_ia=np.zeros(1), F=None):
 
 
 
-def calculate_restricted_coupled_cluster_energy(o, v, L, t_ijab, t_ia=np.zeros(1)):
+def calculate_restricted_coupled_cluster_energy(o, v, w, t_ijab, t_ia=np.zeros(1)):
 
-    """
-    
-    Calculates the restricted coupled cluster energy.
 
-    Args:
-        o (slice): Occupied orbital slice
-        v (slice): Virtual orbital slice
-        L (array): Coupled cluster (Eq. 13.7.15)
-        t_ijab (array): Doubles amplitudes
-        t_ia (array, optional): Singles amplitudes
+    E_singles = 0.0
+    E_connected_doubles = np.einsum("abij,ijab->", w[v, v, o, o], t_ijab, optimize=True)
+    E_disconnected_doubles = np.einsum("abij,ia,jb->", w[v, v, o, o], t_ia, t_ia, optimize=True) if t_ia.all() != 0 else 0
 
-    Returns:
-        E_CC (float): Coupled cluster energy
-        E_connected_doubles (float): Energy due to connected doubles
-        E_disconnected_doubles (float): Energy due to disconnected doubles
-    
-    """
+    E_CC = E_singles + E_connected_doubles + E_disconnected_doubles
 
-    E_connected_doubles = np.einsum("ijab,ijab->", L[o, v, o, v], t_ijab, optimize=True)
-    E_disconnected_doubles = np.einsum("iajb,ia,jb->", L[o, v, o, v], t_ia, t_ia, optimize=True) if t_ia.all() != 0 else 0
-
-    E_CC = E_connected_doubles + E_disconnected_doubles
-
-    return E_CC, E_connected_doubles, E_disconnected_doubles
+    return E_CC, E_singles, E_connected_doubles, E_disconnected_doubles
 
 
 
@@ -1038,7 +1022,7 @@ def calculate_LCCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, 
 
 
 
-def calculate_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, silent=False):
+def calculate_unrestricted_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, silent=False):
 
     """ 
     
@@ -1175,6 +1159,141 @@ def calculate_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, s
 
 
 
+def calculate_restricted_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, silent=False):
+
+
+    E_CCSD = 0.0
+
+    CC_max_iter = calculation.CC_max_iter
+
+    DIIS_error_vector = []
+    t_ijab_vector = []
+    t_ia_vector = []
+
+    # Does kronecker delta needded?
+
+    log_spacer(calculation, silent=silent, start="\n")
+    log("               CCSD Energy and Density ", calculation, 1, silent=silent, colour="white")
+
+
+    coupled_cluster_initial_print(t_ijab, g, "CCSD", o, v, calculation, silent=silent)
+
+
+    def permute_ia_jb(array):
+
+        return array + array.transpose(1, 0, 3, 2)
+
+    # Put g into Chemist's notation
+    g = g.transpose(0, 2, 1, 3)
+
+
+    for step in range(1, CC_max_iter + 1):
+
+        t_ijab_old = t_ijab.copy()
+        t_ia_old = t_ia.copy()
+
+        E_old = E_CCSD
+
+
+
+
+        w = 2 * g - g.swapaxes(0, 1)
+
+        F_ik = F[o, o] + np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize=True) + np.einsum("cdkl,ic,ld->ik", w[v, v, o, o], t_ia, t_ia, optimize=True) 
+        F_ac = F[v, v] - np.einsum("cdkl,klad->ac", w[v, v, o, o], t_ijab, optimize=True) - np.einsum("cdkl,ka,ld->ac", w[v, v, o, o], t_ia, t_ia, optimize=True) 
+        F_ck = np.einsum("cdkl,ld->ck", w[v, v, o, o], t_ia, optimize=True)
+
+        L_ik = F_ik + np.einsum("cilk,lc->ik", w[v, o, o, o], t_ia, optimize=True)
+        L_ac = F_ac + np.einsum("dcka,kd->ac", w[v, v, o, v], t_ia, optimize=True)
+        
+        L_tilde_ik = L_ik - F[o, o]
+        L_tilde_ac = L_ac - F[v, v]
+
+        W_ijkl = g[o, o, o, o] + np.einsum("cilk,jc->ijkl", g[v, o, o, o], t_ia, optimize=True) + np.einsum("cjkl,ic->ijkl", g[v, o, o, o], t_ia, optimize=True)
+        W_ijkl += np.einsum("cdkl,ijcd->ijkl", g[v, v, o, o], t_ijab, optimize=True) + np.einsum("cdkl,ic,jd->ijkl", g[v, v, o, o], t_ia, t_ia, optimize=True)
+
+        W_cdab = g[v, v, v, v] - np.einsum("dcka,kb->cdab", g[v, v, o, v], t_ia, optimize=True) - np.einsum("cdkb,ka->cdab", g[v, v, o, v], t_ia, optimize=True)
+
+        W_icak = g[o, v, v, o] - np.einsum("cikl,la->icak", g[v, o, o, o], t_ia, optimize=True) + np.einsum("cdka,id->icak", g[v, v, o, v], t_ia, optimize=True)
+        W_icak += - (1 / 2) * np.einsum("dclk,ilda->icak", g[v, v, o, o], t_ijab, optimize=True) - np.einsum("dclk,id,la->icak", g[v, v, o, o], t_ia, t_ia, optimize=True) + (1 / 2) * np.einsum("dclk,ilad->icak", w[v, v, o, o], t_ijab, optimize=True)
+
+        W_ciak = g[v, o, v, o] - np.einsum("cilk,la->ciak", g[v, o, o, o], t_ia, optimize=True) + np.einsum("dcka,id->ciak", g[v, v, o, v], t_ia, optimize=True)
+        W_ciak += - (1 / 2) * np.einsum("cdlk,ilda->ciak", g[v, v, o, o], t_ijab, optimize=True) - np.einsum("cdlk,id,la->ciak", g[v, v, o, o], t_ia, t_ia, optimize=True)
+
+
+        t_ia_temporary = np.einsum("ca,ic->ia", F_ac - F[v, v], t_ia, optimize=True) - np.einsum("ik,ka->ia", F_ik - F[o, o], t_ia, optimize=True) + np.einsum("ck,kica->ia", F_ck, 2 * t_ijab - t_ijab.swapaxes(0, 1), optimize=True)
+        t_ia_temporary += np.einsum("ck,ic,ka->ia", F_ck, t_ia, t_ia, optimize=True) + np.einsum("icak,kc->ia", w[o, v, v, o], t_ia, optimize=True) + np.einsum("cdak,ikcd->ia", w[v, v, v, o], t_ijab, optimize=True)
+        t_ia_temporary += np.einsum("cdak,ic,kd->ia", w[v, v, v, o], t_ia, t_ia, optimize=True) - np.einsum("ickl,klac->ia", w[o, v, o, o], t_ijab, optimize=True) - np.einsum("ickl,ka,lc->ia", w[o, v, o, o], t_ia, t_ia, optimize=True)
+
+
+
+        t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", W_ijkl, t_ijab, optimize=True) + (1 / 2) * np.einsum("ijkl,ka,lb->ijab", W_ijkl, t_ia, t_ia, optimize=True)
+        t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", W_cdab, t_ijab, optimize=True) + (1 / 2) * np.einsum("cdab,ic,jd->ijab", W_cdab, t_ia, t_ia, optimize=True)
+        t_ijab_temporary += np.einsum("ca,ijcb->ijab", L_tilde_ac, t_ijab, optimize=True) - np.einsum("ik,kjab->ijab", L_tilde_ik, t_ijab, optimize=True)
+        t_ijab_temporary += np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize=True) - np.einsum("ickb,ka,jc->ijab", g[o, v, o, v], t_ia, t_ia, optimize=True) - np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize=True) - np.einsum("icak,jc,kb->ijab", g[o, v, v, o], t_ia, t_ia, optimize=True)
+        t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", W_icak, t_ijab, optimize=True) - np.einsum("ciak,kjcb->ijab", W_ciak, t_ijab, optimize=True) - np.einsum("icak,kjbc->ijab", W_icak, t_ijab, optimize=True) - np.einsum("cibk,kjac->ijab", W_ciak, t_ijab, optimize=True)
+
+
+        t_ijab_temporary_permuted = permute_ia_jb(t_ijab_temporary)
+
+
+        t_ia = e_ia * t_ia_temporary
+        t_ijab = e_ijab * t_ijab_temporary_permuted
+
+        E_CCSD, E_CCSD_singles, E_CCSD_connected_doubles, E_CCSD_disconnected_doubles = calculate_restricted_coupled_cluster_energy(o, v, w, t_ijab, t_ia)
+
+        if E_CCSD > 1000 or any(not np.isfinite(x).all() for x in (t_ia, t_ijab)):
+
+            error("Non-finite encountered in CCSD iteration. Try stronger damping with the CCDAMP keyword?.")
+
+        # Calculates the change in energy
+        delta_E = E_CCSD - E_old
+
+        log(f"  {step:3.0f}           {E_CCSD:13.10f}         {delta_E:13.10f}", calculation, 1, silent=silent)
+
+        # If convergence criteria has been reached, exit loop
+        if abs(delta_E) < calculation.CC_conv and np.linalg.norm(t_ijab - t_ijab_old) < calculation.amp_conv and np.linalg.norm(t_ia - t_ia_old) < calculation.amp_conv: break
+
+        elif step >= CC_max_iter: error("The CCSD iterations failed to converge! Try increasing the maximum iterations?")
+
+        # Update amplitudes with DIIS
+        t_ijab_residual = (t_ijab - t_ijab_old).ravel()
+        t_ia_residual = (t_ia - t_ia_old).ravel()
+
+        t_ijab_vector.append(t_ijab.copy())
+        t_ia_vector.append(t_ia.copy())
+
+        DIIS_error_vector.append(np.concatenate((t_ijab_residual, t_ia_residual)))
+
+        if step > 2 and calculation.DIIS: 
+
+            t_ijab_DIIS, t_ia_DIIS, _ = update_DIIS((t_ijab_vector, t_ia_vector), DIIS_error_vector, calculation, silent=silent)
+
+            t_ijab = t_ijab_DIIS if t_ijab_DIIS is not None else t_ijab
+            t_ia = t_ia_DIIS if t_ia_DIIS is not None else t_ia
+
+        # Applies damping to amplitudes
+        t_ijab, t_ia, _ =  apply_damping(t_ijab, t_ijab_old, calculation, t_ia=t_ia, t_ia_old=t_ia_old)
+
+
+    log_spacer(calculation, silent=silent)
+
+    log(f"\n  Singles contribution:               {E_CCSD_singles:13.10f}", calculation, 1, silent=silent)
+    log(f"  Connected doubles contribution:     {E_CCSD_connected_doubles:13.10f}", calculation, 1, silent=silent)
+    log(f"  Disconnected doubles contribution:  {E_CCSD_disconnected_doubles:13.10f}", calculation, 1, silent=silent)
+
+    log(f"\n  CCSD correlation energy:            {E_CCSD:.10f}", calculation, 1, silent=silent)
+
+
+    return E_CCSD, t_ia, t_ijab
+
+
+
+
+
+
+
+
 
 
 def calculate_unrestricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent=False):
@@ -1276,6 +1395,7 @@ def calculate_restricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculat
     log("                   CCSD(T) Energy  ", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
+    
 
     def P_ijkabc(array):
 
@@ -1728,6 +1848,21 @@ def calculate_coupled_cluster(method, molecule, SCF_output, ERI_AO, X, H_core, c
     n_occ = molecule.n_occ
     n_virt = molecule.n_virt
 
+    """"""
+    g, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, molecule.n_doubly_occ, calculation, silent=silent)
+
+    e_ia = ci.build_singles_epsilons_tensor(epsilons, o, v)
+    e_ijab = ci.build_doubles_epsilons_tensor(epsilons, epsilons, o, o, v, v)
+    e_ijkabc = ci.build_triples_epsilons_tensor(epsilons, o, v)
+
+    t_ia = np.zeros_like(e_ia)
+    t_ijab = e_ijab * g.transpose(0,2,1,3)[o, o, v, v]
+    F = np.diag(epsilons)
+    E_CCSD, t_ia, t_ijab = calculate_restricted_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, silent=silent)
+    calculate_restricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, calculation, silent=False)
+    """"""
+
+
     # Calculates useful quantities for all coupled cluster calculations
     g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels_sorted, spin_orbital_labels_sorted = ci.begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, n_occ, calculation, silent=silent)
 
@@ -1767,7 +1902,7 @@ def calculate_coupled_cluster(method, molecule, SCF_output, ERI_AO, X, H_core, c
 
     elif "CCSD" in method and "CCSDT" not in method:
 
-        E_CCSD, t_ia, t_ijab = calculate_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, silent=silent)
+        E_CCSD, t_ia, t_ijab = calculate_unrestricted_CCSD_energy(g, e_ia, e_ijab, t_ia, t_ijab, F, o, v, calculation, silent=silent)
        
     elif "CCSDT" in method:
 
