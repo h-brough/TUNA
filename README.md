@@ -39,7 +39,6 @@ The program requires Python 3.12 or higher and the following packages:
 * matplotlib
 * termcolor
 
-
 ### Installation
 
 The simplest way to install TUNA and its dependencies is by running
