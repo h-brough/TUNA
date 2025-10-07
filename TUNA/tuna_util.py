@@ -6,9 +6,6 @@ from functools import partial
 
 
 
-
-
-
 def process_keyword(key_strings, default_value, params=None, boolean=True, check_next_space=False, mandatory_value=False, associated_keyword_default=None, value_type=None, plot_path=False):
 
     """
@@ -189,7 +186,7 @@ class Calculation:
         self.multiplicity = keyword(["ML", "MULTIPLICITY"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.default_multiplicity = not keyword(["ML", "MULTIPLICITY"], False)
         self.S_eigenvalue_threshold = keyword(["STHRESH"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.rotate_guess, self.theta = keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[0], keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[1] * np.pi / 180
+        self.rotate_guess, self.theta = keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[0], keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[1]
         self.no_rotate_guess = keyword(["NOROTATE"], False)
 
         # Custom masses
@@ -219,6 +216,7 @@ class Calculation:
         self.OMP2_max_iter = keyword(["OMP2MAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.CC_conv = keyword(["CCCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.amp_conv = keyword(["AMPCONV"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.print_n_amplitudes = keyword(["PRINTAMPS"], 10, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.CC_max_iter = keyword(["CCMAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.cc_damp_requested, self.coupled_cluster_damping_parameter = keyword(["CCDAMP"], False, check_next_space=True, value_type=float, associated_keyword_default=0.25)
         self.coupled_cluster_damping_parameter = self.coupled_cluster_damping_parameter if self.cc_damp_requested else 0
@@ -247,6 +245,7 @@ class Calculation:
         if not self.SCF_conv_requested:
         
             self.SCF_conv = constants.convergence_criteria_SCF["tight"] if self.calculation_type in ["OPT", "FREQ", "OPTFREQ", "MD"] and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
+            self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if self.calculation_type in ["FREQ", "OPTFREQ"] else self.SCF_conv
             self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "CIS" in self.method and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
 
         self.geom_conv = constants.convergence_criteria_optimisation["loose"] if "LOOSEOPT" in params else constants.convergence_criteria_optimisation["medium"]
@@ -643,6 +642,19 @@ def finish_calculation(calculation):
     end_time = time.perf_counter()
     total_time = end_time - calculation.start_time
     
+    if calculation.additional_print:
+
+        log(f"\n Time taken for molecular integrals:      {calculation.integrals_time - calculation.start_time:8.2f} seconds", calculation, 3)
+        log(f" Time taken for SCF iterations:           {calculation.SCF_time - calculation.integrals_time:8.2f} seconds", calculation, 3)
+
+        if calculation.method in correlated_methods: 
+            
+            log(f" Time taken for correlated calculation:   {calculation.correlation_time - calculation.SCF_time:8.2f} seconds", calculation, 3)
+        
+        if calculation.method in excited_state_methods:
+        
+            log(f" Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:6.2f} seconds", calculation, 3)
+
     if total_time > 120:
 
         minutes = total_time // 60
@@ -664,6 +676,7 @@ def finish_calculation(calculation):
         
         log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n","white"), calculation, 1)
     
+
     # Exits the program
     sys.exit()
 
@@ -918,8 +931,16 @@ def scan_plot(calculation, bond_lengths, energies):
     import matplotlib
     import pickle
     from matplotlib import font_manager as fm
+    import warnings, logging
 
-    plot_font = ["Consolas", "Liberation Mono", "DejaVu San"]
+    # Suppress warnings
+    logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+    logging.getLogger("matplotlib").setLevel(logging.ERROR)
+    warnings.filterwarnings("ignore", module="matplotlib.font_manager")
+
+    _ = fm.fontManager.ttflist  # touch the cache
+
+    plot_font = ["Consolas", "Liberation Mono", "Courier New", "DejaVu Sans"]
 
     matplotlib.rcParams['font.family'] = plot_font
 
@@ -931,7 +952,9 @@ def scan_plot(calculation, bond_lengths, energies):
             with open("TUNA-plot-temp.pkl", "rb") as f:
                 fig = pickle.load(f)
                 ax = fig.axes[0]
-
+                plt.figure(fig.number)            # <- make loaded figure current
+                fig.set_size_inches(10, 6, True)
+        
         except:
 
             fig, ax = plt.subplots(figsize=(10,6))    
@@ -983,7 +1006,7 @@ def scan_plot(calculation, bond_lengths, energies):
     
     if calculation.save_plot:
 
-        plt.savefig(calculation.save_plot_filepath, dpi=1200, transparent=True)
+        plt.savefig(calculation.save_plot_filepath, dpi=1200, figtransparent=True)
 
     log("  [Done]", calculation, 1)
 
@@ -1049,14 +1072,41 @@ method_types = {
     "UCEPA": "unrestricted coupled electron pair approximation",
     "CEPA[0]": "coupled electron pair approximation",
     "UCEPA[0]": "unrestricted coupled electron pair approximation",
+    "QCISD": "quadratic configuration interaction singles and doubles",
+    "UQCISD": "unrestricted quadratic configuration interaction singles and doubles",
     "CCSD": "coupled cluster singles and doubles",
     "UCCSD": "unrestricted coupled cluster singles and doubles",
+    "QCISD[T]": "quadratic configuration interaction singles, doubles and perturbative triples",
+    "UQCISD[T]": "unrestricted quadratic configuration interaction singles, doubles and perturbative triples",
     "CCSD[T]": "coupled cluster singles, doubles and perturbative triples",
     "UCCSD[T]": "unrestricted coupled cluster singles, doubles and perturbative triples",
     "CCSDT": "coupled cluster singles, doubles and triples",
     "UCCSDT": "unrestricted coupled cluster singles, doubles and triples"
 
     }
+
+
+
+
+
+
+correlated_methods = [
+    
+    "MP2", "UMP2", "SCS-MP2", "USCS-MP2", "MP3", "UMP3", "SCS-MP3", "USCS-MP3", "MP4", "MP4[SDTQ]", "MP4[SDQ]", "MP4[DQ]", "OMP2", "UOMP2", "OOMP2", "UOOMP2",
+    "CCD", "UCCD", "CEPA0", "UCEPA0", "LCCD", "ULCCD",  "LCCSD", "ULCCSD", "CEPA", "UCEPA", "CEPA[0]", "UCEPA[0]", "QCISD", "UQCISD", "CCSD", "UCCSD", "QCISD[T]", "UQCISD[T]", "CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT"
+
+    ]
+
+
+
+
+
+excited_state_methods = [
+    
+    "CIS", "UCIS", "UCIS[D]", "CIS[D]"
+
+    ]
+
 
 
 

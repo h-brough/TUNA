@@ -64,6 +64,34 @@ def six_index_permute(array):
 
 
 
+def calculate_restricted_t_amplitude_energy(t_ijab, g):
+
+    """
+
+    Calculates the restricted MP2 energy.
+
+    Args:
+        t_ijab (array): Amplitude with shape ijab
+        g (array): Electron repulsion integrals in spatial orbital basis
+
+    Returns:
+        E_MP2 (float): Contribution to MP2 energy
+
+    """
+
+    E_MP2 = np.einsum("ijab,ijab->", t_ijab, 2 * g - g.transpose(0, 1, 3, 2), optimize=True)
+
+    return E_MP2
+
+
+
+
+
+
+
+
+
+
 def calculate_t_amplitude_energy(t_ijab, ERI_SO):
 
     """
@@ -251,7 +279,8 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
 
     log("  Calculating MP2 correlation energy... ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
-    ERI_MO = ERI_MO.transpose(1, 3, 0, 2)
+    # Convert to chemists' notation
+    ERI_MO = ERI_MO.transpose(0, 2, 1, 3)
 
     ERI_MO_ijab = ERI_MO[o, o, v, v]
     ERI_MO_ijab_ansym = ERI_MO_ijab - ERI_MO_ijab.swapaxes(2, 3)
@@ -277,7 +306,7 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
     log("\n  Constructing MP2 unrelaxed density... ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
     # Opposite and same-spin t-amplitudes
-    t_ijab_OS = -2 * ERI_MO[o,o,v,v] * e_ijab
+    t_ijab_OS = -2 * ERI_MO_ijab * e_ijab
     t_ijab_SS = ERI_MO_ijab_ansym * e_ijab
 
     P_MP2 = np.zeros((n_atomic_orbitals, n_atomic_orbitals))

@@ -1,16 +1,30 @@
 # Changelog
 
-## TUNA 0.8.1 — 28/10/2025
+## TUNA 0.8.1 — 11/10/2025
 
 ### Added
 
-- Spin-adapted closed shell LCCD, LCCSD, CCD, CCSD, and CCSD(T), speeding up restricted reference calculations
-- Spin-unrestricted and spin-adapted QCISD
-- Using additional print keyword, `P`, to get a more detailed breakdown of time taken
+- Spin-adapted closed shell LCCD, LCCSD, CCD, CCSD and CCSD(T), speeding up correlated calculations on RHF references
+- Spin-unrestricted and spin-adapted QCISD and QCISD(T)
+- The additional print keyword, `P`, now gives a more detailed breakdown of time taken throughout a calculation
+- Choose the number of the largest amplitudes to print with the `PRINTAMPS` keyword
+- Significant speed improvements using new methods to find largest amplitudes in coupled cluster calculations
+
+### Changed
+
+- For frequency calculations, the default SCF convergence is now `EXTREME` to prevent numerical issues
+- Optimised and refactored coupled cluster module
+- Improved formatting in output for consistency
+- An error is now given before the SCF calculation if a correlated calculation is not possible
 
 ### Fixed
 
-- Manual is now distributed using PyPI
+- The disconnected doubles contribution to the coupled cluster energy was sometimes calculated incorrectly
+- Dynamic damping now only starts after the second SCF step, to prevent issues with rotated guesses and overdamping
+- During geometry optimisation, the current bond length was not printing correctly
+- Suppressed warnings for Matplotlib not being able to find a particular font
+- Matplotlib graphs where `ADDPLOT` is used successively no longer get exponentially bigger on MacOS
+- The TUNA manual is now distributed using PyPI
 - Improved PyPI page formatting
 
 <br>

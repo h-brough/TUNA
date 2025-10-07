@@ -1,6 +1,6 @@
 import numpy as np
 import tuna_scf as scf
-import sys
+import sys, time
 from tuna_util import *
 from tuna_integrals import tuna_integral as ints
 import tuna_postscf as postscf
@@ -419,7 +419,7 @@ def check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=False):
 
 
 
-def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta, calculation, silent=False):
+def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
     
     """
 
@@ -435,7 +435,8 @@ def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta, calculation, sil
 
     """
 
-    theta_degrees = theta * np.pi / 180.0
+    # Converts to radians
+    theta *= np.pi / 180.0
 
     homo_index = n_occ - 1
     lumo_index = n_occ
@@ -536,7 +537,7 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
             guess_epsilons, guess_mos = scf.diagonalise_Fock_matrix(H_core, X)
 
             # Rotate the alpha MOs if this is requested, otherwise take the alpha guess to equal the beta guess
-            guess_mos_alpha = rotate_molecular_orbitals(guess_mos, n_alpha, calculation.theta, calculation, silent=silent) if rotate_guess_mos else guess_mos
+            guess_mos_alpha = rotate_molecular_orbitals(guess_mos, n_alpha, calculation.theta) if rotate_guess_mos else guess_mos
 
             # Construct density matrices (1 electron per orbital) for the alpha and beta guesses
             P_guess_alpha = scf.construct_density_matrix(guess_mos_alpha, n_alpha, 1)
@@ -552,7 +553,7 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
 
             if rotate_guess_mos: 
                 
-                log(f" Initial guess density uses molecular orbitals rotated by {(calculation.theta / np.pi * 180):.1f} degrees.\n", calculation, silent=silent)
+                log(f" Initial guess density uses molecular orbitals rotated by {(calculation.theta):.1f} degrees.\n", calculation, silent=silent)
 
 
     return E_guess, P_guess, P_guess_alpha, P_guess_beta, guess_epsilons, guess_mos
@@ -820,8 +821,12 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         except np._core._exceptions._ArrayMemoryError:
 
             error("Not enough memory to build two-electron integrals array! Uh oh!")
-
+        
         log("[Done]", calculation, 1, silent=silent)
+
+        calculation.integrals_time = time.perf_counter()
+        log(f"\n Time taken for integrals:  {calculation.integrals_time - calculation.start_time:.2f} seconds", calculation, 3, silent=silent)
+
 
         # Calculates Fock transformation matrix from overlap matrix
         log("\n Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
@@ -845,6 +850,9 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         # Starts SCF cycle for two-electron energy
         SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent)
+        
+        calculation.SCF_time = time.perf_counter()
+        log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
 
         # Extracts useful quantities from SCF output object
         molecular_orbitals = SCF_output.molecular_orbitals
@@ -885,23 +893,22 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
         if "MP" in method: 
-            
-            if n_virt <= 0 and reference == "RHF" or n_virt <= 1 and reference == "UHF": error("Correlated calculation requested on system with insufficient virtual orbitals!")
 
             E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
             postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "MP2", silent=silent)
 
         # If a coupled-cluster calculation is requested, calculates the energy
-        elif "CC" in method or "CEPA" in method:
+        elif "CC" in method or "CEPA" in method or "QCISD" in method:
 
-            if n_virt <= 0 and reference == "RHF" or n_virt <= 1 and reference == "UHF": error("Correlated calculation requested on system with insufficient virtual orbitals!")
-            if method in ["CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT"] and n_electrons == 2: error("Triple excitations have been requested on a two-electron system!")
-
-
-            E_LCCD, E_CCD, E_LCCSD, E_CCSD, E_CCSD_T, E_CCSDT, P, P_alpha, P_beta = cc.calculate_coupled_cluster(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
+            E_CC, E_CCSD_T, P, P_alpha, P_beta = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
+            
             postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "Coupled cluster", silent=silent)
 
-    
+        if method in correlated_methods:
+
+            calculation.correlation_time = time.perf_counter()
+            log(f"\n Time taken for correlated calculation:  {calculation.correlation_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
+
 
 
     # Prints post SCF information, as long as its not an optimisation that hasn't finished yet
@@ -917,6 +924,9 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
         E_CIS, E_transition, P, P_alpha, P_beta = ci.run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, silent=silent)
+        
+        calculation.excited_state_time = time.perf_counter()
+        log(f"\n Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
 
         if calculation.additional_print: 
            
@@ -924,18 +934,19 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
            postscf.post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, molecule.partition_ranges, D, P_alpha, P_beta, epsilons_alpha, epsilons_beta, molecular_orbitals_alpha, molecular_orbitals_beta)
 
     # Prints Hartree-Fock energy
-    if reference == "RHF": log("\n Final restricted Hartree-Fock energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
-    else: log("\n Final unrestricted Hartree-Fock energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
+    if reference == "RHF": log("\n Restricted Hartree-Fock energy:   " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+    else: log("\n Unrestricted Hartree-Fock energy: " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
 
 
     # Adds up and prints MP2 energies
     if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2"]: 
-    
+        
+        space = " " * max(0, 8 - len(method))
+
         final_energy += E_MP2
 
-        log(f" Correlation energy from {method}: " + f"{E_MP2:.10f}\n", calculation, 1, silent=silent)
-        log(" Final single point energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
+        log(f" Correlation energy from {method}: {space}" + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
 
 
     # Adds up and prints MP3 energies
@@ -945,82 +956,82 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         if method == "SCS-MP3":
 
-            log(f" Correlation energy from SCS-MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from SCS-MP3: " + f"{E_MP3:.10f}\n", calculation, 1, silent=silent)
+            log(f" Correlation energy from SCS-MP2:  " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from SCS-MP3:  " + f"{E_MP3:16.10f}\n", calculation, 1, silent=silent)
 
         else:
 
-            log(f" Correlation energy from MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP3: " + f"{E_MP3:.10f}\n", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP2:      " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP3:      " + f"{E_MP3:16.10f}\n", calculation, 1, silent=silent)
 
-        log(" Final single point energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
 
     elif method in ["MP4", "MP4[SDQ]", "MP4[DQ]", "MP4[SDTQ]"]:
         
         final_energy += E_MP2 + E_MP3 + E_MP4
 
+        log(f" Correlation energy from MP2:      " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
+        log(f" Correlation energy from MP3:      " + f"{E_MP3:16.10f}", calculation, 1, silent=silent)
+
         if method == "MP4" or method == "MP4[SDTQ]":
 
-            log(f" Correlation energy from MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP3: " + f"{E_MP3:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP4: " + f"{E_MP4:.10f}\n", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP4:      " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
 
         elif method == "MP4[SDQ]":
 
-            log(f" Correlation energy from MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP3: " + f"{E_MP3:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP4(SDQ): " + f"{E_MP4:.10f}\n", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP4(SDQ): " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
 
         elif method == "MP4[DQ]":
 
-            log(f" Correlation energy from MP2: " + f"{E_MP2:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP3: " + f"{E_MP3:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP4(DQ): " + f"{E_MP4:.10f}\n", calculation, 1, silent=silent)
+            log(f" Correlation energy from MP4(DQ):  " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
  
 
-        log(" Final single point energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
 
 
-    elif "CC" in method or "CEPA" in method:
+    elif "CC" in method or "CEPA" in method or "QC" in method:
 
-        E_CC = E_LCCD + E_LCCSD + E_CCD + E_CCSD + E_CCSD_T + E_CCSDT
-
-        final_energy += E_CC
+        final_energy += E_CC + E_CCSD_T
 
 
-        if method in ["CCSD[T]", "UCCSD[T]"]:
+        if "CCSD[T]" in method:
 
-            log(f" Correlation energy from CCSD: " + f"{E_CCSD:.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from CCSD(T): " + f"{E_CCSD_T:.10f}\n", calculation, 1, silent=silent)
+            log(f" Correlation energy from CCSD:     " + f"{E_CC:16.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from CCSD(T):  " + f"{E_CCSD_T:16.10f}\n", calculation, 1, silent=silent)
+        
+        elif "QCISD[T]" in method:
+
+            log(f" Correlation energy from QCISD:    " + f"{E_CC:16.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from QCISD(T): " + f"{E_CCSD_T:16.10f}\n", calculation, 1, silent=silent)
 
         else:
             
-            method = method.replace("[", "(").replace("]", ")")
+            space = " " * max(0, 8 - len(method))
 
-            log(f" Correlation energy from {method}: " + f"{E_CC:.10f}\n", calculation, 1, silent=silent)
-
-
-        log(" Final single point energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from {method}:{space} " + f"{E_CC:16.10f}\n", calculation, 1, silent=silent)
 
 
 
     # Prints CIS energy of state of interest
-    elif method in ["CIS", "UCIS", "CIS[D]", "UCIS[D]"]:
+    elif method in excited_state_methods:
 
         final_energy = E_CIS
 
         method = method.replace("[", "(").replace("]", ")")
+        space = " " * max(0, 8 - len(method))
 
-        log(f"\n Excitation energy to state {calculation.root} from {method}: " + f"{E_transition:.10f}", calculation, 1, silent=silent)
-        log(f"\n Final {method} single point energy: {final_energy:.10f}", calculation, 1, silent=silent)
+        log(f"\n Excitation energy is the energy difference to excited state {calculation.root}.", calculation, 1, silent=silent)
+        
+        log(f"\n Excitation energy from {method}:  {space}" + f"{E_transition:16.10f}", calculation, 1, silent=silent)
+    
+    
+    log(" Final single point energy:        " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
     # Adds on D2 energy, and prints this as dispersion-corrected final energy
     if calculation.D2:
     
         final_energy += E_D2
 
-        log("\n Semi-empirical dispersion energy: " + f"{E_D2:.10f}", calculation, 1, silent=silent)
-        log(" Dispersion-corrected final energy: " + f"{final_energy:.10f}", calculation, 1, silent=silent)
+        log("\n Semi-empirical dispersion energy: " + f"{E_D2:16.10f}", calculation, 1, silent=silent)
+        log(" Dispersion-corrected final energy:" + f"{final_energy:16.10f}", calculation, 1, silent=silent)
     
 
 

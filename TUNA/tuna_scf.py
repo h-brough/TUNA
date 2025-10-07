@@ -290,7 +290,7 @@ def construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta):
 
 
 
-def apply_damping(P_before_damping, P_old_damp, orbital_gradient, calculation, P_old_before_damping, P_very_old_damped, S, partition_ranges, atoms):
+def apply_damping(P_before_damping, P_old_damp, orbital_gradient, calculation, P_old_before_damping, P_very_old_damped, S, partition_ranges, atoms, step):
 
     """
     
@@ -356,7 +356,7 @@ def apply_damping(P_before_damping, P_old_damp, orbital_gradient, calculation, P
 
         else:
 
-            if orbital_gradient > 0.01: 
+            if orbital_gradient > 0.01 and step > 1: 
                 
                 # Equations taken from Zerner and Hehenberger paper
                 A_n_out = calculate_gross_Mulliken_atomic_population(P_before_damping)
@@ -683,7 +683,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             # Damping factor is applied to the density matrix
             P_before_damping = P
 
-            P, damping_factor = apply_damping(P, P_old, orbital_gradient, calculation, P_old_before_damping, P_very_old, S, molecule.partition_ranges, molecule.atoms)
+            P, damping_factor = apply_damping(P, P_old, orbital_gradient, calculation, P_old_before_damping, P_very_old, S, molecule.partition_ranges, molecule.atoms, step)
 
             # Energy is sum of electronic and nuclear energies
             E_total = E + V_NN  
@@ -715,6 +715,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
             P_very_old_alpha = P_old_alpha
             P_very_old_beta = P_old_beta
+            
             P_old_before_damping_alpha = P_before_damping_alpha
             P_old_before_damping_beta = P_before_damping_beta
 
@@ -784,8 +785,8 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             P_before_damping_alpha = P_alpha
             P_before_damping_beta = P_beta
 
-            P_alpha, damping_factor_alpha = apply_damping(P_alpha, P_old_alpha, orbital_gradient_alpha, calculation, P_old_before_damping_alpha, P_very_old_alpha, S, molecule.partition_ranges, molecule.atoms)
-            P_beta, damping_factor_beta = apply_damping(P_beta, P_old_beta, orbital_gradient_beta, calculation, P_old_before_damping_beta, P_very_old_beta, S, molecule.partition_ranges, molecule.atoms)
+            P_alpha, damping_factor_alpha = apply_damping(P_alpha, P_old_alpha, orbital_gradient_alpha, calculation, P_old_before_damping_alpha, P_very_old_alpha, S, molecule.partition_ranges, molecule.atoms, step)
+            P_beta, damping_factor_beta = apply_damping(P_beta, P_old_beta, orbital_gradient_beta, calculation, P_old_before_damping_beta, P_very_old_beta, S, molecule.partition_ranges, molecule.atoms, step)
 
             P = P_alpha + P_beta
 

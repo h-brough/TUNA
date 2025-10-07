@@ -193,6 +193,9 @@ class Molecule:
         self.n_SO = 2 * self.n_atomic_orbitals
         self.n_virt = self.n_SO - self.n_occ
 
+        # This variable can be used for either RHF or UHF references
+        self.n_orbitals = self.n_SO if calculation.reference == "UHF" else self.n_atomic_orbitals
+
         # Number of core electrons is the same as number of orbitals for UHF, double for RHF
         if calculation.freeze_core:
         
@@ -217,6 +220,11 @@ class Molecule:
         if self.multiplicity < 1: error("Multiplicity must be at least 1!")
         if self.n_electrons > self.n_SO: error("Too many electrons for size of basis set!")
 
+        # Sets off errors for impossible correlated calculations
+
+        if self.n_virt <= 0 and calculation.reference == "RHF" or self.n_virt <= 1 and calculation.reference == "UHF": error("Correlated calculation requested on system with insufficient virtual orbitals!")
+        if calculation.method in ["CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "QCISD[T]", "UQCISD[T]"] and self.n_electrons == 2: error("Triple excitations have been requested on a two-electron system!")
+        
         # Sets off errors for invalid use of restricted Hartree-Fock
         if calculation.reference == "RHF" or calculation.method == "RHF":
 

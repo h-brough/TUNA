@@ -277,7 +277,7 @@ def calculate_population_analysis(P, S, R, AO_ranges, atoms, charges):
     S_sqrt = S_vecs * np.sqrt(S_vals) @ S_vecs.T
     P_Lowdin = S_sqrt @ P @ S_sqrt
 
-    bond_order_Mayer = bond_order_Lowdin = bond_order_Mulliken = 0
+    bond_order_Mayer, bond_order_Lowdin, bond_order_Mulliken = 0, 0, 0
 
     total_valences = [0, 0]
     populations_Mulliken = [0, 0]
@@ -290,9 +290,9 @@ def calculate_population_analysis(P, S, R, AO_ranges, atoms, charges):
     for i in range(AO_ranges[0]):
         for j in range(AO_ranges[0], AO_ranges[0] + AO_ranges[1]):
 
-            bond_order_Mayer += PS[i,j] * PS[j,i] + RS[i,j] * RS[j,i]
+            bond_order_Mayer += PS[i, j] * PS[j, i] + RS[i, j] * RS[j, i]
             bond_order_Lowdin += P_Lowdin[i,j] ** 2
-            bond_order_Mulliken += 2 * P[i,j] * S[i,j]
+            bond_order_Mulliken += 2 * P[i, j] * S[i, j]
     
     # Sums over atoms, then corresponding ranges of atomic orbitals in the density matrix, to build the valences and populations
     for atom in range(len(atoms)):
@@ -302,8 +302,8 @@ def calculate_population_analysis(P, S, R, AO_ranges, atoms, charges):
 
         for i in atomic_ranges:
             
-            populations_Lowdin[atom] += P_Lowdin[i,i] 
-            populations_Mulliken[atom] += PS[i,i]
+            populations_Lowdin[atom] += P_Lowdin[i, i] 
+            populations_Mulliken[atom] += PS[i, i]
             total_valences[atom] += np.einsum("j,j->", PS[i, atomic_ranges], PS[atomic_ranges, i], optimize=True)
 
         charges_Mulliken[atom] = charges[atom] - populations_Mulliken[atom]
@@ -775,8 +775,9 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
     if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2"]: log("\n Using the MP2 unrelaxed density for property calculations.", calculation, 1)
     elif method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
     elif method in ["MP3", "SCS-MP3", "UMP3", "USCS-MP3", "MP4", "MP4[SDQ]"]: warning("Using the unrelaxed MP2 density for property calculations.")
-    if "CC" in method or "CEPA" in method: log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
+    if "CC" in method or "CEPA" in method or "QC" in method: log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
     if method in ["CCSD[T]", "UCCSD[T]"]: warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")
+    if method in ["QCISD[T]", "UQCISD[T]"]: warning("Using the linearised QCISD density, not the QCISD(T) density, for property calculations.")
 
     # Prints molecular orbital eigenvalues and coefficients
     print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_alpha, n_beta, epsilons, epsilons_alpha, epsilons_beta)
@@ -790,9 +791,9 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
         if electron_affinity != "---": electron_affinity = f"{electron_affinity:9.6f}"
         if HOMO_LUMO_gap != "---": HOMO_LUMO_gap = f"{HOMO_LUMO_gap:9.6f}"
             
-        log(f"\n Koopmans' theorem ionisation energy: {ionisation_energy:9.6f}", calculation, 2)
-        log(f" Koopmans' theorem electron affinity: {electron_affinity}", calculation, 2)
-        log(f" Energy gap between HOMO and LUMO: {HOMO_LUMO_gap}", calculation, 2)
+        log(f"\n Koopmans' theorem ionisation energy:  {ionisation_energy:9.6f}", calculation, 2)
+        log(f" Koopmans' theorem electron affinity:  {electron_affinity}", calculation, 2)
+        log(f" Energy gap between HOMO and LUMO:     {HOMO_LUMO_gap}", calculation, 2)
 
     # As long as there are two real atoms present, calculates rotational constant and dipole moment information
     if len(molecule.atoms) != 1 and not any(atom.ghost for atom in molecule.atoms):

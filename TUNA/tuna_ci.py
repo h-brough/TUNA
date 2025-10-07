@@ -64,7 +64,7 @@ def antisymmetrise_integrals(ERI):
 
     """
 
-    ERI_ansym = ERI - ERI.transpose(0,1,3,2)
+    ERI_ansym = ERI - ERI.transpose(0, 1, 3, 2)
 
     return ERI_ansym
 
@@ -244,22 +244,22 @@ def build_triples_epsilons_tensor(epsilons, o, v):
 
 
 
-def build_MP2_t_amplitudes(ERI_SO, e_ijab):
+def build_MP2_t_amplitudes(g, e_ijab):
 
     """
 
     Build MP2 t amplitudes with shape ijab.
 
     Args:   
-        ERI_SO (array): Electron-repulsion integrals in SO basis
+        g (array): Electron-repulsion integrals in SO basis or spatial orbital basis OOVV sliced
         e_ijab (array): Inverse epsilons tensor shape ijab
 
     Returns:
-        t_ijab (array): MP2 t amplitudes shape ijab
+        t_ijab (array): Doubles t-amplitudes shape ijab
 
     """
 
-    t_ijab = ERI_SO * e_ijab
+    t_ijab = g * e_ijab
 
     return t_ijab
 
@@ -487,7 +487,7 @@ def begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ
 
     log("\n Transforming two-electron integrals...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    ERI_MO = transform_ERI_AO_to_MO(ERI_AO, molecular_orbitals)
+    g = transform_ERI_AO_to_MO(ERI_AO, molecular_orbitals)
 
     log("[Done]", calculation, 1, silent=silent)
 
@@ -501,7 +501,7 @@ def begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ
         log(f"\n All electrons will be correlated.", calculation, 1, silent=silent)
 
 
-    return ERI_MO, molecular_orbitals, epsilons, o, v
+    return g, molecular_orbitals, epsilons, o, v
 
 
 
@@ -870,6 +870,9 @@ def print_excited_state_information(excitation_energies, SCF_output, contributio
 
 
 
+
+
+
 def print_CIS_absorption_spectrum(molecule, excitation_energies_eV, calculation, frequencies_per_cm, wavelengths_nm, transition_dipoles, oscillator_strengths, state_types, silent=False):
     
     """
@@ -914,6 +917,9 @@ def print_CIS_absorption_spectrum(molecule, excitation_energies_eV, calculation,
 
 
 
+
+
+
 def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, g, o, v, b_ia, calculation, silent=False):
 
     """
@@ -943,7 +949,7 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, g, o, v,
 
     log(f"  Applying doubles correction to state {root + 1} only.", calculation, 1, silent=silent)
    
-    log(f"\n  Building MP2 amplitudes...               ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"\n  Building doubles amplitudes...           ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
     
     # Builds and inverts inverse epsilons tensor, to upright e_ijab_inv
     e_ijab_inv = 1 / build_doubles_epsilons_tensor(epsilons, epsilons, o, o, v, v)
@@ -981,10 +987,10 @@ def calculate_CIS_doubles_correction(excitation_energy, epsilons, root, g, o, v,
     log(f"     [Done]", calculation, 1, silent=silent)
     
     # Correction energy in eV prints if P used
-    log(f"\n  Excitation energy from CIS:         {excitation_energy:13.10f}", calculation, 1, silent=silent)
-    log(f"  Correction energy from CIS(D):      {E_CIS_D:13.10f}", calculation, 1, silent=silent)
-    log(f"  Correction energy (eV):             {(E_CIS_D * constants.eV_in_hartree):13.10f}", calculation, 3, silent=silent)
-    log(f"\n  Excitation energy from CIS(D):      {(E_CIS_D + excitation_energy):13.10f}", calculation, 1, silent=silent)
+    log(f"\n  Excitation energy from CIS:       {excitation_energy:15.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy from CIS(D):    {E_CIS_D:15.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy (eV):           {(E_CIS_D * constants.eV_in_hartree):15.10f}", calculation, 3, silent=silent)
+    log(f"\n  Excitation energy from CIS(D):    {(E_CIS_D + excitation_energy):15.10f}", calculation, 1, silent=silent)
     log_spacer(calculation, silent=silent)
   
     return E_CIS_D
@@ -1043,7 +1049,7 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     log("[Done]", calculation, 1, silent=silent)
 
 
-    log("  Calculating transition dipoles...          ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log("\n  Calculating transition dipoles...          ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
 
     transition_dipoles = calculate_transition_dipoles(SCF_output.D, weights, excitations, C_spin_block)
     oscillator_strengths = calculate_oscillator_strengths(transition_dipoles, excitation_energies)

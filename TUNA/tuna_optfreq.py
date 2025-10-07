@@ -32,7 +32,7 @@ def calculate_gradient(coordinates, calculation, atoms, silent=False):
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
 
-    log(" Calculating energy on displaced geometry 1 of 2...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 1 of 2...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
     if calculation.extrapolate:
 
@@ -44,7 +44,7 @@ def calculate_gradient(coordinates, calculation, atoms, silent=False):
 
     log("[Done]", calculation, 1, silent=silent)
 
-    log(" Calculating energy on displaced geometry 2 of 2...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 2 of 2...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
     if calculation.extrapolate:
 
@@ -120,7 +120,7 @@ def calculate_Hessian(coordinates, calculation, atoms, silent=False):
     backward_coords = coordinates - prodding_coords
     far_backward_coords = coordinates - 2 * prodding_coords  
 
-    log("\n Calculating energy on displaced geometry 1 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log("\n Calculating energy on displaced geometry 1 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     if calculation.extrapolate:
 
@@ -132,7 +132,7 @@ def calculate_Hessian(coordinates, calculation, atoms, silent=False):
 
     log("[Done]", calculation, 1, silent=silent)   
 
-    log(" Calculating energy on displaced geometry 2 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 2 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     if calculation.extrapolate:
 
@@ -144,7 +144,7 @@ def calculate_Hessian(coordinates, calculation, atoms, silent=False):
 
     log("[Done]", calculation, 1, silent=silent)   
 
-    log(" Calculating energy on displaced geometry 3 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 3 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     if calculation.extrapolate:
 
@@ -156,7 +156,7 @@ def calculate_Hessian(coordinates, calculation, atoms, silent=False):
 
     log("[Done]", calculation, 1, silent=silent)   
 
-    log(" Calculating energy on displaced geometry 4 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 4 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     if calculation.extrapolate:
 
@@ -168,7 +168,7 @@ def calculate_Hessian(coordinates, calculation, atoms, silent=False):
 
     log("[Done]", calculation, 1, silent=silent)   
 
-    log(" Calculating energy on displaced geometry 5 of 5...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 5 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     if calculation.extrapolate:
 
@@ -290,9 +290,10 @@ def optimise_geometry(calculation, atoms, coordinates):
     P_guess_alpha = None
     P_guess_beta = None
 
-    bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
     for iteration in range(1, max_geom_iter + 1):
+        
+        bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
         log_big_spacer(calculation, start="\n",space="")
         log(f"Beginning energy and gradient iteration {iteration} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1)

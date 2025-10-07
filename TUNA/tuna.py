@@ -199,7 +199,8 @@ def main():
     # Reads input line, makes sure it's okay and extracts the desired parameters
     calculation_type, method, basis, atoms, coordinates, params = parse_input()
 
-    print(colored(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set via {method_types.get(method)} requested.", "light_grey", force_color=True))
+    print(colored(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set requested.", "light_grey", force_color=True))
+    print(colored(f"Electronic structure method is {method_types.get(method)}.\n", "light_grey", force_color=True))
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
     calculation = Calculation(calculation_type, method, start_time, params, basis, atoms)

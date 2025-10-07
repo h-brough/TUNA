@@ -46,6 +46,11 @@ classifiers = [
 where = ["."]
 include = ["TUNA", "TUNA.tuna_integrals*"]
 
+
+[tool.setuptools.package-data]
+"TUNA" = ["*.pdf", "*.bat"]
+
+
 [project.urls]
 Repository = "https://github.com/h-brough/TUNA"
 Documentation = "https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf"
