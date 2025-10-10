@@ -542,9 +542,13 @@ def calculate_T1_diagnostic(molecule, t_ia, spin_labels_sorted, n_occ, n_alpha, 
     
     else:
 
-        t_ia_norm = np.linalg.norm(t_ia)
+        # Removes core orbitals from occupied count
+        n_occ -= molecule.n_core_orbitals
 
+        # The T1 diagnostic always wants the number of spin orbitals (at least to match ORCA)
         n_occ *= 2
+       
+        t_ia_norm = np.linalg.norm(t_ia)
 
     # Calculates the T1 diagnostic
     T1_diagnostic = t_ia_norm / np.sqrt(n_occ)
