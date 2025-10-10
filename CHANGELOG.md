@@ -9,9 +9,11 @@
 - The additional print keyword, `P`, now gives a more detailed breakdown of time taken throughout a calculation
 - Choose the number of the largest amplitudes to print with the `PRINTAMPS` keyword
 - Significant speed improvements using new methods to find largest amplitudes in coupled cluster calculations
+- Dynamic damping factor will now now exceed 70% by default, changeable with `MAXDAMP` keyword
 
 ### Changed
 
+- Dynamic damping now only starts after the second SCF step, to prevent issues with rotated guesses and overdamping
 - For frequency calculations, the default SCF convergence is now `EXTREME` to prevent numerical issues
 - Optimised and refactored coupled cluster module
 - Improved formatting in output for consistency
@@ -20,7 +22,6 @@
 ### Fixed
 
 - The disconnected doubles contribution to the coupled cluster energy was sometimes calculated incorrectly
-- Dynamic damping now only starts after the second SCF step, to prevent issues with rotated guesses and overdamping
 - During geometry optimisation, the current bond length was not printing correctly
 - Suppressed warnings for Matplotlib not being able to find a particular font
 - Matplotlib graphs where `ADDPLOT` is used successively no longer get exponentially bigger on MacOS

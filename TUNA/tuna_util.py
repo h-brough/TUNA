@@ -181,6 +181,9 @@ class Calculation:
 
         self.damping = keyword(["DAMP"], True)
         self.damping = not keyword(["NODAMP"], False)
+        self.max_damping = keyword(["MAXDAMP"], 0.700, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+
+
         # Keywords with mandatory parameters
         self.charge = keyword(["CH", "CHARGE"], 0, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.multiplicity = keyword(["ML", "MULTIPLICITY"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)

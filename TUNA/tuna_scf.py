@@ -375,7 +375,9 @@ def apply_damping(P_before_damping, P_old_damp, orbital_gradient, calculation, P
                 if damping_factor < 0 or damping_factor > 1: 
                     
                     damping_factor = 0
-
+                
+                # Damping will never exceed this value
+                damping_factor = damping_factor if damping_factor < calculation.max_damping else calculation.max_damping
 
 
     # Mixes old density with new, in proportion of damping factor
