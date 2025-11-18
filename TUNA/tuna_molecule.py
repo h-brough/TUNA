@@ -7,7 +7,7 @@ import numpy as np
 
 class Atom:
 
-    def __init__(self, basis_charge, mass, origin, C6, vdw_radius, symbol, core_orbitals, ghost=False):
+    def __init__(self, basis_charge, mass, origin, C6, vdw_radius, real_vdw_radius, symbol, core_orbitals, ghost=False):
 
         """
 
@@ -32,6 +32,7 @@ class Atom:
         # Defines D2 dispersion parameters
         self.C6 = C6
         self.vdw_radius = vdw_radius
+        self.real_vdw_radius = real_vdw_radius
 
         # Defines capitalised atomic symbol
         self.symbol = symbol
@@ -95,13 +96,13 @@ class Molecule:
                 atom_data = atomic_properties["X"]
                 which_ghost = atomic_properties[symbol.split("X")[1]]
 
-                atom = Atom(which_ghost["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], symbol, atom_data["core_orbitals"], ghost=True)
+                atom = Atom(which_ghost["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], ghost=True)
             
             else:
 
                 atom_data = atomic_properties[symbol]
 
-                atom = Atom(atom_data["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], symbol, atom_data["core_orbitals"], ghost=False)
+                atom = Atom(atom_data["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], ghost=False)
                 
             self.atoms.append(atom)
 
@@ -222,7 +223,12 @@ class Molecule:
 
         # Sets off errors for impossible correlated calculations
 
-        if self.n_virt <= 0 and calculation.reference == "RHF" or self.n_virt <= 1 and calculation.reference == "UHF": error("Correlated calculation requested on system with insufficient virtual orbitals!")
+        if calculation.method in correlated_methods:
+
+            if self.n_virt <= 0 and calculation.reference == "RHF" or self.n_virt <= 1 and calculation.reference == "UHF": 
+                
+                error("Correlated calculation requested on system with insufficient virtual orbitals!")
+        
         if calculation.method in ["CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "QCISD[T]", "UQCISD[T]"] and self.n_electrons == 2: error("Triple excitations have been requested on a two-electron system!")
         
         # Sets off errors for invalid use of restricted Hartree-Fock
@@ -231,7 +237,7 @@ class Molecule:
             if self.n_electrons % 2 != 0: error("Restricted Hartree-Fock is not compatible with an odd number of electrons!")
             if self.multiplicity != 1: error("Restricted Hartree-Fock is not compatible non-singlet states!")
 
-        if calculation.method in ["MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]"] and calculation.reference == "UHF":
+        if calculation.method in ["MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]", "LMP2"] and calculation.reference == "UHF":
                 
             error(f"The {calculation.method} method is only implemented for spin-restricted references!")
 

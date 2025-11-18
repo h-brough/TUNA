@@ -1,5 +1,43 @@
 # Changelog
 
+## TUNA 0.9.0
+
+### Added
+
+- Density functional theory including hybrid and double-hybrid exhange-correlation funciontals
+- Acknowledgements in manual
+- Superposition of atomic densities initial guess
+- Iterative MP2 theory for calculations on non-canonical molecular orbitals, control with `MPMAXITER` and `MPCONV` keywords
+- Force calculation type, to calculate forces
+- DFT module
+- Hartree-Fock-Slater
+- Slater exchange, Xalpha, VWN3 correlation, PW 
+- Local density approximation methods including SVWN, SPW, H
+- GGA methods including PBE and BLYP
+- Hybrid exchange-correlation functions including B3LYP, BHHLYP and PBE0
+- Double-hybrid exchange-correlation functionals including B2PLYP and PBE0-DH
+- Laplace transform MP2 with MPGRID keyword
+- Plot moelcular orbitals, density and spin density
+- New tuna_output module
+- Point charges
+- Natural transition orbitals
+- Plotting natural orbtials and NTOsm, exfited state difference densities
+- Hartree method
+- Visualise exchange, correlation, exchnage-correlation, hartree potential, external, effective
+
+### Changed
+
+- Keyword `OMP2MAXITER` is now `MPMAXITER`
+- Keyword `OMP2CONV` is now `MPCONV`
+
+### Fixed
+
+- First SCF guess cycle energy now prints properly
+- MAXITER keyword was off by 1
+- Known issue "levelshift p"
+
+<br>
+
 ## TUNA 0.8.1 — 11/10/2025
 
 ### Added

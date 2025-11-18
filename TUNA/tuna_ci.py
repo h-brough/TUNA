@@ -437,6 +437,33 @@ def begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, n_occ, calculat
 
 
 
+def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
+    
+
+    # Converts to radians
+    theta *= np.pi / 180.0
+
+    homo_index = 2
+    lumo_index = 3
+
+    dimension = len(molecular_orbitals)
+    rotation_matrix = np.eye(dimension)
+
+    # Makes sure there is a HOMO and a LUMO to rotate, builds rotation matrix using sine and cosine of the requested angle, at the HOMO and LUMO indices
+    try:
+        
+
+        rotation_matrix[homo_index:lumo_index + 1, homo_index:lumo_index + 1] = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta),  np.cos(theta)]])
+    
+    except: error("Basis set too small to rotate initial guess orbitals! Use a larger basis or the NOROTATE keyword.")
+
+    # Rotates molecular orbitals with this matrix
+    rotated_molecular_orbitals = molecular_orbitals @ rotation_matrix
+
+
+    return rotated_molecular_orbitals
+
+
 
 
 
@@ -482,6 +509,8 @@ def begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ
     # Recovers SCF output objects
     molecular_orbitals = SCF_output.molecular_orbitals
     epsilons = SCF_output.epsilons
+
+    #molecular_orbitals = rotate_molecular_orbitals(molecular_orbitals, n_doubly_occ, 45)
 
     log("\n Preparing transformation to spatial-orbital basis...", calculation, 1, silent=silent)
 

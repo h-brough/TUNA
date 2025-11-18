@@ -1,5 +1,6 @@
 import numpy as np
 from tuna_util import *
+import tuna_dft as dft
 
 
 def format_output_line(E, delta_E, max_DP, RMS_DP, damping_factor, step, orbital_gradient, calculation, silent=False):
@@ -48,10 +49,40 @@ def construct_density_matrix(molecular_orbitals, n_occ, n_electrons_per_orbital)
 
     """
 
+
     occupied_mos = molecular_orbitals[:, :n_occ]
     P = n_electrons_per_orbital * occupied_mos @ occupied_mos.T
 
+    P = (1 / 2) * (P + P.T)
+
     return P
+    
+
+
+
+
+def construct_hole_density_matrix(molecular_orbitals, n_occ, n_electrons_per_orbital):
+
+    """
+
+    Slices out virtual molecular orbitals to build one-particle reduced hole density matrix.
+
+    Args:
+        molecular_orbitals (array): Molecular orbitals in AO basis
+        n_occ (int): Number of occupied molecular orbitals
+        n_electrons_per_orbital (int): Number of electrons per orbital (RHF or UHF)
+
+    Returns:
+        Q (array): One-particle reduced hole density matrix in AO basis
+
+    """
+
+    unoccupied_mos = molecular_orbitals[:, n_occ:]
+    Q = n_electrons_per_orbital * unoccupied_mos @ unoccupied_mos.T
+
+    Q = (1 / 2) * (Q + Q.T)
+
+    return Q
     
 
 
@@ -77,10 +108,38 @@ def diagonalise_Fock_matrix(F, X):
     
     epsilons, eigenvectors = np.linalg.eigh(F_orthonormal)
 
+
     # Transforms molecular orbitals back to non-orthogonal AO basis
     molecular_orbitals = X @ eigenvectors
 
     return epsilons, molecular_orbitals
+
+
+
+
+
+def calculate_RDFT_electronic_energy(P, H_core, J, density, weights, exchange_method, correlation_method, calculation):
+
+
+    electronic_energy = np.einsum("ij,ij->", P, H_core)
+    electronic_energy += 0.5*np.einsum("ij,ij->", P, J)
+
+    E_XC, E_X, E_C = dft.calculate_exchange_correlation_energy(density, weights, exchange_method, correlation_method, calculation)
+    electronic_energy += E_XC
+
+    return electronic_energy, E_X, E_C
+
+
+
+def calculate_UDFT_electronic_energy(P_alpha, P_beta, H_Core, J_alpha, J_beta, alpha_density, beta_density, weights, exchange_method, correlation_method, calculation):
+
+
+    electronic_energy = 0.5 * (calculate_one_electron_property(P_alpha + P_beta, H_Core) + calculate_one_electron_property(P_alpha + P_beta, J_alpha + J_beta))
+    
+    E_XC, E_X, E_C = dft.calculate_unrestricted_exchange_correlation_energy(alpha_density, beta_density, weights, exchange_method, correlation_method, calculation)
+    electronic_energy += E_XC
+
+    return electronic_energy, E_X, E_C
 
 
 
@@ -174,6 +233,8 @@ def calculate_energy_components(P_alpha, P_beta, T, V_NE, J_alpha, J_beta, K_alp
         coulomb_energy = 0.5 * calculate_one_electron_property(P, J)
         exchange_energy = -0.5 * calculate_one_electron_property(P, K / 2)
 
+
+
     elif reference == "UHF":
 
         coulomb_energy = 0.5 * calculate_one_electron_property(P, J_alpha + J_beta)
@@ -215,8 +276,36 @@ def calculate_SCF_changes(E, E_old, P, P_old):
 
 
 
+def construct_RDFT_Fock_matrix(H_core, ERI_AO, P, V_XC):
 
-def construct_RHF_Fock_matrix(H_core, ERI_AO, P):
+    J = np.einsum('ijkl,kl->ij', ERI_AO, P, optimize=True)
+
+    # Two-electron part of Fock matrix   
+    G = J + V_XC
+    
+    F = H_core + G
+
+    F = (1 / 2) * (F + F.T)
+
+    return F, J, V_XC
+    
+
+def construct_UDFT_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta, V_XC_alpha, V_XC_beta):
+
+    J_alpha = np.einsum('ijkl,kl->ij', ERI_AO, P_alpha, optimize=True)
+    J_beta = np.einsum('ijkl,kl->ij', ERI_AO, P_beta, optimize=True)
+
+    # Builds separate Fock matrices for alpha and beta spins
+    # Maybe +-VXC
+    F_alpha = H_core + (J_alpha + J_beta) + V_XC_alpha
+    F_beta = H_core + (J_alpha + J_beta) + V_XC_beta
+
+    return F_alpha, F_beta, J_alpha, J_beta, V_XC_alpha, V_XC_beta
+    
+    
+
+
+def construct_RHF_Fock_matrix(H_core, ERI_AO, P, method):
 
     """
 
@@ -226,6 +315,7 @@ def construct_RHF_Fock_matrix(H_core, ERI_AO, P):
         H_core (array): Core Hamiltonian matrix in AO basis
         ERI_AO (array): Electron repulsion integrals in AO basis
         P (array): Density matrix in AO basis
+        method (str): 
 
     Returns:
         F (array): RHF Fock matrix in AO basis
@@ -236,19 +326,19 @@ def construct_RHF_Fock_matrix(H_core, ERI_AO, P):
 
 
     J = np.einsum('ijkl,kl->ij', ERI_AO, P, optimize=True)
-    K = np.einsum('ilkj,kl->ij', ERI_AO, P, optimize=True)
+    K = np.einsum('ilkj,kl->ij', ERI_AO, P, optimize=True) if method not in ["H", "UH"] else np.zeros_like(J)
 
     # Two-electron part of Fock matrix   
     G = J - 0.5 * K
     
     F = H_core + G
-    
+
     return F, J, K
     
 
 
 
-def construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta):
+def construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta, method):
 
     """
 
@@ -259,6 +349,7 @@ def construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta):
         ERI_AO (array): Electron repulsion integrals in AO basis
         P_alpha (array): Density matrix for alpha orbitals in AO basis
         P_beta (array): Density matrix for beta orbitals in AO basis
+        method (string): Calculation method
 
     Returns:
         F_alpha (array): RHF Fock matrix for alpha orbitals in AO basis
@@ -270,11 +361,11 @@ def construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta):
 
     """
 
-    J_alpha = np.einsum('ijkl,kl->ij', ERI_AO, P_alpha, optimize=True)
+    J_alpha = np.einsum('ijkl,kl->ij', ERI_AO, P_alpha, optimize=True) 
     J_beta = np.einsum('ijkl,kl->ij', ERI_AO, P_beta, optimize=True)
 
-    K_alpha = np.einsum('ilkj,kl->ij', ERI_AO, P_alpha, optimize=True)
-    K_beta = np.einsum('ilkj,kl->ij', ERI_AO, P_beta, optimize=True)
+    K_alpha = np.einsum('ilkj,kl->ij', ERI_AO, P_alpha, optimize=True) if method not in ["H", "UH"] else np.zeros_like(J_alpha)
+    K_beta = np.einsum('ilkj,kl->ij', ERI_AO, P_beta, optimize=True) if method not in ["H", "UH"] else np.zeros_like(J_beta)
 
     # Builds separate Fock matrices for alpha and beta spins
     F_alpha = H_core + (J_alpha + J_beta) - K_alpha
@@ -435,6 +526,7 @@ def calculate_DIIS_error(F, P, S, X):
 
     """
 
+
     # Orthogonalises DIIS error to remove issues from linear dependencies
     DIIS_error = F @ P @ S - S @ P @ F
     orthogonalised_DIIS_error = X.T @ DIIS_error @ X
@@ -556,7 +648,7 @@ def check_convergence(SCF_conv_params, step, delta_E, max_DP, RMS_DP, orbital_gr
 
 
 
-def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alpha=None, P_beta=None, silent=False):
+def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alpha=None, P_beta=None, silent=False, atomic_orbitals=None, weights=None):
 
     """
 
@@ -575,13 +667,11 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
         P_alpha (array, optional): Guess density matrix for alpha orbitals in AO basis
         P_beta (array, optional): Guess density matrix for beta orbitals in AO basis
         silent (bool, optional): Not silent by default
+        atomic_orbitals (array, optional): Atomic orbitals evaluated on grid
+        weights (array, optional): Integration weights for DFT
 
     Returns:
-        scf_output (Output): Output object containing all SCF results
-
-    Notes:
-        - Either runs the RHF or UHF SCF loop
-        - Throws an error if the SCF cycle does not converge in the maximum number of iterations
+        SCF_output (Output): Output object containing all SCF results
 
     """
     log_big_spacer(calculation, silent=silent)
@@ -601,6 +691,13 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
     n_electrons_per_orbital = calculation.n_electrons_per_orbital
     level_shift_removed = False
 
+    do_DFT = calculation.DFT_calculation
+
+    if do_DFT:
+
+        exchange_method = DFT_methods.get(calculation.method).x_functional
+        correlation_method = DFT_methods.get(calculation.method).c_functional
+
     # Unpacks useful molecular quantities
     n_doubly_occ = molecule.n_doubly_occ
 
@@ -617,6 +714,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
     orbital_gradient = 1
 
+
     if reference == "RHF":
 
         # Initialises vectors for DIIS
@@ -624,14 +722,36 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
         DIIS_error_vector = []
 
         for step in range(1, maximum_iterations):
-            
+
             E_old = E
             P_very_old = P_old
             P_old_before_damping = P_before_damping
             P_old = P 
       
-            # Constructs Fock matrix
-            F, J, K = construct_RHF_Fock_matrix(H_core, ERI_AO, P)
+            #print("P\n", np.round(P,4))
+
+            if do_DFT:
+                
+                density = dft.construct_density_on_grid(P, atomic_orbitals)
+
+                exchange_functional = dft.exchange_functionals.get(exchange_method)
+                correlation_functional = dft.correlation_functionals.get(correlation_method)
+
+                v_X = dft.calculate_XC_potential(density, exchange_functional, calculation) if exchange_functional is not None else 0
+
+                #v_C = dft.calculate_XC_potential(density, correlation_functional, calculation) if correlation_functional is not None else 0
+                v_C = dft.calculate_PW_correlation_potential(density, 0.031091, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+
+                v_XC = v_X + v_C
+
+                K = dft.calculate_K_matrix(v_XC, atomic_orbitals, weights) 
+
+                F, J, K = construct_RDFT_Fock_matrix(H_core, ERI_AO, P, K)
+
+            else:
+
+                F, J, K = construct_RHF_Fock_matrix(H_core, ERI_AO, P, calculation.method)
+
 
             # Applies level shift
             if calculation.level_shift and not level_shift_removed:
@@ -658,8 +778,16 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             # Constructs density matrix
             P = construct_density_matrix(molecular_orbitals, n_doubly_occ, n_electrons_per_orbital)
 
-            # Calculates electronic energy
-            E = calculate_RHF_electronic_energy(P, H_core, F)
+            if do_DFT:
+
+                E, E_X, E_C = calculate_RDFT_electronic_energy(P, H_core, J, density, weights, exchange_method, correlation_method, calculation)
+
+            else: 
+
+                E = calculate_RHF_electronic_energy(P, H_core, F)
+
+                correlation_energy = 0
+
 
             # Calculates the changes in energy and density
             delta_E, maxDP, rmsDP = calculate_SCF_changes(E, E_old, P, P_old)
@@ -698,8 +826,15 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
                 kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy = calculate_energy_components(None, None, T, V_NE, None, None, None, None, P, J, K, reference)
 
-                SCF_output = Output(E_total, S, P, P / 2, P / 2, molecular_orbitals, molecular_orbitals, molecular_orbitals, epsilons, epsilons, epsilons, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy)
-               
+                if do_DFT:
+
+                    exchange_energy = E_X
+                    correlation_energy = E_C
+                
+
+                SCF_output = Output(E_total, S, P, P / 2, P / 2, molecular_orbitals, molecular_orbitals, molecular_orbitals, epsilons, epsilons, epsilons, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F, T, V_NE, J, K)
+
+
                 return SCF_output
 
 
@@ -726,9 +861,34 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             P_old_alpha = P_alpha
             P_old_beta = P_beta
             
+            if do_DFT:
 
-            # Constructs Fock matrices
-            F_alpha, F_beta, J_alpha, J_beta, K_alpha, K_beta = construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta)
+                alpha_density = dft.construct_density(P_alpha, atomic_orbitals)
+                beta_density = dft.construct_density(P_beta, atomic_orbitals)
+
+                density = alpha_density + beta_density
+
+                exchange_function = dft.exchange_functionals.get(exchange_method)
+                correlation_function = dft.correlation_functionals.get(correlation_method)
+
+                v_X_alpha = dft.calculate_XC_potential(alpha_density, exchange_function, calculation)
+                v_X_beta = dft.calculate_XC_potential(beta_density, exchange_function, calculation)
+
+                v_C_alpha = dft.calculate_XC_potential(alpha_density, correlation_function, calculation) if correlation_function is not None else 0
+                v_C_beta = dft.calculate_XC_potential(beta_density, correlation_function, calculation) if correlation_function is not None else 0
+
+                v_XC_alpha = v_X_alpha + v_C_alpha
+                v_XC_beta = v_X_beta + v_C_beta
+
+                K_alpha = dft.calculate_K_matrix(v_XC_alpha, atomic_orbitals, weights) 
+                K_beta = dft.calculate_K_matrix(v_XC_beta, atomic_orbitals, weights) 
+                
+                F_alpha, F_beta, J_alpha, J_beta, K_alpha, K_beta = construct_UDFT_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta, K_alpha, K_beta)
+
+            else:
+
+                # Constructs Fock matrices
+                F_alpha, F_beta, J_alpha, J_beta, K_alpha, K_beta = construct_UHF_Fock_matrices(H_core, ERI_AO, P_alpha, P_beta, calculation.method)
 
             # Apply level shift only once
             if calculation.level_shift and not level_shift_removed:
@@ -762,8 +922,18 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
             P = P_alpha + P_beta
 
-            # Calculates electronic energy
-            E = calculate_UHF_electronic_energy(P_alpha, P_beta, H_core, F_alpha, F_beta)
+            if do_DFT:
+
+                E, E_X, E_C = calculate_UDFT_electronic_energy(P_alpha, P_beta, H_core, J_alpha, J_beta, alpha_density, beta_density, weights, exchange_method, correlation_method, calculation)
+
+
+            else: 
+
+                # Calculates electronic energy
+                E = calculate_UHF_electronic_energy(P_alpha, P_beta, H_core, F_alpha, F_beta)
+
+                correlation_energy = 0
+
 
             # Calculates the changes in energy and density
             delta_E, maxDP, rmsDP = calculate_SCF_changes(E, E_old, P, P_old)
@@ -812,8 +982,13 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
                 epsilons = epsilons_combined[np.argsort(epsilons_combined)]
                 molecular_orbitals = molecular_orbitals_combined[:, np.argsort(epsilons_combined)]
 
+                if do_DFT:
+
+                    exchange_energy = E_X
+                    correlation_energy = E_C
+                
                 # Builds SCF Output object with useful quantities
-                SCF_output = Output(E_total, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy )
+                SCF_output = Output(E_total, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F_alpha=F_alpha, F_beta=F_beta)
 
                 return SCF_output
             

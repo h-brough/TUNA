@@ -2,7 +2,7 @@ import tuna_optfreq as optfreq
 import tuna_energy as energ
 import numpy as np
 from tuna_util import *
-
+import tuna_out as out
 
 
 def calculate_accelerations(forces, inv_masses): 
@@ -146,6 +146,67 @@ def calculate_forces(coordinates, calculation, atoms, rotation_matrix):
 
 
     return forces
+
+
+
+
+
+
+
+
+
+
+def rotate_coordinates_to_z_axis(difference_vector):
+
+    """
+
+    Calculates axis of rotation and rotates difference vector using Rodrigues' formula.
+
+    Args:   
+        difference_vector (array): Difference vector
+
+    Returns:
+        difference_vector_rotated (array) : Rotated difference vector on z axis
+        rotation_matrix (array) : Rotation matrix
+
+    """
+
+    normalised_vector = difference_vector / np.linalg.norm(difference_vector)
+    
+    z_axis = np.array([0.0, 0.0, 1.0])
+    
+    # Calculate the axis of rotation by the cross product
+    rotation_axis = np.cross(normalised_vector, z_axis)
+    axis_norm = np.linalg.norm(rotation_axis)
+    
+    if axis_norm < 1e-10:
+
+        # If the axis is too small, the vector is almost aligned with the z-axis
+        rotation_matrix = np.eye(3)
+
+    else:
+
+        # Normalize the rotation axis
+        rotation_axis /= axis_norm
+        
+        # Calculate the angle of rotation by the dot product
+        cos_theta = np.dot(normalised_vector, z_axis)
+        sin_theta = axis_norm
+        
+        # Rodrigues' rotation formula
+        K = np.array([[0, -rotation_axis[2], rotation_axis[1]], [rotation_axis[2], 0, -rotation_axis[0]], [-rotation_axis[1], rotation_axis[0], 0]])
+        
+        rotation_matrix = np.eye(3, dtype=np.float64) + sin_theta * K + (1 - cos_theta) * np.dot(K, K)
+    
+    
+    # Rotate the difference vector to align it with the z-axis
+    difference_vector_rotated = np.dot(rotation_matrix, difference_vector)
+    
+    return difference_vector_rotated, rotation_matrix
+
+
+
+
 
 
 
@@ -324,8 +385,16 @@ def run_MD(calculation, atoms, coordinates):
         # By default prints trajectory to file, can be viewed with Jmol
         if calculation.trajectory: 
             
-            print_trajectory(molecule, potential_energy, coordinates, trajectory_path)
+            out.print_trajectory(molecule, potential_energy, coordinates, trajectory_path)
         
 
 
     log_big_spacer(calculation)
+
+
+
+
+
+
+
+

@@ -5,7 +5,7 @@ import sys
 from termcolor import colored
 import tuna_postscf as postscf
 import tuna_thermo as thermo
-
+import tuna_out as out
 
 
 def calculate_gradient(coordinates, calculation, atoms, silent=False):
@@ -241,7 +241,7 @@ def calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_o
 
 
 
-def optimise_geometry(calculation, atoms, coordinates):
+def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True):
     
     """
 
@@ -293,6 +293,8 @@ def optimise_geometry(calculation, atoms, coordinates):
 
     for iteration in range(1, max_geom_iter + 1):
         
+        if iteration > 1 and not multiple_iterations: break
+
         bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
         log_big_spacer(calculation, start="\n",space="")
@@ -373,7 +375,9 @@ def optimise_geometry(calculation, atoms, coordinates):
         log_spacer(calculation)
 
         # Prints trajectory to file if TRAJ keyword has been used
-        if calculation.trajectory: print_trajectory(molecule, energy, coordinates, trajectory_path)
+        if calculation.trajectory: 
+            
+            out.print_trajectory(molecule, energy, coordinates, trajectory_path)
 
         # If optimisation is converged, begin post SCF output and print to console, then finish calculation
         if converged_grad and converged_step: 
@@ -415,8 +419,9 @@ def optimise_geometry(calculation, atoms, coordinates):
             old_bond_length = bond_length
             old_gradient = gradient
      
+    if multiple_iterations:
 
-    error(F"Geometry optimisation did not converge in {max_geom_iter} iterations! Increase the maximum or give up!")
+        error(F"Geometry optimisation did not converge in {max_geom_iter} iterations! Increase the maximum or give up!")
 
 
 

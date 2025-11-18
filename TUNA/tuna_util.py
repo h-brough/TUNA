@@ -1,7 +1,6 @@
 import numpy as np
 import time, sys
 from termcolor import colored
-import os
 from functools import partial
 
 
@@ -129,7 +128,7 @@ class Calculation:
     
     """
 
-    def __init__(self, calculation_type, method, start_time, params, basis, atoms):
+    def __init__(self, calculation_type, method, start_time, params, basis, atomic_symbols):
         
         # Defines fundamental calculation parameters
         self.calculation_type = calculation_type
@@ -138,7 +137,8 @@ class Calculation:
         self.params = params
         self.basis = basis
         self.original_basis = basis
-        self.atoms = atoms
+        self.atomic_symbols = atomic_symbols
+        self.DFT_calculation = True if method in DFT_methods else False
 
         # Prevents running "params" through every function call
         keyword = partial(process_keyword, params=params)
@@ -164,8 +164,12 @@ class Calculation:
         self.plot_dotted_lines = keyword(["DOT"], False)
         self.add_plot = keyword(["ADDPLOT"], False)
         self.extrapolate = keyword(["EXTRAPOLATE"], False)
-        
-        if keyword(["DELPLOT"], False): delete_saved_plot()
+        self.delete_plot = keyword(["DELPLOT"], False)
+        self.plot_density = keyword(["DENSPLOT"], False)
+        self.plot_spin_density = keyword(["SPINDENSPLOT"], False)
+        self.plot_HOMO = keyword(["PLOTHOMO"], False)
+        self.plot_LUMO = keyword(["PLOTLUMO"], False)
+        self.plot_ESP = keyword(["ESP"], False)
 
         # Convergence keywords with optional parameters
         self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
@@ -197,7 +201,7 @@ class Calculation:
         self.custom_mass_2 = keyword(["M2"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
 
         # Convergence and optimisation keywords
-        self.max_iter = keyword(["MAXITER"], 100, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.max_iter = keyword(["MAXITER"], 100, boolean=False, check_next_space=True, value_type=int, mandatory_value=True) + 1
         self.max_step = keyword(["MAXSTEP"], 0.2, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.default_Hessian = keyword(["DEFAULTHESS"], 0.25, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.geom_max_iter = keyword(["GEOMMAXITER", "MAXGEOMITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -215,8 +219,8 @@ class Calculation:
         self.same_spin_scaling = keyword(["SSS"], 1 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.opposite_spin_scaling = keyword(["OSS"], 6 / 5, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.MP3_scaling = keyword(["MP3S", "MP3SCALING", "MP3SCAL"], 1 / 4, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.OMP2_conv = keyword(["OMP2CONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.OMP2_max_iter = keyword(["OMP2MAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+        self.MP2_conv = keyword(["MPCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.MP2_max_iter = keyword(["MPMAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.CC_conv = keyword(["CCCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.amp_conv = keyword(["AMPCONV"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.print_n_amplitudes = keyword(["PRINTAMPS"], 10, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -224,6 +228,12 @@ class Calculation:
         self.cc_damp_requested, self.coupled_cluster_damping_parameter = keyword(["CCDAMP"], False, check_next_space=True, value_type=float, associated_keyword_default=0.25)
         self.coupled_cluster_damping_parameter = self.coupled_cluster_damping_parameter if self.cc_damp_requested else 0
         self.freeze_core, self.freeze_n_orbitals = keyword(["FREEZECORE"], False, boolean=True, check_next_space=True, value_type=int, mandatory_value=False, associated_keyword_default=None)
+        self.n_MP2_grid_points = keyword(["MPGRID"], 20, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
+
+        # DFT keywords
+        self.X_alpha = keyword(["XA"], 2 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.integral_accuracy_requested, self.integral_accuracy = keyword(["INTACC"], False, check_next_space=True, value_type=float, associated_keyword_default=4.0)
+        self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
 
         # Excited state keywords
         self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -239,6 +249,7 @@ class Calculation:
         # Convergence keywords for SCF and optimisations
         self.SCF_conv_requested = True if "LOOSE" in params or "LOOSESCF" in params or "MEDIUM" in params or "MEDIUMSCF" in params or "TIGHT" in params or "TIGHTSCF" in params or "EXTREME" in params or "EXTREMESCF" in params else False
         self.geom_conv_requested = True if "LOOSEOPT" in params or "MEDIUMOPT" in params or "TIGHTOPT" in params or "EXTREMEOPT" in params else False
+        self.grid_conv_requested = True if "LOOSEGRID" in params or "MEDIUMGRID" in params or "TIGHTGRID" in params or "EXTREMEGRID" in params else False
 
         self.SCF_conv = constants.convergence_criteria_SCF["loose"] if "LOOSE" in params or "LOOSESCF" in params else constants.convergence_criteria_SCF["medium"]
         self.SCF_conv = constants.convergence_criteria_SCF["medium"] if "MEDIUM" in params or "MEDIUMSCF"in params else self.SCF_conv
@@ -259,11 +270,15 @@ class Calculation:
         if not self.geom_conv_requested:
 
             self.geom_conv = constants.convergence_criteria_optimisation["tight"] if self.calculation_type == "OPTFREQ" and self.geom_conv != constants.convergence_criteria_optimisation["extreme"] else self.geom_conv
+        
+        self.grid_conv = constants.convergence_criteria_grid["loose"] if "LOOSEGRID" in params else constants.convergence_criteria_grid["medium"]
+        self.grid_conv = constants.convergence_criteria_grid["medium"] if "MEDIUMGRID" in params else self.grid_conv
+        self.grid_conv = constants.convergence_criteria_grid["tight"] if "TIGHTGRID" in params else self.grid_conv
+        self.grid_conv = constants.convergence_criteria_grid["extreme"] if "EXTREMEGRID" in params else self.grid_conv
+        
 
         # Processes the NOSINGLES keyword
         self.method = process_no_singles_keyword(self.method, self.no_singles)
-
-
 
         
 
@@ -332,6 +347,16 @@ class Constants:
 
         }
 
+        self.convergence_criteria_grid = {
+
+            "loose" : {"integral_accuracy": 3, "extent_multiplier": 0.7, "name": "loose"},
+            "medium" : {"integral_accuracy": 4, "extent_multiplier": 1, "name": "medium"},
+            "tight" : {"integral_accuracy": 5, "extent_multiplier": 1, "name": "tight"},
+            "extreme" : {"integral_accuracy": 7, "extent_multiplier": 1.2, "name": "extreme"},
+
+
+        }
+
 
 
 
@@ -349,7 +374,7 @@ class Output:
 
     """
 
-    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy):
+    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F=None, T=None, V_NE=None, J=None, K=None, F_alpha=None, F_beta=None):
        
         """
 
@@ -371,15 +396,20 @@ class Output:
             nuclear_electron_energy (float): Nuclear-electron energy
             coulomb_energy (float): Coulomb energy
             exchange_energy (float): Exchange energy
-
-        Returns:
-            None : This function does not return anything
+            F (array, optional): Fock matrix in AO basis
+            T (array, optional): Kinetic matrix in AO basis
+            V_NE (array, optional): Nuclear-electron matrix in AO basis
+            J (array, optional): Coulomb matrix in AO basis
+    
 
         """
 
         # Key quantities
         self.energy = energy
         self.S = S
+        self.F = F
+        self.F_alpha = F_alpha
+        self.F_beta = F_beta
 
         # Density matrices
         self.P = P
@@ -402,31 +432,51 @@ class Output:
         self.nuclear_electron_energy = nuclear_electron_energy
         self.coulomb_energy = coulomb_energy
         self.exchange_energy = exchange_energy
+        self.correlation_energy = correlation_energy
+        self.exchange_correlation_energy = self.exchange_energy + self.correlation_energy
+
+        # Optional matrices
+        self.T = T
+        self.V_NE = V_NE
+        self.J = J
+        self.K = K
 
 
 
 
-def delete_saved_plot():
 
-    """
+
+
+
+class Functional:
+
+    def __init__(self, name, x_functional, c_functional, DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0):
+
+        self.name = name
+        self.x_functional = x_functional
+        self.c_functional = c_functional
+        self.DFX_proportion = DFX_proportion
+        self.HFX_proportion = HFX_proportion
+        self.DFC_proportion = DFC_proportion
+        self.MPC_proportion = MPC_proportion
+
+        self.functional_type = self.process_functional()
+
     
-    Deletes a pickle plot, if it exists.
-    
-    """
+    def process_functional(self):
+
+        self.functional_type = "pure"
+
+        if self.HFX_proportion != 0: 
+            
+            self.functional_type = "hybrid"
+
+            if self.MPC_proportion != 0: 
+
+                self.functional_type = "double-hybrid"
 
 
-    file_path = "TUNA-plot-temp.pkl"
-
-    if os.path.exists(file_path):
-        
-        os.remove(file_path)
-        warning(f"The file {file_path} has been deleted due to the DELPLOT keyword.\n",space=0)
-
-    else:
-        
-        warning(f"Plot deletion requested but {file_path} could not be found!\n",space=0)
-
-
+        return self.functional_type
 
 
 
@@ -471,61 +521,6 @@ def process_no_singles_keyword(method, no_singles):
     method = prefix + method  
 
     return method
-
-
-
-
-
-
-
-
-def rotate_coordinates_to_z_axis(difference_vector):
-
-    """
-
-    Calculates axis of rotation and rotates difference vector using Rodrigues' formula.
-
-    Args:   
-        difference_vector (array): Difference vector
-
-    Returns:
-        difference_vector_rotated (array) : Rotated difference vector on z axis
-        rotation_matrix (array) : Rotation matrix
-
-    """
-
-    normalised_vector = difference_vector / np.linalg.norm(difference_vector)
-    
-    z_axis = np.array([0.0, 0.0, 1.0])
-    
-    # Calculate the axis of rotation by the cross product
-    rotation_axis = np.cross(normalised_vector, z_axis)
-    axis_norm = np.linalg.norm(rotation_axis)
-    
-    if axis_norm < 1e-10:
-
-        # If the axis is too small, the vector is almost aligned with the z-axis
-        rotation_matrix = np.eye(3)
-
-    else:
-
-        # Normalize the rotation axis
-        rotation_axis /= axis_norm
-        
-        # Calculate the angle of rotation by the dot product
-        cos_theta = np.dot(normalised_vector, z_axis)
-        sin_theta = axis_norm
-        
-        # Rodrigues' rotation formula
-        K = np.array([[0, -rotation_axis[2], rotation_axis[1]], [rotation_axis[2], 0, -rotation_axis[0]], [-rotation_axis[1], rotation_axis[0], 0]])
-        
-        rotation_matrix = np.eye(3, dtype=np.float64) + sin_theta * K + (1 - cos_theta) * np.dot(K, K)
-    
-    
-    # Rotate the difference vector to align it with the z-axis
-    difference_vector_rotated = np.dot(rotation_matrix, difference_vector)
-    
-    return difference_vector_rotated, rotation_matrix
 
 
 
@@ -718,41 +713,6 @@ def calculate_centre_of_mass(masses, coordinates):
 
 
 
-def print_trajectory(molecule, energy, coordinates, trajectory_path):
-
-    """
-
-    Prints trajectory from optimisation or MD simulation to file.
-
-    Args:   
-        molecule (Molecule): Molecule object
-        energy (float) : Final energy
-        coordinates (array): Atomic coordinates
-        trajectory_path (str): Path to file
-
-    Returns:
-        None : This function does not return anything
-
-    """
-    atomic_symbols = molecule.atomic_symbols
-    
-    with open(trajectory_path, "a") as file:
-        
-        # Prints energy and atomic_symbols
-        file.write(f"{len(atomic_symbols)}\n")
-        file.write(f"Coordinates from TUNA calculation, E = {energy:.10f}\n")
-
-        coordinates_angstrom = bohr_to_angstrom(coordinates)
-
-        # Prints coordinates
-        for i in range(len(atomic_symbols)):
-
-            file.write(f"  {atomic_symbols[i]}      {coordinates_angstrom[i][0]:6f}      {coordinates_angstrom[i][1]:6f}      {coordinates_angstrom[i][2]:6f}\n")
-
-    file.close()
-
-
-
 
 
 
@@ -912,117 +872,6 @@ def log_big_spacer(calculation, priority=1, start="", end="", space=" ", silent=
 
 
 
-def scan_plot(calculation, bond_lengths, energies):
-
-    """
-
-    Interfaces with matplotlib to plot energy as a function of bond length.
-
-    Args:
-        calculation (Calculation): Calculation object
-        bond_lengths (array): List of bond lengths  
-        energies (array): List of energies at each bond length
-
-    Returns:
-        None: Nothing is returned
-
-    """
-
-    log("\nPlotting energy profile diagram...      ", calculation, 1, end=""); sys.stdout.flush()
-    
-    import matplotlib.pyplot as plt
-    import matplotlib
-    import pickle
-    from matplotlib import font_manager as fm
-    import warnings, logging
-
-    # Suppress warnings
-    logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
-    logging.getLogger("matplotlib").setLevel(logging.ERROR)
-    warnings.filterwarnings("ignore", module="matplotlib.font_manager")
-
-    _ = fm.fontManager.ttflist  # touch the cache
-
-    plot_font = ["Consolas", "Liberation Mono", "Courier New", "DejaVu Sans"]
-
-    matplotlib.rcParams['font.family'] = plot_font
-
-    # Saves temporary file if ADDPLOT used
-    if calculation.add_plot:
-
-        try:
-        
-            with open("TUNA-plot-temp.pkl", "rb") as f:
-                fig = pickle.load(f)
-                ax = fig.axes[0]
-                plt.figure(fig.number)            # <- make loaded figure current
-                fig.set_size_inches(10, 6, True)
-        
-        except:
-
-            fig, ax = plt.subplots(figsize=(10,6))    
-    
-    else: 
-        
-        fig, ax = plt.subplots(figsize=(10,6))   
-
-
-    def mag_then_sign(n):
-
-        if n == 1: return '+'
-        if n == -1: return '-'
-        
-        return f"{abs(n)}{'+' if n > 0 else '-'}"
-
-
-    legend_label = f"{calculation.method}/{calculation.basis}" if "CIS" not in calculation.method else f"{calculation.method}/{calculation.basis}, ROOT {calculation.root}"
-
-
-    charge = "" if calculation.charge == 0 else mag_then_sign(calculation.charge)
-    
-    linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
-
-    font_prop = fm.FontProperties(family=plot_font, size=12)
-
-    plt.plot(bond_lengths, energies, color=calculation.scan_plot_colour,linewidth=1.75, label=legend_label, linestyle=linestyle)
-    plt.xlabel("Bond Length (Angstrom)", fontweight="bold", labelpad=10, fontfamily=plot_font,fontsize=14)
-    plt.ylabel("Energy (Hartree)",labelpad=10, fontweight="bold", fontfamily=plot_font,fontsize=14)
-    plt.legend(loc="upper right", fontsize=12, frameon=False, handlelength=4, prop=font_prop)
-    plt.title(f"TUNA Calculation on "f"{calculation.atoms[0].capitalize()}—"f"{calculation.atoms[1].capitalize()}"rf"$^{{{charge}}}$ Molecule",fontweight="bold",fontsize=16,fontfamily=plot_font,pad=15)
-    ax.tick_params(axis='both', which='major', labelsize=11, width=1.25, length=6, direction='out')
-    ax.tick_params(axis='both', which='minor', labelsize=11, width=1.25, length=3, direction='out')
-    
-    for spine in ax.spines.values(): spine.set_linewidth(1.25)
-    
-    plt.minorticks_on()
-    plt.tight_layout() 
-
-    log("[Done]", calculation, 1)
-
-    if calculation.add_plot:
-
-        with open("TUNA-plot-temp.pkl", "wb") as f:
-
-            pickle.dump(fig, f)
-
-    log("Saving energy profile diagram...      ", calculation, 1, end=""); sys.stdout.flush()
-    
-    if calculation.save_plot:
-
-        plt.savefig(calculation.save_plot_filepath, dpi=1200, figtransparent=True)
-
-    log("  [Done]", calculation, 1)
-
-    log(f"\nSaved plot as \"{calculation.save_plot_filepath}\"", calculation, 1)    
-    
-    # Shows the coordinate scan plot
-    plt.show()
-
-
-
-
-
-
 
 
 calculation_types = {
@@ -1032,17 +881,21 @@ calculation_types = {
     "FREQ": "Harmonic frequency",
     "OPTFREQ": "Optimisation and harmonic frequency",
     "SCAN": "Coordinate scan",
-    "MD": "Ab initio molecular dynamics"
+    "MD": "Ab initio molecular dynamics",
+    "FORCE": "Force"
     
     }
 
 
 
 method_types = {
-    
+    "H": "Hartree theory", 
+    "UH": "unrestricted Hartree theory", 
     "HF": "Hartree-Fock theory", 
     "RHF": "restricted Hartree-Fock theory", 
     "UHF": "unrestricted Hartree-Fock theory", 
+    "IMP2": "iterative MP2 theory", 
+    "LMP2": "Laplace transform MP2 theory", 
     "MP2": "MP2 theory", 
     "UMP2": "unrestricted MP2 theory", 
     "SCS-MP2": "spin-component-scaled MP2 theory", 
@@ -1084,7 +937,16 @@ method_types = {
     "CCSD[T]": "coupled cluster singles, doubles and perturbative triples",
     "UCCSD[T]": "unrestricted coupled cluster singles, doubles and perturbative triples",
     "CCSDT": "coupled cluster singles, doubles and triples",
-    "UCCSDT": "unrestricted coupled cluster singles, doubles and triples"
+    "UCCSDT": "unrestricted coupled cluster singles, doubles and triples",
+    "LDA": "density-functional theory via local density approximation",
+    "LSDA": "density-functional theory via local spin density approximation",
+    "SVWN": "density-functional theory with Slater exchange and VWN correlation",
+    "SVWN3": "density-functional theory with Slater exchange and VWN-III correlation",
+    "SVWN5": "density-functional theory with Slater exchange and VWN-V correlation",
+    "SPW": "density-functional theory with Slater exchange and Perdew-Wang correlation",
+    "HFS": "Hartree-Fock theory with Slater exchange", 
+    "RHFS": "restricted Hartree-Fock theory with Slater exchange", 
+    "UHFS": "unrestricted Hartree-Fock theory with Slater exchange", 
 
     }
 
@@ -1095,7 +957,7 @@ method_types = {
 
 correlated_methods = [
     
-    "MP2", "UMP2", "SCS-MP2", "USCS-MP2", "MP3", "UMP3", "SCS-MP3", "USCS-MP3", "MP4", "MP4[SDTQ]", "MP4[SDQ]", "MP4[DQ]", "OMP2", "UOMP2", "OOMP2", "UOOMP2",
+    "MP2", "UMP2", "SCS-MP2", "USCS-MP2", "MP3", "UMP3", "SCS-MP3", "USCS-MP3", "MP4", "MP4[SDTQ]", "MP4[SDQ]", "MP4[DQ]", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2",
     "CCD", "UCCD", "CEPA0", "UCEPA0", "LCCD", "ULCCD",  "LCCSD", "ULCCSD", "CEPA", "UCEPA", "CEPA[0]", "UCEPA[0]", "QCISD", "UQCISD", "CCSD", "UCCSD", "QCISD[T]", "UQCISD[T]", "CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT"
 
     ]
@@ -1110,6 +972,29 @@ excited_state_methods = [
 
     ]
 
+
+
+
+
+DFT_methods = {
+
+    "HFS" : Functional("HFS", "S", None, DFX_proportion=100, HFX_proportion=0, DFC_proportion=0, MPC_proportion=0),
+    "SVWN" : Functional("SVWN", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "LSDA" : Functional("LSDA", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "LDA" : Functional("LDA", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "SVWN3" : Functional("SVWN3", "S", "VWN3", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "SVWN5" : Functional("SVWN5", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "SPW" : Functional("SPW", "S", "PW", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "BLYP" : Functional("BLYP", "B", "LYP", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "B3LYP" : Functional("B3LYP", "B", "LYP", DFX_proportion=80, HFX_proportion=20, DFC_proportion=100, MPC_proportion=0),
+    "B3LYPG" : Functional("B3LYPG", "B", "LYP", DFX_proportion=80, HFX_proportion=20, DFC_proportion=100, MPC_proportion=0),
+    "BHHLYP" : Functional("BHHLYP", "B", "LYP", DFX_proportion=50, HFX_proportion=50, DFC_proportion=100, MPC_proportion=0),
+    "B2PLYP" : Functional("B2PLYP", "B", "LYP", DFX_proportion=47, HFX_proportion=53, DFC_proportion=73, MPC_proportion=27),
+    "PBE" : Functional("PBE", "PBE", "PBE", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "PBE0" : Functional("PBE0", "PBE", "PBE", DFX_proportion=75, HFX_proportion=25, DFC_proportion=100, MPC_proportion=0),
+    "PBE0-DH" : Functional("PBE0-DH", "PBE", "PBE", DFX_proportion=50, HFX_proportion=50, DFC_proportion=87.5, MPC_proportion=12.5),
+
+}
 
 
 
@@ -1269,6 +1154,7 @@ atomic_properties = {
         "mass" : 1.007825,
         "C6" : 2.4283,
         "vdw_radius" : 1.8916,
+        "real_vdw_radius" : 120,
         "core_orbitals": 0,
         "name" : "hydrogen"
     },
@@ -1278,6 +1164,7 @@ atomic_properties = {
         "mass" : 4.002603,
         "C6" : 1.3876,
         "vdw_radius" : 1.9124,
+        "real_vdw_radius" : 140,
         "core_orbitals": 0,
         "name" : "helium"
     },
@@ -1287,6 +1174,7 @@ atomic_properties = {
         "mass" : 7.016004,
         "C6" : 27.92545,
         "vdw_radius" : 1.55902,
+        "real_vdw_radius" : 182,
         "core_orbitals": 0,
         "name" : "lithium"
     },
@@ -1296,6 +1184,7 @@ atomic_properties = {
         "mass" : 9.012182,
         "C6" : 27.92545,
         "vdw_radius" : 2.66073,
+        "real_vdw_radius" : 153,
         "core_orbitals": 0,
         "name" : "beryllium"
     },
@@ -1305,6 +1194,7 @@ atomic_properties = {
         "mass" : 11.009305,
         "C6" : 54.28985,
         "vdw_radius" : 2.80624,
+        "real_vdw_radius" : 192,
         "core_orbitals": 1,
         "name" : "boron"
     },
@@ -1314,6 +1204,7 @@ atomic_properties = {
         "mass" : 12.000000,
         "C6" : 30.35375,
         "vdw_radius" : 2.74388,
+        "real_vdw_radius" : 170,
         "core_orbitals": 1,
         "name" : "carbon"
     },
@@ -1323,6 +1214,7 @@ atomic_properties = {
         "mass" : 14.003074,
         "C6" : 21.33435,
         "vdw_radius" : 2.63995,
+        "real_vdw_radius" : 155,
         "core_orbitals": 1,
         "name" : "nitrogen"
     },
@@ -1332,6 +1224,7 @@ atomic_properties = {
         "mass" : 15.994915,
         "C6" : 12.1415,
         "vdw_radius" : 2.53601,
+        "real_vdw_radius" : 152,
         "core_orbitals": 1,
         "name" : "oxygen"
     },
@@ -1341,6 +1234,7 @@ atomic_properties = {
         "mass" : 18.998403,
         "C6" : 13.00875,
         "vdw_radius" : 2.43208,
+        "real_vdw_radius" : 147,
         "core_orbitals": 1,
         "name" : "fluorine"
     },
@@ -1350,6 +1244,7 @@ atomic_properties = {
         "mass" : 19.992440,
         "C6" : 10.92735,
         "vdw_radius" : 2.34893,
+        "real_vdw_radius" : 154,
         "core_orbitals": 1,
         "name" : "neon"
     },
@@ -1359,6 +1254,7 @@ atomic_properties = {
         "mass" : 22.989770,
         "C6" : 99.03995,
         "vdw_radius" : 2.16185,
+        "real_vdw_radius" : 227,
         "core_orbitals": 1,
         "name" : "sodium"
     },
@@ -1368,6 +1264,7 @@ atomic_properties = {
         "mass" : 23.985042,
         "C6" : 99.03995,
         "vdw_radius" : 2.57759,
+        "real_vdw_radius" : 173,
         "core_orbitals": 1,
         "name" : "magnesium"
     },
@@ -1377,6 +1274,7 @@ atomic_properties = {
         "mass" : 26.981538,
         "C6" : 187.15255,
         "vdw_radius" : 3.09726,
+        "real_vdw_radius" : 184,
         "core_orbitals": 5,
         "name" : "aluminium"
     },
@@ -1386,6 +1284,7 @@ atomic_properties = {
         "mass" : 27.976927,
         "C6" : 160.09435,
         "vdw_radius" : 3.24277,
+        "real_vdw_radius" : 210,
         "core_orbitals": 5,
         "name" : "silicon"
     },
@@ -1395,6 +1294,7 @@ atomic_properties = {
         "mass" : 30.973762,
         "C6" : 135.9848,
         "vdw_radius" : 3.22198,
+        "real_vdw_radius" : 180,
         "core_orbitals": 5,        
         "name" : "phosphorus"
     },
@@ -1404,6 +1304,7 @@ atomic_properties = {
         "mass" : 31.972071,
         "C6" : 96.61165,
         "vdw_radius" : 3.18041,
+        "real_vdw_radius" : 180,
         "core_orbitals": 5,
         "name" : "sulfur"
     },
@@ -1413,6 +1314,7 @@ atomic_properties = {
         "mass" : 34.968853,
         "C6" : 87.93915,
         "vdw_radius" : 3.09726,
+        "real_vdw_radius" : 175,
         "core_orbitals": 5,
         "name" : "chlorine"
     },
@@ -1422,6 +1324,7 @@ atomic_properties = {
         "mass" : 39.962383,
         "C6" : 79.96045,
         "vdw_radius" : 3.01411,
+        "real_vdw_radius" : 188,
         "core_orbitals": 5,
         "name" : "argon"
     }

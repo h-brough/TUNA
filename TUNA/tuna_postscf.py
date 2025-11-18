@@ -132,7 +132,7 @@ def calculate_Koopmans_parameters(epsilons, n_occ):
 
 
 
-def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, V_NN, calculation):
+def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation):
 
     """
 
@@ -143,6 +143,7 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
         kinetic_energy (float): Electronic kinetic energy
         exchange_energy (float): Exchange energy
         coulomb_energy (float): Coulomb energy
+        correlation_energy (float): Correlation energy
         V_NN (float): Nuclear-nuclear repulsion energy
         calculation (Calculation): Calculation object
 
@@ -153,7 +154,7 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
 
     # Adds up different energy components
     one_electron_energy = nuclear_electron_energy + kinetic_energy
-    two_electron_energy = exchange_energy + coulomb_energy
+    two_electron_energy = exchange_energy + coulomb_energy + correlation_energy
     electronic_energy = one_electron_energy + two_electron_energy
 
     total_energy = electronic_energy + V_NN
@@ -164,14 +165,23 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
     log("                  Energy Components       ", calculation, 2, colour="white")
     log_spacer(calculation, priority=2)            
     log(f"  Kinetic energy:                   {kinetic_energy:15.10f}", calculation, 2)
-
     log(f"  Coulomb energy:                   {coulomb_energy:15.10f}", calculation, 2)
     log(f"  Exchange energy:                  {exchange_energy:15.10f}", calculation, 2)
+
+    if calculation.method in DFT_methods:
+        
+        log(f"  Correlation energy:               {correlation_energy:15.10f}", calculation, 2)
+
     log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2)
     log(f"  Nuclear attraction energy:        {nuclear_electron_energy:15.10f}\n", calculation, 2)      
 
     log(f"  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2)
     log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2)
+
+    if calculation.method in DFT_methods:
+        
+        log(f"  Exchange-correlation energy:      {exchange_energy + correlation_energy:15.10f}", calculation, 2)
+
     log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2)
     log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2)
             
@@ -774,6 +784,7 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
     # Specifies which density matrix is used for the property calculations
     if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2"]: log("\n Using the MP2 unrelaxed density for property calculations.", calculation, 1)
     elif method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
+    elif method in ["LMP2"]: warning("Using the Hartree-Fock density, not the MP2 density, for property calculations.")
     elif method in ["MP3", "SCS-MP3", "UMP3", "USCS-MP3", "MP4", "MP4[SDQ]"]: warning("Using the unrelaxed MP2 density for property calculations.")
     if "CC" in method or "CEPA" in method or "QC" in method: log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
     if method in ["CCSD[T]", "UCCSD[T]"]: warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")

@@ -6,10 +6,10 @@ from tuna_integrals import tuna_integral as ints
 import tuna_postscf as postscf
 import tuna_mp as mp
 import tuna_cc as cc
-import tuna_molecule as plot
+import tuna_out as out
 import tuna_ci as ci
 import tuna_molecule as mol
-
+import tuna_dft as dft
 
 
 
@@ -462,7 +462,85 @@ def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
 
 
 
-def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, rotate_guess_mos, no_rotate_guess_mos, calculation, silent=False):
+def new_guess(calculation, atomic_symbols, coordinates, basis_functions_big, n_basis_big):
+
+
+
+    def calculate_overlap_matrix(basis1, basis2, n_basis1, n_basis2):
+
+        S = np.zeros((n_basis1, n_basis2)) 
+
+        for i in range(n_basis1):
+            for j in range(n_basis2):
+
+                S[i, j] = ints.S(basis1[i], basis2[j])
+   
+        return S
+
+
+    if len(atomic_symbols) == 2:
+
+        calculation_old = calculation
+
+        atomic_symbols_A = [atomic_symbols[0]]
+        coordinates_A = [coordinates[0]]
+
+        calculation.atomic_symbols = atomic_symbols_A
+        calculation.coordinates = coordinates_A
+
+        _, molecule_A, E_guess_A, P_guess_A = calculate_energy(calculation, atomic_symbols_A, coordinates_A, silent=True, guess_calculation=True)
+
+        n_basis_A = molecule_A.n_basis
+        bfs_A = molecule_A.basis_functions
+
+        atomic_symbols_B = [atomic_symbols[1]]
+        coordinates_B = [coordinates[1]]
+
+        calculation.atomic_symbols = atomic_symbols_B
+        calculation.coordinates = coordinates_B
+
+        _, molecule_B, E_guess_B, P_guess_B = calculate_energy(calculation, atomic_symbols_B, coordinates_B, silent=True, guess_calculation=True)
+
+        n_basis_B = molecule_B.n_basis
+        bfs_B = molecule_B.basis_functions
+
+        E_guess = E_guess_A + E_guess_B
+
+        S_22 = calculate_overlap_matrix(basis_functions_big, basis_functions_big, n_basis_big, n_basis_big)
+
+        S_22_inv = np.linalg.inv(S_22)
+
+        S_21 = calculate_overlap_matrix(basis_functions_big, bfs_A, n_basis_big, n_basis_A)
+
+        P_guess_A_big = S_22_inv @ S_21 @ P_guess_A @ S_21.T @ S_22_inv
+
+        S_21 = calculate_overlap_matrix(basis_functions_big, bfs_B, n_basis_big, n_basis_B)
+
+        P_guess_B_big = S_22_inv @ S_21 @ P_guess_B @ S_21.T @ S_22_inv
+
+
+        P_guess = P_guess_A_big + P_guess_B_big
+        P_guess_alpha = P_guess_beta = P_guess / 2
+
+        calculation = calculation_old
+
+
+
+        return E_guess, P_guess, P_guess_alpha, P_guess_beta, calculation
+
+
+
+
+
+    return E_guess, P_guess, P_guess_alpha, P_guess_beta
+
+
+
+
+
+
+
+def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, rotate_guess_mos, no_rotate_guess_mos, calculation, silent=False, S=None):
 
     """
 
@@ -496,9 +574,10 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
     """
     
     H_core = T + V_NE
-
+    
     guess_epsilons = []
     guess_mos = []
+
 
     if reference == "RHF":
         
@@ -514,6 +593,7 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
 
                  
             P_guess = scf.construct_density_matrix(guess_mos, n_doubly_occ, 2)
+            P_guess_alpha = P_guess_beta = P_guess / 2
 
             # Take lowest energy guess epsilon for guess energy
             E_guess = guess_epsilons[0]       
@@ -650,7 +730,7 @@ def calculate_one_electron_energy(method, reference, basis_functions, atoms, n_b
     check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
 
     # Builds initial guess, which is the final answer for the one-electron case
-    E, P, P_alpha, P_beta, epsilons, molecular_orbitals = setup_initial_guess(None, None, None, None, reference, T, V_NE, X, 1, 1, 0, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent)
+    E, P, P_alpha, P_beta, epsilons, molecular_orbitals = setup_initial_guess(None, None, None, None, reference, T, V_NE, X, 1, 1, 0, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent, S=S)
 
     return E, P, epsilons, molecular_orbitals, D, S, ERI_AO, T, V_NE
 
@@ -660,12 +740,8 @@ def calculate_one_electron_energy(method, reference, basis_functions, atoms, n_b
 
 
 
-
-
-def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, terse=False, silent=False):
+def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, terse=False, silent=False, guess_calculation=False):
  
-
-
     log("\n Setting up molecule...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     # Builds molecule object using calculation and atomic parameters
@@ -674,6 +750,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     # Unpacking of various useful calculation quantities
     method = calculation.method
     reference = calculation.reference
+    do_DFT = calculation.DFT_calculation
 
     # Unpacking of various useful molecular properties
     atomic_symbols = molecule.atomic_symbols
@@ -832,13 +909,29 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         log("\n Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
         X, smallest_S_eigenvalue = calculate_Fock_transformation_matrix(S)
-
         log("[Done]", calculation, 1, silent=silent)
 
+        # Makes sure there is no linear dependency in the basis set
         check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
 
         # Calculates one-electron density for initial guess
-        E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent)
+        E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent, S=S)
+
+        # Forces the trace of the guess density to be correct
+        P_guess = dft.clean_density_matrix(P_guess, S, n_electrons)
+        P_guess_alpha = dft.clean_density_matrix(P_guess_alpha, S, n_alpha)
+        P_guess_beta = dft.clean_density_matrix(P_guess_beta, S, n_beta)
+
+
+        #if not guess_calculation:
+   
+        #    E_guess, P_guess, P_guess_alpha, P_guess_beta, calculation = new_guess(calculation, atomic_symbols, coordinates, basis_functions, n_basis)
+        
+
+
+        # Sets up the DFT integration grid
+        atomic_orbitals, weights = dft.set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess, calculation, silent=False) if do_DFT else (None, None)
+
 
         log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
 
@@ -848,8 +941,11 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         # Prints the chosen SCF convergence acceleration options
         log_convergence_acceleration(calculation, silent=silent)
 
+        E_guess -= V_NN + E_D2
+
+
         # Starts SCF cycle for two-electron energy
-        SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent)
+        SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent, atomic_orbitals=atomic_orbitals, weights=weights)
         
         calculation.SCF_time = time.perf_counter()
         log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
@@ -857,7 +953,6 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         # Extracts useful quantities from SCF output object
         molecular_orbitals = SCF_output.molecular_orbitals
         molecular_orbitals_alpha = SCF_output.molecular_orbitals_alpha  
-
         molecular_orbitals_beta = SCF_output.molecular_orbitals_beta   
         epsilons = SCF_output.epsilons
         epsilons_alpha = SCF_output.epsilons_alpha
@@ -870,6 +965,8 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         nuclear_electron_energy = SCF_output.nuclear_electron_energy
         coulomb_energy = SCF_output.coulomb_energy
         exchange_energy = SCF_output.exchange_energy
+        correlation_energy = SCF_output.correlation_energy
+
 
         # Packs dipole integrals into SCF output object
         SCF_output.D = D
@@ -889,7 +986,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         if not silent: 
 
             # Prints the individual components of the total SCF energy
-            postscf.print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, V_NN, calculation)
+            postscf.print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation)
 
         # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
         if "MP" in method: 
@@ -934,13 +1031,19 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
            postscf.post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, molecule.partition_ranges, D, P_alpha, P_beta, epsilons_alpha, epsilons_beta, molecular_orbitals_alpha, molecular_orbitals_beta)
 
     # Prints Hartree-Fock energy
-    if reference == "RHF": log("\n Restricted Hartree-Fock energy:   " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
-    else: log("\n Unrestricted Hartree-Fock energy: " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+    if reference == "RHF" and not do_DFT: log("\n Restricted Hartree-Fock energy:   " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+    elif reference == "UHF" and not do_DFT: log("\n Unrestricted Hartree-Fock energy: " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+
+    else:
+        
+        space = " " * max(0, 8 - len(method))
+
+        log(f"\n Restricted {method} energy: {space}      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
 
 
     # Adds up and prints MP2 energies
-    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2"]: 
+    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2"]: 
         
         space = " " * max(0, 8 - len(method))
 
@@ -1032,7 +1135,12 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         log("\n Semi-empirical dispersion energy: " + f"{E_D2:16.10f}", calculation, 1, silent=silent)
         log(" Dispersion-corrected final energy:" + f"{final_energy:16.10f}", calculation, 1, silent=silent)
-    
+
+
+    if not silent:
+
+        out.plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons)
+
 
 
     return SCF_output, molecule, final_energy, P
@@ -1131,7 +1239,18 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
     log_spacer(calculation)
     
     # If SCANPLOT keyword is used, plots and shows a matplotlib graph of the data
+
+    if calculation.delete_plot:
+
+        out.delete_saved_plot()
+
     if calculation.scan_plot: 
         
-        plot.scan_plot(calculation, bohr_to_angstrom(np.array(bond_lengths)), energies)
+        out.scan_plot(calculation, bohr_to_angstrom(np.array(bond_lengths)), energies)
+
+
+
+
+
+
 

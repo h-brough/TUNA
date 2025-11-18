@@ -1595,7 +1595,7 @@ def calculate_unrestricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, method
     method = method.split("U")[1] if "U" in method else method
 
     log_spacer(calculation, silent=silent, start="\n")
-    log(f"                  {method} Energy  ", calculation, 1, silent=silent, colour="white")
+    log(f"                   {method} Energy  ", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
 

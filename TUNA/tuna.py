@@ -144,11 +144,13 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
         
 
     # Geometry optimisation
-    elif calculation_type == "OPT":
+    elif calculation_type == "OPT" or calculation_type == "FORCE":
         
         if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            optfreq.optimise_geometry(calculation, atomic_symbols, coordinates)
+            multiple_iterations = False if calculation_type == "FORCE" else True
+
+            optfreq.optimise_geometry(calculation, atomic_symbols, coordinates, multiple_iterations=multiple_iterations)
         
         else: error("Geometry optimisation requested for single atom!")
         
@@ -197,13 +199,13 @@ def main():
     """
 
     # Reads input line, makes sure it's okay and extracts the desired parameters
-    calculation_type, method, basis, atoms, coordinates, params = parse_input()
-
+    calculation_type, method, basis, atomic_symbols, coordinates, params = parse_input()
+    
     print(colored(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set requested.", "light_grey", force_color=True))
     print(colored(f"Electronic structure method is {method_types.get(method)}.\n", "light_grey", force_color=True))
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
-    calculation = Calculation(calculation_type, method, start_time, params, basis, atoms)
+    calculation = Calculation(calculation_type, method, start_time, params, basis, atomic_symbols)
 
     # If a decontracted basis has been requested, this is printed to the console
     contraction = "fully decontracted" if calculation.decontract else "partially contracted"
@@ -213,7 +215,7 @@ def main():
 
 
     # Sets off the desired calculation with the requested parameters
-    run_calculation(calculation_type, calculation, atoms, coordinates)
+    run_calculation(calculation_type, calculation, atomic_symbols, coordinates)
 
     # Finishes the calculation, printing the time taken
     finish_calculation(calculation)
