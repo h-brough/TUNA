@@ -1139,7 +1139,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
     if not silent:
 
-        out.plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons)
+        out.plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons, molecule.basis_charges)
 
 
 

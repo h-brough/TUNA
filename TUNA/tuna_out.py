@@ -6,7 +6,7 @@ import matplotlib
 import pickle
 from matplotlib import font_manager as fm
 import warnings, logging
-
+import os
 
 
 
@@ -181,7 +181,7 @@ def print_trajectory(molecule, energy, coordinates, trajectory_path):
 
 def build_Cartesian_grid(bond_length):
 
-    bond_length = bond_length if type(bond_length) == float else 0
+    bond_length = bond_length if type(bond_length) != str else 0
 
     extent = 3
     number_of_points = 500
@@ -202,19 +202,19 @@ def build_Cartesian_grid(bond_length):
 
 
 
-def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None):
+def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, atomic_charges=None):
 
     X, Z = grid 
 
     fig, ax = plt.subplots()
     ax.axis("off")
 
-    bond_length = bond_length if type(bond_length) == float else 0
+    bond_length = bond_length if type(bond_length) != str else 0
 
     if P is not None:
 
         density = dft.construct_density_on_grid(P, basis_functions_on_grid)
-
+        
         density_cut_off = 0.98
 
         view = np.clip(density, None, np.quantile(density, density_cut_off))
@@ -223,7 +223,6 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
 
         vmin = 0
         vmax = np.max(view)
-
 
     elif molecular_orbitals is not None:
 
@@ -239,8 +238,17 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
         vmin = -max_abs
         vmax =  max_abs
 
+    elif atomic_charges is not None:
 
-    im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
+        view = calculate_nuclear_electrostatic_potential(grid, bond_length, atomic_charges)
+        cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)])
+        from matplotlib.colors import LogNorm
+
+        vmin = 1
+        vmax = np.max(view)
+    
+    
+    im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, norm=LogNorm(vmin=vmin, vmax=vmax))
 
     ax.scatter([0.0, bond_length],[0.0, 0.0], c="black", s=8, zorder=3)
 
@@ -279,11 +287,15 @@ def calculate_electronic_electrostatic_potential():
 
 
 
-def plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons):
+def plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons, atomic_charges=None):
 
     grid = build_Cartesian_grid(bond_length)
     basis_functions_on_grid = dft.construct_basis_functions_on_grid_new(basis_functions, grid)
-    
+
+    if calculation.plot_ESP:
+
+        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, atomic_charges=atomic_charges)
+
     if calculation.plot_density: 
         
         plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P)
@@ -303,11 +315,6 @@ def plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, mo
         elif calculation.plot_LUMO: 
             
             which_MO = n_electrons if calculation.reference == "UHF" else n_electrons // 2
-
-        
-    if calculation.plot_ESP:
-
-        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P)
 
         
         if calculation.plot_molecular_orbital: 

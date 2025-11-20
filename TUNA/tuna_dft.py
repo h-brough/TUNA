@@ -309,22 +309,18 @@ def calculate_overlap_matrix(atomic_orbitals, weights):
 
 
 
-def calculate_exchange_energy(density, weights, exchange_method, calculation):
+def calculate_exchange_energy(density, weights, exchange_functional, calculation):
 
-    exchange_energy_function = exchange_functionals.get(exchange_method)
-
-    e_X = exchange_energy_function(density, calculation)
+    e_X = exchange_functional(density, calculation)
 
     E_X = integrate_on_grid(e_X * density, weights)
 
-    return E_X
+    return E_X, e_X
 
 
 
 
-def calculate_correlation_energy(density, weights, correlation_method, calculation):
-
-    correlation_functional = correlation_functionals.get(correlation_method)
+def calculate_correlation_energy(density, weights, correlation_functional, calculation):
 
     e_C = correlation_functional(density, calculation)
 
@@ -343,9 +339,23 @@ def calculate_Slater_energy_density(density, calculation):
     alpha = calculation.X_alpha
 
 
-    e_X = (3 / 2 * alpha) * -3 / 4 * (3 / np.pi) ** (1 / 3) * density ** (1 / 3) 
+    e_X = (3 / 2 * alpha) * -3 / 4 * np.cbrt(3 / np.pi * density)
 
     return e_X
+
+
+
+
+
+def calculate_Slater_potential(density, calculation):
+
+    alpha = calculation.X_alpha
+
+    v_X = - (3 / 2 * alpha) * np.cbrt(3 / np.pi * density)
+
+    return v_X
+
+
 
 
 def calculate_unrestricted_Slater_energy_density(alpha_density, beta_density, calculation):
@@ -375,13 +385,6 @@ def calculate_unrestricted_Slater_potential(alpha_density, beta_density, calcula
 
 
 
-def calculate_Slater_potential(density, calculation):
-
-    alpha = calculation.X_alpha
-
-    v_X = - (3 / 2 * alpha) * (3 / np.pi) ** (1 / 3) * density ** (1 / 3)
-
-    return v_X
 
 
 
@@ -393,10 +396,10 @@ def calculate_VWN_energy_density(density, x_0, b, c):
 
     A = 0.0621814 / 2
 
-    r_s = (3 / (4 * np.pi * density)) ** (1 / 3)
+    r_s = np.cbrt(3 / (4 * np.pi * density))
 
-    x = r_s ** (1 / 2)
-    Q = (4 * c - b ** 2) ** (1 / 2)
+    x = np.sqrt(r_s)
+    Q = np.sqrt(4 * c - b ** 2)
 
     def X(x):
 
@@ -432,6 +435,46 @@ def spin_polarisation_function(zeta):
 
 
 
+
+
+def phi(zeta):
+
+    phi_zeta = ((1 + zeta) ** (2 / 3) + (1 - zeta) ** (2 / 3)) / 2
+
+    return phi_zeta
+
+
+
+
+
+
+def calculate_PBE_exchange(density, calculation, density_gradient):
+
+    e_X_Slater = calculate_Slater_energy_density(density, calculation)
+
+
+    r = np.cbrt(3 / (4 * np.pi * density))
+    k_F = np.cbrt(3 * np.pi ** 2 * density)
+
+    k_s = np.sqrt(4 * k_F / np.pi)
+
+    beta = 0.066725
+
+    mu = beta * np.pi ** 2 / 3
+    kappa = 0.804
+
+    F_X = 1 + kappa - kappa / (1 + mu * s ** 2 / kappa)
+
+    e_X = e_X_Slater * F_X
+
+    return e_X
+
+
+
+
+
+
+
 def calculate_VWN3_energy_density(density, calculation):
 
     x_0 = -0.409286 
@@ -464,9 +507,9 @@ def calculate_RPW_energy_density(density, calculation):
 
 def calculate_PW_correlation_density(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, P):
 
-    r_s = (3 / (4 * np.pi * density)) ** (1 / 3)
+    r_s = np.cbrt(3 / (4 * np.pi * density))
 
-    B = beta_1 * r_s ** (1 / 2) + beta_2 * r_s + beta_3 * r_s ** (3 / 2) + beta_4 * r_s ** (P + 1)
+    B = beta_1 * np.sqrt(r_s) + beta_2 * r_s + beta_3 * np.sqrt(r_s) ** 3 + beta_4 * r_s ** (P + 1)
 
     K = 1 / (2 * A * B)
 
@@ -477,17 +520,17 @@ def calculate_PW_correlation_density(density, A, alpha_1, beta_1, beta_2, beta_3
 
 
 
-def calculate_PW_correlation_potential(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, P):
+def calculate_PW_potential(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, P):
 
-    r_s = (3 / (4 * np.pi * density)) ** (1 / 3)
+    r_s = np.cbrt(3 / (4 * np.pi * density))
 
-    B = beta_1 * r_s ** (1 / 2) + beta_2 * r_s + beta_3 * r_s ** (3 / 2) + beta_4 * r_s ** (P + 1)
+    B = beta_1 * np.sqrt(r_s) + beta_2 * r_s + beta_3 * np.sqrt(r_s) ** 3 + beta_4 * r_s ** (P + 1)
 
     K = 1 / (2 * A * B)
 
     e_C = -2 * A * (1 + alpha_1 * r_s) * np.log(1 + K)
 
-    dB_dr = (1 / 2) * beta_1 * r_s ** (-1 / 2) + beta_2 + (3 / 2) * beta_3 * r_s ** (1 / 2) + (P + 1) * beta_4 * r_s ** P
+    dB_dr = (1 / 2) * beta_1 * 1 / np.sqrt(r_s) + beta_2 + (3 / 2) * beta_3 * np.sqrt(r_s) + (P + 1) * beta_4 * r_s ** P
 
     de_dr = -2 * A * alpha_1 * np.log(1 + K) + (1 + alpha_1 * r_s) * dB_dr / (B ** 2 * (1 + K))
 
@@ -500,7 +543,49 @@ def calculate_PW_correlation_potential(density, A, alpha_1, beta_1, beta_2, beta
 
 
 
-def calculate_XC_potential(density, e_XC_functional, calculation):
+def calculate_VWN3_correlation_potential(density, calculation):
+
+    v_C = calculate_numerical_functional_derivative(density, calculate_VWN3_energy_density, calculation)
+
+    return v_C
+
+
+def calculate_VWN5_correlation_potential(density, calculation):
+
+    v_C = calculate_numerical_functional_derivative(density, calculate_VWN5_energy_density, calculation)
+
+    return v_C
+
+
+def calculate_PW_correlation_potential(density, calculation):
+
+    v_C = calculate_PW_potential(density, 0.031091, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+
+    return v_C
+
+
+def calculate_Slater_exchange_potential(density, calculation):
+
+    v_X = calculate_Slater_potential(density, calculation)
+
+    return v_X
+
+
+
+
+
+def calculate_XC_potential(density, functional, calculation):
+
+    v_XC = functional(density, calculation)
+
+    return v_XC
+
+
+
+
+
+
+def calculate_numerical_functional_derivative(density, e_XC_functional, calculation):
 
     dp = 0.0001 * density
 
@@ -525,16 +610,12 @@ def calculate_K_matrix(v_XC, atomic_orbitals, weights):
 
 
 
-def calculate_exchange_correlation_energy(density, weights, exchange_method, correlation_method, calculation):
 
-    E_X = calculate_exchange_energy(density, weights, exchange_method, calculation) if exchange_method is not None else 0
+def calculate_zeta(alpha_density, beta_density):
 
-    E_C = calculate_correlation_energy(density, weights, correlation_method, calculation) if correlation_method is not None else 0
+    zeta = (alpha_density - beta_density) / (alpha_density + beta_density)
 
-    E_XC = E_X + E_C
-
-    return E_XC, E_X, E_C
-
+    return zeta
 
 
 
@@ -550,6 +631,11 @@ exchange_functionals = {
 
 
 
+exchange_potentials = {
+
+    "S": calculate_Slater_exchange_potential,
+
+}
 
 
 
@@ -558,6 +644,15 @@ correlation_functionals = {
     "VWN3": calculate_VWN3_energy_density,
     "VWN5": calculate_VWN5_energy_density,
     "PW": calculate_RPW_energy_density,
+
+}
+
+
+correlation_potentials = {
+
+    "VWN3": calculate_VWN3_correlation_potential,
+    "VWN5": calculate_VWN5_correlation_potential,
+    "PW": calculate_PW_correlation_potential,
 
 }
 

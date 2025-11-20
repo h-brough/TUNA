@@ -131,7 +131,7 @@ def calculate_translational_entropy(temperature, pressure, mass):
 
     pressure_atomic_units = pressure / constants.pascal_in_atomic_units
 
-    translational_entropy = k * (5 / 2 + np.log(((h * mass * k * temperature) / (h ** 2) ) ** (3 / 2) * (k * temperature / pressure_atomic_units)))
+    translational_entropy = k * (5 / 2 + np.log(np.sqrt(((h * mass * k * temperature) / (h ** 2))) ** 3 * (k * temperature / pressure_atomic_units)))
 
     return translational_entropy
 

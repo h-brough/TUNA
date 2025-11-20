@@ -118,16 +118,21 @@ def diagonalise_Fock_matrix(F, X):
 
 
 
-def calculate_RDFT_electronic_energy(P, H_core, J, density, weights, exchange_method, correlation_method, calculation):
+def calculate_RDFT_electronic_energy(P, H_core, J, density, weights, exchange_functional, correlation_functional, calculation):
 
 
     electronic_energy = np.einsum("ij,ij->", P, H_core)
     electronic_energy += 0.5*np.einsum("ij,ij->", P, J)
 
-    E_XC, E_X, E_C = dft.calculate_exchange_correlation_energy(density, weights, exchange_method, correlation_method, calculation)
+    E_X, e_X = dft.calculate_exchange_energy(density, weights, exchange_functional, calculation) if exchange_functional is not None else 0
+
+    E_C = dft.calculate_correlation_energy(density, weights, correlation_functional, calculation) if correlation_functional is not None else 0
+
+    E_XC = E_X + E_C
+
     electronic_energy += E_XC
 
-    return electronic_energy, E_X, E_C
+    return electronic_energy, E_X, E_C, e_X
 
 
 
@@ -721,6 +726,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
         Fock_vector = []
         DIIS_error_vector = []
 
+
         for step in range(1, maximum_iterations):
 
             E_old = E
@@ -728,7 +734,6 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             P_old_before_damping = P_before_damping
             P_old = P 
       
-            #print("P\n", np.round(P,4))
 
             if do_DFT:
                 
@@ -737,10 +742,11 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
                 exchange_functional = dft.exchange_functionals.get(exchange_method)
                 correlation_functional = dft.correlation_functionals.get(correlation_method)
 
-                v_X = dft.calculate_XC_potential(density, exchange_functional, calculation) if exchange_functional is not None else 0
+                exchange_potential = dft.exchange_potentials.get(exchange_method)
+                correlation_potential = dft.correlation_potentials.get(correlation_method)
 
-                #v_C = dft.calculate_XC_potential(density, correlation_functional, calculation) if correlation_functional is not None else 0
-                v_C = dft.calculate_PW_correlation_potential(density, 0.031091, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+                v_X = dft.calculate_XC_potential(density, exchange_potential, calculation) if exchange_potential is not None else 0
+                v_C = dft.calculate_XC_potential(density, correlation_potential, calculation) if correlation_potential is not None else 0
 
                 v_XC = v_X + v_C
 
@@ -780,7 +786,7 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
             if do_DFT:
 
-                E, E_X, E_C = calculate_RDFT_electronic_energy(P, H_core, J, density, weights, exchange_method, correlation_method, calculation)
+                E, E_X, E_C, e_X = calculate_RDFT_electronic_energy(P, H_core, J, density, weights, exchange_functional, correlation_functional, calculation)
 
             else: 
 
