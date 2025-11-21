@@ -966,6 +966,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         coulomb_energy = SCF_output.coulomb_energy
         exchange_energy = SCF_output.exchange_energy
         correlation_energy = SCF_output.correlation_energy
+        density = SCF_output.density
 
 
         # Packs dipole integrals into SCF output object
@@ -988,8 +989,14 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
             # Prints the individual components of the total SCF energy
             postscf.print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation)
 
+            if do_DFT:
+
+                n_electrons_DFT = dft.integrate_on_grid(density, weights)
+
+                log(f"\n Integral of the final density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
+
         # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
-        if "MP" in method: 
+        if "MP" in method or calculation.MP_correlation_proportion != 0: 
 
             E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
             postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "MP2", silent=silent)
@@ -1043,13 +1050,21 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
     # Adds up and prints MP2 energies
-    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2"]: 
+    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2"] or (do_DFT and calculation.MP_correlation_proportion != 0): 
         
         space = " " * max(0, 8 - len(method))
 
+        E_MP2 *= calculation.MP_correlation_proportion if do_DFT else 1
+
         final_energy += E_MP2
 
-        log(f" Correlation energy from {method}: {space}" + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
+        if do_DFT:
+            
+            log(f" Double-hybrid correlation energy: " + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
+
+        else:
+            
+            log(f" Correlation energy from {method}: {space}" + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
 
 
     # Adds up and prints MP3 energies

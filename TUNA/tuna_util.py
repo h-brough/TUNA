@@ -231,9 +231,14 @@ class Calculation:
         self.n_MP2_grid_points = keyword(["MPGRID"], 20, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
 
         # DFT keywords
+        self.functional = DFT_methods.get(self.method)
         self.X_alpha = keyword(["XA"], 2 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.integral_accuracy_requested, self.integral_accuracy = keyword(["INTACC"], False, check_next_space=True, value_type=float, associated_keyword_default=4.0)
         self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
+        self.HFX_requested, self.HF_exchange_proportion = (False, 0) if self.method in ["H", "UH"] else keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
+        if self.method in DFT_methods and not self.HFX_requested: self.HF_exchange_proportion = self.functional.HFX_proportion
+        self.MPC_requested, self.MP_correlation_proportion = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
+        if self.method in DFT_methods and not self.MPC_requested: self.MP_correlation_proportion = self.functional.MPC_proportion
 
         # Excited state keywords
         self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -374,7 +379,7 @@ class Output:
 
     """
 
-    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F=None, T=None, V_NE=None, J=None, K=None, F_alpha=None, F_beta=None):
+    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F=None, T=None, V_NE=None, J=None, K=None, F_alpha=None, F_beta=None, density=None):
        
         """
 
@@ -415,6 +420,7 @@ class Output:
         self.P = P
         self.P_alpha = P_alpha
         self.P_beta = P_beta
+        self.density = density
 
         # Molecular orbitals
         self.molecular_orbitals = molecular_orbitals

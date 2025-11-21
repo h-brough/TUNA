@@ -7,6 +7,7 @@ import pickle
 from matplotlib import font_manager as fm
 import warnings, logging
 import os
+from matplotlib.colors import LogNorm
 
 
 
@@ -224,6 +225,8 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
         vmin = 0
         vmax = np.max(view)
 
+        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
+
     elif molecular_orbitals is not None:
 
         molecular_orbitals_on_grid = np.einsum("ikl,ij->jkl", basis_functions_on_grid, molecular_orbitals, optimize=True)
@@ -238,17 +241,18 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
         vmin = -max_abs
         vmax =  max_abs
 
+        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
+
+
     elif atomic_charges is not None:
 
         view = calculate_nuclear_electrostatic_potential(grid, bond_length, atomic_charges)
         cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)])
-        from matplotlib.colors import LogNorm
 
         vmin = 1
         vmax = np.max(view)
     
-    
-    im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, norm=LogNorm(vmin=vmin, vmax=vmax))
+        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, norm=LogNorm(vmin=vmin, vmax=vmax))
 
     ax.scatter([0.0, bond_length],[0.0, 0.0], c="black", s=8, zorder=3)
 
@@ -279,18 +283,13 @@ def calculate_nuclear_electrostatic_potential(grid, bond_length, nuclear_charges
 
 
 
-def calculate_electronic_electrostatic_potential():
-
-    return
-
-
 
 
 
 def plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons, atomic_charges=None):
 
     grid = build_Cartesian_grid(bond_length)
-    basis_functions_on_grid = dft.construct_basis_functions_on_grid_new(basis_functions, grid)
+    basis_functions_on_grid = dft.construct_basis_functions_on_grid(basis_functions, grid)
 
     if calculation.plot_ESP:
 

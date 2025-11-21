@@ -24,6 +24,7 @@
 - Plotting natural orbtials and NTOsm, exfited state difference densities
 - Hartree method
 - Visualise exchange, correlation, exchnage-correlation, hartree potential, external, effective
+- Hartree Fock exchange proportion by HFX [0-1] keyword
 
 ### Changed
 

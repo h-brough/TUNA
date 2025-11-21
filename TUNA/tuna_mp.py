@@ -1192,7 +1192,7 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
         E_MP2 = run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, SCF_output.F, n_doubly_occ, calculation, SCF_output.P, silent=silent)
 
 
-    elif method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "MP3", "UMP3", "SCS-MP3", "USCS-MP3", "MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]"]:
+    elif method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "MP3", "UMP3", "SCS-MP3", "USCS-MP3", "MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]"] or method in DFT_methods:
          
         if calculation.reference == "UHF":
 
