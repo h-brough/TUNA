@@ -170,6 +170,9 @@ class Calculation:
         self.plot_HOMO = keyword(["PLOTHOMO"], False)
         self.plot_LUMO = keyword(["PLOTLUMO"], False)
         self.plot_ESP = keyword(["ESP"], False)
+        self.plot_transition_density = keyword(["XDENSPLOT"], False)
+        self.plot_transition_spin_density = keyword(["XSPINDENSPLOT"], False)
+
 
         # Convergence keywords with optional parameters
         self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
@@ -235,10 +238,12 @@ class Calculation:
         self.X_alpha = keyword(["XA"], 2 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.integral_accuracy_requested, self.integral_accuracy = keyword(["INTACC"], False, check_next_space=True, value_type=float, associated_keyword_default=4.0)
         self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
+        self.plot_natural_transition_orbital, self.natural_transition_orbital_to_plot = keyword(["PLOTNTO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
         self.HFX_requested, self.HF_exchange_proportion = (False, 0) if self.method in ["H", "UH"] else keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
         if self.method in DFT_methods and not self.HFX_requested: self.HF_exchange_proportion = self.functional.HFX_proportion
         self.MPC_requested, self.MP_correlation_proportion = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
         if self.method in DFT_methods and not self.MPC_requested: self.MP_correlation_proportion = self.functional.MPC_proportion
+
 
         # Excited state keywords
         self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -945,14 +950,26 @@ method_types = {
     "CCSDT": "coupled cluster singles, doubles and triples",
     "UCCSDT": "unrestricted coupled cluster singles, doubles and triples",
     "LDA": "density-functional theory via local density approximation",
+    "ULDA": "unrestricted density-functional theory via local density approximation",
     "LSDA": "density-functional theory via local spin density approximation",
+    "ULSDA": "unrestricted density-functional theory via local spin density approximation",
     "SVWN": "density-functional theory with Slater exchange and VWN correlation",
+    "USVWN": "unrestricted density-functional theory with Slater exchange and VWN correlation",
     "SVWN3": "density-functional theory with Slater exchange and VWN-III correlation",
+    "USVWN3": "unrestricted density-functional theory with Slater exchange and VWN-III correlation",
     "SVWN5": "density-functional theory with Slater exchange and VWN-V correlation",
+    "USVWN5": "unrestricted density-functional theory with Slater exchange and VWN-V correlation",
     "SPW": "density-functional theory with Slater exchange and Perdew-Wang correlation",
+    "USPW": "unrestricted density-functional theory with Slater exchange and Perdew-Wang correlation",
     "HFS": "Hartree-Fock theory with Slater exchange", 
     "RHFS": "restricted Hartree-Fock theory with Slater exchange", 
     "UHFS": "unrestricted Hartree-Fock theory with Slater exchange", 
+    "PBE": "density-functional theory with PBE exchange and correlation",
+    "UPBE": "unrestricted density-functional theory with PBE exchange and correlation",
+    "PBE0": "hybrid density-functional theory with PBE exchange and correlation",
+    "UPBE0": "unrestricted hybrid density-functional theory with PBE exchange and correlation",
+    "PBE0-DH": "double-hybrid density-functional theory with PBE exchange and correlation",
+    "UPBE0-DH": "unrestricted double-hybrid density-functional theory with PBE exchange and correlation",
 
     }
 
@@ -985,20 +1002,25 @@ excited_state_methods = [
 DFT_methods = {
 
     "HFS" : Functional("HFS", "S", None, DFX_proportion=100, HFX_proportion=0, DFC_proportion=0, MPC_proportion=0),
+    "UHFS" : Functional("UHFS", "US", None, DFX_proportion=100, HFX_proportion=0, DFC_proportion=0, MPC_proportion=0),
     "SVWN" : Functional("SVWN", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "USVWN" : Functional("USVWN", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
     "LSDA" : Functional("LSDA", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "ULSDA" : Functional("ULSDA", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
     "LDA" : Functional("LDA", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "ULDA" : Functional("ULDA", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
     "SVWN3" : Functional("SVWN3", "S", "VWN3", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "USVWN3" : Functional("USVWN3", "US", "VWN3", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
     "SVWN5" : Functional("SVWN5", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "USVWN5" : Functional("USVWN5", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
     "SPW" : Functional("SPW", "S", "PW", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "BLYP" : Functional("BLYP", "B", "LYP", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "B3LYP" : Functional("B3LYP", "B", "LYP", DFX_proportion=80, HFX_proportion=20, DFC_proportion=100, MPC_proportion=0),
-    "B3LYPG" : Functional("B3LYPG", "B", "LYP", DFX_proportion=80, HFX_proportion=20, DFC_proportion=100, MPC_proportion=0),
-    "BHHLYP" : Functional("BHHLYP", "B", "LYP", DFX_proportion=50, HFX_proportion=50, DFC_proportion=100, MPC_proportion=0),
-    "B2PLYP" : Functional("B2PLYP", "B", "LYP", DFX_proportion=47, HFX_proportion=53, DFC_proportion=73, MPC_proportion=27),
+    "USPW" : Functional("USPW", "US", "UPW", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
     "PBE" : Functional("PBE", "PBE", "PBE", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
+    "UPBE" : Functional("UPBE", "UPBE", "PBE", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
     "PBE0" : Functional("PBE0", "PBE", "PBE", DFX_proportion=75, HFX_proportion=25, DFC_proportion=100, MPC_proportion=0),
+    "UPBE0" : Functional("UPBE0", "UPBE", "PBE", DFX_proportion=75, HFX_proportion=25, DFC_proportion=100, MPC_proportion=0),
     "PBE0-DH" : Functional("PBE0-DH", "PBE", "PBE", DFX_proportion=50, HFX_proportion=50, DFC_proportion=87.5, MPC_proportion=12.5),
+    "UPBE0-DH" : Functional("UPBE0-DH", "UPBE", "PBE", DFX_proportion=50, HFX_proportion=50, DFC_proportion=87.5, MPC_proportion=12.5),
 
 }
 

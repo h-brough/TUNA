@@ -611,6 +611,12 @@ def calculate_weights_matrix(weights_of_interest, excitations, n_occ, n_virt):
 
 
 
+
+
+
+
+
+
 def calculate_CIS_density_matrix(n_SO, n_occ, C_spin_block, o, v, b_ia):
 
     """
@@ -637,16 +643,25 @@ def calculate_CIS_density_matrix(n_SO, n_occ, C_spin_block, o, v, b_ia):
     DP_ab = np.einsum("ia,ib->ab", b_ia, b_ia, optimize=True)
 
     # Initialises HF density matrix in SO basis
-    P_SO = np.zeros((n_SO, n_SO))
-    P_SO[o, o] = np.identity(n_occ)
+    P_transition = np.zeros((n_SO, n_SO))
 
     # Adds on transition density blocks to form unrelaxed density matrix in SO basis
-    P_SO[v, v] += DP_ab
-    P_SO[o, o] += DP_ij
+    P_transition[v, v] = DP_ab
+    P_transition[o, o] = DP_ij
+
+    P_SO = P_transition.copy()
+
+    P_SO[o, o] += np.identity(n_occ)
+
+    # This stuff is the transition density (not the difference density), which is needed to compute NTOs
+    T_SO = np.zeros((n_SO, n_SO))
+    T_SO[v, o] = b_ia.T
+    U, s, Vh = np.linalg.svd(b_ia, full_matrices=False)
 
     P, P_alpha, P_beta = transform_P_SO_to_AO(P_SO, C_spin_block, n_SO)
+    P_transition, P_transition_alpha, P_transition_beta = transform_P_SO_to_AO(P_transition, C_spin_block, n_SO)
 
-    return P, P_alpha, P_beta
+    return P, P_alpha, P_beta, P_transition, P_transition_alpha, P_transition_beta
 
 
 
@@ -1095,7 +1110,7 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
 
     # Calculates weight matrix for state of interest
     b_ia = calculate_weights_matrix(weights_of_interest, excitations, n_occ, n_virt)
-    P_CIS, P_CIS_a, P_CIS_b = calculate_CIS_density_matrix(n_SO, n_occ, C_spin_block, o, v, b_ia)
+    P_CIS, P_CIS_a, P_CIS_b, P_transition, P_transition_alpha, P_transition_beta = calculate_CIS_density_matrix(n_SO, n_occ, C_spin_block, o, v, b_ia)
 
     log("[Done]", calculation, 1, silent=silent)
 
@@ -1130,7 +1145,6 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
     E_CIS = SCF_output.energy + E_transition
 
 
-
-    return E_CIS, E_transition, P_CIS, P_CIS_a, P_CIS_b
+    return E_CIS, E_transition, P_CIS, P_CIS_a, P_CIS_b, P_transition, P_transition_alpha, P_transition_beta
 
 

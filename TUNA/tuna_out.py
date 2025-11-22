@@ -203,7 +203,7 @@ def build_Cartesian_grid(bond_length):
 
 
 
-def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, atomic_charges=None):
+def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, atomic_charges=None, transition=False):
 
     X, Z = grid 
 
@@ -212,7 +212,7 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
 
     bond_length = bond_length if type(bond_length) != str else 0
 
-    if P is not None:
+    if P is not None and not transition:
 
         density = dft.construct_density_on_grid(P, basis_functions_on_grid)
         
@@ -220,12 +220,37 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
 
         view = np.clip(density, None, np.quantile(density, density_cut_off))
 
-        cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)])
+        cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)]) 
 
-        vmin = 0
+        vmin = 0 
         vmax = np.max(view)
 
         im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
+
+
+
+    elif P is not None and transition:
+
+        density = dft.construct_density_on_grid(P, basis_functions_on_grid, clean=False)
+        
+        density_cut_off = 0.98
+
+        lower_q = 1.0 - density_cut_off 
+        upper_q = density_cut_off        
+
+        low  = np.quantile(density, lower_q)
+        high = np.quantile(density, upper_q)
+
+        view = np.clip(density, low, high)
+        cmap = "bwr"
+
+        max_abs = np.max(np.abs(view))
+        vmin = -max_abs
+        vmax =  max_abs
+
+        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
+
+
 
     elif molecular_orbitals is not None:
 
@@ -299,7 +324,11 @@ def plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, mo
         
         plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P)
 
-    if calculation.plot_spin_density: 
+    if calculation.plot_transition_density:
+
+        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P, transition=True)
+
+    if calculation.plot_spin_density or calculation.plot_transition_spin_density: 
         
         plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P_alpha-P_beta)
 

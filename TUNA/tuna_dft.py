@@ -211,6 +211,60 @@ def construct_basis_functions_on_grid(basis_functions, points):
 
 
 
+def construct_basis_function_gradients_on_grid(basis_functions, points):
+
+    if len(points) == 2:
+
+        X, Z = points
+        Y = np.full_like(X, 0)
+
+    else:
+
+        X, Y, Z = points
+
+    _, N, M = X.shape
+
+    n_basis = len(basis_functions)
+
+    dphi_dx = np.zeros((n_basis, N, M))
+    dphi_dy = np.zeros((n_basis, N, M))
+    dphi_dz = np.zeros((n_basis, N, M))
+
+    for i, bf in enumerate(basis_functions):
+
+        X_relative = X - bf.origin[0]
+        Y_relative = Y - bf.origin[1]
+        Z_relative = Z - bf.origin[2]
+
+        l, m, n = bf.shell
+        r_squared = X_relative ** 2 + Y_relative ** 2 + Z_relative ** 2
+
+        poly_x = X_relative ** l if l > 0 else np.ones_like(X_relative)
+        poly_y = Y_relative ** m if m > 0 else np.ones_like(Y_relative)
+        poly_z = Z_relative ** n if n > 0 else np.ones_like(Z_relative)
+
+        P_poly = poly_x * poly_y * poly_z    
+
+        common = bf.norm[:, None, None] * np.exp(-bf.exps[:, None, None] * r_squared)
+
+        dP_dx_poly = l * (X_relative ** (l - 1)) * poly_y * poly_z if l > 0 else np.zeros_like(P_poly)
+        dP_dy_poly = m * poly_x * (Y_relative ** (m - 1)) * poly_z if l > 0 else np.zeros_like(P_poly)
+        dP_dz_poly = n * poly_x * poly_x * (Z_relative ** (n - 1)) if l > 0 else np.zeros_like(P_poly)
+
+        dphi_dx_primitives = common * (dP_dx_poly - 2 * bf.exps[:, None, None] * X_relative * P_poly)
+        dphi_dy_primitives = common * (dP_dy_poly - 2 * bf.exps[:, None, None] * Y_relative * P_poly)
+        dphi_dz_primitives = common * (dP_dz_poly - 2 * bf.exps[:, None, None] * Z_relative * P_poly)
+
+        dphi_dx[i] = np.einsum("ijk,i->jk", dphi_dx_primitives, bf.coefs, optimize=True)
+        dphi_dy[i] = np.einsum("ijk,i->jk", dphi_dy_primitives, bf.coefs, optimize=True)
+        dphi_dz[i] = np.einsum("ijk,i->jk", dphi_dz_primitives, bf.coefs, optimize=True)
+
+    return dphi_dx, dphi_dy, dphi_dz
+
+
+
+
+
 
 
 
@@ -238,7 +292,7 @@ def integrate_on_grid(integrand, weights):
 
 
 
-def construct_density_on_grid(P, atomic_orbitals):
+def construct_density_on_grid(P, atomic_orbitals, clean=True):
     
     """
     
@@ -256,7 +310,9 @@ def construct_density_on_grid(P, atomic_orbitals):
 
     density = np.einsum("ij,ikl,jkl->kl", P, atomic_orbitals, atomic_orbitals, optimize=True)
 
-    density = clean_density(density)
+    if clean:
+        
+        density = clean_density(density)
 
     return density
 
@@ -302,7 +358,7 @@ def calculate_overlap_matrix(atomic_orbitals, weights):
 
 
 
-def calculate_numerical_functional_derivative(density, e_XC_functional, calculation):
+def calculate_numerical_LDA_potential(density, e_XC_functional, calculation):
 
     dp = 0.0001 * density
 
@@ -313,19 +369,62 @@ def calculate_numerical_functional_derivative(density, e_XC_functional, calculat
 
 
 
-def spin_polarisation_function(zeta):
+def calculate_d_e_XC_d_sigma(sigma, density, e_XC_functional, calculation):
 
-    f_zeta = ((1 + zeta) ** (4 / 3) + (1 - zeta) ** (4 / 3) - 2) / (2 ** (4 / 3) - 2)
+    ds = 0.0001 * sigma
+
+    v_XC = (e_XC_functional(sigma + ds, density, calculation) - e_XC_functional(sigma - ds, density, calculation)) / (2 * ds)
+
+    return v_XC
+
+
+
+
+def calculate_d_e_XC_dp(sigma, density, e_XC_functional, calculation):
+
+    dp = 0.0001 * density
+
+    v_XC = (e_XC_functional(sigma, density + dp, calculation) - e_XC_functional(sigma, density - dp, calculation)) / (2 * dp)
+
+    return v_XC
+
+
+
+def calculate_numerical_GGA_potential(density, e_XC_functional, calculation, sigma, grad_x, grad_y, grad_z, X, Y, Z):
+
+    v_XC_LDA = calculate_numerical_LDA_potential(density, e_XC_functional, calculation)
+
+    d_e_XC_d_sigma = calculate_d_e_XC_dp(sigma, density, e_XC_functional, calculation)
+
+    k = density * d_e_XC_d_sigma
+
+    x_term = k * grad_x
+    y_term = k * grad_y
+    z_term = k * grad_z
+
+    v_XC_GGA = np.gradient(x_term, X) + np.gradient(y_term, Y) + np.gradient(z_term, Z)
+
+    v_XC = v_XC_LDA + v_XC_GGA * 2
+
+    return v_XC
+
+
+
+def calculate_f_zeta(zeta):
+
+    f_zeta = (np.cbrt(1 + zeta) ** 4 + np.cbrt(1 - zeta) ** 4 - 2) / (np.cbrt(2) ** 4 - 2)
 
     return f_zeta
 
 
 
-def phi(zeta):
+def calculate_f_prime_zeta(zeta):
 
-    phi_zeta = ((1 + zeta) ** (2 / 3) + (1 - zeta) ** (2 / 3)) / 2
+    f_zeta = (np.cbrt(1 + zeta) + np.cbrt(1 - zeta) - 2) / (np.cbrt(2) ** 4 - 2)
 
-    return phi_zeta
+    return f_zeta
+
+
 
 
 
@@ -342,7 +441,7 @@ def calculate_zeta(alpha_density, beta_density):
 
 
 
-def calculate_Slater_potential(density, calculation):
+def calculate_restricted_Slater_potential(density, calculation):
 
     alpha = calculation.X_alpha
 
@@ -355,7 +454,11 @@ def calculate_Slater_potential(density, calculation):
 
 
 
-def calculate_PW_potential(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, P):
+
+
+
+
+def calculate_restricted_PW_potential(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, P):
 
     r_s = np.cbrt(3 / (4 * np.pi * density))
 
@@ -372,6 +475,8 @@ def calculate_PW_potential(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, 
     v_C = e_C - r_s / 3 * de_dr
 
     return v_C, e_C
+
+
 
 
 
@@ -408,12 +513,21 @@ def calculate_VWN_potential(density, x_0, b, c):
 
 
 
-def calculate_Slater_exchange_potential(density, calculation):
+def calculate_restricted_Slater_exchange_potential(density, calculation):
 
-    v_X, e_X = calculate_Slater_potential(density, calculation)
+    v_X, e_X = calculate_restricted_Slater_potential(density, calculation)
 
     return v_X, e_X
 
+
+def calculate_unrestricted_Slater_potential(density, calculation):
+
+    v_X, e_X = calculate_restricted_Slater_potential(density, calculation)
+
+    v_X *= np.cbrt(2)
+    e_X *= np.cbrt(2)
+
+    return v_X, e_X
 
 
 def calculate_VWN3_correlation_potential(density, calculation):
@@ -430,9 +544,33 @@ def calculate_VWN5_correlation_potential(density, calculation):
     return v_C, e_C
 
 
-def calculate_PW_correlation_potential(density, calculation):
+def calculate_restricted_PW_correlation_potential(density, calculation):
 
-    v_C, e_C = calculate_PW_potential(density, 0.031091, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+    v_C, e_C = calculate_restricted_PW_potential(density, 0.031091, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+
+    return v_C, e_C
+
+
+def calculate_unrestricted_PW_correlation_potential(density, alpha_density, beta_density):
+
+    def calc_e():
+
+        v_C_0, e_C_0 = calculate_restricted_PW_potential(density, 0.031091, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+        v_C_1, e_C_1 = calculate_restricted_PW_potential(density, 0.015545, 0.20548, 14.1189, 6.1977, 3.3662, 0.62517, 1)
+        v_C_alpha, minus_alpha = calculate_restricted_PW_potential(density, 0.016887, 0.11125, 10.357, 3.6231, 0.88026, 0.49671, 1)
+
+        alpha = -1 * minus_alpha
+
+        zeta = calculate_zeta(alpha_density, beta_density)
+
+        f_zeta = calculate_f_zeta(zeta)
+
+        e_C = e_C_0 + alpha * f_zeta / 1.709921 * (1 - zeta ** 4) + (e_C_1 - e_C_0) * f_zeta * zeta ** 4
+
+        return e_C
+
+    e_C = calc_e()
+
 
     return v_C, e_C
 
@@ -440,11 +578,10 @@ def calculate_PW_correlation_potential(density, calculation):
 
 
 
-
-
 exchange_potentials = {
 
-    "S": calculate_Slater_exchange_potential,
+    "S": calculate_restricted_Slater_exchange_potential,
+    "US": calculate_unrestricted_Slater_potential,
 
 }
 
@@ -455,12 +592,44 @@ correlation_potentials = {
 
     "VWN3": calculate_VWN3_correlation_potential,
     "VWN5": calculate_VWN5_correlation_potential,
-    "PW": calculate_PW_correlation_potential,
+    "PW": calculate_restricted_PW_correlation_potential,
+    "UPW": calculate_unrestricted_PW_correlation_potential,
 
 }
 
 
 
 
+
+
+
+
+def calculate_square_density_gradient(P, basis_functions_on_grid, basis_functions, points):
+
+    dphi_dx, dphi_dy, dphi_dz = construct_basis_function_gradients_on_grid(basis_functions, points)
+
+    grad_x = 2 * np.einsum("ij,ikl,jkl->kl", P, basis_functions_on_grid, dphi_dx, optimize=True)
+    grad_y = 2 * np.einsum("ij,ikl,jkl->kl", P, basis_functions_on_grid, dphi_dy, optimize=True)
+    grad_z = 2 * np.einsum("ij,ikl,jkl->kl", P, basis_functions_on_grid, dphi_dz, optimize=True)
+
+    sigma = grad_x ** 2 + grad_y ** 2 + grad_z ** 2
+
+    return sigma
+
+
+
+
+
+def calculate_kinetic_energy_density(P, basis_functions, points):
+
+    dphi_dx, dphi_dy, dphi_dz = construct_basis_function_gradients_on_grid(basis_functions, points)
+
+    tau_x = np.einsum("ij,ikl,jkl->kl", P, dphi_dx, dphi_dx, optimize=True)
+    tau_y = np.einsum("ij,ikl,jkl->kl", P, dphi_dy, dphi_dy, optimize=True)
+    tau_z = np.einsum("ij,ikl,jkl->kl", P, dphi_dz, dphi_dz, optimize=True)
+
+    tau = tau_x + tau_y + tau_z
+
+    return tau
 
 

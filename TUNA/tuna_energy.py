@@ -922,6 +922,9 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         P_guess_alpha = dft.clean_density_matrix(P_guess_alpha, S, n_alpha)
         P_guess_beta = dft.clean_density_matrix(P_guess_beta, S, n_beta)
 
+        if reference == "UHF" and "U" not in method and method in DFT_methods:
+
+            method = calculation.method = "U" + method
 
         #if not guess_calculation:
    
@@ -1027,7 +1030,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         if n_virt <= 0: error("Excited state calculation requested on system with no virtual orbitals!")
 
 
-        E_CIS, E_transition, P, P_alpha, P_beta = ci.run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, silent=silent)
+        E_CIS, E_transition, P, P_alpha, P_beta, P_transition, P_transition_alpha, P_transition_beta = ci.run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, silent=silent)
         
         calculation.excited_state_time = time.perf_counter()
         log(f"\n Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
@@ -1153,6 +1156,18 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
     if not silent:
+
+        if method in excited_state_methods:
+
+            if calculation.plot_transition_density: 
+
+                P = P_transition
+                mp.calculate_natural_orbitals(P, X, calculation, silent=False)
+                
+            if calculation.plot_transition_spin_density: 
+                
+                P_alpha = P_transition_alpha
+                P_beta = P_transition_beta
 
         out.plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons, molecule.basis_charges)
 
