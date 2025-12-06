@@ -25,6 +25,16 @@
 - Hartree method
 - Visualise exchange, correlation, exchnage-correlation, hartree potential, external, effective
 - Hartree Fock exchange proportion by HFX [0-1] keyword
+- Print epsilons and occupancies with MO coefficients, all in one go, axe eigenvalues section
+- Change beta MO counting to align with plotting numbers
+- Sort out one electorn DFT systems
+- Sort out HFX keyword
+- Sort out dobule hybrid density matrices
+- Add  keywords, DFC, DFX
+- PBE-QIDH
+- just forget x100
+- H plotmo 30 with cc-pvtz works?
+
 
 ### Changed
 
@@ -35,7 +45,7 @@
 
 - First SCF guess cycle energy now prints properly
 - MAXITER keyword was off by 1
-- Known issue "levelshift p"
+- Known issue "levelshift p", He ML3 3-21g rotate
 
 <br>
 

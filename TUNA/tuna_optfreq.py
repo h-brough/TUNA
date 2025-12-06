@@ -5,7 +5,6 @@ import sys
 from termcolor import colored
 import tuna_postscf as postscf
 import tuna_thermo as thermo
-import tuna_out as out
 
 
 def calculate_gradient(coordinates, calculation, atoms, silent=False):
@@ -376,7 +375,8 @@ def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True)
 
         # Prints trajectory to file if TRAJ keyword has been used
         if calculation.trajectory: 
-            
+            import tuna_out as out
+
             out.print_trajectory(molecule, energy, coordinates, trajectory_path)
 
         # If optimisation is converged, begin post SCF output and print to console, then finish calculation

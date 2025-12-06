@@ -169,9 +169,9 @@ class Calculation:
         self.plot_spin_density = keyword(["SPINDENSPLOT"], False)
         self.plot_HOMO = keyword(["PLOTHOMO"], False)
         self.plot_LUMO = keyword(["PLOTLUMO"], False)
-        self.plot_ESP = keyword(["ESP"], False)
-        self.plot_transition_density = keyword(["XDENSPLOT"], False)
-        self.plot_transition_spin_density = keyword(["XSPINDENSPLOT"], False)
+        self.plot_ESP = keyword(["ESP", "PLOTESP"], False)
+        self.plot_difference_density = keyword(["DIFFDENSPLOT"], False)
+        self.plot_difference_spin_density = keyword(["DIFFSPINDENSPLOT"], False)
 
 
         # Convergence keywords with optional parameters
@@ -239,11 +239,25 @@ class Calculation:
         self.integral_accuracy_requested, self.integral_accuracy = keyword(["INTACC"], False, check_next_space=True, value_type=float, associated_keyword_default=4.0)
         self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
         self.plot_natural_transition_orbital, self.natural_transition_orbital_to_plot = keyword(["PLOTNTO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
-        self.HFX_requested, self.HF_exchange_proportion = (False, 0) if self.method in ["H", "UH"] else keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
-        if self.method in DFT_methods and not self.HFX_requested: self.HF_exchange_proportion = self.functional.HFX_proportion
-        self.MPC_requested, self.MP_correlation_proportion = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
-        if self.method in DFT_methods and not self.MPC_requested: self.MP_correlation_proportion = self.functional.MPC_proportion
+        self.plot_natural_orbital, self.natural_orbital_to_plot = keyword(["PLOTNO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
+        
+        if self.method in ["H", "UH"]:
+            
+            self.HFX_requested, self.HFX_prop = (False, 0) 
+        else: 
+             
+             self.HFX_requested, self.HFX_prop =keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+        
+        if self.method in DFT_methods and not self.HFX_requested: self.HFX_prop = self.functional.HFX
+        elif self.method in DFT_methods:
+             self.HFX_prop =  self.HFX_prop
+        
+        
+        self.HFX_prop /= 100
 
+        self.MPC_requested, self.MPC_prop = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
+        if self.method in DFT_methods and not self.MPC_requested: self.MPC_prop = self.functional.MPC
+        self.MPC_prop /= 100
 
         # Excited state keywords
         self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -289,8 +303,11 @@ class Calculation:
 
         # Processes the NOSINGLES keyword
         self.method = process_no_singles_keyword(self.method, self.no_singles)
+        self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_ESP or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital or self.plot_natural_transition_orbital
 
-        
+
+
+
 
 
 
@@ -322,6 +339,8 @@ class Constants:
         self.atomic_mass_unit_in_kg = 0.001 / self.avogadro
         self.reduced_planck_constant_in_joules_seconds = self.planck_constant_in_joules_seconds / (2 * np.pi)
         self.bohr_in_metres = 4 * np.pi * self.permittivity_in_farad_per_metre * self.reduced_planck_constant_in_joules_seconds ** 2 / (self.electron_mass_in_kilograms * self.elementary_charge_in_coulombs ** 2)
+        self.bohr_in_metres = 5.291772105443e-11
+        
         self.hartree_in_joules = self.reduced_planck_constant_in_joules_seconds ** 2 / (self.electron_mass_in_kilograms * self.bohr_in_metres ** 2)
         self.atomic_time_in_seconds = self.reduced_planck_constant_in_joules_seconds /  self.hartree_in_joules
         self.atomic_time_in_femtoseconds = self.atomic_time_in_seconds * 10 ** 15
@@ -360,7 +379,7 @@ class Constants:
         self.convergence_criteria_grid = {
 
             "loose" : {"integral_accuracy": 3, "extent_multiplier": 0.7, "name": "loose"},
-            "medium" : {"integral_accuracy": 4, "extent_multiplier": 1, "name": "medium"},
+            "medium" : {"integral_accuracy": 4, "extent_multiplier": 0.8, "name": "medium"},
             "tight" : {"integral_accuracy": 5, "extent_multiplier": 1, "name": "tight"},
             "extreme" : {"integral_accuracy": 7, "extent_multiplier": 1.2, "name": "extreme"},
 
@@ -384,7 +403,7 @@ class Output:
 
     """
 
-    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F=None, T=None, V_NE=None, J=None, K=None, F_alpha=None, F_beta=None, density=None):
+    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F=None, T=None, V_NE=None, J=None, K=None, F_alpha=None, F_beta=None, density=None, alpha_density=None, beta_density=None):
        
         """
 
@@ -426,6 +445,8 @@ class Output:
         self.P_alpha = P_alpha
         self.P_beta = P_beta
         self.density = density
+        self.alpha_density = alpha_density
+        self.beta_density = beta_density
 
         # Molecular orbitals
         self.molecular_orbitals = molecular_orbitals
@@ -461,15 +482,16 @@ class Output:
 
 class Functional:
 
-    def __init__(self, name, x_functional, c_functional, DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0):
+    def __init__(self, x_functional, c_functional, DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"):
 
-        self.name = name
         self.x_functional = x_functional
         self.c_functional = c_functional
-        self.DFX_proportion = DFX_proportion
-        self.HFX_proportion = HFX_proportion
-        self.DFC_proportion = DFC_proportion
-        self.MPC_proportion = MPC_proportion
+        self.DFX = DFX
+        self.HFX = HFX
+        self.DFC = DFC
+        self.MPC = MPC
+
+        self.functional_class = functional_class
 
         self.functional_type = self.process_functional()
 
@@ -478,11 +500,11 @@ class Functional:
 
         self.functional_type = "pure"
 
-        if self.HFX_proportion != 0: 
+        if self.HFX != 0: 
             
             self.functional_type = "hybrid"
 
-            if self.MPC_proportion != 0: 
+            if self.MPC != 0: 
 
                 self.functional_type = "double-hybrid"
 
@@ -964,12 +986,19 @@ method_types = {
     "HFS": "Hartree-Fock theory with Slater exchange", 
     "RHFS": "restricted Hartree-Fock theory with Slater exchange", 
     "UHFS": "unrestricted Hartree-Fock theory with Slater exchange", 
+    "HFB": "Hartree-Fock theory with Becke exchange", 
+    "RHFB": "restricted Hartree-Fock theory with Becke exchange", 
+    "UHFB": "unrestricted Hartree-Fock theory with Becke exchange", 
     "PBE": "density-functional theory with PBE exchange and correlation",
     "UPBE": "unrestricted density-functional theory with PBE exchange and correlation",
     "PBE0": "hybrid density-functional theory with PBE exchange and correlation",
     "UPBE0": "unrestricted hybrid density-functional theory with PBE exchange and correlation",
     "PBE0-DH": "double-hybrid density-functional theory with PBE exchange and correlation",
     "UPBE0-DH": "unrestricted double-hybrid density-functional theory with PBE exchange and correlation",
+    "PBE-QIDH": "double-hybrid density-functional theory with PBE exchange and correlation",
+    "UPBE-QIDH": "unrestricted double-hybrid density-functional theory with PBE exchange and correlation",
+    "PBE0-2": "double-hybrid density-functional theory with PBE exchange and correlation",
+    "UPBE0-2": "unrestricted double-hybrid density-functional theory with PBE exchange and correlation",
 
     }
 
@@ -1001,27 +1030,33 @@ excited_state_methods = [
 
 DFT_methods = {
 
-    "HFS" : Functional("HFS", "S", None, DFX_proportion=100, HFX_proportion=0, DFC_proportion=0, MPC_proportion=0),
-    "UHFS" : Functional("UHFS", "US", None, DFX_proportion=100, HFX_proportion=0, DFC_proportion=0, MPC_proportion=0),
-    "SVWN" : Functional("SVWN", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "USVWN" : Functional("USVWN", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "LSDA" : Functional("LSDA", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "ULSDA" : Functional("ULSDA", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "LDA" : Functional("LDA", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "ULDA" : Functional("ULDA", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "SVWN3" : Functional("SVWN3", "S", "VWN3", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "USVWN3" : Functional("USVWN3", "US", "VWN3", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "SVWN5" : Functional("SVWN5", "S", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "USVWN5" : Functional("USVWN5", "US", "VWN5", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "SPW" : Functional("SPW", "S", "PW", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "USPW" : Functional("USPW", "US", "UPW", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "PBE" : Functional("PBE", "PBE", "PBE", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "UPBE" : Functional("UPBE", "UPBE", "PBE", DFX_proportion=100, HFX_proportion=0, DFC_proportion=100, MPC_proportion=0),
-    "PBE0" : Functional("PBE0", "PBE", "PBE", DFX_proportion=75, HFX_proportion=25, DFC_proportion=100, MPC_proportion=0),
-    "UPBE0" : Functional("UPBE0", "UPBE", "PBE", DFX_proportion=75, HFX_proportion=25, DFC_proportion=100, MPC_proportion=0),
-    "PBE0-DH" : Functional("PBE0-DH", "PBE", "PBE", DFX_proportion=50, HFX_proportion=50, DFC_proportion=87.5, MPC_proportion=12.5),
-    "UPBE0-DH" : Functional("UPBE0-DH", "UPBE", "PBE", DFX_proportion=50, HFX_proportion=50, DFC_proportion=87.5, MPC_proportion=12.5),
-
+    "HFS" : Functional("S", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
+    "UHFS" : Functional("US", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
+    "SVWN" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "USVWN" : Functional("US", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "LSDA" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "ULSDA" : Functional("US", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "LDA" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "ULDA" : Functional("US", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "SVWN3" : Functional("S", "VWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "USVWN3" : Functional("US", "UVWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "SVWN5" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "USVWN5" : Functional("US", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "SPW" : Functional("S", "PW", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "USPW" : Functional("US", "UPW", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
+    "PBE" : Functional("PBE", "PBE", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UPBE" : Functional("UPBE", "UPBE", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "PBE0" : Functional("PBE", "PBE", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "UPBE0" : Functional("UPBE", "UPBE", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "PBE0-DH" : Functional("PBE", "PBE", DFX=50, HFX=50, DFC=87.5, MPC=12.5, functional_class="GGA"),
+    "UPBE0-DH" : Functional("UPBE", "UPBE", DFX=50, HFX=50, DFC=87.5, MPC=12.5, functional_class="GGA"),
+    "PBE-QIDH" : Functional("PBE", "PBE", DFX=31, HFX=69, DFC=67, MPC=33, functional_class="GGA"),
+    "UPBE-QIDH" : Functional("UPBE", "UPBE", DFX=31, HFX=69, DFC=67, MPC=33, functional_class="GGA"),
+    "PBE0-2" : Functional("PBE", "PBE", DFX=1-100/np.cbrt(2), HFX=100/np.cbrt(2), DFC=50, MPC=50, functional_class="GGA"),
+    "UPBE0-2" : Functional("UPBE", "UPBE", DFX=1-100/np.cbrt(2), HFX=100/np.cbrt(2), DFC=50, MPC=50, functional_class="GGA"),
+    "HFB" : Functional("B", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
+    "UHFB" : Functional("UB", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
+   
 }
 
 

@@ -2,7 +2,6 @@ import tuna_optfreq as optfreq
 import tuna_energy as energ
 import numpy as np
 from tuna_util import *
-import tuna_out as out
 
 
 def calculate_accelerations(forces, inv_masses): 
@@ -385,6 +384,8 @@ def run_MD(calculation, atoms, coordinates):
         # By default prints trajectory to file, can be viewed with Jmol
         if calculation.trajectory: 
             
+            import tuna_out as out
+
             out.print_trajectory(molecule, potential_energy, coordinates, trajectory_path)
         
 

@@ -11,6 +11,8 @@ from matplotlib.colors import LogNorm
 
 
 
+
+
 def delete_saved_plot():
 
     """
@@ -30,6 +32,8 @@ def delete_saved_plot():
     else:
         
         warning(f"Plot deletion requested but {file_path} could not be found!\n",space=0)
+
+
 
 
 
@@ -129,7 +133,7 @@ def scan_plot(calculation, bond_lengths, energies):
     
     if calculation.save_plot:
 
-        plt.savefig(calculation.save_plot_filepath, dpi=1200, figtransparent=True)
+        plt.savefig(calculation.save_plot_filepath, dpi=1200)
 
     log("  [Done]", calculation, 1)
 
@@ -137,6 +141,8 @@ def scan_plot(calculation, bond_lengths, energies):
     
     # Shows the coordinate scan plot
     plt.show()
+
+
 
 
 
@@ -160,6 +166,7 @@ def print_trajectory(molecule, energy, coordinates, trajectory_path):
         None : This function does not return anything
 
     """
+
     atomic_symbols = molecule.atomic_symbols
     
     with open(trajectory_path, "a") as file:
@@ -180,19 +187,40 @@ def print_trajectory(molecule, energy, coordinates, trajectory_path):
 
 
 
-def build_Cartesian_grid(bond_length):
 
-    bond_length = bond_length if type(bond_length) != str else 0
 
-    extent = 3
-    number_of_points = 500
 
+
+
+def build_Cartesian_grid(bond_length, extent=3, number_of_points=500):
+
+    """
+    
+    Builds the Cartesian grid for plotting.
+
+    Args:
+        bond-length (float): Bond length in bohr
+        extent (float, optional): How far away from the atomic centers should the grid span
+        number_of_points (int, optional): Number of points on each grid axis
+
+    Returns:
+        grid (array): Two-dimensional grid on which to plot
+
+    """
+
+    # If bond length is not a float, set it to zero for atoms
+    if isinstance(bond_length, str):
+
+        bond_length = 0 
+
+    # The molecule always lies along the z axis, so this axis is extended by the bond length
     x = np.linspace(-extent, extent, number_of_points)
     z = np.linspace(-extent, extent + bond_length, number_of_points)
 
+    # No Y axis is needed because of the symmetry of linear molecules
     X, Z = np.meshgrid(x, z, indexing="ij")
     
-    grid = np.array([X, Z])
+    grid = np.stack([X, Z], axis=0)
 
     return grid
 
@@ -203,84 +231,148 @@ def build_Cartesian_grid(bond_length):
 
 
 
-def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, atomic_charges=None, transition=False):
 
+def calculate_nuclear_electrostatic_potential(grid, bond_length, nuclear_charges):
+    
+    """
+    
+    Calculates the nuclear electrostatic potential.
+
+    Args:
+        grid (array): Grid on which to calculate electrostatic potential
+        bond-length (float): Bond length in bohr
+        nuclear_charges (list): List of relative nuclear charges
+
+    Returns:
+
+        V_nuclear (array): Nuclear potential for molecule
+
+    """
+
+    X, Z = grid
+
+    Z_A, Z_B = nuclear_charges
+
+    # Builds nuclear potential for both atoms, then adds them together
+    V_nuclear_A = Z_A / (X ** 2 + Z ** 2) ** (1 / 2)
+    V_nuclear_B = Z_B / (X ** 2 + (Z - bond_length) ** 2) ** (1 / 2)
+
+    V_nuclear = V_nuclear_A + V_nuclear_B
+
+    return V_nuclear
+
+
+
+
+
+
+
+
+
+
+def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, nuclear_charges=None, transition=False):
+
+    """
+    
+    Plots requested quantity on a two-dimensional grid and shows the image with Matplotlib.
+
+    Args:
+        basis_functions_on_grid (array): Basis functions evaluated on grid
+        grid (array): Two-dimensional grid for plotting
+        bond_length (float): Bond length in bohr
+        P (array, optional): Density matrix
+        molecular_orbitals (array): Molecular orbitals
+        which_MO (int): Which molecular orbital to print
+        nuclear_charges (array): Nuclear relative charges
+        transition (bool): Plot transition density or orbitals
+    
+    """
+    
     X, Z = grid 
 
     fig, ax = plt.subplots()
     ax.axis("off")
 
-    bond_length = bond_length if type(bond_length) != str else 0
+    # If bond length is not a float, set it to zero for atoms
+    if isinstance(bond_length, str):
 
-    if P is not None and not transition:
-
-        density = dft.construct_density_on_grid(P, basis_functions_on_grid)
-        
-        density_cut_off = 0.98
-
-        view = np.clip(density, None, np.quantile(density, density_cut_off))
-
-        cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)]) 
-
-        vmin = 0 
-        vmax = np.max(view)
-
-        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
+        bond_length = 0 
 
 
+    if P is not None:
 
-    elif P is not None and transition:
-
+        # Builds density on grid
         density = dft.construct_density_on_grid(P, basis_functions_on_grid, clean=False)
         
+        # Ignores the extremes of density near the nuclei
         density_cut_off = 0.98
 
-        lower_q = 1.0 - density_cut_off 
-        upper_q = density_cut_off        
+        if transition:
+            
+            view = np.clip(density, np.quantile(density, 1 - density_cut_off), np.quantile(density, density_cut_off))
 
-        low  = np.quantile(density, lower_q)
-        high = np.quantile(density, upper_q)
+            # Difference densities have both positive and negative parts
+            cmap = "bwr"
 
-        view = np.clip(density, low, high)
-        cmap = "bwr"
+            max_abs = np.max(np.abs(view))
 
-        max_abs = np.max(np.abs(view))
-        vmin = -max_abs
-        vmax =  max_abs
+            vmin, vmax = -max_abs, max_abs
 
-        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
+        else:
+
+            view = np.clip(density, None, np.quantile(density, density_cut_off))
+
+            # Electron density is only positive
+            cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)]) 
+
+            vmin, vmax = 0, np.max(view)
+
+        # Shows the image of the plot on the two-dimensional grid
+        ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
 
 
 
-    elif molecular_orbitals is not None:
+    if molecular_orbitals is not None:
 
+        # Builds molecular orbitals on grid
         molecular_orbitals_on_grid = np.einsum("ikl,ij->jkl", basis_functions_on_grid, molecular_orbitals, optimize=True)
 
+        # Pickks out a particular molecular orbital
         view = molecular_orbitals_on_grid[which_MO]
         
+        # Ensures consistency in colour by setting the sign to positive on the atom centred at the origin
         view *= -1 if np.sign(view[np.unravel_index(np.argmin(X ** 2 + Z ** 2), X.shape)]) < 0 else 1
-
+        
+        # Molecular orbitals can be positive or negative in sign
         cmap = "bwr"
 
         max_abs = np.max(np.abs(view))
-        vmin = -max_abs
-        vmax =  max_abs
+        vmin, vmax = -max_abs, max_abs
+        
+        # Shows the image of the plot on the two-dimensional grid
+        ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
 
-        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
 
 
-    elif atomic_charges is not None:
+    if nuclear_charges is not None:
+        
+        # Calculates the nuclear electrostatic potential
+        view = calculate_nuclear_electrostatic_potential(grid, bond_length, nuclear_charges)
 
-        view = calculate_nuclear_electrostatic_potential(grid, bond_length, atomic_charges)
+        # Nuclear potential is always positive
         cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)])
 
         vmin = 1
         vmax = np.max(view)
-    
-        im = ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, norm=LogNorm(vmin=vmin, vmax=vmax))
 
+        # Shows the image of the plot on the two-dimensional grid, log scale due to extreme behaviour near nuclei
+        ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, norm=LogNorm(vmin=vmin, vmax=vmax))
+
+
+    # Plots dots for one of both atomic centres
     ax.scatter([0.0, bond_length],[0.0, 0.0], c="black", s=8, zorder=3)
 
+    # Shows the plot
     plt.tight_layout()
     plt.show()
 
@@ -291,63 +383,79 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
 
 
 
-def calculate_nuclear_electrostatic_potential(grid, bond_length, nuclear_charges):
-
-    X, Z = grid
-
-    Z_A, Z_B = nuclear_charges
-
-
-    V_nuclear_A = Z_A / np.sqrt(X ** 2 + Z ** 2)
-    V_nuclear_B = Z_B / np.sqrt(X ** 2 + (Z - bond_length) ** 2)
-
-    V_nuclear = V_nuclear_A + V_nuclear_B
-
-
-    return V_nuclear
 
 
 
+def show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_alpha, P_beta, n_electrons, P_difference_alpha=None, P_difference_beta=None, P_difference=None, molecular_orbitals=None, natural_orbitals=None, nuclear_charges=None):
 
+    """
+    
+    Shows the requested two-dimensional plot.
 
+    Args:
+        calculation (Calculation): Calculation object]
+        basis_functions (list): List of basis function objects
+        bond_length (float): Bond length in bohr
+        P (array): Density matrix in AO basis
+        P_alpha (array): Alpha density matrix in AO basis
+        P_beta (array): Beta density matrix in AO basis
+        n_electrons (int): Number of electrons
+        P_difference_alpha (array, optional): Alpha difference density
+        P_difference_beta (array, optional): Beta difference density
+        P_difference (array, optional): Difference density
+        molecular_orbitals (array): Molecular orbitals
+        natural_orbitals (array): Natural orbitals
+        nuclear_charges (list): Relative nuclear charges
+    
+    """
 
-def plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons, atomic_charges=None):
+    if calculation.method in excited_state_methods:
 
+        # Sets the density matrices to the difference density
+        if calculation.plot_difference_density or calculation.plot_difference_spin_density: 
+
+            P = P_difference
+            P_alpha = P_difference_alpha
+            P_beta = P_difference_beta       
+            
+
+    # Build grid and express basis functions on the grid
     grid = build_Cartesian_grid(bond_length)
     basis_functions_on_grid = dft.construct_basis_functions_on_grid(basis_functions, grid)
 
+    # Plots electrostatic potential
     if calculation.plot_ESP:
 
-        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, atomic_charges=atomic_charges)
+        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, atomic_charges=nuclear_charges)
 
+    # Plots electron density
     if calculation.plot_density: 
         
         plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P)
 
-    if calculation.plot_transition_density:
+    # Plots difference density
+    if calculation.plot_difference_density:
 
         plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P, transition=True)
 
-    if calculation.plot_spin_density or calculation.plot_transition_spin_density: 
+    # Plots spin density
+    if calculation.plot_spin_density or calculation.plot_difference_spin_density: 
         
         plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P_alpha-P_beta)
 
+    # Plots molecular orbital
     if calculation.plot_HOMO or calculation.plot_LUMO or calculation.plot_molecular_orbital:
 
         which_MO = calculation.molecular_orbital_to_plot - 1
 
+        # Identifies the index of the HOMO or LUMO if requested
         if calculation.plot_HOMO: 
             
-            which_MO = n_electrons -1 if calculation.reference == "UHF" else n_electrons // 2 - 1
+            which_MO = n_electrons - 1 if calculation.reference == "UHF" else n_electrons // 2 - 1
 
         elif calculation.plot_LUMO: 
             
             which_MO = n_electrons if calculation.reference == "UHF" else n_electrons // 2
-
-        
-        if calculation.plot_molecular_orbital: 
-
-            which_MO = calculation.molecular_orbital_to_plot - 1
 
         try:
             
@@ -356,6 +464,19 @@ def plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, mo
         except IndexError:
 
             error("Requested molecular orbital is out of range. Increase basis set size to see more!")
+
+    # Plots natural orbital
+    if calculation.plot_natural_orbital:
+
+        which_MO = calculation.natural_orbital_to_plot - 1
+
+        try:
+            
+            plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, molecular_orbitals=natural_orbitals, which_MO=which_MO)
+
+        except IndexError:
+
+            error("Requested natural orbital is out of range. Increase basis set size to see more!")
 
 
     return

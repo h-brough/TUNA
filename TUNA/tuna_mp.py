@@ -392,10 +392,12 @@ def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI
 
     log("      [Done]", calculation, 1, silent=silent)
 
-    if not calculation.no_natural_orbitals: calculate_natural_orbitals(P, X, calculation, silent=silent)
+    if not calculation.no_natural_orbitals: 
+        
+        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
 
-    return E_MP2, P, P_alpha, P_beta
+    return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
 
 
@@ -508,9 +510,11 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
     log("     [Done]", calculation, 1, silent=silent)
     
     # Calculates and prints natural orbital occupancies
-    if not calculation.no_natural_orbitals: calculate_natural_orbitals(P, X, calculation, silent=silent)
+    if not calculation.no_natural_orbitals: 
+        
+         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
-    return E_MP2, P, P_alpha, P_beta
+    return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
 
 
@@ -671,9 +675,11 @@ def run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block
     log("     [Done]", calculation, 1, silent=silent)
     
     # Calculates and prints natural orbital occupancies
-    if not calculation.no_natural_orbitals: calculate_natural_orbitals(P, X, calculation, silent=silent)
+    if not calculation.no_natural_orbitals: 
+        
+         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
-    return E_MP2, P, P_alpha, P_beta
+    return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
 
 
@@ -846,9 +852,11 @@ def run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, E_HF
     log("       [Done]", calculation, 1, silent=silent)
 
     # Calculates natural orbitals from OMP2 density
-    if not calculation.no_natural_orbitals: calculate_natural_orbitals(P, X, calculation, silent=silent)
+    if not calculation.no_natural_orbitals: 
+        
+         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
-    return E_OMP2, P, P_alpha, P_beta
+    return E_OMP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
 
 
@@ -1167,6 +1175,8 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
     n_occ = molecule.n_occ
     n_doubly_occ = molecule.n_doubly_occ
 
+    natural_orbital_occupancies, natural_orbitals = None, None
+
     # Calculates useful quantities for all spin orbital or spatial orbital calculations
 
     if calculation.reference == "UHF" or "OMP2" in method:
@@ -1178,14 +1188,13 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
         ERI_MO, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=silent)
 
 
-
     if method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: 
         
-        E_MP2, P, P_alpha, P_beta = run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, SCF_output.energy, ERI_spin_block, o, v, silent=silent)
+        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, SCF_output.energy, ERI_spin_block, o, v, silent=silent)
     
     elif method == "IMP2":
 
-        E_MP2, P, P_alpha, P_beta = run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI_AO, n_doubly_occ, X, H_core, calculation, SCF_output, silent=silent)
+        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI_AO, n_doubly_occ, X, H_core, calculation, SCF_output, silent=silent)
 
     elif method == "LMP2":
 
@@ -1196,11 +1205,11 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
          
         if calculation.reference == "UHF":
 
-            E_MP2, P, P_alpha, P_beta = run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=silent)
+            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block, X, silent=silent)
 
         else:
 
-            E_MP2, P, P_alpha, P_beta = run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, molecule.n_atomic_orbitals, n_doubly_occ, X, calculation, molecule, silent=silent)
+            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, molecule.n_atomic_orbitals, n_doubly_occ, X, calculation, molecule, silent=silent)
 
 
         if method in ["MP3", "UMP3", "SCS-MP3", "USCS-MP3", "MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]"]: 
@@ -1219,4 +1228,4 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
 
     log_spacer(calculation, silent=silent)
 
-    return E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta
+    return E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals

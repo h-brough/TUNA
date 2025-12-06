@@ -6,7 +6,6 @@ from tuna_integrals import tuna_integral as ints
 import tuna_postscf as postscf
 import tuna_mp as mp
 import tuna_cc as cc
-import tuna_out as out
 import tuna_ci as ci
 import tuna_molecule as mol
 import tuna_dft as dft
@@ -769,6 +768,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     n_alpha = molecule.n_alpha
     n_beta = molecule.n_beta
 
+    natural_orbitals = None
 
     if reference == "RHF":
 
@@ -813,7 +813,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
             for exponent, coefficient in params:
 
-                log(f"      {exponent:15.7f}     {coefficient:10.7f}", calculation, 3, silent=silent)
+                log(f"      {exponent:15.10f}     {coefficient:10.10f}", calculation, 3, silent=silent)
 
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent=silent)
 
@@ -842,179 +842,149 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         else: E_D2 = 0
         
     else: V_NN = 0; E_D2 = 0
+
+
+    if reference == "RHF": log(" Beginning restricted Hartree-Fock calculation...  \n", calculation, 1, silent=silent)
+    else: log(" Beginning unrestricted Hartree-Fock calculation...  \n", calculation, 1, silent=silent)
+
+    log(" Calculating one-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    S, T, V_NE, D = calculate_one_electron_integrals(atoms, n_basis, basis_functions, centre_of_mass)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    log(" Calculating two-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    try:
+
+        ERI_AO = calculate_two_electron_integrals(n_basis, basis_functions)
+
+    except np._core._exceptions._ArrayMemoryError:
+
+        error("Not enough memory to build two-electron integrals array! Uh oh!")
+    
+    log("[Done]", calculation, 1, silent=silent)
+
+    calculation.integrals_time = time.perf_counter()
+    log(f"\n Time taken for integrals:  {calculation.integrals_time - calculation.start_time:.2f} seconds", calculation, 3, silent=silent)
+
+
+    # Calculates Fock transformation matrix from overlap matrix
+    log("\n Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    X, smallest_S_eigenvalue = calculate_Fock_transformation_matrix(S)
+    log("[Done]", calculation, 1, silent=silent)
+
+    # Makes sure there is no linear dependency in the basis set
+    check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
+
+    # Calculates one-electron density for initial guess
+    E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent, S=S)
+
+    # Forces the trace of the guess density to be correct
+    P_guess = dft.clean_density_matrix(P_guess, S, n_electrons)
+    P_guess_alpha = dft.clean_density_matrix(P_guess_alpha, S, n_alpha)
+    P_guess_beta = dft.clean_density_matrix(P_guess_beta, S, n_beta)
+
+    if reference == "UHF" and "U" not in method and method in DFT_methods:
+
+        method = calculation.method = "U" + method
+
+    #if not guess_calculation:
+
+    #    E_guess, P_guess, P_guess_alpha, P_guess_beta, calculation = new_guess(calculation, atomic_symbols, coordinates, basis_functions, n_basis)
+    
+
+
+    # Sets up the DFT integration grid
+    atomic_orbitals, weights, points = dft.set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess, calculation, silent=False) if do_DFT else (None, None, None)
+
+
+    log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
+
+    # Prints convergence criteria specified
+    log(f" Using \"{calculation.SCF_conv["name"]}\" SCF convergence criteria.", calculation, 1, silent=silent)
+
+    # Prints the chosen SCF convergence acceleration options
+    log_convergence_acceleration(calculation, silent=silent)
+
+    E_guess -= V_NN + E_D2
+
+
+    # Starts SCF cycle for two-electron energy
+    SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent, basis_functions_on_grid=atomic_orbitals, weights=weights, basis_functions=basis_functions, points=points)
+    
+    calculation.SCF_time = time.perf_counter()
+    log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
+
+    # Extracts useful quantities from SCF output object
+    molecular_orbitals = SCF_output.molecular_orbitals
+    molecular_orbitals_alpha = SCF_output.molecular_orbitals_alpha  
+    molecular_orbitals_beta = SCF_output.molecular_orbitals_beta   
+    epsilons = SCF_output.epsilons
+    epsilons_alpha = SCF_output.epsilons_alpha
+    epsilons_beta = SCF_output.epsilons_beta
+    P = SCF_output.P
+    P_alpha = SCF_output.P_alpha
+    P_beta = SCF_output.P_beta
+    final_energy = SCF_output.energy
+    kinetic_energy = SCF_output.kinetic_energy
+    nuclear_electron_energy = SCF_output.nuclear_electron_energy
+    coulomb_energy = SCF_output.coulomb_energy
+    exchange_energy = SCF_output.exchange_energy
+    correlation_energy = SCF_output.correlation_energy
+    density = SCF_output.density
+    alpha_density = SCF_output.alpha_density
+    beta_density = SCF_output.beta_density
+
+
+    # Packs dipole integrals into SCF output object
+    SCF_output.D = D
+
+
+    if reference == "UHF": 
         
+        # Calculates UHF spin contamination and prints to the console
+        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, reference, silent=silent)
 
-    if n_electrons < 0: error("Negative number of electrons specified!")
+        if calculation.natural_orbitals and not calculation.no_natural_orbitals: 
+                
+            natural_orbital_occupancies, natural_orbitals = mp.calculate_natural_orbitals(P, X, calculation, silent=silent)
 
-    elif n_electrons == 0: error("Zero electrons specified!")
+            log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent=silent)
 
-
-    elif n_electrons == 1: 
-
-        log(" Beginning Hartree-Fock calculation...  \n", calculation, 1, silent=silent)
-
-        # Calculates the one-electron energy, exact within the basis set
-        E, P, epsilons, molecular_orbitals, D, S, ERI_AO, T, V_NE = calculate_one_electron_energy(method, reference, basis_functions, atoms, n_basis, centre_of_mass, calculation, silent=silent)
-
-        J = np.einsum('ijkl,kl->ij', ERI_AO, P, optimize=True)
-        K = np.einsum('ilkj,kl->ij', ERI_AO, P, optimize=True)
-
-        final_energy = E + V_NN
-        P_alpha = P / 2
-        P_beta = P / 2
-
-        kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy = scf.calculate_energy_components(P_alpha, P_beta, T, V_NE, None, None, None, None, P, J, K, "RHF")
-        if not silent: postscf.print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, V_NN, calculation)
-
-        # Builds energy output object with all the calculated quantities from the one-electron guess
-        SCF_output = Output(final_energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals, None, epsilons, epsilons, None, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy)
-
-        # No beta electrons for the one-electron case exists
-        epsilons_alpha = epsilons
-        epsilons_beta = None
-        molecular_orbitals_alpha = molecular_orbitals
-        molecular_orbitals_beta = None
-        
-        SCF_output.D = D
-
-
-    elif n_electrons > 1:
-
-        if reference == "RHF": log(" Beginning restricted Hartree-Fock calculation...  \n", calculation, 1, silent=silent)
-        else: log(" Beginning unrestricted Hartree-Fock calculation...  \n", calculation, 1, silent=silent)
-
-        log(" Calculating one-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-   
-        S, T, V_NE, D = calculate_one_electron_integrals(atoms, n_basis, basis_functions, centre_of_mass)
-
-        log("[Done]", calculation, 1, silent=silent)
-
-        log(" Calculating two-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-        try:
-
-            ERI_AO = calculate_two_electron_integrals(n_basis, basis_functions)
-
-        except np._core._exceptions._ArrayMemoryError:
-
-            error("Not enough memory to build two-electron integrals array! Uh oh!")
-        
-        log("[Done]", calculation, 1, silent=silent)
-
-        calculation.integrals_time = time.perf_counter()
-        log(f"\n Time taken for integrals:  {calculation.integrals_time - calculation.start_time:.2f} seconds", calculation, 3, silent=silent)
-
-
-        # Calculates Fock transformation matrix from overlap matrix
-        log("\n Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-        X, smallest_S_eigenvalue = calculate_Fock_transformation_matrix(S)
-        log("[Done]", calculation, 1, silent=silent)
-
-        # Makes sure there is no linear dependency in the basis set
-        check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
-
-        # Calculates one-electron density for initial guess
-        E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent, S=S)
-
-        # Forces the trace of the guess density to be correct
-        P_guess = dft.clean_density_matrix(P_guess, S, n_electrons)
-        P_guess_alpha = dft.clean_density_matrix(P_guess_alpha, S, n_alpha)
-        P_guess_beta = dft.clean_density_matrix(P_guess_beta, S, n_beta)
-
-        if reference == "UHF" and "U" not in method and method in DFT_methods:
-
-            method = calculation.method = "U" + method
-
-        #if not guess_calculation:
-   
-        #    E_guess, P_guess, P_guess_alpha, P_guess_beta, calculation = new_guess(calculation, atomic_symbols, coordinates, basis_functions, n_basis)
-        
-
-
-        # Sets up the DFT integration grid
-        atomic_orbitals, weights = dft.set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess, calculation, silent=False) if do_DFT else (None, None)
-
-
-        log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
-
-        # Prints convergence criteria specified
-        log(f" Using \"{calculation.SCF_conv["name"]}\" SCF convergence criteria.", calculation, 1, silent=silent)
-
-        # Prints the chosen SCF convergence acceleration options
-        log_convergence_acceleration(calculation, silent=silent)
-
-        E_guess -= V_NN + E_D2
-
-
-        # Starts SCF cycle for two-electron energy
-        SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent, atomic_orbitals=atomic_orbitals, weights=weights)
-        
-        calculation.SCF_time = time.perf_counter()
-        log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
-
-        # Extracts useful quantities from SCF output object
-        molecular_orbitals = SCF_output.molecular_orbitals
-        molecular_orbitals_alpha = SCF_output.molecular_orbitals_alpha  
-        molecular_orbitals_beta = SCF_output.molecular_orbitals_beta   
-        epsilons = SCF_output.epsilons
-        epsilons_alpha = SCF_output.epsilons_alpha
-        epsilons_beta = SCF_output.epsilons_beta
-        P = SCF_output.P
-        P_alpha = SCF_output.P_alpha
-        P_beta = SCF_output.P_beta
-        final_energy = SCF_output.energy
-        kinetic_energy = SCF_output.kinetic_energy
-        nuclear_electron_energy = SCF_output.nuclear_electron_energy
-        coulomb_energy = SCF_output.coulomb_energy
-        exchange_energy = SCF_output.exchange_energy
-        correlation_energy = SCF_output.correlation_energy
-        density = SCF_output.density
-
-
-        # Packs dipole integrals into SCF output object
-        SCF_output.D = D
-
-
-        if reference == "UHF": 
+        else:
             
-            # Calculates UHF spin contamination and prints to the console
-            postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, reference, silent=silent)
+            natural_orbital_occupancies, natural_orbitals = None, None
 
-            if calculation.natural_orbitals and not calculation.no_natural_orbitals: 
-                    
-                mp.calculate_natural_orbitals(P, X, calculation, silent=silent)
-                log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent=silent)
+    if not silent: 
 
+        # Prints the individual components of the total SCF energy
+        postscf.print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation)
 
-        if not silent: 
+        if do_DFT:
 
-            # Prints the individual components of the total SCF energy
-            postscf.print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation)
+            n_electrons_DFT = dft.integrate_on_grid(density, weights)
 
-            if do_DFT:
+            log(f"\n Integral of the final density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
 
-                n_electrons_DFT = dft.integrate_on_grid(density, weights)
+    # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
+    if "MP" in method or method in DFT_methods and calculation.functional.functional_type == "double-hybrid": 
 
-                log(f"\n Integral of the final density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
+        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
+        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "MP2", silent=silent)
 
-        # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
-        if "MP" in method or calculation.MP_correlation_proportion != 0: 
+    # If a coupled-cluster calculation is requested, calculates the energy
+    elif "CC" in method or "CEPA" in method or "QCISD" in method:
 
-            E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
-            postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "MP2", silent=silent)
+        E_CC, E_CCSD_T, P, P_alpha, P_beta = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
+        
+        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "Coupled cluster", silent=silent)
 
-        # If a coupled-cluster calculation is requested, calculates the energy
-        elif "CC" in method or "CEPA" in method or "QCISD" in method:
+    if method in correlated_methods:
 
-            E_CC, E_CCSD_T, P, P_alpha, P_beta = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
-            
-            postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "Coupled cluster", silent=silent)
-
-        if method in correlated_methods:
-
-            calculation.correlation_time = time.perf_counter()
-            log(f"\n Time taken for correlated calculation:  {calculation.correlation_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
+        calculation.correlation_time = time.perf_counter()
+        log(f"\n Time taken for correlated calculation:  {calculation.correlation_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
 
 
 
@@ -1040,6 +1010,12 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
            # Optionally uses CIS density for dipole moment and population analysis
            postscf.post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, molecule.partition_ranges, D, P_alpha, P_beta, epsilons_alpha, epsilons_beta, molecular_orbitals_alpha, molecular_orbitals_beta)
 
+    else:
+        
+        P_transition = P_transition_alpha = P_transition_beta = None
+
+
+
     # Prints Hartree-Fock energy
     if reference == "RHF" and not do_DFT: log("\n Restricted Hartree-Fock energy:   " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
     elif reference == "UHF" and not do_DFT: log("\n Unrestricted Hartree-Fock energy: " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
@@ -1053,11 +1029,11 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
     # Adds up and prints MP2 energies
-    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2"] or (do_DFT and calculation.MP_correlation_proportion != 0): 
+    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2"] or (do_DFT and calculation.MPC_prop != 0): 
         
         space = " " * max(0, 8 - len(method))
 
-        E_MP2 *= calculation.MP_correlation_proportion if do_DFT else 1
+        E_MP2 *= calculation.MPC_prop if do_DFT else 1
 
         final_energy += E_MP2
 
@@ -1155,22 +1131,11 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         log(" Dispersion-corrected final energy:" + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
 
-    if not silent:
+    if not silent and calculation.plot_something:
 
-        if method in excited_state_methods:
+        import tuna_out as out
 
-            if calculation.plot_transition_density: 
-
-                P = P_transition
-                mp.calculate_natural_orbitals(P, X, calculation, silent=False)
-                
-            if calculation.plot_transition_spin_density: 
-                
-                P_alpha = P_transition_alpha
-                P_beta = P_transition_beta
-
-        out.plot_plots(calculation, basis_functions, bond_length, P, P_alpha, P_beta, molecular_orbitals, n_electrons, molecule.basis_charges)
-
+        out.show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_alpha, P_beta, n_electrons, P_difference_alpha=P_transition_alpha, P_difference_beta=P_transition_beta, P_difference=P_transition, molecular_orbitals=molecular_orbitals, natural_orbitals=natural_orbitals, nuclear_charges=molecule.basis_charges)
 
 
     return SCF_output, molecule, final_energy, P
@@ -1271,11 +1236,15 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
     # If SCANPLOT keyword is used, plots and shows a matplotlib graph of the data
 
     if calculation.delete_plot:
+        
+        import tuna_out as out
 
         out.delete_saved_plot()
 
     if calculation.scan_plot: 
         
+        import tuna_out as out
+  
         out.scan_plot(calculation, bohr_to_angstrom(np.array(bond_lengths)), energies)
 
 

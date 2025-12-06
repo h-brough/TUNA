@@ -154,6 +154,12 @@ class Molecule:
         # Calculates number of electrons
         self.n_electrons = np.sum(self.charges) - self.charge
 
+        if self.n_electrons < 0: error("Negative number of electrons specified!")
+
+        elif self.n_electrons == 0: error("Zero electrons specified!")
+
+
+
         # Determines molecular point group and molecular structure
         self.point_group = self.determine_point_group()
         self.molecular_structure = self.determine_molecular_structure()
