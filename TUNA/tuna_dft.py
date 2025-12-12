@@ -29,16 +29,21 @@ def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_
 
     log("[Done]", calculation, 1, silent=silent)
 
+    total_points = points.shape[1] * points.shape[2]
+    points_per_atom = total_points // len(atoms)
+
     log(f"\n Integration grid has {n_radial} radial and {points.shape[2]} angular points, a Lebedev order of {Lebedev_order}.", calculation, 1, silent=silent)
-    log(f" In total there are {n_radial * points.shape[1]} grid points, {int(n_radial * points.shape[1] / 2)} per atom.", calculation, 1, silent=silent)
+    log(f" In total there are {total_points} grid points, {points_per_atom} per atom.", calculation, 1, silent=silent)
 
     log("\n Building guess density on grid...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
 
-    atomic_orbitals = construct_basis_functions_on_grid(basis_functions, points)
+    bfs_on_grid = construct_basis_functions_on_grid(basis_functions, points)
+
+    bf_gradients_on_grid = construct_basis_function_gradients_on_grid(basis_functions, points) if calculation.functional.functional_class == "GGA" else None
 
 
-    density = construct_density_on_grid(P_guess, atomic_orbitals)
+    density = construct_density_on_grid(P_guess, bfs_on_grid)
 
     log("[Done]", calculation, 1, silent=silent)
 
@@ -58,7 +63,7 @@ def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_
     
 
 
-    return atomic_orbitals, weights, points
+    return bfs_on_grid, weights, points, bf_gradients_on_grid
 
 
 
@@ -270,26 +275,16 @@ def construct_basis_function_gradients_on_grid(basis_functions, points):
 
 
 
+def calculate_density_gradient(P, bfs_on_grid, bf_gradients_on_grid):
 
+    density_gradient = 2 * np.einsum("ij,ikl,ajkl->akl", P, bfs_on_grid, bf_gradients_on_grid, optimize=True)
 
-
-def calculate_density_gradient(P, basis_functions_on_grid, basis_functions, points):
-
-    dphi_dx, dphi_dy, dphi_dz = construct_basis_function_gradients_on_grid(basis_functions, points)
-    
-    grad_x = 2 * np.einsum("ij,ikl,jkl->kl", P, basis_functions_on_grid, dphi_dx, optimize=True)
-    grad_y = 2 * np.einsum("ij,ikl,jkl->kl", P, basis_functions_on_grid, dphi_dy, optimize=True)
-    grad_z = 2 * np.einsum("ij,ikl,jkl->kl", P, basis_functions_on_grid, dphi_dz, optimize=True)
-
-    sigma = grad_x ** 2 + grad_y ** 2 + grad_z ** 2
+    sigma = np.einsum("akl->kl", density_gradient ** 2, optimize=True)
 
     sigma = clean_density(sigma)
 
-    atomic_orbital_gradients = np.array([dphi_dx, dphi_dy, dphi_dz])
-    density_gradient = np.array([grad_x, grad_y, grad_z])
+    return sigma, density_gradient
 
-
-    return sigma, density_gradient, atomic_orbital_gradients
 
 
 
@@ -385,22 +380,44 @@ def clean_density_matrix(P, S, n_electrons):
 
 
 
-def calculate_V_X(df_dn, atomic_orbitals, weights, atomic_orbital_gradient=None, density_gradient=None, df_ds=None):
 
+def calculate_V_X(weights, bfs_on_grid, df_dn, df_ds, bf_gradients_on_grid, density_gradient, df_dt=None):
+    
+    """
+    
+    Calculates the density functional theory exchange matrix. Separately integrates the LDA, GGA and meta-GGA contributions.
 
-    V_X_LDA = np.einsum("kl,mkl,nkl->mnkl", df_dn, atomic_orbitals, atomic_orbitals, optimize=True)
+    Args:
+        weights (array): Integration weights 
+        bfs_on_grid (array): Basis functions evaluated on integration grid
+        df_dn (array): Derivative of n * e_X with respect to the density
+        df_ds (array, optional): Derivative of n * e_X with respect to the square density gradient, sigma
+        df_dt (array, optional): Derivative of n * e_X with respect to the kinetic energy density, tau
+        bf_gradients_on_grid (array, optional): Gradient of basis functions evaluated on integration grid
+        density_gradient (array, optional): Gradient of density evaluated on integration grid      
+
+    Returns:
+        V_X (array): Symmetrised density functional theory exchange matrix in AO basis  
+    
+    """
+
+    # Contribution to exchange matrix from LDA part of functional
+    V_X = np.einsum("kl,mkl,nkl,kl->mn", df_dn, bfs_on_grid, bfs_on_grid, weights, optimize=True)
 
     if df_ds is not None:
 
-        V_X_GGA = 4 * np.einsum("kl,akl,mkl,ankl->mnkl", df_ds, density_gradient, atomic_orbitals, atomic_orbital_gradient, optimize=True)
+        # Contribution to exchange matrix from GGA part of functional
 
-    else:
+        V_X += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
 
-        V_X_GGA = np.zeros_like(V_X_LDA)
+    if df_dt is not None:
+        
+        # Contribution to exchange matrix from meta-GGA part of functional
 
-    V_X = np.einsum("kl,mnkl->mn", weights, V_X_LDA + V_X_GGA, optimize=True)
+        V_X += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize=True)
 
-    V_X = (1 / 2) * (V_X + V_X.T)
+    # Absolutely necessary to symmetrise as these are not symmetric by design
+    V_X = symmetrise(V_X)
 
     return V_X
 
@@ -409,36 +426,52 @@ def calculate_V_X(df_dn, atomic_orbitals, weights, atomic_orbital_gradient=None,
 
 
 
-def calculate_V_C(df_dn, atomic_orbitals, weights, atomic_orbital_gradient=None, density_gradient=None, df_ds=None):
+def calculate_V_C(weights, bfs_on_grid, df_dn, df_ds, bf_gradients_on_grid, density_gradient, density_gradient_other_spin=None, df_ds_ab=None, df_dt=None):
+    
+    """
+    
+    Calculates the density functional theory correlation matrix. Separately integrates the LDA, GGA and meta-GGA contributions.
 
-    V_C_LDA = np.einsum('kl,mkl,nkl->mnkl', df_dn, atomic_orbitals, atomic_orbitals, optimize=True)
+    Args:
+        weights (array): Integration weights 
+        bfs_on_grid (array): Basis functions evaluated on integration grid
+        df_dn (array): Derivative of n * e_C with respect to the density
+        df_ds (array, optional): Derivative of n * e_C with respect to the square density gradient, sigma
+        df_dt (array, optional): Derivative of n * e_C with respect to the kinetic energy density, tau
+        bf_gradients_on_grid (array, optional): Gradient of basis functions evaluated on integration grid
+        density_gradient (array, optional): Gradient of density evaluated on integration grid      
+
+    Returns:
+        V_C (array): Symmetrised density functional theory correlation matrix in AO basis  
+    
+    """
+
+    # Contribution to exchange matrix from LDA part of functional
+    V_C = np.einsum("kl,mkl,nkl,kl->mn", df_dn, bfs_on_grid, bfs_on_grid, weights, optimize=True)
 
     if df_ds is not None:
 
-        V_C_GGA = 4 * np.einsum("kl,akl,mkl,ankl->mnkl", df_ds, density_gradient, atomic_orbitals, atomic_orbital_gradient, optimize=True)
+        # Contribution to exchange matrix from GGA part of functional
 
-    else:
+        if df_ds_ab is not None:
+        
+            V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
+            V_C += 2 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds_ab, density_gradient_other_spin, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
 
-        V_C_GGA = np.zeros_like(V_C_LDA)
+        else:
 
-    V_C = np.einsum("kl,mnkl", weights, V_C_LDA + V_C_GGA, optimize=True)
+            V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
 
-    V_C = (1 / 2) * (V_C + V_C.T)
+    if df_dt is not None:
+        
+        # Contribution to exchange matrix from meta-GGA part of functional
 
+        V_C += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize=True)
+
+    # Absolutely necessary to symmetrise as these are not symmetric by design
+    V_C = symmetrise(V_C)
 
     return V_C
-
-
-
-
-def calculate_overlap_matrix(atomic_orbitals, weights):
-
-    S = np.einsum("ikl,kl,jkl->ij", atomic_orbitals, weights, atomic_orbitals, optimize=True)
-
-    return S
-
-
-
 
 
 
@@ -449,8 +482,6 @@ def calculate_seitz_radius(density):
     r_s = np.cbrt(3 / (4 * np.pi * density))
 
     return r_s
-
-
 
 
 
@@ -604,22 +635,18 @@ def calculate_VWN5_spin_interpolation(alpha_density, beta_density, density, minu
 
 
 
-def calculate_restricted_Slater_exchange_potential(density, calculation):
+def calculate_restricted_Slater_exchange_potential(density, calculation, sigma):
 
-    v_X, e_X = calculate_Slater_potential(density, calculation)
+    df_dn, e_X = calculate_Slater_potential(density, calculation)
 
-    return v_X, e_X
-
-
-def calculate_unrestricted_Slater_exchange_potential(density, calculation):
-
-    v_X, e_X = calculate_Slater_potential(density, calculation)
-
-    v_X *= np.cbrt(2)
-    e_X *= np.cbrt(2)
+    return df_dn, None, e_X
 
 
-    return v_X, e_X
+def calculate_unrestricted_Slater_exchange_potential(density, calculation, sigma):
+
+    df_dn, e_X = calculate_Slater_potential(2 * density, calculation)
+
+    return df_dn, None, e_X
 
 
 def calculate_restricted_PBE_exchange_potential(density, calculation, sigma):
@@ -629,11 +656,11 @@ def calculate_restricted_PBE_exchange_potential(density, calculation, sigma):
     return df_dn, df_ds, e_X
 
 
-def calculate_unrestricted_PBE_exchange_potential(density, alpha_density, beta_density):
+def calculate_unrestricted_PBE_exchange_potential(density, calculation, sigma):
 
-    v_C, e_C, _ = None, None, None
+    df_dn, df_ds, e_X = calculate_PBE_exchange_potential(2 * density, 4 * sigma, calculation)
 
-    return v_C, e_C
+    return df_dn, df_ds * 2, e_X
 
 
 def calculate_restricted_B88_exchange_potential(density, calculation, sigma):
@@ -647,36 +674,35 @@ def calculate_unrestricted_B88_exchange_potential(density, calculation, sigma):
 
     df_dn, df_ds, e_X = calculate_B88_exchange_potential(density, sigma, calculation)
 
-
     return df_dn, df_ds, e_X
 
 
 
-def calculate_restricted_VWN3_correlation_potential(density, calculation):
+def calculate_restricted_VWN3_correlation_potential(density, calculation, sigma):
 
-    v_C, e_C, _ = calculate_VWN_potential(density, -0.409286, 13.0720, 42.7198, 0.0310907)
+    df_dn, e_C, _ = calculate_VWN_potential(density, -0.409286, 13.0720, 42.7198, 0.0310907)
 
-    return v_C, e_C
+    return df_dn, None, e_C
 
 
-def calculate_unrestricted_VWN3_correlation_potential(density, alpha_density, beta_density):
+def calculate_unrestricted_VWN3_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, calculation):
 
     _, e_C_0, de0_dr = calculate_VWN_potential(density, -0.409286, 13.0720, 42.7198, 0.0310907)
     _, e_C_1, de1_dr = calculate_VWN_potential(density, -0.743294, 20.1231, 101.578, 0.01554535)
 
     v_C_alpha, v_C_beta, e_C = calculate_VWN3_spin_interpolation(alpha_density, beta_density, density, e_C_0, de0_dr, e_C_1, de1_dr)
 
-    return v_C_alpha, v_C_beta, e_C
+    return v_C_alpha, v_C_beta, None, None, None, e_C
 
 
-def calculate_restricted_VWN5_correlation_potential(density, calculation):
+def calculate_restricted_VWN5_correlation_potential(density, calculation, sigma):
 
-    v_C, e_C, _ = calculate_VWN_potential(density, -0.10498, 3.72744, 12.9352, 0.0310907)
+    df_dn, e_C, _ = calculate_VWN_potential(density, -0.10498, 3.72744, 12.9352, 0.0310907)
 
-    return v_C, e_C
+    return df_dn, None, e_C
 
 
-def calculate_unrestricted_VWN5_correlation_potential(density, alpha_density, beta_density):
+def calculate_unrestricted_VWN5_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, calculation):
 
     _, e_C_0, de0_dr = calculate_VWN_potential(density, -0.10498, 3.72744, 12.9352, 0.0310907)
     _, e_C_1, de1_dr = calculate_VWN_potential(density, -0.32500, 7.06042, 18.0578, 0.01554535)
@@ -684,28 +710,28 @@ def calculate_unrestricted_VWN5_correlation_potential(density, alpha_density, be
 
     v_C_alpha, v_C_beta, e_C = calculate_VWN5_spin_interpolation(alpha_density, beta_density, density, minus_alpha, -dalpha_dr, e_C_0, de0_dr, e_C_1, de1_dr)
     
-    return v_C_alpha, v_C_beta, e_C
+    return v_C_alpha, v_C_beta, None, None, None, e_C
 
 
-def calculate_restricted_PW_correlation_potential(density, calculation):
+def calculate_restricted_PW_correlation_potential(density, calculation, sigma):
 
     # Note - from this is "modified" PW from LibXC has more significant figures than original paper
-    v_C, e_C, _ = calculate_PW_potential(density, 0.0310907, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+    df_dn, e_C, _ = calculate_PW_potential(density, 0.0310907, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
 
-    return v_C, e_C
+    return df_dn, None, e_C
 
 
-def calculate_unrestricted_PW_correlation_potential(density, alpha_density, beta_density):
+def calculate_unrestricted_PW_correlation_potential(alpha_density, beta_density, density, sigma, calculation):
     
 
     _, e_C_0, de0_dr = calculate_PW_potential(density, 0.0310907, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
     _, e_C_1, de1_dr = calculate_PW_potential(density, 0.01554535, 0.20548, 14.1189, 6.1977, 3.3662, 0.62517, 1)
     _, minus_alpha, dalpha_dr = calculate_PW_potential(density, 0.0168869, 0.11125, 10.357, 3.6231, 0.88026, 0.49671, 1)
 
-    v_C_alpha, v_C_beta, e_C = calculate_VWN5_spin_interpolation(alpha_density, beta_density, density, minus_alpha, -dalpha_dr, e_C_0, de0_dr, e_C_1, de1_dr)
+    df_dn_alpha, df_dn_beta, e_C = calculate_VWN5_spin_interpolation(alpha_density, beta_density, density, minus_alpha, -dalpha_dr, e_C_0, de0_dr, e_C_1, de1_dr)
 
 
-    return v_C_alpha, v_C_beta, e_C
+    return df_dn_alpha, df_dn_beta, None, None, None, e_C
 
 
 
@@ -716,39 +742,28 @@ def calculate_restricted_PBE_correlation_potential(density, calculation, sigma):
     return df_dn, df_ds, e_C
 
 
-def calculate_unrestricted_PBE_correlation_potential(density, alpha_density, beta_density):
 
-    v_C, e_C, _ = None, None, None
+def calculate_unrestricted_PBE_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, calculation):
 
-    return v_C, e_C
+    df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, e_C = calculate_UPBE_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab)
 
-
-
-exchange_potentials = {
-
-    "S": calculate_restricted_Slater_exchange_potential,
-    "US": calculate_unrestricted_Slater_exchange_potential,
-    "PBE": calculate_restricted_PBE_exchange_potential,
-    "UPBE": calculate_unrestricted_PBE_exchange_potential,
-    "B": calculate_restricted_B88_exchange_potential,
-    "UB": calculate_unrestricted_B88_exchange_potential,
-
-}
+    return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, e_C
 
 
 
+def calculate_restricted_LYP_correlation_potential(density, calculation, sigma):
 
-correlation_potentials = {
+    df_dn, df_ds, e_C = calculate_LYP_correlation_potential(density, sigma)
 
-    "VWN3": calculate_restricted_VWN3_correlation_potential,
-    "UVWN3": calculate_unrestricted_VWN3_correlation_potential,
-    "VWN5": calculate_restricted_VWN5_correlation_potential,
-    "UVWN5": calculate_unrestricted_VWN5_correlation_potential,
-    "PW": calculate_restricted_PW_correlation_potential,
-    "UPW": calculate_unrestricted_PW_correlation_potential,
-    "PBE": calculate_restricted_PBE_correlation_potential,
-    "UPBE": calculate_unrestricted_PBE_correlation_potential,
-}
+    return df_dn, df_ds, e_C
+
+
+
+def calculate_unrestricted_LYP_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, calculation):
+
+    df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, e_C = calculate_ULYP_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab)
+
+    return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, e_C
 
 
 
@@ -766,7 +781,7 @@ def calculate_PBE_exchange_potential(density, sigma, calculation):
 
     F_X = 1 + kappa - kappa * denom
 
-    e_X_LDA = calculate_restricted_Slater_exchange_potential(density, calculation)[1]
+    e_X_LDA = calculate_restricted_Slater_exchange_potential(density, calculation, sigma)[2]
 
     e_X = e_X_LDA * F_X
 
@@ -783,12 +798,12 @@ def calculate_PBE_exchange_potential(density, sigma, calculation):
 
 def calculate_PBE_correlation_potential(density, sigma, calculation):
 
-    v_C_LDA, e_C_LDA = calculate_restricted_PW_correlation_potential(density, calculation)
+    v_C_LDA, _, e_C_LDA = calculate_restricted_PW_correlation_potential(density, calculation, sigma)
 
     de_C_LDA_dn = (v_C_LDA - e_C_LDA) / density
 
-    gamma = 0.0310907
-    beta = 0.066725    
+    gamma = (1 - np.log(2)) / np.pi ** 2
+    beta = 0.06672455060314922
 
     k_F = np.cbrt(3 * np.pi ** 2 * density)
 
@@ -820,16 +835,109 @@ def calculate_PBE_correlation_potential(density, sigma, calculation):
 
 
 
+
+
+
+
+def calculate_UPBE_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab):
+
+    sigma = sigma_aa + sigma_bb + 2 * sigma_ab
+
+    gamma = (1 - np.log(2)) / np.pi ** 2
+    beta = 0.06672455060314922
+    B = beta / gamma
+
+    v_C_LDA_alpha, v_C_LDA_beta, _, _, _, e_C_LDA = calculate_unrestricted_PW_correlation_potential(alpha_density, beta_density, density, None, None)
+
+    zeta = calculate_zeta(alpha_density, beta_density)
+    one_plus_zeta  = 1 + zeta
+    one_minus_zeta = clean_density(1 - zeta)
+
+    cbrt_plus  = np.cbrt(one_plus_zeta)
+    cbrt_minus = np.cbrt(one_minus_zeta)
+
+    phi = (1 / 2) * (cbrt_plus ** 2 + cbrt_minus ** 2)
+    phi_prime = (1 / cbrt_plus - 1 / cbrt_minus) / 3
+
+    k_F = np.cbrt(3 * np.pi ** 2 * density)
+    n2 = density ** 2
+    phi2 = phi ** 2
+    phi3 = phi ** 3
+
+    T = sigma * np.pi / 16 / (phi2 * k_F * n2)
+
+    Q = np.exp(-e_C_LDA / (gamma * phi3))
+    A = B / (Q - 1.0)
+    A2 = A ** 2
+    T2 = T ** 2
+
+    D = 1 + A * T + A2 * T2
+    N = B * T * (1 + A * T)
+    X = N / D
+
+    H = gamma * phi3 * np.log(1 + X)     
+    e_C = e_C_LDA + H
+
+    inv_n = 1 / density
+    inv_n2 = inv_n ** 2
+
+    dphi_dn_alpha = phi_prime * (2 * beta_density * inv_n2)
+    dphi_dn_beta = -phi_prime * (2 * alpha_density * inv_n2)
+
+    dT_dn = -7 / 3 * T * inv_n
+    dT_dphi = -2 * T / phi
+
+    dT_dn_alpha = dT_dn + dT_dphi * dphi_dn_alpha
+    dT_dn_beta  = dT_dn + dT_dphi * dphi_dn_beta
+
+    T_over_sigma = np.pi / 16 / (phi2 * k_F * n2)
+    dT_dsigma = T_over_sigma
+
+    de_C_LDA_dn_alpha = (v_C_LDA_alpha - e_C_LDA) * inv_n
+    de_C_LDA_dn_beta  = (v_C_LDA_beta  - e_C_LDA) * inv_n
+
+    phi4 = phi2 ** 2
+    dA_dE   = (A2 / beta) * Q / phi3
+    dA_dphi = -3 * e_C_LDA * Q * A2 / (beta * phi4)
+
+    dA_dn_alpha = dA_dE * de_C_LDA_dn_alpha + dA_dphi * dphi_dn_alpha
+    dA_dn_beta = dA_dE * de_C_LDA_dn_beta + dA_dphi * dphi_dn_beta
+
+    dD_dT = A + 2 * A2 * T
+    dX_dT = (B * (1 + 2 * A * T) * D - N * dD_dT) / D ** 2
+
+    dD_dA = T + 2 * A * T2
+    dX_dA = (B * T2 * D - N * dD_dA) / D ** 2
+
+    C1 = 3 * gamma * phi2 * np.log(1 + X)
+    C2 = gamma * phi3 / (1 + X)
+
+    dH_dn_alpha = C1 * dphi_dn_alpha + C2 * (dX_dT * dT_dn_alpha + dX_dA * dA_dn_alpha)
+    dH_dn_beta = C1 * dphi_dn_beta  + C2 * (dX_dT * dT_dn_beta  + dX_dA * dA_dn_beta)
+
+    df_dn_alpha = e_C + density * (de_C_LDA_dn_alpha + dH_dn_alpha)
+    df_dn_beta = e_C + density * (de_C_LDA_dn_beta + dH_dn_beta)
+
+    df_dsigma = density * C2 * dX_dT * dT_dsigma
+
+    df_dsigma_aa, df_dsigma_bb, df_dsigma_ab = df_dsigma, df_dsigma, 2 * df_dsigma
+
+
+    return df_dn_alpha, df_dn_beta, df_dsigma_aa, df_dsigma_bb, df_dsigma_ab, e_C
+
+
+
+
+
 def calculate_B88_exchange_potential(density, sigma, calculation):
 
-    
-    e_X_LDA = - 3 / 4 * np.cbrt(3 / np.pi * density) 
+    e_X_LDA = calculate_Slater_potential(density, calculation)[1]
 
     beta = 0.0042 
     C = 2 / np.cbrt(4)
 
     cube_root_density = np.cbrt(density) 
-    x = sigma ** (1 / 2) / cube_root_density ** 4 if np.max(density) > 1e-30 else np.zeros_like(density)
+    x = sigma ** (1 / 2) / cube_root_density ** 4
 
     A = np.arcsinh(x)
 
@@ -838,8 +946,138 @@ def calculate_B88_exchange_potential(density, sigma, calculation):
 
     e_X = C * e_X_LDA - beta * cube_root_density * x ** 2 / D
 
-    df_dn = (e_X + C * e_X_LDA / 3 + beta * cube_root_density * (7 * x ** 2 * D - 4 * x ** 3 * Dprime) / (3 * D ** 2)) if np.max(density) > 1e-30 else np.zeros_like(density)
+    df_dn = (e_X + C * e_X_LDA / 3 + beta * cube_root_density * (7 * x ** 2 * D - 4 * x ** 3 * Dprime) / (3 * D ** 2)) 
 
-    df_ds = -beta * density * cube_root_density * (x ** 2 * D - 0.5 * x ** 3 * Dprime) / (sigma * D ** 2) if np.max(density) > 1e-30 else np.zeros_like(density)
+    df_ds = -beta * density * cube_root_density * (x ** 2 * D - 0.5 * x ** 3 * Dprime) / (sigma * D ** 2)
     
     return df_dn, df_ds, e_X
+
+
+
+
+
+
+
+
+def calculate_LYP_correlation_potential(density, sigma):
+  
+    a, b, c, d = 0.04918, 0.132, 0.2533, 0.349
+
+    inv_density = 1 / density
+    cbrt_density = np.cbrt(density)
+    inv_cbrt_density = 1 / cbrt_density
+
+    X = 1 + d * inv_cbrt_density
+
+    C2 = 6 / 10 * np.cbrt(3 * np.pi ** 2) ** 2 * np.cbrt(density) ** 8
+
+    w = inv_cbrt_density ** 11 * np.exp(-c * inv_cbrt_density) / X
+    delta = inv_cbrt_density * (c + d / X)
+
+    minus_a_b_w = -a * b * w * density
+    
+    w_prime_over_w = -(1 / 3) * inv_cbrt_density ** 4 * (11 * cbrt_density - c - d / X)
+    delta_prime = (1 / 3) * (d ** 2 * inv_cbrt_density ** 5 / X ** 2 - delta * inv_density)
+
+    df_ds = minus_a_b_w * density * (-7 * delta - 3) / 72
+
+    df_dn = -a / X + minus_a_b_w * sigma * (-1 / 12 - 7 * delta / 36 + density * (-7 * delta_prime / 72 + w_prime_over_w * (-1 / 24 - 7 * delta / 72)))
+    df_dn += density * (- a * d / (3 * X ** 2 * cbrt_density ** 4) - 7 * C2 * a * b * w / 3 - (1 / 2) * C2 * a * b * density * w_prime_over_w * w)
+    
+    e_C = (1 / 2) * C2 * minus_a_b_w - minus_a_b_w * sigma * (7 * delta + 3) / 72 - a / X
+    
+
+    return df_dn, df_ds, e_C
+
+
+
+
+
+
+
+def calculate_ULYP_correlation_potential(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab):
+
+    a, b, c, d = 0.04918, 0.132, 0.2533, 0.349
+
+    cbrt_alpha_density = np.cbrt(alpha_density)
+    cbrt_beta_density = np.cbrt(beta_density)
+
+    inv_density = 1 / density
+    cbrt_density = np.cbrt(density)
+
+    inv_cbrt_density = 1 / cbrt_density
+    X = (1 + d * inv_cbrt_density)
+
+    C = np.cbrt(2) ** 11 * 3 / 10 * np.cbrt(3 * np.pi ** 2) ** 2
+
+    density_product = alpha_density * beta_density
+    densities_power_sum = cbrt_alpha_density ** 8 + cbrt_beta_density ** 8
+
+    w = inv_cbrt_density ** 11 * np.exp(-c * inv_cbrt_density) / X
+    delta = inv_cbrt_density * (c + d / X)
+
+    minus_a_b_w = -a * b * w
+
+    w_prime = -(1 / 3) * inv_cbrt_density ** 4 * w * (11 * cbrt_density - c - d / X)
+    delta_prime = (1 / 3) * (d ** 2 * inv_cbrt_density ** 5 / X ** 2 - delta * inv_density)
+
+    w_prime_over_w = -(1 / 3) * inv_cbrt_density ** 4 * (11 * cbrt_density - c - d / X)
+
+    df_ds_aa = minus_a_b_w * ((1 / 9) * density_product * (1 - 3 * delta - (delta - 11) * alpha_density * inv_density) - beta_density ** 2)
+    df_ds_bb = minus_a_b_w * ((1 / 9) * density_product * (1 - 3 * delta - (delta - 11) * beta_density * inv_density) - alpha_density ** 2)
+    df_ds_ab = minus_a_b_w * ((1 / 9) * density_product * (47 - 7 * delta) - (4 / 3) * density ** 2)
+
+    f_C = density_product * (C * minus_a_b_w * densities_power_sum - 4 * a / X * inv_density) + df_ds_aa * sigma_aa + df_ds_bb * sigma_bb + df_ds_ab * sigma_ab
+
+    d2f_dn_a_ds_aa = w_prime_over_w * df_ds_aa + minus_a_b_w * ((1 / 9) * beta_density * (1 - 3 * delta - (delta - 11) * alpha_density * inv_density) - (1 / 9) * density_product * (delta_prime * (3 + alpha_density * inv_density) + (delta - 11) * beta_density * inv_density ** 2))
+    d2f_dn_b_ds_bb = w_prime_over_w * df_ds_bb + minus_a_b_w * ((1 / 9) * alpha_density * (1 - 3 * delta - (delta - 11) * beta_density * inv_density) - (1 / 9) * density_product * (delta_prime * (3 + beta_density * inv_density) + (delta - 11) * alpha_density * inv_density ** 2))
+
+    d2f_dn_a_ds_ab = w_prime_over_w * df_ds_ab + minus_a_b_w * ((1 / 9) * beta_density * (47 - 7 * delta) - (7 / 9) * density_product * delta_prime - (8 / 3) * density)
+    d2f_dn_b_ds_ab = w_prime_over_w * df_ds_ab + minus_a_b_w * ((1 / 9) * alpha_density * (47 - 7 * delta) - (7 / 9) * density_product * delta_prime - (8 / 3) * density)
+
+    d2f_dn_a_ds_bb = w_prime_over_w * df_ds_bb + minus_a_b_w * ((1 / 9) * beta_density * (1 - 3 * delta - (delta - 11) * beta_density * inv_density) - (1 / 9) * density_product * ((3 + beta_density * inv_density) * delta_prime - (delta - 11) * beta_density * inv_density ** 2) - 2 * alpha_density)
+    d2f_dn_b_ds_aa = w_prime_over_w * df_ds_aa + minus_a_b_w * ((1 / 9) * alpha_density * (1 - 3 * delta - (delta - 11) * alpha_density * inv_density) - (1 / 9) * density_product * ((3 + alpha_density * inv_density) * delta_prime - (delta - 11) * alpha_density * inv_density ** 2) - 2 * beta_density)
+
+    df_dn_alpha = -4 * a / X * density_product * inv_density * ((1 / 3) * d * inv_cbrt_density ** 4 / X + 1 / alpha_density - inv_density) - C * a * b * (w_prime * density_product * densities_power_sum + w * beta_density * (11 / 3 * cbrt_alpha_density ** 8 + cbrt_beta_density ** 8)) + d2f_dn_a_ds_aa * sigma_aa + d2f_dn_a_ds_bb * sigma_bb + d2f_dn_a_ds_ab * sigma_ab                                                         
+    df_dn_beta = -4 * a / X * density_product * inv_density * ((1 / 3) * d * inv_cbrt_density ** 4 / X + 1 / beta_density - inv_density) - C * a * b * (w_prime * density_product * densities_power_sum + w * alpha_density * (11 / 3 * cbrt_beta_density ** 8 + cbrt_alpha_density ** 8)) + d2f_dn_b_ds_bb * sigma_bb + d2f_dn_b_ds_aa * sigma_aa + d2f_dn_b_ds_ab * sigma_ab                                                         
+       
+    e_C = f_C * inv_density
+
+
+    return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, e_C
+
+
+
+
+
+
+
+exchange_functionals = {
+
+    "S": calculate_restricted_Slater_exchange_potential,
+    "US": calculate_unrestricted_Slater_exchange_potential,
+    "PBE": calculate_restricted_PBE_exchange_potential,
+    "UPBE": calculate_unrestricted_PBE_exchange_potential,
+    "B": calculate_restricted_B88_exchange_potential,
+    "UB": calculate_unrestricted_B88_exchange_potential,
+
+}
+
+
+
+
+correlation_functionals = {
+
+    "VWN3": calculate_restricted_VWN3_correlation_potential,
+    "UVWN3": calculate_unrestricted_VWN3_correlation_potential,
+    "VWN5": calculate_restricted_VWN5_correlation_potential,
+    "UVWN5": calculate_unrestricted_VWN5_correlation_potential,
+    "PW": calculate_restricted_PW_correlation_potential,
+    "UPW": calculate_unrestricted_PW_correlation_potential,
+    "PBE": calculate_restricted_PBE_correlation_potential,
+    "UPBE": calculate_unrestricted_PBE_correlation_potential,
+    "LYP": calculate_restricted_LYP_correlation_potential,
+    "ULYP": calculate_unrestricted_LYP_correlation_potential,
+    
+}
+

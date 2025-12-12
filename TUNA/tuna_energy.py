@@ -30,7 +30,6 @@ def log_convergence_acceleration(calculation, silent=False):
     DIIS = calculation.DIIS
     damping = calculation.damping
     damping_factor = calculation.damping_factor
-    level_shift = calculation.level_shift
 
 
     if DIIS:
@@ -64,11 +63,8 @@ def log_convergence_acceleration(calculation, silent=False):
                 log(f" Using dynamic damping for convergence acceleration.", calculation, silent=silent)
 
 
-    if level_shift:
 
-        log(f" Using level shift for convergence acceleration with parameter {calculation.level_shift_parameter:.2f}.", calculation, silent=silent)
-
-    if not DIIS and not damping and not level_shift:
+    if not DIIS and not damping:
 
         log(" No convergence acceleration used.", calculation, 1, silent=silent)
 
@@ -844,8 +840,10 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     else: V_NN = 0; E_D2 = 0
 
 
-    if reference == "RHF": log(" Beginning restricted Hartree-Fock calculation...  \n", calculation, 1, silent=silent)
-    else: log(" Beginning unrestricted Hartree-Fock calculation...  \n", calculation, 1, silent=silent)
+    reference_type = "Kohn-Sham" if method in DFT_methods else "Hartree-Fock"
+
+    if reference == "RHF": log(f" Beginning restricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
+    else: log(f" Beginning unrestricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
 
     log(" Calculating one-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
@@ -897,7 +895,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
     # Sets up the DFT integration grid
-    atomic_orbitals, weights, points = dft.set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess, calculation, silent=False) if do_DFT else (None, None, None)
+    atomic_orbitals, weights, points, bf_gradients_on_grid = dft.set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess, calculation, silent=silent) if do_DFT else (None, None, None, None)
 
 
     log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
@@ -912,7 +910,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
     # Starts SCF cycle for two-electron energy
-    SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent, basis_functions_on_grid=atomic_orbitals, weights=weights, basis_functions=basis_functions, points=points)
+    SCF_output = scf.run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P=P_guess, P_alpha=P_guess_alpha, P_beta=P_guess_beta, silent=silent, bfs_on_grid=atomic_orbitals, bf_gradients_on_grid=bf_gradients_on_grid, weights=weights, basis_functions=basis_functions, points=points)
     
     calculation.SCF_time = time.perf_counter()
     log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
@@ -944,8 +942,10 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
     if reference == "UHF": 
         
+        type = "UKS" if do_DFT else "UHF"
+
         # Calculates UHF spin contamination and prints to the console
-        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, reference, silent=silent)
+        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, type, silent=silent)
 
         if calculation.natural_orbitals and not calculation.no_natural_orbitals: 
                 

@@ -225,7 +225,7 @@ def calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculatio
     space2 = "            "
     title = type 
 
-    if type == "UHF": priority = 2
+    if type in ["UHF", "UKS"]: priority = 2
     else: priority = 3
 
     if type == "Coupled cluster":
@@ -356,7 +356,7 @@ def calculate_dipole_moment(centre_of_mass, charges, coordinates, P, D):
     """
 
     nuclear_dipole_moment = calculate_nuclear_dipole_moment(centre_of_mass, charges, coordinates)        
-    electronic_dipole_moment = -1 * scf.calculate_one_electron_property(P, D)
+    electronic_dipole_moment = -1 * np.einsum("ij,ij->", P, D, optimize=True)
 
     total_dipole_moment = nuclear_dipole_moment + electronic_dipole_moment
 

@@ -821,7 +821,7 @@ def run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, E_HF
         g = ci.antisymmetrise_integrals(ERI_SO)
 
         # Calculates total energy from one-electron and two-electron contractions with one- and two-electron Hamiltonians
-        E_OMP2 = V_NN + scf.calculate_one_electron_property(P_OMP2, H_core_SO) + scf.calculate_two_electron_property(D, g)
+        E_OMP2 = V_NN + np.einsum("ij,ij->", P_OMP2, H_core_SO, optimize=True) + (1 / 4) * np.einsum("ijkl,ijkl->", D, g, optimize=True)
 
         # Determines change in energy, and correlation energy by removing original reference (HF) energy
         E_OMP2 = E_OMP2 - E_HF

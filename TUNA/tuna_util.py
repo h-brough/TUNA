@@ -178,9 +178,6 @@ class Calculation:
         self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
         if self.DIIS: self.DIIS = not keyword(["NODIIS"], False)
 
-        self.level_shift, self.level_shift_parameter = keyword(["LEVELSHIFT"], False, check_next_space=True, associated_keyword_default=0.2, value_type=float)
-        if self.level_shift: self.level_shift = not keyword(["NOLEVELSHIFT"], False)
-
         self.damping, self.damping_factor = keyword(["DAMP"], True, check_next_space=True, associated_keyword_default=None, value_type=float)
         if self.damping: self.damping = not keyword(["NODAMP"], False)
         if keyword(["SLOWCONV"], False): self.damping_factor = 0.5
@@ -360,10 +357,10 @@ class Constants:
 
         self.convergence_criteria_SCF = {
 
-            "loose" : {"delta_E": 0.000001, "max_DP": 0.00001, "RMS_DP": 0.000001, "orbital_gradient": 0.0001, "name": "loose"},
-            "medium" : {"delta_E": 0.0000001, "max_DP": 0.000001, "RMS_DP": 0.0000001, "orbital_gradient": 0.00001, "name": "medium"},
-            "tight" : {"delta_E": 0.000000001, "max_DP": 0.00000001, "RMS_DP": 0.000000001, "orbital_gradient": 0.0000001, "name": "tight"},
-            "extreme" : {"delta_E": 0.00000000001, "max_DP": 0.0000000001, "RMS_DP": 0.00000000001, "orbital_gradient": 0.000000001, "name": "extreme"}   
+            "loose" : {"delta_E": 0.000001, "max_DP": 0.00001, "RMS_DP": 0.000001, "commutator": 0.0001, "name": "loose"},
+            "medium" : {"delta_E": 0.0000001, "max_DP": 0.000001, "RMS_DP": 0.0000001, "commutator": 0.00001, "name": "medium"},
+            "tight" : {"delta_E": 0.000000001, "max_DP": 0.00000001, "RMS_DP": 0.000000001, "commutator": 0.0000001, "name": "tight"},
+            "extreme" : {"delta_E": 0.00000000001, "max_DP": 0.0000000001, "RMS_DP": 0.00000000001, "commutator": 0.000000001, "name": "extreme"}   
             
         }
 
@@ -716,6 +713,29 @@ def finish_calculation(calculation):
 
 
 
+def symmetrise(M):
+
+    """
+    
+    Symmetrises a square matrix.
+
+    Args:
+        M (array): Square matrix
+    
+    Returns:
+        M_symmetrised (array): Symmetrised square matrix
+
+    """
+
+    M_symmetrised = (1 / 2) * (M + M.T)
+
+    return M_symmetrised
+
+
+
+
+
+
 
 
 def calculate_centre_of_mass(masses, coordinates): 
@@ -740,62 +760,6 @@ def calculate_centre_of_mass(masses, coordinates):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-def calculate_one_electron_property(P, M):
-
-    """
-
-    Calculates a one-electron property.
-
-    Args:   
-        P (array): One-particle reduced density matrix
-        M (array): Property matrix
-
-    Returns:
-        property (float) : Property defined by M
-
-    """
-
-    property = np.einsum('ij,ij->', P, M, optimize=True)
-
-    return property
-
-
-
-
-
-
-
-
-def calculate_two_electron_property(D, M):
-
-    """
-
-    Calculates a two-electron property.
-
-    Args:   
-        D (array): Two-particle reduced density matrix
-        M (array): Property matrix
-
-    Returns:
-        property (float) : Property defined by M
-
-    """
-
-    property = (1 / 4) * np.einsum('ijkl,ijkl->', D, M, optimize=True)
-
-    return property
 
 
 
@@ -971,35 +935,59 @@ method_types = {
     "UCCSD[T]": "unrestricted coupled cluster singles, doubles and perturbative triples",
     "CCSDT": "coupled cluster singles, doubles and triples",
     "UCCSDT": "unrestricted coupled cluster singles, doubles and triples",
-    "LDA": "density-functional theory via local density approximation",
-    "ULDA": "unrestricted density-functional theory via local density approximation",
-    "LSDA": "density-functional theory via local spin density approximation",
-    "ULSDA": "unrestricted density-functional theory via local spin density approximation",
-    "SVWN": "density-functional theory with Slater exchange and VWN correlation",
-    "USVWN": "unrestricted density-functional theory with Slater exchange and VWN correlation",
-    "SVWN3": "density-functional theory with Slater exchange and VWN-III correlation",
-    "USVWN3": "unrestricted density-functional theory with Slater exchange and VWN-III correlation",
-    "SVWN5": "density-functional theory with Slater exchange and VWN-V correlation",
-    "USVWN5": "unrestricted density-functional theory with Slater exchange and VWN-V correlation",
-    "SPW": "density-functional theory with Slater exchange and Perdew-Wang correlation",
-    "USPW": "unrestricted density-functional theory with Slater exchange and Perdew-Wang correlation",
+    "LDA": "density functional theory via local density approximation",
+    "ULDA": "unrestricted density functional theory via local density approximation",
+    "LSDA": "density functional theory via local spin density approximation",
+    "ULSDA": "unrestricted density functional theory via local spin density approximation",
+    "SVWN": "density functional theory with Slater exchange and VWN correlation",
+    "USVWN": "unrestricted density functional theory with Slater exchange and VWN correlation",
+    "SVWN3": "density functional theory with Slater exchange and VWN-III correlation",
+    "USVWN3": "unrestricted density functional theory with Slater exchange and VWN-III correlation",
+    "SVWN5": "density functional theory with Slater exchange and VWN-V correlation",
+    "USVWN5": "unrestricted density functional theory with Slater exchange and VWN-V correlation",
+    "BVWN": "density functional theory with Becke exchange and VWN correlation",
+    "UBVWN": "unrestricted density functional theory with Becke exchange and VWN correlation",
+    "BVWN3": "density functional theory with Becke exchange and VWN-III correlation",
+    "UBVWN3": "unrestricted density functional theory with Becke exchange and VWN-III correlation",
+    "BVWN5": "density functional theory with Becke exchange and VWN-V correlation",
+    "UBVWN5": "unrestricted density functional theory with Becke exchange and VWN-V correlation",
+    "SPW": "density functional theory with Slater exchange and Perdew-Wang correlation",
+    "USPW": "unrestricted density functional theory with Slater exchange and Perdew-Wang correlation",
     "HFS": "Hartree-Fock theory with Slater exchange", 
     "RHFS": "restricted Hartree-Fock theory with Slater exchange", 
     "UHFS": "unrestricted Hartree-Fock theory with Slater exchange", 
     "HFB": "Hartree-Fock theory with Becke exchange", 
     "RHFB": "restricted Hartree-Fock theory with Becke exchange", 
     "UHFB": "unrestricted Hartree-Fock theory with Becke exchange", 
-    "PBE": "density-functional theory with PBE exchange and correlation",
-    "UPBE": "unrestricted density-functional theory with PBE exchange and correlation",
-    "PBE0": "hybrid density-functional theory with PBE exchange and correlation",
-    "UPBE0": "unrestricted hybrid density-functional theory with PBE exchange and correlation",
-    "PBE0-DH": "double-hybrid density-functional theory with PBE exchange and correlation",
-    "UPBE0-DH": "unrestricted double-hybrid density-functional theory with PBE exchange and correlation",
-    "PBE-QIDH": "double-hybrid density-functional theory with PBE exchange and correlation",
-    "UPBE-QIDH": "unrestricted double-hybrid density-functional theory with PBE exchange and correlation",
-    "PBE0-2": "double-hybrid density-functional theory with PBE exchange and correlation",
-    "UPBE0-2": "unrestricted double-hybrid density-functional theory with PBE exchange and correlation",
-
+    "PBE": "density functional theory with PBE exchange and correlation",
+    "UPBE": "unrestricted density functional theory with PBE exchange and correlation",
+    "PBE0": "hybrid density functional theory with PBE exchange and correlation",
+    "UPBE0": "unrestricted hybrid density functional theory with PBE exchange and correlation",
+    "PBE0-DH": "double-hybrid density functional theory with PBE exchange and correlation",
+    "UPBE0-DH": "unrestricted double-hybrid density functional theory with PBE exchange and correlation",
+    "PBE-QIDH": "double-hybrid density functional theory with PBE exchange and correlation",
+    "UPBE-QIDH": "unrestricted double-hybrid density functional theory with PBE exchange and correlation",
+    "PBE0-2": "double-hybrid density functional theory with PBE exchange and correlation",
+    "UPBE0-2": "unrestricted double-hybrid density functional theory with PBE exchange and correlation",
+    "BLYP": "density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UBLYP": "unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "SLYP": "density functional theory with Slater exchange and Lee-Yang-Parr correlation",
+    "USLYP": "unrestricted density functional theory with Slater exchange and Lee-Yang-Parr correlation",
+    "BHLYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UBHLYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B1LYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB1LYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B3LYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB3LYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2KPLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2KPLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2TPLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2TPLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2GPLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2GPLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    
     }
 
 
@@ -1056,7 +1044,32 @@ DFT_methods = {
     "UPBE0-2" : Functional("UPBE", "UPBE", DFX=1-100/np.cbrt(2), HFX=100/np.cbrt(2), DFC=50, MPC=50, functional_class="GGA"),
     "HFB" : Functional("B", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
     "UHFB" : Functional("UB", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
-   
+    "BVWN" : Functional("B", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UBVWN" : Functional("UB", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "SBWN3" : Functional("B", "VWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UBVWN3" : Functional("UB", "UVWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "BVWN5" : Functional("B", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UBVWN5" : Functional("UB", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "BLYP" : Functional("B", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UBLYP" : Functional("UB", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "BHLYP" : Functional("B", "LYP", DFX=50, HFX=50, DFC=100, MPC=0, functional_class="GGA"),
+    "UBHLYP" : Functional("UB", "ULYP", DFX=50, HFX=50, DFC=100, MPC=0, functional_class="GGA"),
+    "B1LYP" : Functional("B", "LYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "UB1LYP" : Functional("UB", "ULYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "SLYP" : Functional("S", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "USLYP" : Functional("US", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "B3LYP" : Functional("B", "LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "UB3LYP" : Functional("UB", "ULYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "B3LYP/G" : Functional("B", "LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "UB3LYP/G" : Functional("UB", "ULYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "B2PLYP" : Functional("B", "LYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA"),
+    "UB2PLYP" : Functional("UB", "ULYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA"),
+    "B2KPLYP" : Functional("B", "LYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
+    "UB2KPLYP" : Functional("UB", "ULYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
+    "B2TPLYP" : Functional("B", "LYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
+    "UB2TPLYP" : Functional("UB", "ULYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
+    "B2GPLYP" : Functional("B", "LYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
+    "UB2GPLYP" : Functional("UB", "ULYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
 }
 
 
