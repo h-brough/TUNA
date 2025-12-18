@@ -36,6 +36,7 @@
 - Atom called X brekas things
 - Ghost atoms broken
 - Print (double-) hybrid parameters, give keywords to change
+- Check H def2-qzvp = qzvpp 
 
 ### Changed
 
@@ -43,6 +44,7 @@
 - Keyword `OMP2CONV` is now `MPCONV`
 - Major changes to SCF module
 - Removed level shift
+- Increased speed of two electron integrals for high angular momentum functions. Improvement from 2x for DZ to 12x for QZ
 
 ### Fixed
 

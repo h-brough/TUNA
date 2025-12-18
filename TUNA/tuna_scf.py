@@ -284,11 +284,11 @@ def calculate_restricted_electronic_energy(T, V_NE, P, J, K, calculation, densit
     if weights is not None:
 
         # Integrates exchange energy density on a grid, scales for hybrid functionals
-        exchange_energy += dft.integrate_on_grid(e_X * density, weights) *  (1 - calculation.HFX_prop) if e_X is not None else 0
+        exchange_energy += dft.integrate_on_grid(e_X * density, weights) * calculation.DFX_prop if e_X is not None else 0
 
         # Integrates correlation energy density on a grid, scales for double-hybrid functionals
-        correlation_energy += dft.integrate_on_grid(e_C * density, weights) * (1 - calculation.MPC_prop) if e_C is not None else 0
-    
+        correlation_energy += dft.integrate_on_grid(e_C * density, weights) * calculation.DFC_prop if e_C is not None else 0
+
     # Sums up total electronic energy
     electronic_energy = kinetic_energy + nuclear_electron_energy + coulomb_energy + exchange_energy + correlation_energy
 
@@ -350,11 +350,11 @@ def calculate_unrestricted_electronic_energy(T, V_NE, P_alpha, P_beta, J_alpha, 
     if weights is not None:
 
         # Integrates exchange energy density on a grid, scales for hybrid functionals
-        exchange_energy_alpha += dft.integrate_on_grid(e_X_alpha * alpha_density, weights) *  (1 - calculation.HFX_prop) if e_X_alpha is not None else 0
-        exchange_energy_beta += dft.integrate_on_grid(e_X_beta * beta_density, weights) *  (1 - calculation.HFX_prop) if e_X_beta is not None else 0
+        exchange_energy_alpha += dft.integrate_on_grid(e_X_alpha * alpha_density, weights) * calculation.DFX_prop if e_X_alpha is not None else 0
+        exchange_energy_beta += dft.integrate_on_grid(e_X_beta * beta_density, weights) * calculation.DFX_prop if e_X_beta is not None else 0
         
         # Integrates correlation energy density on a grid, scales for double-hybrid functionals
-        correlation_energy += dft.integrate_on_grid(e_C * (alpha_density + beta_density), weights) * (1 - calculation.MPC_prop) if e_C is not None else 0
+        correlation_energy += dft.integrate_on_grid(e_C * (alpha_density + beta_density), weights) * calculation.DFC_prop if e_C is not None else 0
     
     # Sums up exchange energy
     exchange_energy = exchange_energy_alpha + exchange_energy_beta
@@ -494,24 +494,27 @@ def calculate_restricted_exchange_correlation_matrix(P, bfs_on_grid, bf_gradient
     # Constructs the electron density on a grid
     density = dft.construct_density_on_grid(P, bfs_on_grid)
 
-    sigma, density_gradient = None, None
+    sigma, tau, density_gradient = None, None, None
 
-    if calculation.functional.functional_class == "GGA":
+    if calculation.functional.functional_class in ["GGA", "meta-GGA"]:
 
         # Calculates the density gradient for a GGA calculation
         sigma, density_gradient = dft.calculate_density_gradient(P, bfs_on_grid, bf_gradients_on_grid) 
 
+        if calculation.functional.functional_class == "meta-GGA":
+
+            tau = dft.calculate_kinetic_energy_density(P, bf_gradients_on_grid)
 
     # Calculates derivatives necessary for XC matrix
-    df_dn_X, df_ds_X, e_X = exchange_functional(density, calculation, sigma) if exchange_functional is not None else (None, None, None)
-    df_dn_C, df_ds_C, e_C = correlation_functional(density, calculation, sigma) if correlation_functional is not None else (None, None, None)
+    df_dn_X, df_ds_X, df_dt_X, e_X = exchange_functional(density, calculation, sigma, tau) if exchange_functional is not None else (None, None, None)
+    df_dn_C, df_ds_C, df_dt_C, e_C = correlation_functional(density, calculation, sigma, tau) if correlation_functional is not None else (None, None, None)
     
     # Builds the exchange and correlation matrices
-    V_X = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X, df_ds_X, bf_gradients_on_grid, density_gradient) if df_dn_X is not None else np.zeros_like(P)
-    V_C = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C, df_ds_C, bf_gradients_on_grid, density_gradient) if df_dn_C is not None else np.zeros_like(P)
+    V_X = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X, df_ds_X, df_dt_X, bf_gradients_on_grid, density_gradient) if df_dn_X is not None else np.zeros_like(P)
+    V_C = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C, df_ds_C, df_dt_C, bf_gradients_on_grid, density_gradient) if df_dn_C is not None else np.zeros_like(P)
 
     # Constructs exchange-correlation matrix considering hybrid functionals
-    V_XC = V_X * (1 - calculation.HFX_prop) + V_C * (1 - calculation.MPC_prop)
+    V_XC = V_X * calculation.DFX_prop + V_C * calculation.DFC_prop
 
     return V_XC, density, e_X, e_C
 
@@ -555,9 +558,9 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha, P_beta, bfs_on_g
 
     density = alpha_density + beta_density
     
-    sigma_aa, sigma_bb, sigma_ab, density_gradient_alpha, density_gradient_beta = None, None, None, None, None
+    sigma_aa, sigma_bb, sigma_ab, density_gradient_alpha, density_gradient_beta, tau_alpha, tau_beta = None, None, None, None, None, None, None
 
-    if calculation.functional.functional_class == "GGA":
+    if calculation.functional.functional_class in ["GGA", "meta-GGA"]:
 
         # Calculates the density gradient for a GGA calculation
         sigma_aa, density_gradient_alpha = dft.calculate_density_gradient(P_alpha, bfs_on_grid, bf_gradients_on_grid) 
@@ -566,24 +569,29 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha, P_beta, bfs_on_g
         # This sigma is cleaned here as the others are cleaned in calculate_density_gradient - do NOT clean this
         sigma_ab = np.einsum("akl,akl->kl", density_gradient_alpha, density_gradient_beta, optimize=True)
 
+        if calculation.functional.functional_class == "meta-GGA":
+
+            tau_alpha = dft.calculate_kinetic_energy_density(P_alpha, bf_gradients_on_grid)
+            tau_beta = dft.calculate_kinetic_energy_density(P_beta, bf_gradients_on_grid)
+
     # Calculates derivatives necessary for XC matrix
-    df_dn_X_alpha, df_ds_X_alpha, e_X_alpha = exchange_functional(alpha_density, calculation, sigma_aa) if exchange_functional is not None else (None, None, None)
-    df_dn_X_beta, df_ds_X_beta, e_X_beta = exchange_functional(beta_density, calculation, sigma_bb) if exchange_functional is not None else (None, None, None)
+    df_dn_X_alpha, df_ds_X_alpha, df_dt_X_alpha, e_X_alpha = exchange_functional(alpha_density, calculation, sigma_aa, tau_alpha) if exchange_functional is not None else (None, None, None)
+    df_dn_X_beta, df_ds_X_beta, df_dt_X_beta, e_X_beta = exchange_functional(beta_density, calculation, sigma_bb, tau_beta) if exchange_functional is not None else (None, None, None)
     
-    df_dn_C_alpha, df_dn_C_beta, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab, e_C = correlation_functional(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, calculation) if correlation_functional is not None else (None, None, None, None, None, None)
+    df_dn_C_alpha, df_dn_C_beta, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab, df_dt_C_alpha, df_dt_C_beta, e_C = correlation_functional(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation) if correlation_functional is not None else (None, None, None, None, None, None)
 
     # Builds the alpha and beta exchange matrices
-    V_X_alpha = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_alpha, df_ds_X_alpha, bf_gradients_on_grid, density_gradient_alpha) if df_dn_X_alpha is not None else np.zeros_like(P_alpha)
-    V_X_beta = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_beta, df_ds_X_beta, bf_gradients_on_grid, density_gradient_beta) if df_dn_X_beta is not None else np.zeros_like(P_beta)
+    V_X_alpha = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_alpha, df_ds_X_alpha, df_dt_X_alpha, bf_gradients_on_grid, density_gradient_alpha) if df_dn_X_alpha is not None else np.zeros_like(P_alpha)
+    V_X_beta = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_beta, df_ds_X_beta, df_dt_X_beta, bf_gradients_on_grid, density_gradient_beta) if df_dn_X_beta is not None else np.zeros_like(P_beta)
 
     # Builds the alpha and beta correlation matrices
-    V_C_alpha = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_alpha, df_ds_C_aa, bf_gradients_on_grid, density_gradient_alpha, density_gradient_other_spin=density_gradient_beta, df_ds_ab=df_ds_C_ab) if df_dn_C_alpha is not None else np.zeros_like(P_alpha)
-    V_C_beta = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_beta, df_ds_C_bb, bf_gradients_on_grid, density_gradient_beta, density_gradient_other_spin=density_gradient_alpha, df_ds_ab=df_ds_C_ab) if df_dn_C_beta is not None else np.zeros_like(P_beta)
+    V_C_alpha = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_alpha, df_ds_C_aa, df_dt_C_alpha, bf_gradients_on_grid, density_gradient_alpha, density_gradient_other_spin=density_gradient_beta, df_ds_ab=df_ds_C_ab) if df_dn_C_alpha is not None else np.zeros_like(P_alpha)
+    V_C_beta = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_beta, df_ds_C_bb, df_dt_C_beta, bf_gradients_on_grid, density_gradient_beta, density_gradient_other_spin=density_gradient_alpha, df_ds_ab=df_ds_C_ab) if df_dn_C_beta is not None else np.zeros_like(P_beta)
 
 
     # Constructs exchange-correlation matrices considering hybrid functionals
-    V_XC_alpha = V_X_alpha * (1 - calculation.HFX_prop) + V_C_alpha * (1 - calculation.MPC_prop)
-    V_XC_beta = V_X_beta * (1 - calculation.HFX_prop) + V_C_beta * (1 - calculation.MPC_prop)
+    V_XC_alpha = V_X_alpha * calculation.DFX_prop + V_C_alpha * calculation.DFC_prop
+    V_XC_beta = V_X_beta * calculation.DFX_prop + V_C_beta * calculation.DFC_prop
 
 
     return V_XC_alpha, V_XC_beta, alpha_density, beta_density, density, e_X_alpha, e_X_beta, e_C 

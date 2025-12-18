@@ -462,9 +462,8 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
     log("     [Done]\n", calculation, 1, silent=silent)
 
 
-
     # Optionally scales the same- and opposite-spin contributions to energy
-    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"]: 
+    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"] or calculation.functional.functional_type == "spin-scaled double-hybrid": 
         
         E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent=silent)
 
@@ -608,7 +607,7 @@ def run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block
     t_ijab_aa = ci.build_MP2_t_amplitudes(ERI_SO_aa, e_ijab_aa)
     t_ijab_bb = ci.build_MP2_t_amplitudes(ERI_SO_bb, e_ijab_bb)
     t_ijab_ab = ci.build_MP2_t_amplitudes(ERI_SO_ab, e_ijab_ab)
-    t_ijab_ba = t_ijab_ab.transpose(1,0,3,2) 
+    t_ijab_ba = t_ijab_ab.transpose(1, 0, 3, 2) 
     
     # Calculates MP2 energy for alpha-alpha, beta-beta and alpha-beta pairs
     E_aa = calculate_t_amplitude_energy(t_ijab_aa, ERI_SO_aa)
@@ -623,7 +622,7 @@ def run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, ERI_spin_block
     log("     [Done]\n", calculation, 1, silent=silent)
 
     # Optionally scales the same- and opposite-spin contributions to energy
-    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"]: 
+    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"] or calculation.functional.functional_type == "spin-scaled double-hybrid": 
         
         E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent=silent)
 

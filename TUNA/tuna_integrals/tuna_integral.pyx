@@ -232,32 +232,6 @@ cdef inline double E(int i, int j, int t, double Qx, double a, double b, int n =
 
 
 
-cdef inline double R(int t, int u, int v, int n, double p, double PCx, double PCy, double PCz, double RPC, dict cache = None):
-
-    cdef double T = p * RPC * RPC
-    cdef double val = 0.0
-
-    if t == 0 and u == 0 and v == 0: val += pow(-2 * p, n) * boys(n, T) 
-
-    elif t == 0 and u == 0:
-
-        if v > 1: val += (v - 1) * R(t, u, v - 2, n + 1, p, PCx, PCy, PCz, RPC, cache)   
-
-        val += PCz * R(t, u, v - 1, n + 1, p, PCx, PCy, PCz, RPC, cache)
-
-    elif t == 0:
-
-        if u > 1: val += (u - 1) * R(t, u - 2, v, n + 1, p, PCx, PCy, PCz, RPC, cache)  
-
-        val += PCy * R(t, u - 1, v, n + 1, p, PCx, PCy, PCz, RPC, cache)
-
-    else:
-
-        if t > 1: val += (t - 1) * R(t - 2, u, v, n + 1, p, PCx, PCy, PCz, RPC, cache)  
-        val += PCx * R(t - 1, u, v, n + 1, p, PCx, PCy, PCz, RPC, cache)
-
-    return val
-
 
 
 
@@ -281,42 +255,52 @@ cdef inline double boys(double m, double T, dict cache = None):
 
 
 
-cpdef double [:, :, :, :] doERIs(long N, double [:, :, :, :] TwoE, list bfs):
-
-    """
-    
-    Calculates the four-dimensional array of two-electron integrals.
-    
-    """
+cpdef double [:, :, :, :] doERIs(long N,
+                                double [:, :, :, :] TwoE,
+                                list bfs,
+                                bint use_diatomic_parity=True):
 
     cdef:
-
         long i, j, k, l, ij, kl
+        double val
+        Basis bi, bj, bk, bl
 
     for i in range(N):
+        bi = <Basis>bfs[i]
         for j in range(i + 1):
+            bj = <Basis>bfs[j]
 
             ij = (i * (i + 1) // 2 + j)
 
             for k in range(N):
+                bk = <Basis>bfs[k]
                 for l in range(k + 1):
+                    bl = <Basis>bfs[l]
 
                     kl = (k * (k + 1) // 2 + l)
 
                     if ij >= kl:
 
-                       val = ERI(bfs[i], bfs[j], bfs[k], bfs[l])
+                        # Exact diatomic (z-axis) parity screening
+                        if use_diatomic_parity and (
+                            ((bi.shell[0] + bj.shell[0] + bk.shell[0] + bl.shell[0]) & 1) or
+                            ((bi.shell[1] + bj.shell[1] + bk.shell[1] + bl.shell[1]) & 1)
+                        ):
+                            val = 0.0
+                        else:
+                            val = ERI(bi, bj, bk, bl)
 
-                       TwoE[i, j, k, l] = val
-                       TwoE[k, l, i, j] = val
-                       TwoE[j, i, l, k] = val
-                       TwoE[l, k, j, i] = val
-                       TwoE[j, i, k, l] = val
-                       TwoE[l, k, i, j] = val
-                       TwoE[i, j, l, k] = val
-                       TwoE[k, l, j, i] = val
+                        TwoE[i, j, k, l] = val
+                        TwoE[k, l, i, j] = val
+                        TwoE[j, i, l, k] = val
+                        TwoE[l, k, j, i] = val
+                        TwoE[j, i, k, l] = val
+                        TwoE[l, k, i, j] = val
+                        TwoE[i, j, l, k] = val
+                        TwoE[k, l, j, i] = val
 
     return TwoE
+
 
 
 
@@ -365,19 +349,95 @@ cpdef double ERI(Basis a, Basis b, Basis c, Basis d):
 
 
 
-
-
-
-cdef double electron_repulsion(double a, long *lmn1, double *A, double b, long *lmn2, double *B, double c, long *lmn3, double *C, double d, long *lmn4, double *D):
-    
+cdef inline void fill_boys_table(int M, double T, double* F):
     """
-    
+    Fill F[0..M] with Boys values F_m(T).
+    Uses ONE hyp1f1 evaluation at m=M, then downward recurrence:
+        F_{m-1} = (2*T*F_m + exp(-T)) / (2m - 1)
+    """
+    cdef int m
+    cdef double e, twoT
+
+    if T == 0.0:
+        for m in range(M + 1):
+            F[m] = 1.0 / (2.0 * m + 1.0)
+        return
+
+    F[M] = hyp1f1(M + 0.5, M + 1.5, -T) / (2.0 * M + 1.0)
+
+    e = exp(-T)
+    twoT = 2.0 * T
+    for m in range(M, 0, -1):
+        F[m - 1] = (twoT * F[m] + e) / (2.0 * m - 1.0)
+
+
+cdef inline void fill_pow_table(int M, double p, double* P):
+    """
+    P[n] = (-2*p)^n for n=0..M (avoids pow() in the base case).
+    """
+    cdef int n
+    cdef double fac = -2.0 * p
+    P[0] = 1.0
+    for n in range(1, M + 1):
+        P[n] = P[n - 1] * fac
+
+
+cdef inline double R(int t, int u, int v, int n,
+                     double p, double PCx, double PCy, double PCz, double RPC,
+                     dict cache = None,
+                     double* boys_tab = NULL,
+                     double* pow_tab  = NULL):
+
+    cdef double val = 0.0
+    cdef long long key
+    cdef object tmp
+
+    if cache is not None:
+        key = ((<long long>t) << 48) | ((<long long>u) << 32) | ((<long long>v) << 16) | (<long long>n)
+        tmp = cache.get(key, None)
+        if tmp is not None:
+            return <double>tmp
+
+    if t == 0 and u == 0 and v == 0:
+        # IMPORTANT: other code (e.g. nuclear_attraction) calls R without tables.
+        if boys_tab != NULL and pow_tab != NULL:
+            val = pow_tab[n] * boys_tab[n]
+        else:
+            val = pow(-2.0 * p, n) * boys(n, p * RPC * RPC)
+
+    elif t == 0 and u == 0:
+        if v > 1:
+            val += (v - 1) * R(t, u, v - 2, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
+        val += PCz * R(t, u, v - 1, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
+
+    elif t == 0:
+        if u > 1:
+            val += (u - 1) * R(t, u - 2, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
+        val += PCy * R(t, u - 1, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
+
+    else:
+        if t > 1:
+            val += (t - 1) * R(t - 2, u, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
+        val += PCx * R(t - 1, u, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
+
+    if cache is not None:
+        cache[key] = val
+
+    return val
+
+
+cdef double electron_repulsion(double a, long *lmn1, double *A,
+                               double b, long *lmn2, double *B,
+                               double c, long *lmn3, double *C,
+                               double d, long *lmn4, double *D):
+
+    """
     Recursive calculation of electron repulsion integrals between primitive Gaussians.
-    
+    Optimization: precompute Boys table (one hyp1f1 call) and (-2*alpha)^n table once per quartet.
+    Also precompute all 1D E-coefficients once per axis, per primitive pair.
     """
 
     cdef:
-
         long l1 = lmn1[0], m1 = lmn1[1], n1 = lmn1[2]
         long l2 = lmn2[0], m2 = lmn2[1], n2 = lmn2[2]
         long l3 = lmn3[0], m3 = lmn3[1], n3 = lmn3[2]
@@ -399,24 +459,110 @@ cdef double electron_repulsion(double a, long *lmn1, double *A, double b, long *
         double dz = Pz - Qz
         double RPQ = sqrt(dx * dx + dy * dy + dz * dz)
 
+        double ABx = A[0] - B[0]
+        double ABy = A[1] - B[1]
+        double ABz = A[2] - B[2]
+        double CDx = C[0] - D[0]
+        double CDy = C[1] - D[1]
+        double CDz = C[2] - D[2]
+
         long t, u, v, tau, nu, phi
         double val = 0.0
+        double Eu, sign, pref
 
-    if PyErr_CheckSignals() != 0: return  0
+        dict R_cache = {}
 
-    for t in range(l1 + l2 + 1):
-        for u in range(m1 + m2 + 1):
-            for v in range(n1 + n2 + 1):
-                for tau in range(l3 + l4 + 1):
-                    for nu in range(m3 + m4 + 1):
-                        for phi in range(n3 + n4 + 1):
-    
-                            val += E(l1, l2, t, A[0] - B[0], a, b) * E(m1, m2, u, A[1] - B[1], a, b) * E(n1, n2, v, A[2] - B[2], a, b) * E(l3, l4, tau, C[0] - D[0], c, d) * E(m3, m4, nu, C[1] - D[1], c, d) * E(n3, n4, phi, C[2] - D[2], c, d) * pow(-1,tau + nu + phi) * R(t + tau, u + nu, v + phi, 0, alpha, Px - Qx, Py - Qy, Pz - Qz, RPQ) 
+        int nt   = <int>(l1 + l2 + 1)
+        int nuu  = <int>(m1 + m2 + 1)
+        int nv   = <int>(n1 + n2 + 1)
+        int ntau = <int>(l3 + l4 + 1)
+        int nnu  = <int>(m3 + m4 + 1)
+        int nphi = <int>(n3 + n4 + 1)
 
-    val *= 2 * pow(pi, 2.5) / (p * q * sqrt(p + q))
+        int Mmax = <int>((l1 + m1 + n1) + (l2 + m2 + n2) + (l3 + m3 + n3) + (l4 + m4 + n4))
+        double Tval = alpha * RPQ * RPQ
 
-    return val 
+        double *Etx = NULL
+        double *Ety = NULL
+        double *Etz = NULL
+        double *Eux = NULL
+        double *Euy = NULL
+        double *Euz = NULL
 
+        double *boys_tab = NULL
+        double *pow_tab  = NULL
+
+    if PyErr_CheckSignals() != 0:
+        return 0.0
+
+    Etx = <double*>malloc(nt   * sizeof(double))
+    Ety = <double*>malloc(nuu  * sizeof(double))
+    Etz = <double*>malloc(nv   * sizeof(double))
+    Eux = <double*>malloc(ntau * sizeof(double))
+    Euy = <double*>malloc(nnu  * sizeof(double))
+    Euz = <double*>malloc(nphi * sizeof(double))
+
+    if Etx == NULL or Ety == NULL or Etz == NULL or Eux == NULL or Euy == NULL or Euz == NULL:
+        if Etx != NULL: free(Etx)
+        if Ety != NULL: free(Ety)
+        if Etz != NULL: free(Etz)
+        if Eux != NULL: free(Eux)
+        if Euy != NULL: free(Euy)
+        if Euz != NULL: free(Euz)
+        return 0.0
+
+    boys_tab = <double*>malloc((Mmax + 1) * sizeof(double))
+    pow_tab  = <double*>malloc((Mmax + 1) * sizeof(double))
+    if boys_tab == NULL or pow_tab == NULL:
+        if boys_tab != NULL: free(boys_tab)
+        if pow_tab  != NULL: free(pow_tab)
+        free(Etx); free(Ety); free(Etz)
+        free(Eux); free(Euy); free(Euz)
+        return 0.0
+
+    fill_boys_table(Mmax, Tval, boys_tab)
+    fill_pow_table(Mmax, alpha, pow_tab)
+
+    for t in range(nt):
+        Etx[t] = E(l1, l2, t, ABx, a, b)
+    for u in range(nuu):
+        Ety[u] = E(m1, m2, u, ABy, a, b)
+    for v in range(nv):
+        Etz[v] = E(n1, n2, v, ABz, a, b)
+
+    for tau in range(ntau):
+        Eux[tau] = E(l3, l4, tau, CDx, c, d)
+    for nu in range(nnu):
+        Euy[nu] = E(m3, m4, nu, CDy, c, d)
+    for phi in range(nphi):
+        Euz[phi] = E(n3, n4, phi, CDz, c, d)
+
+    for t in range(nt):
+        for u in range(nuu):
+            for v in range(nv):
+
+                Eu = Etx[t] * Ety[u] * Etz[v]
+
+                for tau in range(ntau):
+                    for nu in range(nnu):
+                        for phi in range(nphi):
+
+                            sign = -1.0 if ((tau + nu + phi) & 1) else 1.0
+
+                            val += Eu * Eux[tau] * Euy[nu] * Euz[phi] * sign * \
+                                   R(t + tau, u + nu, v + phi, 0,
+                                     alpha, Px - Qx, Py - Qy, Pz - Qz, RPQ,
+                                     R_cache, boys_tab, pow_tab)
+
+    pref = 2.0 * pow(pi, 2.5) / (p * q * sqrt(p + q))
+    val *= pref
+
+    free(Etx); free(Ety); free(Etz)
+    free(Eux); free(Euy); free(Euz)
+    free(boys_tab)
+    free(pow_tab)
+
+    return val
 
 
 
@@ -465,30 +611,6 @@ cpdef double Mu(object a, object b, C, str direction):
 
     return mu
 
-
-
-
-
-
-
-
-
-def RxDel(a, b, C, direction):
-
-    """
-    
-    Calculates angular integrals between contracted Gaussians.
-    
-    """
-
-    l = 0.0
-
-    for ia, ca in enumerate(a.coefs):
-        for ib, cb in enumerate(b.coefs):
-
-            l += a.norm[ia] * b.norm[ib] * ca * cb * angular(a.exps[ia], a.shell, a.origin, b.exps[ib], b.shell, b.origin, C, direction)
-
-    return l
 
 
 
@@ -658,44 +780,6 @@ def kinetic(a, lmn1, A, b, lmn2, B):
 
 
 
-
-
-
-
-
-def angular(a, lmn1, A, b, lmn2, B, C, direction):
-
-    """
-    
-    Calculates angular integrals between primitive Gaussians.
-    
-    """
-
-    l1, m1, n1 = lmn1
-    l2, m2, n2 = lmn2
-    P = gaussian_product_center(a, A, b, B)
-
-    XPC = P[0] - C[0]
-    YPC = P[1] - C[1]
-    ZPC = P[2] - C[2]
-
-    S0x = E(l1, l2, 0, A[0] - B[0], a, b) 
-    S0y = E(m1, m2, 0, A[1] - B[1], a, b) 
-    S0z = E(n1, n2, 0, A[2] - B[2], a, b) 
-
-    S1x = E(l1, l2, 0, A[0] - B[0], a, b, 1, A[0] - C[0])
-    S1y = E(m1, m2, 0, A[1] - B[1], a, b, 1, A[1] - C[1])
-    S1z = E(n1, n2, 0, A[2] - B[2], a, b, 1, A[2] - C[2])
-    
-    D1x = l2 * E(l1, l2 - 1, 0, A[0] - B[0], a, b) - 2 * b * E(l1, l2 + 1, 0, A[0] - B[0], a, b)
-    D1y = m2 * E(m1, m2 - 1, 0, A[1] - B[1], a, b) - 2 * b * E(m1, m2 + 1, 0, A[1] - B[1], a, b)
-    D1z = n2 * E(n1, n2 - 1, 0, A[2] - B[2], a, b) - 2 * b * E(n1, n2 + 1, 0, A[2] - B[2], a, b)
-
-    if direction.lower() == "x": return -S0x * (S1y * D1z - S1z * D1y) * np.power(pi / (a + b), 1.5) 
-
-    elif direction.lower() == "y": return -S0y * (S1z * D1x - S1x * D1z) * np.power(pi / (a + b), 1.5) 
-
-    elif direction.lower() == "z": return -S0z * (S1x * D1y - S1y * D1x) * np.power(pi / (a + b), 1.5) 
 
 
 

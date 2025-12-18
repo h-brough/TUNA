@@ -216,6 +216,7 @@ class Calculation:
         self.pressure = keyword(["PRES", "PRESSURE"], 101325, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
 
         # Post-Hartree-Fock keywords
+        # Need to consider case of modify double hybrids
         self.same_spin_scaling = keyword(["SSS"], 1 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.opposite_spin_scaling = keyword(["OSS"], 6 / 5, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.MP3_scaling = keyword(["MP3S", "MP3SCALING", "MP3SCAL"], 1 / 4, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
@@ -241,20 +242,28 @@ class Calculation:
         if self.method in ["H", "UH"]:
             
             self.HFX_requested, self.HFX_prop = (False, 0) 
+
         else: 
              
-             self.HFX_requested, self.HFX_prop =keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+            self.HFX_requested, self.HFX_prop = keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
         
-        if self.method in DFT_methods and not self.HFX_requested: self.HFX_prop = self.functional.HFX
-        elif self.method in DFT_methods:
-             self.HFX_prop =  self.HFX_prop
-        
+        self.DFX_requested, self.DFX_prop = keyword(["DFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+        self.DFC_requested, self.DFC_prop = keyword(["DFC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+        self.MPC_requested, self.MPC_prop = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
+
+
+        if self.method in DFT_methods: 
+            
+            if not self.HFX_requested: self.HFX_prop = self.functional.HFX
+            if not self.DFX_requested: self.DFX_prop = self.functional.DFX
+            if not self.DFC_requested: self.DFC_prop = self.functional.DFC
+            if not self.MPC_requested: self.MPC_prop = self.functional.MPC
         
         self.HFX_prop /= 100
-
-        self.MPC_requested, self.MPC_prop = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
-        if self.method in DFT_methods and not self.MPC_requested: self.MPC_prop = self.functional.MPC
+        self.DFX_prop /= 100
+        self.DFC_prop /= 100
         self.MPC_prop /= 100
+
 
         # Excited state keywords
         self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -479,14 +488,18 @@ class Output:
 
 class Functional:
 
-    def __init__(self, x_functional, c_functional, DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"):
+    def __init__(self, x_functional, c_functional, DFX=100, HFX=0, DFC=100, MPC=0, SSS=1, OSS=1, functional_class="LDA"):
 
         self.x_functional = x_functional
         self.c_functional = c_functional
+
         self.DFX = DFX
         self.HFX = HFX
         self.DFC = DFC
         self.MPC = MPC
+
+        self.SSS = SSS
+        self.OSS = OSS
 
         self.functional_class = functional_class
 
@@ -505,8 +518,13 @@ class Functional:
 
                 self.functional_type = "double-hybrid"
 
+                if self.SSS != 1 and self.OSS != 1:
+
+                    self.functional_type = "spin-scaled double-hybrid"
 
         return self.functional_type
+
+
 
 
 
@@ -886,6 +904,7 @@ calculation_types = {
 
 
 method_types = {
+    
     "H": "Hartree theory", 
     "UH": "unrestricted Hartree theory", 
     "HF": "Hartree-Fock theory", 
@@ -971,6 +990,10 @@ method_types = {
     "UPBE0-2": "unrestricted double-hybrid density functional theory with PBE exchange and correlation",
     "BLYP": "density functional theory with Becke exchange and Lee-Yang-Parr correlation",
     "UBLYP": "unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "BP86": "density functional theory with Becke exchange and Perdew 1986 correlation",
+    "UBP86": "unrestricted density functional theory with Becke exchange and Perdew 1986 correlation",
+    "B1P86": "hybrid density functional theory with Becke exchange and Perdew 1986 correlation",
+    "UB1P86": "hybrid unrestricted density functional theory with Becke exchange and Perdew 1986 correlation",
     "SLYP": "density functional theory with Slater exchange and Lee-Yang-Parr correlation",
     "USLYP": "unrestricted density functional theory with Slater exchange and Lee-Yang-Parr correlation",
     "BHLYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
@@ -979,17 +1002,38 @@ method_types = {
     "UB1LYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
     "B3LYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
     "UB3LYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B3LYP/G": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB3LYP/G": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
     "B2PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
     "UB2PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2KPLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2KPLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2TPLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2TPLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2GPLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2GPLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "DSD-BLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UDSD-BLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2K-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2K-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2T-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2T-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2G-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2G-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "B2NC-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
+    "UB2NC-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",   
+    "TPSS": "density functional theory with TPSS exchange and correlation",
+    "UTPSS": "unrestricted density functional theory with TPSS exchange and correlation",
+    "TPSSH": "hybrid density functional theory with TPSS exchange and correlation",
+    "UTPSSH": "unrestricted density functional theory with TPSS exchange and correlation",
+    "TPSS0": "hybrid density functional theory with TPSS exchange and correlation",
+    "UTPSS0": "hybrid unrestricted density functional theory with TPSS exchange and correlation",
+    "PWP": "density functional theory with Perdew-Wang exchange and Perdew 1986 correlation",
+    "UPWP": "unrestricted density functional theory with Perdew-Wang exchange and Perdew 1986 correlation",
+    "MPWLYP": "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
+    "UMPWLYP": "unrestricted density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
+    "MPW1LYP": "hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
+    "UMPW1LYP": "unrestricted hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
+    "MPW2PLYP": "double-hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
+    "UMPW2PLYP": "unrestricted double-hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
     
     }
-
 
 
 
@@ -1056,20 +1100,45 @@ DFT_methods = {
     "UBHLYP" : Functional("UB", "ULYP", DFX=50, HFX=50, DFC=100, MPC=0, functional_class="GGA"),
     "B1LYP" : Functional("B", "LYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
     "UB1LYP" : Functional("UB", "ULYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "PWP" : Functional("PW", "P86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UPWP" : Functional("UPW", "UP86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "USLYP" : Functional("US", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "SLYP" : Functional("S", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "USLYP" : Functional("US", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "B3LYP" : Functional("B", "LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
-    "UB3LYP" : Functional("UB", "ULYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
-    "B3LYP/G" : Functional("B", "LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
-    "UB3LYP/G" : Functional("UB", "ULYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "B3LYP" : Functional("B3", "3LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "UB3LYP" : Functional("UB3", "U3LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "B3LYP/G" : Functional("B3", "3LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "UB3LYP/G" : Functional("UB3", "U3LYP", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
     "B2PLYP" : Functional("B", "LYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA"),
     "UB2PLYP" : Functional("UB", "ULYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA"),
-    "B2KPLYP" : Functional("B", "LYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
-    "UB2KPLYP" : Functional("UB", "ULYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
-    "B2TPLYP" : Functional("B", "LYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
-    "UB2TPLYP" : Functional("UB", "ULYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
-    "B2GPLYP" : Functional("B", "LYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
-    "UB2GPLYP" : Functional("UB", "ULYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
+    "B2-PLYP" : Functional("B", "LYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA"),
+    "UB2-PLYP" : Functional("UB", "ULYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA"),
+    "B2K-PLYP" : Functional("B", "LYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
+    "UB2K-PLYP" : Functional("UB", "ULYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
+    "B2T-PLYP" : Functional("B", "LYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
+    "UB2T-PLYP" : Functional("UB", "ULYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
+    "B2G-PLYP" : Functional("B", "LYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
+    "UB2G-PLYP" : Functional("UB", "ULYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
+    "B2NC-PLYP" : Functional("B", "LYP", DFX=19, HFX=81, DFC=45, MPC=55, functional_class="GGA"),
+    "UB2NC-PLYP" : Functional("UB", "ULYP", DFX=19, HFX=81, DFC=45, MPC=55, functional_class="GGA"),
+    "DSD-BLYP" : Functional("B", "LYP", DFX=25, HFX=75, DFC=53, MPC=100, SSS=0.60, OSS=0.46, functional_class="GGA"),
+    "UDSD-BLYP" : Functional("UB", "ULYP", DFX=25, HFX=75, DFC=53, MPC=100, SSS=0.60, OSS=0.46, functional_class="GGA"),
+    "BP86" : Functional("B", "P86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UBP86" : Functional("UB", "UP86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "B1P86" : Functional("B", "P86", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "UB1P86" : Functional("UB", "UP86", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "TPSS" : Functional("TPSS", "TPSS", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="meta-GGA"),
+    "UTPSS" : Functional("UTPSS", "UTPSS", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="meta-GGA"),
+    "TPSSh" : Functional("TPSS", "TPSS", DFX=90, HFX=10, DFC=100, MPC=0, functional_class="meta-GGA"),
+    "UTPSSh" : Functional("UTPSS", "UTPSS", DFX=90, HFX=10, DFC=100, MPC=0, functional_class="meta-GGA"),
+    "TPSS0" : Functional("TPSS", "TPSS", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="meta-GGA"),
+    "UTPSS0" : Functional("UTPSS", "UTPSS", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="meta-GGA"),
+    "MPWLYP" : Functional("MPW", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "UMPWLYP" : Functional("UMPW", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "MPW1LYP" : Functional("MPW", "LYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "UMPW1LYP" : Functional("UMPW", "ULYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
+    "MPW2PLYP" : Functional("MPW", "LYP", DFX=45, HFX=55, DFC=75, MPC=25, functional_class="GGA"),
+    "UMPW2PLYP" : Functional("UMPW", "ULYP", DFX=45, HFX=55, DFC=75, MPC=25, functional_class="GGA"),
 }
 
 

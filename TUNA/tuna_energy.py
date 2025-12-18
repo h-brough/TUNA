@@ -314,7 +314,8 @@ def calculate_two_electron_integrals(n_basis, basis_functions):
 
     ERI_AO = np.zeros((n_basis, n_basis, n_basis, n_basis))  
 
-    ERI_AO = ints.doERIs(n_basis, ERI_AO, basis_functions)
+    ERI_AO = ints.doERIs(n_basis, ERI_AO, basis_functions, use_diatomic_parity=True)
+
     ERI_AO = np.asarray(ERI_AO)
 
     return ERI_AO
@@ -674,67 +675,6 @@ def calculate_D2_energy(atoms, bond_length):
 
 
 
-def calculate_one_electron_energy(method, reference, basis_functions, atoms, n_basis, centre_of_mass, calculation, silent=False):
-
-    """
-
-    Calculates the energy of a one-electron system.
-
-    Args:
-        method (str): Electronic structure method
-        reference (str): Either UHF or RHF
-        atomic_orbitals (array): Atomic orbitals
-        charges (list): Nuclear charges
-        coordinates (array): Atomic coordinates in 3D
-        centre_of_mass (float): Distance from first atom of centre of mass
-        calculation (Calculation): Calculation object
-        silent (bool, optional): Should anything be printed
-
-    Returns:
-        E (float): One-electron energy
-        P (array): One-electron density matrix in AO basis
-        epsilons (array): Energy levels of one-electron system
-        molecular_orbitals (array): Molecular orbitals of one-electron system in AO basis
-        D (array): Dipole integral matrix
-        S (array): Overlap matrix
-        ERI_AO (array): Electron repulsion integrals in AO basis
-        T (array): Kinetic energy matrix in AO basis
-        V_NE (array): Nuclear-electron matrix in AO basis
-
-    """
-
-    if method not in ["HF", "RHF", "UHF", "CIS", "UCIS", "CIS[D]", "UCIS[D]"]: error("A correlated calculation has been requested on a one-electron system!")
-    elif method in ["CIS", "UCIS", "CIS[D]", "UCIS[D]"]: error("An excited state calculation has been requested on a one-electron system!")
-
-    # Calculates one-electron integrals
-    log(" Calculating one-electron integrals...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-    S, T, V_NE, D = calculate_one_electron_integrals(atoms, n_basis, basis_functions, centre_of_mass)
-
-    log("[Done]", calculation, 1, silent=silent)
- 
-    ERI_AO = np.zeros((n_basis, n_basis, n_basis, n_basis))
-    
-    # Calculates Fock transformation matrix from overlap matrix
-    log(" Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent)
-    
-    X, smallest_S_eigenvalue = calculate_Fock_transformation_matrix(S)
-    
-    log("[Done]", calculation, 1, silent=silent)
-
-    check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
-
-    # Builds initial guess, which is the final answer for the one-electron case
-    E, P, P_alpha, P_beta, epsilons, molecular_orbitals = setup_initial_guess(None, None, None, None, reference, T, V_NE, X, 1, 1, 0, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent, S=S)
-
-    return E, P, epsilons, molecular_orbitals, D, S, ERI_AO, T, V_NE
-
-
-
-
-
-
-
 def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, terse=False, silent=False, guess_calculation=False):
  
     log("\n Setting up molecule...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
@@ -932,9 +872,6 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     exchange_energy = SCF_output.exchange_energy
     correlation_energy = SCF_output.correlation_energy
     density = SCF_output.density
-    alpha_density = SCF_output.alpha_density
-    beta_density = SCF_output.beta_density
-
 
     # Packs dipole integrals into SCF output object
     SCF_output.D = D
@@ -969,7 +906,12 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
             log(f"\n Integral of the final density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
 
     # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
-    if "MP" in method or method in DFT_methods and calculation.functional.functional_type == "double-hybrid": 
+    if "MP" in method or calculation.MPC_prop != 0: 
+
+        if method in DFT_methods:
+
+            calculation.same_spin_scaling = calculation.functional.SSS
+            calculation.opposite_spin_scaling = calculation.functional.OSS
 
         E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
         postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "MP2", silent=silent)

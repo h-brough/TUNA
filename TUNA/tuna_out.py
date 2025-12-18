@@ -302,7 +302,7 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
     if P is not None:
 
         # Builds density on grid
-        density = dft.construct_density_on_grid(P, basis_functions_on_grid, clean=False)
+        density = dft.construct_density_on_grid(P, basis_functions_on_grid, clean_density=False)
         
         # Ignores the extremes of density near the nuclei
         density_cut_off = 0.98
