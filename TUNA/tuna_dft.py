@@ -1,22 +1,146 @@
+from tuna_util import log, warning, error, symmetrise
 import numpy as np
-from tuna_util import *
+import sys
 from scipy.integrate import lebedev_rule
 
-# Note we used np.cbrt for cube roots as this makes a large difference to speed. Similarly, cubing via x * x * x instead of x ** 3 seems to be much faster
-# This is onlt true for powers of 2 or 3, abvoe this the ** becomes faster
+
+"""
+
+This is the TUNA module for density functional theory (DFT), written first for version 0.9.0.
+
+The DFT integration grids are constructed by Legendre-Gauss quadrature for the radial parts and Lebedev quadrature for the angular parts, they
+have been optimised to some extent "by hand" but are not expected to be anywhere near as efficient as proper quantum chemistry codes. Exchange and 
+correlation matrices can be calculated for LDA, GGA and meta-GGA functionals, and a variety are implemented. The routines for hybrid and double-hybrid 
+functionals are found in the SCF module, not here.
+
+The module contains:
+
+1. Some small utility functions (calculate_zeta, clean, integrate_on_grid, etc.)
+2. Functions to set up the integration grid (set_up_integration_grid, build_molecular_grid, etc.)
+3. Functions to evaluate the density, gradient, and kinetic energy density on the grid (construct_density_on_grid, etc.)
+4. Functions to evaluate the exchange and correlation matrices (calculate_V_X, calculate_V_C, etc.)
+5. The top level, "parsing" functions for all exchange and correlation functionals implemented
+6. The complicated, horrible, explicit functional expressions for all the exchange and correlation functionals
+7. Some dictionaries for all the implemented exchange and correlation functionals
+
+Note that throughout this module, we use ** (1 / 2) for square rooting, and np.cbrt() for cube rooting - this inconsistency is on purpose, as
+these options seem to be significantly faster and more accurate than their counterparts. We also cube via x * x * x rather than x ** 3 for the same
+reason, although higher powers do not benefit as much. Optimising all of these low level operations makes quite a big difference to the speed; I
+observed about a factor of two increase for DFT functionals generally by optimising the cubing and cube rooting.
+
+"""
+
+
+# These are constants for cleaning grid-based arrays - the sigma floor needs to be the square of the density floor
+DENSITY_FLOOR = 1e-26
+SIGMA_FLOOR = DENSITY_FLOOR ** 2
+
+
+
+def calculate_seitz_radius(density):
+
+    # Calculates the Seitz radius for a given density, cube rooting via numpy is faster and more accurate than in pure Python
+    r_s = np.cbrt(3 / (4 * np.pi * density))
+
+    return r_s
+
+
+
+def calculate_zeta(alpha_density, beta_density):
+
+    # The local spin polarisation, zeta, depends on the alpha and beta densities
+    zeta = (alpha_density - beta_density) / (alpha_density + beta_density)
+
+    return zeta
+
+
+
+def calculate_f_zeta(zeta):
+
+    # This is the spin polarisation function used in eg. VWN5 correlation in interpolation
+    f_zeta = (np.cbrt(1 + zeta) ** 4 + np.cbrt(1 - zeta) ** 4 - 2) / (np.cbrt(2) ** 4 - 2)
+
+    return f_zeta
+
+
+
+def calculate_f_prime_zeta(zeta):
+
+    # This is the derivative of spin polarisation function used in eg. VWN5 correlation in interpolation
+    f_prime_zeta = (np.cbrt(1 + zeta) - np.cbrt(1 - zeta)) / (np.cbrt(2) ** 4 - 2) * 4 / 3
+
+    return f_prime_zeta
+
+
+
+def clean(function_on_grid, floor=DENSITY_FLOOR):
+
+    # Makes sure there are no zero or negative values in the electron density
+        
+    function_on_grid = np.maximum(function_on_grid, floor)
+
+    return function_on_grid
+
+
+
+
+def clean_density_matrix(P, S, n_electrons):
+
+    # Forces the trace of the density matrix to be correct
+
+    P *= n_electrons / np.trace(P @ S) if n_electrons > 0 else 0
+
+    return P
+
+
+
+
+
+def integrate_on_grid(integrand, weights):
+
+    # Uses quadrature to calculate the integral of a function expressed on a grid
+
+    integral = np.sum(integrand * weights)
+
+    return integral
 
 
 
 
 def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess, calculation, silent=False):
 
+    """
+
+    High level function that sets up the integration grid and prints out information about it.
+
+    Args:
+        basis_functions (list): List of basis function objects
+        atoms (list): List of atoms
+        bond_length (float): Bond length of the molecule
+        n_electrons (int): Number of electrons
+        P_guess (array): Density matrix in AO basis for guess
+        calculation (Calculation): Calculation object#
+        silent (bool, optional): Should anything be printed
+    
+    Returns:
+        bfs_on_grid: Basis functions evaluated on grid, shape (n_basis, n_radial, n_angular)
+        weights: Integration weights for grid points, shape (n_radial, n_angular)
+        points: Grid points, shape (3, n_radial, n_angular)
+        bf_gradients_on_grid: Basis function gradients evaluated on grid (3, n_basis, n_radial, n_angular)
+
+    """
+
+
     log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
+    # Reads the integration grid parameters from the requested convergence criteria
     extent_multiplier = calculation.grid_conv["extent_multiplier"]
     integral_accuracy = calculation.grid_conv["integral_accuracy"] if not calculation.integral_accuracy_requested else calculation.integral_accuracy
 
+    # The extent of the grid away from the nucleus is given by this function, which is homemade. It can be directly modified via the extent_multiplier.
     extent = extent_multiplier * np.max([atoms[i].real_vdw_radius for i in range(len(atoms))]) / 6
 
+    # Uses the integral accuracy to map to a particular Lebedev order
     n = int(integral_accuracy * 9)
 
     LEBEDEV_ORDERS = np.array([3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 35, 41, 47, 53, 59, 65, 71, 77, 83, 89, 95, 101, 107, 113, 119, 125, 131])
@@ -24,13 +148,15 @@ def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_
     idx = np.abs(LEBEDEV_ORDERS - n).argmin()
     Lebedev_order = int(LEBEDEV_ORDERS[idx])
 
+    # Uses the integral accuracy to map to a number of radial points, scaled by extent of the grid to keep the density the same for larger atoms
     n_radial = int(extent * integral_accuracy)
 
-
+    # Builds the molecular grid - the atomic grids are the same for both atoms even if heteroatomic
     points, weights = build_molecular_grid(extent, n_radial, Lebedev_order, bond_length, atoms)
 
     log("[Done]", calculation, 1, silent=silent)
 
+    # Calculates the total number of grid points, and the number per atom
     total_points = points.shape[1] * points.shape[2]
     points_per_atom = total_points // len(atoms)
 
@@ -39,22 +165,23 @@ def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_
 
     log("\n Building guess density on grid...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-
+    # Calculates the basis functions expressed on the integration grid
     bfs_on_grid = construct_basis_functions_on_grid(basis_functions, points)
-
+    
+    # If a (meta-)GGA calculation has been requested, determines the basis functions expressed on the integration grid
     bf_gradients_on_grid = construct_basis_function_gradients_on_grid(basis_functions, points) if calculation.functional.functional_class in ["GGA", "meta-GGA"] else None
 
-
+    # Constructs the electron density, using the guess density matrix, on the grid
     density = construct_density_on_grid(P_guess, bfs_on_grid)
 
     log("[Done]", calculation, 1, silent=silent)
 
+    # Integrates the grid to get the number of electrons
     n_electrons_DFT = integrate_on_grid(density, weights)
 
     log(f"\n Integral of the guess density: {n_electrons_DFT:13.10f}\n", calculation, 1, silent=silent)
 
-
-
+    # Prints a warning of the density integral is a bit dodgy, and throws and error if its totally wrong
     if np.abs(n_electrons_DFT - n_electrons) > 0.00001:
 
         warning(" Integral of density is far from the number of electrons! Be careful with your results.")
@@ -64,15 +191,34 @@ def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_
             error("Integral for the density is completely wrong!")
     
 
-
     return bfs_on_grid, weights, points, bf_gradients_on_grid
 
 
 
 
 
-def build_radial_and_angular_grid(radial_grid_cutoff, n_radial, lebedev_order, radial_power=3):
 
+
+
+
+def build_atomic_radial_and_angular_grid(radial_grid_cutoff, n_radial, lebedev_order, radial_power=3):
+
+    """
+
+    Sets up the radial and angular integration grid for an atom. The default radial power of 3 seems to work
+    better than either 2 or 4 on average, but hasn't seriously been optimised.
+
+    Args:
+        radial_grid_cutoff (float): Extent of radial grid
+        n_radial (int): Number of radial grid points
+        lebedev_order (int): Order of Lebedev quadrature
+        radial_power (float, optional): Tightness near nucleus of radial grid (higher -> tighter)
+
+    Returns:
+        atomic_points (array): Grid points for atom, shape (N_radial, N_angular)
+        atomic_weights (array): Integration weights for each grid point, shape (N_radial, N_angular)
+
+    """
 
     # This gives quadrature between -1 and 1
     t_nodes, t_weights = np.polynomial.legendre.leggauss(n_radial)
@@ -88,15 +234,12 @@ def build_radial_and_angular_grid(radial_grid_cutoff, n_radial, lebedev_order, r
     
     # Uses Lebedev quadrature to get the directions and weights
     unit_sphere_directions, weights_angular = lebedev_rule(lebedev_order)
-    x_sph, y_sph, z_sph = unit_sphere_directions    
 
     # Builds the Cartesian grid out of the radial and angular grids
-    R = r[:, None]               
+    atomic_points = np.einsum("m,in->imn", r, unit_sphere_directions, optimize=True)
 
-    atomic_points = np.stack((R * x_sph[None, :], R * y_sph[None, :], R * z_sph[None, :]), axis=0)
-    
     # Radial weights scaled by R^2 to account for surface of sphere getting larger away from nucleus
-    atomic_weights = weights_radial[:, None] * (R ** 2) * weights_angular[None, :]
+    atomic_weights = np.einsum("m,m,n->mn", weights_radial, r ** 2, weights_angular, optimize=True)
 
     return atomic_points, atomic_weights
 
@@ -106,27 +249,51 @@ def build_radial_and_angular_grid(radial_grid_cutoff, n_radial, lebedev_order, r
 
 
 
+
+
 def calculate_Becke_diatomic_weights(X, Y, Z, bond_length, atoms, steepness=4):
 
+    """
+
+    Calculates the relative weights for each atom in the diatomic, using Becke's method. The default steepness of 4
+    is higher than Becke's recommended value of 3, but seems to perform better for diatomic molecules (although this has
+    not been tested thoroughly).
+
+    Args:
+        X (array): Cartesian grid for x axis
+        Y (array): Cartesian grid for y axis
+        Z (array): Cartesian grid for z axis
+        bond_length (float): Bond length of molecule
+        atoms (list): List of atoms
+        steepness (int, optional): How many times should "steepening" function be applied
+
+    Returns:
+        weights_A (array): Weights for first atom in diatomic
+        weights_B (array): Weights for second atom in diatomic
+    
+    """
+
     # Distance to the atomic centres for each point on the Cartesian grid
-    R_A = (X ** 2 + Y ** 2 + Z ** 2) ** (1 / 2)
-    R_B = (X ** 2 + Y ** 2 + (Z - bond_length) ** 2) ** (1 / 2)
+    R_A = (X * X + Y * Y + Z * Z) ** (1 / 2)
+    R_B = (X * X + Y * Y + (Z - bond_length) * (Z - bond_length)) ** (1 / 2)
 
     # This is -1 on atom A, 1 on atom B and 0 in the centre. It is an elliptical coordinate
     s = (R_A - R_B) / bond_length
 
+    # The values of Van der Waals radius are taken as a proxy for atomic size, chi is the ratio between sizes
     chi = atoms[0].real_vdw_radius / atoms[1].real_vdw_radius
 
+    # These equations are straight from Becke's paper on integration weights for heteroatomic systems
     u = (chi - 1) / (chi + 1)
-    a = u / (u ** 2 - 1)
-    s = s + a * (1 - s ** 2)
+    a = u / (u * u - 1)
+    s = s + a * (1 - s * s)
 
-    # The more p(x) is applied, the steeper the transition becomes and the more highly weighted points around the nuclei
+    # The more this function is applied, the steeper the transition becomes and the more highly weighted points around the nuclei
     for i in range(steepness):
 
-        s = (3 * s - s ** 3) / 2 
+        s = (3 * s - s * s * s) / 2 
  
-    # These weights are 1 on atom A, 0 on atom B and 0.5 when elliptical coordinate is zero. Vice versa for B.
+    # These weights are 1 on atom A, 0 on atom B and 0.5 when the elliptical coordinate is zero. Vice versa for B.
     weights_A = (1 - s) / 2
     weights_B = (1 + s) / 2
 
@@ -138,11 +305,32 @@ def calculate_Becke_diatomic_weights(X, Y, Z, bond_length, atoms, steepness=4):
 
 
 
-def build_molecular_grid(radial_grid_cutoff, n_radial, Lebedev_order, bond_length, atoms):
+
+
+def build_molecular_grid(radial_grid_cutoff, n_radial, lebedev_order, bond_length, atoms):
+
+    """
+
+    Sets up the molecular grid for a diatomic molecule.
+
+    Args:
+
+        radial_grid_cutoff (float): Extent of radial grid
+        n_radial (int): Number of radial grid points
+        lebedev_order (int): Order of Lebedev quadrature
+        bond_length (float): Bond length of diatomic
+        atoms (list): List of atoms
+
+    Returns:
+        points (array): Molecular grid points
+        weights (array): Weights for molecular grid points
+
+    """
 
     # Builds the radial and angular grid for the first atom
-    points_A, atomic_weights_A = build_radial_and_angular_grid(radial_grid_cutoff, n_radial, Lebedev_order)
+    points_A, atomic_weights_A = build_atomic_radial_and_angular_grid(radial_grid_cutoff, n_radial, lebedev_order)
 
+    # Extracts grid points into Cartesian components
     X_A, Y_A, Z_A = points_A
 
     # If its just an atomic calculation, return this grid
@@ -150,7 +338,7 @@ def build_molecular_grid(radial_grid_cutoff, n_radial, Lebedev_order, bond_lengt
 
         return points_A, atomic_weights_A
     
-    # For a diatomic, the grid will be the same, but the Z grid shifted by the bond length
+    # For a diatomic, the grid will be the same (we don't optimize atomic grids for atomic species)
     X_B, Y_B, Z_B = X_A, Y_A, Z_A + bond_length
     atomic_weights_B = atomic_weights_A
 
@@ -164,11 +352,11 @@ def build_molecular_grid(radial_grid_cutoff, n_radial, Lebedev_order, bond_lengt
     # Uses Becke atomic partitioning to get weights for each atom
     diatomic_weights_A, diatomic_weights_B = calculate_Becke_diatomic_weights(X, Y, Z, bond_length, atoms)
 
-    N = X_A.shape[0]
+    n_points_atom_A = X_A.shape[0]
 
-    # Combines the atomic weights with the molecular weights
-    weights_combined_A = atomic_weights_A * diatomic_weights_A[:N]
-    weights_combined_B = atomic_weights_B * diatomic_weights_B[N:]
+    # Combines the atomic weights with the molecular weights - both are between 0 and 1, so the combined weights are too
+    weights_combined_A = atomic_weights_A * diatomic_weights_A[:n_points_atom_A]
+    weights_combined_B = atomic_weights_B * diatomic_weights_B[n_points_atom_A:]
 
     # Forms total molecular weights array
     weights = np.concatenate([weights_combined_A, weights_combined_B], axis=0)
@@ -183,93 +371,164 @@ def build_molecular_grid(radial_grid_cutoff, n_radial, Lebedev_order, bond_lengt
 
 def construct_basis_functions_on_grid(basis_functions, points):
     
-    # This is for two-dimensional output plots
-    if len(points) == 2: 
-            
-        X, Z = points
+    """
+    
+    Expresses the basis functions on the integration grid.
 
-        Y = np.full_like(X, 0)
+    Args:
+        basis_functions (list): List of basis function objects
+        points (array): Integration grid points
+    
+    Returns:
+        bfs_on_grid (array): Basis functions expressed on integration grid, shape (basis_size, radial_points, angular_points)
+    
+    """
 
-    # This is for three-dimensional DFT grids
-    else:
+    # For DFT, points is three-dimensional but for plotting, it is two-dimensional (X, Z)
+    X, Y, Z = points if len(points) == 3 else (points[0], np.full_like(points[0], 0), points[1])
 
-        X, Y, Z = points
-
-
+    # These are the number of radial and angular points respectively for DFT, or number of Cartesian X and Z points for outputs
     _, N, M = points.shape
 
-    basis_functions_on_grid = np.zeros((len(basis_functions), N, M))
+    # Initialises the array for basis functions on a grid
+    bfs_on_grid = np.zeros((len(basis_functions), N, M))
 
 
     for i, bf in enumerate(basis_functions):
 
+        # Defines the X, Y and Z coordinates with respect to the origin of the basis function
         X_relative = X - bf.origin[0]
         Y_relative = Y - bf.origin[1]
         Z_relative = Z - bf.origin[2]
 
+        # These are the angular momentum exponents
         l, m, n = bf.shell
-        r_squared = X_relative ** 2 + Y_relative ** 2 + Z_relative ** 2
 
-        primitives = bf.norm[:, None, None] * (X_relative ** l) * (Y_relative ** m) * (Z_relative ** n) * np.exp(-bf.exps[:, None, None] * r_squared)
+        # The shared distance squared from the basis function origin
+        r_squared = X_relative * X_relative + Y_relative * Y_relative + Z_relative * Z_relative
 
-        basis_functions_on_grid[i] = np.einsum("ijk,i->jk", primitives, bf.coefs, optimize=True)
+        # The shared exponent term for the primitive Gaussians
+        exponent_term = np.exp(-1 * np.einsum("i,jk->ijk", bf.exps, r_squared, optimize=True))
+
+        # Basis functions are a product of the coefficient, norm, angular part and radial exponent part
+        bfs_on_grid[i] = np.einsum("i,i,jk,jk,jk,ijk->jk", bf.coefs, bf.norm, X_relative ** l, Y_relative ** m, Z_relative ** n, exponent_term, optimize=True)
 
 
-    return basis_functions_on_grid
+    return bfs_on_grid
+
+
+
+
+
 
 
 
 
 
 def construct_basis_function_gradients_on_grid(basis_functions, points):
+    
+    """
+    
+    Expresses the analytic gradients of the basis functions on the integration grid.
 
-    if len(points) == 2:
+    Args:
+        basis_functions (list): List of basis function objects
+        points (array): Integration grid points
+    
+    Returns:
+        bf_gradients_on_grid (array): Basis function gradients on integration grid, shape (3, basis_size, radial_points, angular_points)
+    
+    """
 
-        X, Z = points
-        Y = np.full_like(X, 0)
+    # For DFT, points is three-dimensional but for plotting, it is two-dimensional (X, Z)
+    X, Y, Z = points if len(points) == 3 else (points[0], np.full_like(points[0], 0), points[1])
 
-    else:
-
-        X, Y, Z = points
-
+    # These are the number of radial and angular points respectively for DFT, or number of Cartesian X and Z points for outputs
     _, N, M = points.shape
 
     n_basis = len(basis_functions)
 
-    dphi_dx = np.zeros((n_basis, N, M))
-    dphi_dy = np.zeros((n_basis, N, M))
-    dphi_dz = np.zeros((n_basis, N, M))
+    # Initialises basis function gradient arrays
+    bf_gradients_on_grid = np.zeros((n_basis, 3, N, M))
 
     for i, bf in enumerate(basis_functions):
 
+        # Defines the X, Y and Z coordinates with respect to the origin of the basis function
         X_relative = X - bf.origin[0]
         Y_relative = Y - bf.origin[1]
         Z_relative = Z - bf.origin[2]
 
+        # These are the angular momentum exponents
         l, m, n = bf.shell
-        r_squared = X_relative ** 2 + Y_relative ** 2 + Z_relative ** 2
 
-        poly_x = X_relative ** l if l > 0 else np.ones_like(X_relative)
-        poly_y = Y_relative ** m if m > 0 else np.ones_like(Y_relative)
-        poly_z = Z_relative ** n if n > 0 else np.ones_like(Z_relative)
+        # The shared distance squared from the basis function origin
+        r_squared = X_relative * X_relative + Y_relative * Y_relative + Z_relative * Z_relative
+
+        # The shared exponent term for the primitive Gaussians
+        exponent_term = np.exp(-1 * np.einsum("i,jk->ijk", bf.exps, r_squared, optimize=True))
+
+        poly_x = X_relative ** l 
+        poly_y = Y_relative ** m 
+        poly_z = Z_relative ** n
 
         P_poly = poly_x * poly_y * poly_z    
 
-        common = bf.norm[:, None, None] * np.exp(-bf.exps[:, None, None] * r_squared)
-
+        # Derivative polynomials for x, y and z
         dP_dx_poly = l * (X_relative ** (l - 1)) * poly_y * poly_z if l > 0 else np.zeros_like(P_poly)
         dP_dy_poly = m * poly_x * (Y_relative ** (m - 1)) * poly_z if m > 0 else np.zeros_like(P_poly)
         dP_dz_poly = n * poly_x * poly_y * (Z_relative ** (n - 1)) if n > 0 else np.zeros_like(P_poly)
 
-        dphi_dx_primitives = common * (dP_dx_poly - 2 * bf.exps[:, None, None] * X_relative * P_poly)
-        dphi_dy_primitives = common * (dP_dy_poly - 2 * bf.exps[:, None, None] * Y_relative * P_poly)
-        dphi_dz_primitives = common * (dP_dz_poly - 2 * bf.exps[:, None, None] * Z_relative * P_poly)
+        # Primitives for the x, y and z derivatives
+        primitives_dx = exponent_term * (dP_dx_poly - 2 * bf.exps[:, None, None] * X_relative * P_poly)
+        primitives_dy = exponent_term * (dP_dy_poly - 2 * bf.exps[:, None, None] * Y_relative * P_poly)
+        primitives_dz = exponent_term * (dP_dz_poly - 2 * bf.exps[:, None, None] * Z_relative * P_poly)
 
-        dphi_dx[i] = np.einsum("ijk,i->jk", dphi_dx_primitives, bf.coefs, optimize=True)
-        dphi_dy[i] = np.einsum("ijk,i->jk", dphi_dy_primitives, bf.coefs, optimize=True)
-        dphi_dz[i] = np.einsum("ijk,i->jk", dphi_dz_primitives, bf.coefs, optimize=True)
+        # Package the three gradient components together for final contraction
+        primitives = np.array([primitives_dx, primitives_dy, primitives_dz])
 
-    return dphi_dx, dphi_dy, dphi_dz
+        # Builds gradients on grid via primitives, norms and coefficients
+        bf_gradients_on_grid[i] = np.einsum("i,i,aijk->ajk", bf.coefs, bf.norm, primitives, optimize=True)
+
+    # Shuffles and unpacks the gradients into Cartesian components
+    bf_gradients_on_grid = bf_gradients_on_grid.swapaxes(0, 1)
+
+    return bf_gradients_on_grid
+
+
+
+
+
+
+
+
+
+def construct_density_on_grid(P, bfs_on_grid, clean_density=True):
+    
+    """
+    
+    Constructs the electron density on the grid using the atomic orbitals, then cleans it up.
+
+    Args:
+        P (array): Density matrix in AO basis
+        bfs_on_grid (array): Basis functions on integration grid
+        clean_density (bool, optional): Should the density be cleaned
+    
+    Returns:
+        density (array): Electron density on molecular grid
+    
+    """
+
+    # Conventional expression for the electron density in terms of basis functions - using P encodes that only occupied orbitals are summed
+    density = np.einsum("ij,ikl,jkl->kl", P, bfs_on_grid, bfs_on_grid, optimize=True)
+
+    # This is on by default to get rid of very small, zero and negative values that break functionals
+    if clean_density:
+        
+        density = clean(density)
+
+
+    return density
+
 
 
 
@@ -279,11 +538,29 @@ def construct_basis_function_gradients_on_grid(basis_functions, points):
 
 def calculate_density_gradient(P, bfs_on_grid, bf_gradients_on_grid):
 
+    """
+
+    Calculates the density gradient, and its square, on the integration grid.
+
+    Args:
+        P (array): Density matrix in AO basis
+        bfs_on_grid (array): Basis functions evaluated on grid
+        bf_gradients_on_grid (array): Basis function gradients evaluated on grid
+    
+    Returns:
+        sigma (array): Square density gradient, shape (n_radial, n_angular)
+        density_gradient (array): Gradient of density on grid, shape (3, n_radial, n_angular)
+
+    """
+
+    # Constructs the density gradient on a grid analytically - the factor of two is due to the symmetry of the density matrix
     density_gradient = 2 * np.einsum("ij,ikl,ajkl->akl", P, bfs_on_grid, bf_gradients_on_grid, optimize=True)
 
+    # Builds the square density gradient, used in GGA functionals
     sigma = np.einsum("akl->kl", density_gradient ** 2, optimize=True)
 
     # It is important that this is cleaned at the square of the floor that the density and kinetic energy density are cleaned
+    # Quantities that rely on ratios between the density and its gradient will break if they're cleaned equally
     sigma = clean(sigma, 1e-52)
 
     return sigma, density_gradient
@@ -293,88 +570,33 @@ def calculate_density_gradient(P, bfs_on_grid, bf_gradients_on_grid):
 
 
 
+
+
 def calculate_kinetic_energy_density(P, bf_gradients_on_grid):
 
-    tau = (1 / 2) * np.einsum("ij,aikl,ajkl->kl", P, bf_gradients_on_grid, bf_gradients_on_grid, optimize=True)
+    """
 
+    Calculates the density gradient, and its square, on the integration grid.
+
+    Args:
+        P (array): Density matrix in AO basis
+        bf_gradients_on_grid (array): Basis function gradients evaluated on grid
+    
+    Returns:
+        tau (array): Non-interacting kinetic energy density, shape (n_radial, n_angular)
+
+    """
+
+    # Conventional expression, with factor of a half, for non-interacting kinetic energy density used in meta-GGA functionals
+    tau = (1 / 2) * np.einsum("ij,aikl,ajkl->kl", P, bf_gradients_on_grid, bf_gradients_on_grid, optimize=True)
+    
+    # This needs to be cleaned with the same floor as the density, higher than sigma
     tau = clean(tau)
 
     return tau
 
 
 
-
-def integrate_on_grid(integrand, weights):
-
-    """
-    
-    Uses quadrature to integrate something on a grid.
-
-    Args:
-        integrand (array): Integrand expressed on a grid
-        weights (array): Weights for quadrature
-
-    Returns:
-        integral (float): Value of summed quadrature expression
-    
-    """
-
-    integral = np.sum(integrand * weights)
-
-    return integral
-
-
-
-
-
-
-def construct_density_on_grid(P, atomic_orbitals, clean_density=True):
-    
-    """
-    
-    Constructs the electron density on the grid using the atomic orbitals, then cleans it up.
-
-    Args:
-        P (array): One-particle reduced density matrix
-        atomic_orbitals (array): Atomic orbitals on molecular grid
-    
-    Returns:
-        density (array): Electron density on molecular grid
-    
-    """
-
-
-    density = np.einsum("ij,ikl,jkl->kl", P, atomic_orbitals, atomic_orbitals, optimize=True)
-
-    if clean_density:
-        
-        density = clean(density)
-
-    return density
-
-
-
-
-
-def clean(function_on_grid, floor=1e-26):
-
-    # Makes sure there are no zero or negative values in the electron density. 
-    # Increasing the minimum messes up the B88 energy at the 6th decimal place
-    
-    function_on_grid = np.maximum(function_on_grid, floor)
-
-    return function_on_grid
-
-
-
-
-def clean_density_matrix(P, S, n_electrons):
-
-    # Forces the trace of the density matrix to be correct
-
-    P *= n_electrons / np.trace(P @ S) if n_electrons > 0 else 0
-
-    return P
 
 
 
@@ -406,7 +628,6 @@ def calculate_V_X(weights, bfs_on_grid, df_dn, df_ds, df_dt, bf_gradients_on_gri
     if df_ds is not None:
 
         # Contribution to exchange matrix from GGA part of functional
-
         V_X += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
 
     if df_dt is not None:
@@ -419,6 +640,8 @@ def calculate_V_X(weights, bfs_on_grid, df_dn, df_ds, df_dt, bf_gradients_on_gri
     V_X = symmetrise(V_X)
 
     return V_X
+
+
 
 
 
@@ -477,158 +700,6 @@ def calculate_V_C(weights, bfs_on_grid, df_dn, df_ds, df_dt, bf_gradients_on_gri
 
 
 
-
-def calculate_seitz_radius(density):
-
-    r_s = np.cbrt(3 / (4 * np.pi * density))
-
-    return r_s
-
-
-
-def calculate_zeta(alpha_density, beta_density):
-
-    zeta = (alpha_density - beta_density) / (alpha_density + beta_density)
-
-    return zeta
-
-
-def calculate_f_zeta(zeta):
-
-    f_zeta = (np.cbrt(1 + zeta) ** 4 + np.cbrt(1 - zeta) ** 4 - 2) / (np.cbrt(2) ** 4 - 2)
-
-    return f_zeta
-
-
-
-def calculate_f_prime_zeta(zeta):
-
-    f_prime_zeta = (np.cbrt(1 + zeta) - np.cbrt(1 - zeta)) / (np.cbrt(2) ** 4 - 2) * 4 / 3
-
-    return f_prime_zeta
-
-
-
-
-
-
-def calculate_Slater_potential(density, calculation):
-
-    alpha = calculation.X_alpha
-
-    v_X = - (3 / 2 * alpha) * np.cbrt(3 / np.pi * density)
-
-    e_X = 3 / 4 * v_X
-
-    return v_X, e_X
-
-
-
-
-def calculate_PW_potential(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, P):
-
-    r_s = calculate_seitz_radius(density)
-
-    Q_0 = -2 * A * (1 + alpha_1 * r_s)
-    Q_1 = 2 * A * (beta_1 * r_s ** (1 / 2) + beta_2 * r_s + beta_3 * r_s ** (3 / 2) + beta_4 * r_s ** (P + 1))
-    Q_1_prime = A * (beta_1 * r_s ** (-1 / 2) + 2 * beta_2 + 3 * beta_3 * r_s ** (1 / 2) + 2 * (P + 1) * beta_4 * r_s ** P)
-
-    log_term = np.log(1 + 1 / Q_1)
-
-    e_C = Q_0 * log_term
-
-    de_dr = -2 * A * alpha_1 * log_term - Q_0 * Q_1_prime / (Q_1 ** 2 + Q_1)
-
-    v_C = e_C - r_s / 3 * de_dr
-
-    return v_C, e_C, de_dr
-
-
-
-
-
-
-
-def calculate_VWN_potential(density, x_0, b, c, A):
-
-    Q = (4 * c - b ** 2) ** (1 / 2)
-    X_0 = x_0 ** 2 + b * x_0 + c
-    c_1 = -b * x_0 / X_0
-    c_2 = 2 * b * (c - x_0 ** 2) / (Q * X_0)
-
-    r_s = calculate_seitz_radius(density)
-    x = r_s ** (1 / 2)
-
-    X = r_s + b * x + c
-
-    log_term_1 = np.log(r_s / X) 
-    log_term_2 = np.log((x - x_0) ** 2 / X)
-    atan_term = np.arctan(Q / (2 * x + b))
-
-    combo = (2 / x + 2 * c_1 / (x - x_0) - (2 * x + b) * (1 + c_1) / X - (1 / 2) * c_2 * Q / X)
-
-    e_C = A * (log_term_1 + c_1 * log_term_2 + c_2 * atan_term)
-
-    de_dr = (A / 2) * combo / x
-
-    v_C = e_C - r_s / 3 * de_dr
-
-    return v_C, e_C, de_dr
-
-
-
-
-
-def calculate_VWN3_spin_interpolation(alpha_density, beta_density, density, e_C_0, de0_dr, e_C_1, de1_dr):
-
-    zeta = calculate_zeta(alpha_density, beta_density)
-
-    f_zeta = calculate_f_zeta(zeta)
-    f_prime_zeta = calculate_f_prime_zeta(zeta)
-
-    e_C = e_C_0 + (e_C_1 - e_C_0) * f_zeta
-
-    r_s = calculate_seitz_radius(density)
-
-    de_dr = de0_dr + (de1_dr - de0_dr) * f_zeta
-
-    de_dzeta = (e_C_1 - e_C_0) * f_prime_zeta
-
-    v_C_alpha = e_C - r_s / 3 * de_dr - (zeta - 1) * de_dzeta
-    v_C_beta = e_C - r_s / 3 * de_dr - (zeta + 1) * de_dzeta
-
-
-    return v_C_alpha, v_C_beta, e_C
-
-
-
-
-
-def calculate_VWN5_spin_interpolation(alpha_density, beta_density, density, minus_alpha, dalpha_dr, e_C_0, de0_dr, e_C_1, de1_dr):
-
-    zeta = calculate_zeta(alpha_density, beta_density)
-
-    alpha = -1 * minus_alpha
-
-    zeta_4 = zeta ** 4
-    f_zeta = calculate_f_zeta(zeta)
-    f_prime_zeta = calculate_f_prime_zeta(zeta)
-    f_prime_prime_at_zero = 8 / (9 * (np.cbrt(2) ** 4 - 2))
-
-    e_C = e_C_0 + alpha * f_zeta / f_prime_prime_at_zero * (1 - zeta_4) + (e_C_1 - e_C_0) * f_zeta * zeta_4
-    
-    r_s = calculate_seitz_radius(density)
-
-    de_dr = de0_dr * (1 - f_zeta * zeta_4) + de1_dr * f_zeta * zeta_4 + dalpha_dr * f_zeta * (1 - zeta_4) / f_prime_prime_at_zero
-
-    de_dzeta = 4 * zeta ** 3 * f_zeta * (e_C_1 - e_C_0 - alpha / f_prime_prime_at_zero) + f_prime_zeta * (zeta_4 * (e_C_1 - e_C_0) + (1 - zeta_4) * alpha / f_prime_prime_at_zero)
-
-
-    v_C_alpha = e_C - r_s / 3 * de_dr - (zeta - 1) * de_dzeta 
-    v_C_beta = e_C - r_s / 3 * de_dr - (zeta + 1) * de_dzeta 
-
-
-    return v_C_alpha, v_C_beta, e_C
 
 
 
@@ -728,6 +799,8 @@ def calculate_unrestricted_B3_exchange_potential(density, calculation, sigma, ta
     e_X = 0.9 * e_X_B88 + 0.1 * e_X_LDA 
     
     return df_dn, df_ds, None, e_X
+
+
 
 
 
@@ -907,6 +980,127 @@ def calculate_unrestricted_3LYP_correlation_potential(alpha_density, beta_densit
 
 
     return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, e_C
+
+
+
+def calculate_Slater_potential(density, calculation):
+
+    alpha = calculation.X_alpha
+
+    v_X = - (3 / 2 * alpha) * np.cbrt(3 / np.pi * density)
+
+    e_X = 3 / 4 * v_X
+
+    return v_X, e_X
+
+
+
+
+def calculate_PW_potential(density, A, alpha_1, beta_1, beta_2, beta_3, beta_4, P):
+
+    r_s = calculate_seitz_radius(density)
+
+    Q_0 = -2 * A * (1 + alpha_1 * r_s)
+    Q_1 = 2 * A * (beta_1 * r_s ** (1 / 2) + beta_2 * r_s + beta_3 * r_s ** (3 / 2) + beta_4 * r_s ** (P + 1))
+    Q_1_prime = A * (beta_1 * r_s ** (-1 / 2) + 2 * beta_2 + 3 * beta_3 * r_s ** (1 / 2) + 2 * (P + 1) * beta_4 * r_s ** P)
+
+    log_term = np.log(1 + 1 / Q_1)
+
+    e_C = Q_0 * log_term
+
+    de_dr = -2 * A * alpha_1 * log_term - Q_0 * Q_1_prime / (Q_1 ** 2 + Q_1)
+
+    v_C = e_C - r_s / 3 * de_dr
+
+    return v_C, e_C, de_dr
+
+
+
+
+
+
+
+def calculate_VWN_potential(density, x_0, b, c, A):
+
+    Q = (4 * c - b ** 2) ** (1 / 2)
+    X_0 = x_0 ** 2 + b * x_0 + c
+    c_1 = -b * x_0 / X_0
+    c_2 = 2 * b * (c - x_0 ** 2) / (Q * X_0)
+
+    r_s = calculate_seitz_radius(density)
+    x = r_s ** (1 / 2)
+
+    X = r_s + b * x + c
+
+    log_term_1 = np.log(r_s / X) 
+    log_term_2 = np.log((x - x_0) ** 2 / X)
+    atan_term = np.arctan(Q / (2 * x + b))
+
+    combo = (2 / x + 2 * c_1 / (x - x_0) - (2 * x + b) * (1 + c_1) / X - (1 / 2) * c_2 * Q / X)
+
+    e_C = A * (log_term_1 + c_1 * log_term_2 + c_2 * atan_term)
+
+    de_dr = (A / 2) * combo / x
+
+    v_C = e_C - r_s / 3 * de_dr
+
+    return v_C, e_C, de_dr
+
+
+
+
+
+def calculate_VWN3_spin_interpolation(alpha_density, beta_density, density, e_C_0, de0_dr, e_C_1, de1_dr):
+
+    zeta = calculate_zeta(alpha_density, beta_density)
+
+    f_zeta = calculate_f_zeta(zeta)
+    f_prime_zeta = calculate_f_prime_zeta(zeta)
+
+    e_C = e_C_0 + (e_C_1 - e_C_0) * f_zeta
+
+    r_s = calculate_seitz_radius(density)
+
+    de_dr = de0_dr + (de1_dr - de0_dr) * f_zeta
+
+    de_dzeta = (e_C_1 - e_C_0) * f_prime_zeta
+
+    v_C_alpha = e_C - r_s / 3 * de_dr - (zeta - 1) * de_dzeta
+    v_C_beta = e_C - r_s / 3 * de_dr - (zeta + 1) * de_dzeta
+
+
+    return v_C_alpha, v_C_beta, e_C
+
+
+
+
+
+def calculate_VWN5_spin_interpolation(alpha_density, beta_density, density, minus_alpha, dalpha_dr, e_C_0, de0_dr, e_C_1, de1_dr):
+
+    zeta = calculate_zeta(alpha_density, beta_density)
+
+    alpha = -1 * minus_alpha
+
+    zeta_4 = zeta ** 4
+    f_zeta = calculate_f_zeta(zeta)
+    f_prime_zeta = calculate_f_prime_zeta(zeta)
+    f_prime_prime_at_zero = 8 / (9 * (np.cbrt(2) ** 4 - 2))
+
+    e_C = e_C_0 + alpha * f_zeta / f_prime_prime_at_zero * (1 - zeta_4) + (e_C_1 - e_C_0) * f_zeta * zeta_4
+    
+    r_s = calculate_seitz_radius(density)
+
+    de_dr = de0_dr * (1 - f_zeta * zeta_4) + de1_dr * f_zeta * zeta_4 + dalpha_dr * f_zeta * (1 - zeta_4) / f_prime_prime_at_zero
+
+    de_dzeta = 4 * zeta ** 3 * f_zeta * (e_C_1 - e_C_0 - alpha / f_prime_prime_at_zero) + f_prime_zeta * (zeta_4 * (e_C_1 - e_C_0) + (1 - zeta_4) * alpha / f_prime_prime_at_zero)
+
+
+    v_C_alpha = e_C - r_s / 3 * de_dr - (zeta - 1) * de_dzeta 
+    v_C_beta = e_C - r_s / 3 * de_dr - (zeta + 1) * de_dzeta 
+
+
+    return v_C_alpha, v_C_beta, e_C
+
 
 
 
@@ -1274,49 +1468,6 @@ def calculate_ULYP_correlation_potential(alpha_density, beta_density, density, s
 
 
 
-exchange_functionals = {
-
-    "S": calculate_restricted_Slater_exchange_potential,
-    "US": calculate_unrestricted_Slater_exchange_potential,
-    "PBE": calculate_restricted_PBE_exchange_potential,
-    "UPBE": calculate_unrestricted_PBE_exchange_potential,
-    "B": calculate_restricted_B88_exchange_potential,
-    "UB": calculate_unrestricted_B88_exchange_potential,
-    "B3": calculate_restricted_B3_exchange_potential,
-    "UB3": calculate_unrestricted_B3_exchange_potential,
-    "TPSS": calculate_restricted_TPSS_exchange_potential,
-    "UTPSS": calculate_unrestricted_TPSS_exchange_potential,
-    "PW": calculate_restricted_PW91_exchange_potential,
-    "UPW": calculate_unrestricted_PW91_exchange_potential,
-    "MPW": calculate_restricted_mPW91_exchange_potential,
-    "UMPW": calculate_unrestricted_mPW91_exchange_potential,
-}
-
-
-
-
-correlation_functionals = {
-
-    "VWN3": calculate_restricted_VWN3_correlation_potential,
-    "UVWN3": calculate_unrestricted_VWN3_correlation_potential,
-    "VWN5": calculate_restricted_VWN5_correlation_potential,
-    "UVWN5": calculate_unrestricted_VWN5_correlation_potential,
-    "PW": calculate_restricted_PW_correlation_potential,
-    "UPW": calculate_unrestricted_PW_correlation_potential,
-    "P86": calculate_restricted_P86_correlation_potential,
-    "UP86": calculate_unrestricted_P86_correlation_potential,
-    "PBE": calculate_restricted_PBE_correlation_potential,
-    "UPBE": calculate_unrestricted_PBE_correlation_potential,
-    "LYP": calculate_restricted_LYP_correlation_potential,
-    "ULYP": calculate_unrestricted_LYP_correlation_potential,    
-    "3LYP": calculate_restricted_3LYP_correlation_potential,
-    "U3LYP": calculate_unrestricted_3LYP_correlation_potential,
-    "TPSS": calculate_restricted_TPSS_correlation_potential,
-    "UTPSS": calculate_unrestricted_TPSS_correlation_potential,
-}
-
-
-
 
 def calculate_P86_correlation_potential(density, sigma):
 
@@ -1553,7 +1704,7 @@ def calculate_UTPSS_correlation_potential(alpha_density, beta_density, density, 
     one_plus2  = one_plus * one_plus
     one_minus_z2 = 1 - zeta * zeta
 
-    B = clean(one_minus2 * sigma_aa + one_plus2 * sigma_bb - 2 * one_minus_z2 * sigma_ab, floor=1e-52)
+    B = clean(one_minus2 * sigma_aa + one_plus2 * sigma_bb - 2 * one_minus_z2 * sigma_ab, floor=SIGMA_FLOOR)
     sqrtB = np.sqrt(B)
     inv_sqrtB = 1 / sqrtB
 
@@ -1766,4 +1917,49 @@ def calculate_TPSS_correlation_potential(density, sigma, tau, calculation):
 
 
 
+
+
+
+
+
+exchange_functionals = {
+
+    "S": calculate_restricted_Slater_exchange_potential,
+    "US": calculate_unrestricted_Slater_exchange_potential,
+    "PBE": calculate_restricted_PBE_exchange_potential,
+    "UPBE": calculate_unrestricted_PBE_exchange_potential,
+    "B": calculate_restricted_B88_exchange_potential,
+    "UB": calculate_unrestricted_B88_exchange_potential,
+    "B3": calculate_restricted_B3_exchange_potential,
+    "UB3": calculate_unrestricted_B3_exchange_potential,
+    "TPSS": calculate_restricted_TPSS_exchange_potential,
+    "UTPSS": calculate_unrestricted_TPSS_exchange_potential,
+    "PW": calculate_restricted_PW91_exchange_potential,
+    "UPW": calculate_unrestricted_PW91_exchange_potential,
+    "MPW": calculate_restricted_mPW91_exchange_potential,
+    "UMPW": calculate_unrestricted_mPW91_exchange_potential,
+}
+
+
+
+
+correlation_functionals = {
+
+    "VWN3": calculate_restricted_VWN3_correlation_potential,
+    "UVWN3": calculate_unrestricted_VWN3_correlation_potential,
+    "VWN5": calculate_restricted_VWN5_correlation_potential,
+    "UVWN5": calculate_unrestricted_VWN5_correlation_potential,
+    "PW": calculate_restricted_PW_correlation_potential,
+    "UPW": calculate_unrestricted_PW_correlation_potential,
+    "P86": calculate_restricted_P86_correlation_potential,
+    "UP86": calculate_unrestricted_P86_correlation_potential,
+    "PBE": calculate_restricted_PBE_correlation_potential,
+    "UPBE": calculate_unrestricted_PBE_correlation_potential,
+    "LYP": calculate_restricted_LYP_correlation_potential,
+    "ULYP": calculate_unrestricted_LYP_correlation_potential,    
+    "3LYP": calculate_restricted_3LYP_correlation_potential,
+    "U3LYP": calculate_unrestricted_3LYP_correlation_potential,
+    "TPSS": calculate_restricted_TPSS_correlation_potential,
+    "UTPSS": calculate_unrestricted_TPSS_correlation_potential,
+}
 
