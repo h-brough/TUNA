@@ -1,6 +1,22 @@
 import numpy as np
-from tuna_util import *
+from tuna_util import log, error, symmetrise, log_big_spacer, Output, DFT_methods
 import tuna_dft as dft
+
+
+"""
+
+This is the TUNA module for the self-consistent field (SCF) cycle, written first for version 0.1.0 and rewritten for version 0.9.0.
+
+The module contains:
+
+1. Some small utility functions (calculate_exchange_matrix, calculate_Coulomb_matrix, construct_density_matrix, etc.)
+2. Functions to check the convergence of the SCF loop (calculate_SCF_changes, etc.)
+3. Functions to calculate the energy for RHF and UHF references, and the respective Fock matrices (calculate_unrestricted_electronic_energy, etc.)
+4. Functions for convergence acceleration (apply_DIIS, apply_damping)
+5. The restricted and unrestricted SCF iteration functions, and the overall loop (run_self_consistent_field_cycle, etc.)
+
+"""
+
 
 
 def calculate_exchange_matrix(P, ERI_AO):
@@ -26,11 +42,12 @@ def calculate_exchange_matrix(P, ERI_AO):
 
 
 
+
 def calculate_Coulomb_matrix(P, ERI_AO):
 
     """
 
-    Calculates the Hartree classical electron repulsion matrix.
+    Calculates the classical electron repulsion matrix.
 
     Args:
         P (array): Density matrix in AO basis
@@ -49,20 +66,23 @@ def calculate_Coulomb_matrix(P, ERI_AO):
 
 
 
+
+
 def format_output_line(E_total, delta_E, max_DP, RMS_DP, damping_factor, step, commutator, calculation, silent=False):
 
     """
     
     Prints an output line for a self-consistent field step.
 
-    E_total (float): Total molecular energy
-    delta_E (float): Change in energy since last step
-    max_DP (float): Maximum absolute change in the density matrix
-    RMS_DP (float): Root-mean-square change in the density matrix
-    step (int): Iteration of self-consistent field loop
-    commutator (float): Error calculated from [F, PS]
-    calculation (Calculation): Calculation object
-    silent (bool, optional): Should anything be printed
+    Args:
+        E_total (float): Total molecular energy
+        delta_E (float): Change in energy since last step
+        max_DP (float): Maximum absolute change in the density matrix
+        RMS_DP (float): Root-mean-square change in the density matrix
+        step (int): Iteration of self-consistent field loop
+        commutator (float): Error calculated from [F, PS]
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
 
     """
 
@@ -70,6 +90,9 @@ def format_output_line(E_total, delta_E, max_DP, RMS_DP, damping_factor, step, c
     damping_factor = f"{damping_factor:.3f}" if damping_factor != 0 else " ---"
 
     log(f"  {step:3.0f}  {E_total:16.10f}  {delta_E:16.10f} {RMS_DP:16.10f} {max_DP:16.10f} {commutator:16.10f}     {damping_factor}", calculation, 1, silent=silent)   
+
+    return
+
 
 
 
@@ -108,6 +131,7 @@ def construct_density_matrix(molecular_orbitals, n_occ, n_electrons_per_orbital)
 
 
 
+
 def construct_hole_density_matrix(molecular_orbitals, n_occ, n_electrons_per_orbital):
 
     """
@@ -140,6 +164,7 @@ def construct_hole_density_matrix(molecular_orbitals, n_occ, n_electrons_per_orb
 
 
 
+
 def diagonalise_Fock_matrix(F, X):
 
     """
@@ -156,10 +181,11 @@ def diagonalise_Fock_matrix(F, X):
 
     """
 
-    F_orthonormal = X.T @ F @ X
+    # Orthonormalises the Fock matrix - symmetrisation improves convergence
+    F_orthonormal = symmetrise(X.T @ F @ X)
     
+    # Diagonalises the Fock matrix, assuming its Hermitian
     epsilons, eigenvectors = np.linalg.eigh(F_orthonormal)
-
 
     # Transforms molecular orbitals back to non-orthogonal AO basis
     molecular_orbitals = X @ eigenvectors
@@ -171,11 +197,12 @@ def diagonalise_Fock_matrix(F, X):
 
 
 
+
 def calculate_SCF_changes(E, E_old, P, P_old):
 
     """
 
-    Calculates changes to energy and density matrix.
+    Calculates changes to the energy and density matrix.
 
     Args:
         E (float): Energy
@@ -185,8 +212,8 @@ def calculate_SCF_changes(E, E_old, P, P_old):
 
     Returns:
         delta_E (float): Change in energy
-        maxDP (float): Maximum absolute change in the density matrix
-        rmsDP (float): Root-mean-square change in the density matrix
+        max_DP (float): Maximum absolute change in the density matrix
+        RMS_DP (float): Root-mean-square change in the density matrix
 
     """
 
@@ -198,6 +225,7 @@ def calculate_SCF_changes(E, E_old, P, P_old):
     RMS_DP = np.mean(delta_P ** 2) ** (1 / 2)
 
     return delta_E, max_DP, RMS_DP
+
 
 
 
@@ -238,6 +266,8 @@ def check_convergence(SCF_conv, step, delta_E, max_DP, RMS_DP, commutator, calcu
 
 
     return converged   
+
+
 
 
 
@@ -373,6 +403,7 @@ def calculate_unrestricted_electronic_energy(T, V_NE, P_alpha, P_beta, J_alpha, 
     
 
 
+
 def construct_restricted_Fock_matrix(T, V_NE, ERI_AO, P, HFX_prop, V_XC):
 
     """
@@ -407,6 +438,7 @@ def construct_restricted_Fock_matrix(T, V_NE, ERI_AO, P, HFX_prop, V_XC):
     F = symmetrise(F)
 
     return F, J, K
+
 
 
 
@@ -506,8 +538,8 @@ def calculate_restricted_exchange_correlation_matrix(P, bfs_on_grid, bf_gradient
             tau = dft.calculate_kinetic_energy_density(P, bf_gradients_on_grid)
 
     # Calculates derivatives necessary for XC matrix
-    df_dn_X, df_ds_X, df_dt_X, e_X = exchange_functional(density, calculation, sigma, tau) if exchange_functional is not None else (None, None, None)
-    df_dn_C, df_ds_C, df_dt_C, e_C = correlation_functional(density, calculation, sigma, tau) if correlation_functional is not None else (None, None, None)
+    df_dn_X, df_ds_X, df_dt_X, e_X = exchange_functional(density, sigma, tau, calculation) if exchange_functional is not None else (None, None, None, None)
+    df_dn_C, df_ds_C, df_dt_C, e_C = correlation_functional(density, sigma, tau, calculation) if correlation_functional is not None else (None, None, None, None)
     
     # Builds the exchange and correlation matrices
     V_X = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X, df_ds_X, df_dt_X, bf_gradients_on_grid, density_gradient) if df_dn_X is not None else np.zeros_like(P)
@@ -517,6 +549,7 @@ def calculate_restricted_exchange_correlation_matrix(P, bfs_on_grid, bf_gradient
     V_XC = V_X * calculation.DFX_prop + V_C * calculation.DFC_prop
 
     return V_XC, density, e_X, e_C
+
 
 
 
@@ -574,20 +607,28 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha, P_beta, bfs_on_g
             tau_alpha = dft.calculate_kinetic_energy_density(P_alpha, bf_gradients_on_grid)
             tau_beta = dft.calculate_kinetic_energy_density(P_beta, bf_gradients_on_grid)
 
-    # Calculates derivatives necessary for XC matrix
-    df_dn_X_alpha, df_ds_X_alpha, df_dt_X_alpha, e_X_alpha = exchange_functional(alpha_density, calculation, sigma_aa, tau_alpha) if exchange_functional is not None else (None, None, None)
-    df_dn_X_beta, df_ds_X_beta, df_dt_X_beta, e_X_beta = exchange_functional(beta_density, calculation, sigma_bb, tau_beta) if exchange_functional is not None else (None, None, None)
-    
-    df_dn_C_alpha, df_dn_C_beta, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab, df_dt_C_alpha, df_dt_C_beta, e_C = correlation_functional(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation) if correlation_functional is not None else (None, None, None, None, None, None)
 
-    # Builds the alpha and beta exchange matrices
-    V_X_alpha = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_alpha, df_ds_X_alpha, df_dt_X_alpha, bf_gradients_on_grid, density_gradient_alpha) if df_dn_X_alpha is not None else np.zeros_like(P_alpha)
-    V_X_beta = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_beta, df_ds_X_beta, df_dt_X_beta, bf_gradients_on_grid, density_gradient_beta) if df_dn_X_beta is not None else np.zeros_like(P_beta)
+    # Accounts for the spin scaling of the exact exchange functional
+    alpha_density_scaled, beta_density_scaled = alpha_density * 2, beta_density * 2
+    sigma_aa_scaled, sigma_bb_scaled = (sigma_aa * 4, sigma_bb * 4) if sigma_aa is not None else (None, None)
+    tau_alpha_scaled, tau_beta_scaled = (tau_alpha * 2, tau_beta * 2) if tau_alpha is not None else (None, None)
+
+    # Calculates derivatives necessary for XC matrix
+    df_dn_X_alpha, df_ds_X_alpha, df_dt_X_alpha, e_X_alpha = exchange_functional(alpha_density_scaled, sigma_aa_scaled, tau_alpha_scaled, calculation) if exchange_functional is not None else (None, None, None, None)
+    df_dn_X_beta, df_ds_X_beta, df_dt_X_beta, e_X_beta = exchange_functional(beta_density_scaled, sigma_bb_scaled, tau_beta_scaled, calculation) if exchange_functional is not None else (None, None, None, None)
+    
+    df_dn_C_alpha, df_dn_C_beta, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab, df_dt_C_alpha, df_dt_C_beta, e_C = correlation_functional(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation) if correlation_functional is not None else (None, None, None, None, None, None, None, None)
+
+    # This is for the spin scaling for exchange
+    df_ds_X_alpha_scaled, df_ds_X_beta_scaled = (df_ds_X_alpha * 2, df_ds_X_beta * 2) if df_ds_X_alpha is not None else (None, None)
+
+    # Builds the alpha and beta exchange matrices - factor of two accounts for spin scaling
+    V_X_alpha = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_alpha, df_ds_X_alpha_scaled, df_dt_X_alpha, bf_gradients_on_grid, density_gradient_alpha) if df_dn_X_alpha is not None else np.zeros_like(P_alpha)
+    V_X_beta = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_beta, df_ds_X_beta_scaled, df_dt_X_beta, bf_gradients_on_grid, density_gradient_beta) if df_dn_X_beta is not None else np.zeros_like(P_beta)
 
     # Builds the alpha and beta correlation matrices
     V_C_alpha = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_alpha, df_ds_C_aa, df_dt_C_alpha, bf_gradients_on_grid, density_gradient_alpha, density_gradient_other_spin=density_gradient_beta, df_ds_ab=df_ds_C_ab) if df_dn_C_alpha is not None else np.zeros_like(P_alpha)
     V_C_beta = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_beta, df_ds_C_bb, df_dt_C_beta, bf_gradients_on_grid, density_gradient_beta, density_gradient_other_spin=density_gradient_alpha, df_ds_ab=df_ds_C_ab) if df_dn_C_beta is not None else np.zeros_like(P_beta)
-
 
     # Constructs exchange-correlation matrices considering hybrid functionals
     V_XC_alpha = V_X_alpha * calculation.DFX_prop + V_C_alpha * calculation.DFC_prop
@@ -595,6 +636,7 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha, P_beta, bfs_on_g
 
 
     return V_XC_alpha, V_XC_beta, alpha_density, beta_density, density, e_X_alpha, e_X_beta, e_C 
+
 
 
 
@@ -648,14 +690,17 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
 
                 for i in atomic_ranges:
                     
-                    populations_Mulliken[atom] += PS[i,i]
+                    populations_Mulliken[atom] += PS[i, i]
 
-        return np.array(populations_Mulliken)
+        populations_Mulliken = np.array(populations_Mulliken)
+
+        return populations_Mulliken
     
 
-
+    # Only runs if NODAMP is not used
     if calculation.damping:
-
+        
+        # Runs if a damping value is specified
         if calculation.damping_factor != None: 
 
             try:
@@ -663,9 +708,7 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
                 # Tries to convert damping factor to a float
                 damping_factor = float(calculation.damping_factor)
 
-            except ValueError:
-
-                pass
+            except ValueError: pass
 
         else:
 
@@ -679,15 +722,13 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
             
                 denominator = A_n_out - A_n1_out - A_n1_in + A_n2_in
 
-
                 alpha = (A_n_out - A_n1_out) / denominator if denominator.all() != 0 else [0, 0]
 
                 if len(partition_ranges) == 2: damping_factor = (alpha[0] * partition_ranges[0] + alpha[1] * partition_ranges[1]) / (partition_ranges[0] + partition_ranges[1])
                 else: damping_factor = alpha[0] * partition_ranges[0]
 
-                if damping_factor < 0 or damping_factor > 1: 
-                    
-                    damping_factor = 0
+                # Clips the damping factor to be 0 if its negative
+                damping_factor = max(damping_factor, 0)
                 
                 # Damping will never exceed this value
                 damping_factor = damping_factor if damping_factor < calculation.max_damping else calculation.max_damping
@@ -695,7 +736,6 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
 
     # Mixes old density with new, in proportion of damping factor
     P_damped = damping_factor * P_old_damp + (1 - damping_factor) * P_before_damping
-    
 
     return P_damped, damping_factor
         
@@ -708,37 +748,61 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
 
 
 
-
-
-
-
-
-
 def calculate_DIIS_error(F_alpha, F_beta, P_alpha, P_beta, S, X, DIIS_error_vector, Fock_vector, calculation):
+
+    """
     
+    Calculates the root-mean-square commutator, [F, PS] for the Fock matrices, and updates the Fock and error vectors.
+
+    Args:
+        F_alpha (array): Alpha Fock matrix in AO basis
+        F_beta (array): Beta Fock matrix in AO basis
+        P_alpha (array): Alpha density matrix
+        P_beta (array): Beta density matrix
+        S (array): Overlap matrix in AO basis
+        X (array): Fock transformation matrix
+        DIIS_error_vector (array): Error vector for DIIS
+        Fock_vector (array): Fock vector for DIIS
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        commutator (float): Root-mean-square commutator, [F, PS]
+        Fock_vector (array): Updated Fock vector
+        DIIS_error_vector (array): Error vector for DIIS
+        commutator_alpha (float): Root-mean-square commutator, [F_alpha, PS]
+        commutator_beta (float): Root-mean-square commutator, [F_beta, PS]
+
+    """
+
 
     def calculate_commutator(F, P):
 
+        # Calculates the root mean square commutator 
         DIIS_error = F @ P @ S - S @ P @ F
 
+        # Uses Fock transformation matrix to orthogonalise the DIIS error matrix
         orthogonalised_DIIS_error = X.T @ DIIS_error @ X
 
-        commutator = np.mean(orthogonalised_DIIS_error ** 2) ** (1 / 2)
+        # Root-mean-square of the orthogonalised error matrix
+        commutator = np.mean(orthogonalised_DIIS_error * orthogonalised_DIIS_error) ** (1 / 2)
 
         return commutator, orthogonalised_DIIS_error
 
-
+    # Calculates commutator for both spin channels
     commutator_alpha, orthogonalised_DIIS_error_alpha = calculate_commutator(F_alpha, P_alpha)
     commutator_beta, orthogonalised_DIIS_error_beta = calculate_commutator(F_beta, P_beta)
 
+    # Commutator for convergence checking is largest of the two
     commutator = max(commutator_alpha, commutator_beta)
 
+    # Updates DIIS error vector
     e_combined = np.concatenate((orthogonalised_DIIS_error_alpha.flatten(), orthogonalised_DIIS_error_beta.flatten()))
     DIIS_error_vector.append(e_combined)
 
+    # Updates Fock vector
     Fock_vector.append((F_alpha, F_beta))
     
-    # Clears old Fock matrices if Fock vector is too old
+    # Clears old Fock matrices if Fock vector is too long
     if len(Fock_vector) > calculation.max_DIIS_matrices: 
         
         del Fock_vector[0]
@@ -753,11 +817,38 @@ def calculate_DIIS_error(F_alpha, F_beta, P_alpha, P_beta, S, X, DIIS_error_vect
 
 
 
-def apply_DIIS(commutator, step, P, P_alpha, P_beta, Fock_vector, DIIS_error_vector, n_alpha, n_beta, X, n_electrons_per_orbital, calculation, silent=False):
 
+def apply_DIIS(commutator, step, P, P_alpha, P_beta, Fock_vector, DIIS_error_vector, n_alpha, n_beta, X, n_electrons_per_orbital, calculation, silent=False):
+    
+    """
+    
+    Sets up and solves the linear system of equations for DIIS to update the density matrices.
+
+    Args:
+        commutator (float): Root-mean-square [F, PS]
+        P (array): Density matrix in AO basis
+        P_alpha (array): Alpha density matrix in AO basis
+        P_beta (array): Beta density matrix in AO basis
+        Fock_vector (array): Fock vector
+        DIIS_error_vector (array): DIIS error vector
+        n_alpha (int): Number of alpha electrons
+        n_beta (int): Number of beta electrons
+        X (array): Fock transformation matrix
+        n_electrons_per_orbital (int): One for UHF, two for RHF
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        P (array): Updated density matrix in AO basis
+        Fock_vector (array): Updated Fock vector
+        DIIS_error_vector (array): Updated DIIS error vector
+        P_alpha (array): Alpha density matrix in AO basis
+        P_beta (array): Beta density matrix in AO basis
+
+    """
+    
     # Updates density matrix from DIIS extrapolated Fock matrix, applies it if the equations were solved successfully
     if step > 2 and calculation.DIIS and commutator < 0.3: 
-        
 
         n_DIIS = len(DIIS_error_vector)
         
@@ -769,11 +860,11 @@ def apply_DIIS(commutator, step, P, P_alpha, P_beta, Fock_vector, DIIS_error_vec
         B[:n_DIIS, :n_DIIS] = DIIS_errors @ DIIS_errors.T 
         B[:n_DIIS, -1] = -1
         B[-1, :n_DIIS] = -1
-        B[-1, -1] = 0.0
+        B[-1, -1] = 0
 
         # Right-hand side of the linear equations
         rhs = np.zeros(n_DIIS + 1)
-        rhs[-1] = -1.0
+        rhs[-1] = -1
 
         try:
 
@@ -806,13 +897,14 @@ def apply_DIIS(commutator, step, P, P_alpha, P_beta, Fock_vector, DIIS_error_vec
 
             log("\n                                       ~~~~~~ Resetting DIIS ~~~~~~", calculation, end="\n\n",silent=silent)
 
-
         if P_alpha_DIIS is not None and P_beta_DIIS is not None: 
             
-            P_alpha = P_alpha_DIIS
-            P_beta = P_beta_DIIS
+            # If the DIIS equations were solved correctly, update the density matrices
+            P_alpha = symmetrise(P_alpha_DIIS)
+            P_beta = symmetrise(P_beta_DIIS)
 
-            P = (P_alpha + P_beta) / 2
+            # Symmetrises the total density matrix
+            P = symmetrise(P_alpha + P_beta) / 2
     
     return P, Fock_vector, DIIS_error_vector, P_alpha, P_beta
 
@@ -822,7 +914,51 @@ def apply_DIIS(commutator, step, P, P_alpha, P_beta, Fock_vector, DIIS_error_vec
 
 
 
+
 def run_restricted_SCF_cycle(step, E, P, P_old, P_before_damping, DIIS_error_vector, Fock_vector, calculation, molecule, T, V_NE, ERI_AO, S, X, n_doubly_occ, silent, bfs_on_grid, bf_gradients_on_grid, exchange_functional, correlation_functional, weights):
+
+    """
+
+    Performs the calculations for a single iteration of the restricted SCF loop.
+
+    Args:
+        step (int): Cycle step
+        E (float): Electronic energy
+        P (array): Density matrix in AO basis
+        P_old (array): Density matrix from previous step
+        P_before_damping (array): Density matrix before damping is applied
+        DIIS_error_vector (array): Error vector for DIIS
+        Fock_vector (array): Vector of Fock matrices for DIIS
+        calculation (Calculation): Calculation object
+        molecule (Molecule): Molecule object
+        T (array): Kinetic energy matrix in AO basis
+        V_NE (array): Nuclear-electron energy matrix in AO basis
+        ERI_AO (array): Two electron integrals in AO basis
+        S (array): Overlap matrix in AO basis
+        X (array): Fock transformation matrix in AO basis
+        n_doubly_occ (int): Number of doubly occupied orbitals
+        silent (bool): Should anything be printed
+        bfs_on_grid (array): Basis functions evaluated on grid
+        bf_gradients_on_grid (array): Basis function gradients evaluated on grid
+        exchange_functional (function): Exchange functional
+        correlation_functional (function): Correlation functional
+        weights (array): Integration weights
+    
+    Returns:
+        E (float): Updated electronic energy
+        E_old (float): Updated electronic energy from previous iteration
+        P (array): Updated density matrix
+        P_old (array): Updated density matrix from previous iteration
+        commutator (array): DIIS error measure, rms[F, PS]
+        damping_factor (float): Damping factor
+        molecular_orbitals (array): Molecular orbitals
+        epsilons (array): Molecular orbital eigenvalues
+        energy_components (tuple): Components of electronic energy
+        F (array): Fock matrix
+        density (array): Electron density on grid
+
+    """
+
 
     E_old = E
     P_very_old = P_old
@@ -865,6 +1001,62 @@ def run_restricted_SCF_cycle(step, E, P, P_old, P_before_damping, DIIS_error_vec
 
 
 def run_unrestricted_SCF_cycle(step, E, P_alpha, P_old_alpha, P_beta, P_old_beta, P, P_old, P_before_damping_alpha, P_before_damping_beta, DIIS_error_vector, Fock_vector, calculation, molecule, T, V_NE, ERI_AO, S, X, n_alpha, n_beta, silent, bfs_on_grid, bf_gradients_on_grid, exchange_functional, correlation_functional, weights):
+    
+    """
+
+    Performs the calculations for a single iteration of the restricted SCF loop.
+
+    Args:
+        step (int): Cycle step
+        E (float): Electronic energy
+        P_alpha (array): Alpha density matrix in AO basis
+        P_old_alpha (array): Alpha density matrix from previous step
+        P_beta (array): Beta density matrix in AO basis
+        P_old_beta (array): Beta density matrix from previous step
+        P (array): Density matrix in AO basis
+        P_old (array): Density matrix from previous step
+        P_before_damping_alpha (array): Alpha density matrix before damping is applied
+        P_before_damping_beta (array): Beta density matrix before damping is applied
+        DIIS_error_vector (array): Error vector for DIIS
+        Fock_vector (array): Vector of Fock matrices for DIIS
+        calculation (Calculation): Calculation object
+        molecule (Molecule): Molecule object
+        T (array): Kinetic energy matrix in AO basis
+        V_NE (array): Nuclear-electron energy matrix in AO basis
+        ERI_AO (array): Two electron integrals in AO basis
+        S (array): Overlap matrix in AO basis
+        X (array): Fock transformation matrix in AO basis
+        n_alpha (int): Number of alpha orbitals
+        n_beta (int): Number of beta orbitals
+        silent (bool): Should anything be printed
+        bfs_on_grid (array): Basis functions evaluated on grid
+        bf_gradients_on_grid (array): Basis function gradients evaluated on grid
+        exchange_functional (function): Exchange functional
+        correlation_functional (function): Correlation functional
+        weights (array): Integration weights
+    
+    Returns:
+        E (float): Updated electronic energy
+        E_old (float): Updated electronic energy from previous iteration
+        P (array): Updated density matrix
+        P_old (array): Updated density matrix from previous iteration
+        P_alpha (array): Updated alpha density matrix
+        P_beta (array): Updated beta density matrix
+        commutator (array): DIIS error measure, rms[F, PS]
+        damping_factor (float): Damping factor
+        molecular_orbitals_alpha (array): Alpha molecular orbitals
+        molecular_orbitals_beta (array): Beta molecular orbitals
+        epsilons_alpha (array): Alpha molecular orbital eigenvalues
+        epsilons_beta (array): Beta molecular orbital eigenvalues
+        energy_components (tuple): Components of electronic energy
+        F_alpha (array): Alpha Fock matrix
+        F_beta (array): Beta Fock matrix
+        alpha_density (array): Alpha electron density on grid
+        beta_density (array): Beta electron density on grid
+        density (array): Electron density on grid
+
+    """
+
 
     E_old = E
 
@@ -924,7 +1116,35 @@ def run_unrestricted_SCF_cycle(step, E, P_alpha, P_old_alpha, P_beta, P_old_beta
 
 
 
-def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alpha=None, P_beta=None, silent=False, bfs_on_grid=None, bf_gradients_on_grid=None, weights=None, basis_functions=None, points=None):
+
+def run_self_consistent_field_cycle(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P, P_alpha, P_beta, bfs_on_grid, bf_gradients_on_grid, weights, silent):
+
+    """
+
+    Runs the self-consistent field cycle outer loop.
+
+    Args:
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        T (array): Kinetic energy matrix in AO basis
+        V_NE (array): Nuclear-electron attraction matrix in AO basis
+        ERI_AO (array): Electron repulsion integrals in AO basis
+        V_NN (float): Nuclear-nuclear repulsion energy
+        S (array): Overlap matrix in AO basis
+        X (array): Fock transformation matrix
+        E (float): Guess energy
+        P (array): Guess density matrix in AO basis
+        P_alpha (array): Guess alpha density matrix in AO basis
+        P_beta (array): Guess beta density matrix in AO basis
+        bfs_on_grid (array): Basis functions evaluated on integration grid
+        bf_gradients_on_grid (array): Basis function gradients evaluated on integration grid
+        weights (array): Integration weights
+        silent (bool): Should anything be printed
+
+    Returns:
+        SCF_output (Output): Output object containing converged SCF data
+
+    """
 
 
     log_big_spacer(calculation, silent=silent)
@@ -939,17 +1159,19 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
 
     if calculation.DFT_calculation:
 
+        # The method strings from the functional definitions
         exchange_method = DFT_methods.get(calculation.method).x_functional
         correlation_method = DFT_methods.get(calculation.method).c_functional
 
+        # The functions from the method strings
         exchange_functional = dft.exchange_functionals.get(exchange_method)
         correlation_functional = dft.correlation_functionals.get(correlation_method)
 
     else:
-
+        
         exchange_functional, correlation_functional = None, None
 
-
+    # Initialises various density matrices
     P_old, P_old_alpha, P_old_beta, P_before_damping, P_before_damping_alpha, P_before_damping_beta = np.zeros_like(P), np.zeros_like(P), np.zeros_like(P), np.zeros_like(P), np.zeros_like(P), np.zeros_like(P)
 
     commutator = 1
@@ -961,28 +1183,33 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
     for step in range(1, calculation.max_iter):
         
         if reference == "RHF":
-
+            
+            # Runs an SCF step
             E, E_old, P, P_old, commutator, damping_factor, molecular_orbitals, epsilons, energy_components, F, density = run_restricted_SCF_cycle(step, E, P, P_old, P_before_damping, DIIS_error_vector, Fock_vector, calculation, molecule, T, V_NE, ERI_AO, S, X, molecule.n_doubly_occ, silent, bfs_on_grid, bf_gradients_on_grid, exchange_functional, correlation_functional, weights)
 
+            # For restricted references, the spin channels are just half the full matrices
             P_alpha = P_beta = P / 2
             F_alpha = F_beta = F / 2
 
+            # Molecular orbitals and eigenvalues are all the same for alpha and beta spins
             molecular_orbitals_alpha = molecular_orbitals_beta = molecular_orbitals
             epsilons_alpha = epsilons_beta = epsilons
 
+            # Alpha and beta density add up to the total density with equal weights
             alpha_density = beta_density = density / 2 if density is not None else None
 
 
         elif reference == "UHF":
 
+            # Runs an SCF step
             E, E_old, P, P_old, P_alpha, P_beta, commutator, damping_factor, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons_alpha, epsilons_beta, energy_components, F_alpha, F_beta, alpha_density, beta_density, density = run_unrestricted_SCF_cycle(step, E, P_alpha, P_old_alpha, P_beta, P_old_beta, P, P_old, P_before_damping_alpha, P_before_damping_beta, DIIS_error_vector, Fock_vector, calculation, molecule, T, V_NE, ERI_AO, S, X, molecule.n_alpha, molecule.n_beta, silent, bfs_on_grid, bf_gradients_on_grid, exchange_functional, correlation_functional, weights)
 
+            # Combines the molecular orbitals and eigenvalues into one array
             epsilons_combined = np.concatenate((epsilons_alpha, epsilons_beta))
             molecular_orbitals_combined = np.concatenate((molecular_orbitals_alpha, molecular_orbitals_beta), axis=1)
 
             epsilons = epsilons_combined[np.argsort(epsilons_combined)]
             molecular_orbitals = molecular_orbitals_combined[:, np.argsort(epsilons_combined)]
-
 
         # Calculates the changes in energy and density
         delta_E, maxDP, rmsDP = calculate_SCF_changes(E, E_old, P, P_old)
@@ -1004,5 +1231,5 @@ def run_SCF(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E, P=None, P_alp
             return SCF_output
 
             
-    error(f"Self-consistent field not converged in {calculation.max_iter} iterations! Increase maximum iterations or give up.")
+    error(f"Self-consistent field not converged in {calculation.max_iter - 1} iterations! Increase maximum iterations or give up.")
 

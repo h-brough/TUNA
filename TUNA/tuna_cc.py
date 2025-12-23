@@ -784,8 +784,8 @@ def run_restricted_CCD_iteration(g, o, v, t_ijab, e_ijab, w):
 
     """
 
-    F_ik =  + np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize=True)
-    F_ca =  - np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize=True) 
+    F_ik = + np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize=True)
+    F_ca = - np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize=True) 
 
     # Intermediates based on two-electron integrals
     W_ijkl = g[o, o, o, o] + np.einsum("cdkl,ijcd->ijkl", g[v, v, o, o], t_ijab, optimize=True)
@@ -1844,7 +1844,7 @@ def begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, H
         calculation (Calculation): Calculation object
         silent (bool, optional): Cancel logging
 
-            Returns:
+    Returns:
         E_CC (float): Coupled cluster energy
         E_perturbative_triples (float): Energy from perturbative triples
         P (array): Density matrix in AO basis

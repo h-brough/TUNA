@@ -140,6 +140,7 @@ def calculate_translational_entropy(temperature, pressure, mass):
 
 
 
+
 def calculate_rotational_entropy(point_group, temperature, rotational_constant_per_m):
     
     """

@@ -36,7 +36,6 @@ def parse_input():
 
     Parses the input line in the console and returns extracted quantities.
 
-
     Returns:
         calculation_type (string): Type of calculation
         method (string): Electronic structure method
@@ -111,9 +110,6 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
         calculation (Calculation): Calculation object
         atomic_symbols (list): List of atomic symbols
         coordinates (array): Atomic coordinates
-
-    Returns:
-        None: Nothing is returned
 
     """
 
@@ -190,6 +186,10 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
         
         
 
+
+
+        
+
 def main(): 
 
     """
@@ -212,7 +212,6 @@ def main():
     print(colored(f"Setting up calculation using {contraction} basis set.", "light_grey", force_color=True))
 
     print(colored(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey", force_color=True))
-
 
     # Sets off the desired calculation with the requested parameters
     run_calculation(calculation_type, calculation, atomic_symbols, coordinates)

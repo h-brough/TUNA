@@ -132,7 +132,7 @@ def calculate_Koopmans_parameters(epsilons, n_occ):
 
 
 
-def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation):
+def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation, silent=False):
 
     """
 
@@ -162,30 +162,30 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
     virial_ratio = -1 * (total_energy - kinetic_energy) / kinetic_energy
            
     log_spacer(calculation, priority=2)
-    log("                  Energy Components       ", calculation, 2, colour="white")
+    log("                  Energy Components       ", calculation, 2, colour="white", silent=silent)
     log_spacer(calculation, priority=2)            
-    log(f"  Kinetic energy:                   {kinetic_energy:15.10f}", calculation, 2)
-    log(f"  Coulomb energy:                   {coulomb_energy:15.10f}", calculation, 2)
-    log(f"  Exchange energy:                  {exchange_energy:15.10f}", calculation, 2)
+    log(f"  Kinetic energy:                   {kinetic_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"  Coulomb energy:                   {coulomb_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"  Exchange energy:                  {exchange_energy:15.10f}", calculation, 2, silent=silent)
 
     if calculation.method in DFT_methods:
         
-        log(f"  Correlation energy:               {correlation_energy:15.10f}", calculation, 2)
+        log(f"  Correlation energy:               {correlation_energy:15.10f}", calculation, 2, silent=silent)
 
     log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2)
-    log(f"  Nuclear attraction energy:        {nuclear_electron_energy:15.10f}\n", calculation, 2)      
+    log(f"  Nuclear attraction energy:        {nuclear_electron_energy:15.10f}\n", calculation, 2, silent=silent)      
 
-    log(f"  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2)
-    log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2)
+    log(f"  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent=silent)
 
     if calculation.method in DFT_methods:
         
-        log(f"  Exchange-correlation energy:      {exchange_energy + correlation_energy:15.10f}", calculation, 2)
+        log(f"  Exchange-correlation energy:      {exchange_energy + correlation_energy:15.10f}", calculation, 2, silent=silent)
 
-    log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2)
-    log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2)
+    log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2, silent=silent)
+    log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2, silent=silent)
             
-    log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2)
+    log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2, silent=silent)
     log_spacer(calculation, priority=2)
 
 

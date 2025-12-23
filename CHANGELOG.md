@@ -4,45 +4,41 @@
 
 ### Added
 
-- Density functional theory including hybrid and double-hybrid exhange-correlation funciontals
-- Acknowledgements in manual
-- Superposition of atomic densities initial guess
+- Density functional theory including (meta-)GGA, hybrid and double-hybrid exchange-correlation functionals
+- Local density methods including SVWN3, SVWN5, SPW and HFS
+- (Meta-)Generalised gradient methods including PBE, BLYP, BP86, mPWLYP, PWP and TPSS
+- Hybrid exchange-correlation functionals including PBE0, B3LYP, BHLYP, TPSS0, mPW3LYP and B3P86
+- Double-hybrid exchange-correlation functionals including PBE0-DH, PBE0-QIDH, B2PLYP, B2NC-PLYP, mPW2PLYP and DSD-BLYP
+- Keywords for proportion of DFT and Hartree-Fock exchange, `DFX` and `HFX`
+- Keywords for proportion of DFT and MP2 correlation, `DFC` and `MPC`
 - Iterative MP2 theory for calculations on non-canonical molecular orbitals, control with `MPMAXITER` and `MPCONV` keywords
-- Force calculation type, to calculate forces
-- DFT module
-- Hartree-Fock-Slater
-- Slater exchange, Xalpha, VWN3 correlation, PW 
-- Local density approximation methods including SVWN, SPW, H
-- GGA methods including PBE and BLYP
-- Hybrid exchange-correlation functions including B3LYP, BHHLYP and PBE0
-- Double-hybrid exchange-correlation functionals including B2PLYP and PBE0-DH
-- Laplace transform MP2 with MPGRID keyword
-- Plot moelcular orbitals, density and spin density
-- New tuna_output module
-- Point charges
-- Natural transition orbitals
-- Plotting natural orbtials and NTOsm, exfited state transiition densities
-- Hartree method
-- Hartree Fock exchange proportion by HFX [0-1] keyword
+- Numerical Laplace transform MP2 theory with controlling `MPGRID` keyword
+- New output module, plotting orbitals, densities and spin densities
+- Plot molecular orbitals with `PLOTMO`, `PLOTHOMO` and `PLOTLUMO` keywords
+- Plot natural orbitals and natural transition orbitals with `PLOTNO` and `PLOTNTO` keywords
+- Plot density, spin density and difference densities with `DENSPLOT`, `SPINDENSPLOT` and `DIFFDENSPLOT` keywords
+- Hartree method, `H`
+- Force calculation type
+
+
+- Acknowledgements in manual
 - Print epsilons and occupancies with MO coefficients, all in one go, axe eigenvalues section
 - Change beta MO counting to align with plotting numbers
-- Sort out one electorn DFT systems
-- Sort out HFX keyword
 - Sort out dobule hybrid density matrices
-- Add  keywords, DFC, DFX
-- PBE-QIDH
-- just forget x100
 - H plotmo 30 with cc-pvtz works?
 - Atom called X brekas things
 - Ghost atoms broken
 - Print (double-) hybrid parameters, give keywords to change
 - Check H def2-qzvp = qzvpp 
+- See if phi(zeta) can be taken into its own function
+- Check PBE0-2 MP2 DH freeze core on H He
+- Check ano-pvtz for H matches ano-pvdz?
 
 ### Changed
 
 - Keyword `OMP2MAXITER` is now `MPMAXITER`
 - Keyword `OMP2CONV` is now `MPCONV`
-- Major changes to SCF module
+- Major changes to SCF module, more robust convergence and stability 
 - Removed level shift
 - Increased speed of two electron integrals for high angular momentum functions. Improvement from 2x for DZ to 12x for QZ
 
