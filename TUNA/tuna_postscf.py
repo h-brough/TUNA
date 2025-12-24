@@ -1,6 +1,5 @@
 import numpy as np
 from tuna_util import *
-import tuna_scf as scf
 
 
 def calculate_reduced_mass(masses): 
@@ -161,9 +160,9 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
     
     virial_ratio = -1 * (total_energy - kinetic_energy) / kinetic_energy
            
-    log_spacer(calculation, priority=2)
+    log_spacer(calculation, priority=2, silent=silent)
     log("                  Energy Components       ", calculation, 2, colour="white", silent=silent)
-    log_spacer(calculation, priority=2)            
+    log_spacer(calculation, priority=2, silent=silent)            
     log(f"  Kinetic energy:                   {kinetic_energy:15.10f}", calculation, 2, silent=silent)
     log(f"  Coulomb energy:                   {coulomb_energy:15.10f}", calculation, 2, silent=silent)
     log(f"  Exchange energy:                  {exchange_energy:15.10f}", calculation, 2, silent=silent)
@@ -172,7 +171,7 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
         
         log(f"  Correlation energy:               {correlation_energy:15.10f}", calculation, 2, silent=silent)
 
-    log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2)
+    log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2, silent=silent)
     log(f"  Nuclear attraction energy:        {nuclear_electron_energy:15.10f}\n", calculation, 2, silent=silent)      
 
     log(f"  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent=silent)
@@ -186,7 +185,7 @@ def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_en
     log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2, silent=silent)
             
     log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2, silent=silent)
-    log_spacer(calculation, priority=2)
+    log_spacer(calculation, priority=2, silent=silent)
 
 
 
@@ -390,27 +389,9 @@ def print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_
 
     """
 
-
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
-    log("     Molecular Orbital Eigenvalues", calculation, 3, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
-
-    def print_eigenvalue_header(calculation):
-        
-        # Prints the header either once for RHF or twice for UHF
-        log("  ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
-        log("    N    Occ.   Epsilon ", calculation, 3)
-        log("  ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
-
-
-    # Prints all the eigenvalues for an array of epsilons and corresponding occupancies, used by UHF and RHF 
-    def print_eigenvalues(epsilons, occupancies):
-
-        for i, epsilon in enumerate(epsilons):
-
-            log(f"   {(i + 1):2.0f}     {occupancies[i]}   {epsilon:10.6f}", calculation, 3)
-
-        log("  ~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 3)
+    log_spacer(calculation, 3, start="\n")
+    log("           Molecular Orbital Eigenvalues", calculation, 3, colour="white")
+    log_spacer(calculation, 3)
 
 
     # Prints alpha and beta eigenvalues separately
@@ -418,11 +399,11 @@ def print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_
 
         if n_beta > 0:
 
-            log("\n  Alpha eigenvalues:           Beta eigenvalues:\n", calculation, 3)
+            log("\n Alpha eigenvalues:          Beta eigenvalues:\n", calculation, 3)
             
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~      ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
-            log("    N    Occ.   Epsilon          N    Occ.   Epsilon  ", calculation, 3)
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~      ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
+            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
+            log("   N    Occ.   Epsilon         N    Occ.   Epsilon  ", calculation, 3)
+            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
             
             # Occupied orbitals are alpha electrons only
             occupancies_alpha = [1] * n_alpha + [0] * int((len(epsilons_alpha) - n_alpha))
@@ -430,9 +411,9 @@ def print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_
 
             for i, (epsilon_alpha, epsilon_beta) in enumerate(zip(epsilons_alpha, epsilons_beta)):
 
-                log(f"   {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}        {(i + 1):2.0f}     {occupancies_beta[i]}   {epsilon_beta:10.6f}", calculation, 3)
+                log(f"  {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}       {(i + 1):2.0f}     {occupancies_beta[i]}   {epsilon_beta:10.6f}", calculation, 3)
 
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~      ~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 3)
+            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 3)
 
 
         else:
@@ -455,12 +436,15 @@ def print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_
 
     elif reference == "RHF":
 
-        print_eigenvalue_header(calculation)
-        
+        log("    N            Occupation             Epsilon ", calculation, 3)
+        log_spacer(calculation, 3)
+
         # Occupied orbitals (doubly occupied) depend on number electron pairs
         occupancies = [2] * n_doubly_occ + [0] * int((len(epsilons) - n_doubly_occ))
 
-        print_eigenvalues(epsilons, occupancies)
+        for i, epsilon in enumerate(epsilons):
+
+            log(f"   {(i + 1):2.0f}                {occupancies[i]}                {epsilon:10.6f}", calculation, 3)
 
 
 
@@ -470,7 +454,7 @@ def print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_
 
 
 
-def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference, epsilons, epsilons_alpha, epsilons_beta, n_alpha, n_beta, n_doubly_occ, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta):
+def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference, epsilons, epsilons_alpha, n_alpha, n_beta, n_doubly_occ, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta):
     
     """
 
@@ -483,7 +467,6 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
         reference (str): Either RHF or UHF
         epsilons (array): Fock matrix eigenvalues
         epsilons_alpha (array): Alpha Fock matrix eigenvalues
-        epsilons_beta (array): Beta Fock matrix eigenvalues   
         n_alpha (int): Number of alpha electrons
         n_beta (int): Number of beta electrons
         n_doubly_occ (int): Number of doubly-occupied molecular orbitals
@@ -493,9 +476,9 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
     """
 
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
-    log("     Molecular Orbital Coefficients", calculation, 3, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3) 
+    log_spacer(calculation, 3, start="")
+    log("           Molecular Orbital Coefficients", calculation, 3, colour="white")
+    log_spacer(calculation, 3)
     
     # Initialises various quantities
     symbol_list = []
@@ -636,7 +619,7 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
 
     # Prints out coefficients for each orbital, as well as if each is occupied or virtual
-    def print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, n_list, eps, n, formatted_ang_mom, n_doubly_occ):
+    def print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, eps, n, formatted_ang_mom):
         
         n_orbitals_to_print = min(len(eps), n_alpha + 10)
 
@@ -668,7 +651,7 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
         if n_beta > 0:
             
-            log("\n  Alpha coefficients:          Beta coefficients:", calculation, 3)
+            log("\n Alpha coefficients:          Beta coefficients:", calculation, 3)
 
             n_orbitals_to_print = min(len(epsilons_alpha), n_alpha + 10)
 
@@ -680,7 +663,7 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
                 if n_beta > mo: occ_beta = "(Occupied)"
                 else: occ_beta = "(Virtual)"
 
-                log(f"\n   MO {mo+1} {occ}              MO {mo+1} {occ_beta}\n", calculation, 3)
+                log(f"\n  MO {mo+1} {occ}              MO {mo+1} {occ_beta}\n", calculation, 3)
                     
                 has_printed_1 = False    
                 has_printed_2 = False    
@@ -693,13 +676,13 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
                         symbol_list[k], has_printed_1, has_printed_2 = format_molecular_orbitals(symbol_list, k, switch_value, atoms, calculation, has_printed_1, has_printed_2)
 
-                        log("    " + symbol_list[k] + f"  {formatted_angular_momentum_list[k]}  :  " + f"{molecular_orbitals_alpha.T[mo][k]:7.4f}" + "           " + symbol_list[k] + f"  {formatted_angular_momentum_list[k]}  :  " + f"{molecular_orbitals_beta.T[mo][k]:7.4f}", calculation, 3)
+                        log("   " + symbol_list[k] + f"  {formatted_angular_momentum_list[k]}  :  " + f"{molecular_orbitals_alpha.T[mo][k]:7.4f}" + "           " + symbol_list[k] + f"  {formatted_angular_momentum_list[k]}  :  " + f"{molecular_orbitals_beta.T[mo][k]:7.4f}", calculation, 3)
 
                     except: pass
 
         else:
 
-            log("\n  Alpha coefficients:         ", calculation, 3)
+            log("\n Alpha coefficients:         ", calculation, 3)
 
             n_orbitals_to_print = min(len(epsilons_alpha), n_alpha + 10)
 
@@ -730,10 +713,10 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
     # For RHF calculations, do all of the above for the combined doubly occupied orbitals
     else:
         
-        print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, n_list, epsilons, n_doubly_occ, formatted_angular_momentum_list, n_doubly_occ)
+        print_coeffs(switch_value, calculation, symbol_list, molecular_orbitals, epsilons, n_doubly_occ, formatted_angular_momentum_list)
 
 
-    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
+    log_spacer(calculation, 3, start="\n")
 
 
 
@@ -792,7 +775,7 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
 
     # Prints molecular orbital eigenvalues and coefficients
     print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_alpha, n_beta, epsilons, epsilons_alpha, epsilons_beta)
-    print_molecular_orbital_coefficients(molecule, atoms, calculation, reference, epsilons, epsilons_alpha, epsilons_beta, n_alpha, n_beta, n_doubly_occ, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta)
+    print_molecular_orbital_coefficients(molecule, atoms, calculation, reference, epsilons, epsilons_beta, n_alpha, n_beta, n_doubly_occ, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta)
 
     # Prints Koopmans' theorem parameters if RHF reference is used
     if calculation.reference == "RHF":
@@ -802,9 +785,9 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
         if electron_affinity != "---": electron_affinity = f"{electron_affinity:9.6f}"
         if HOMO_LUMO_gap != "---": HOMO_LUMO_gap = f"{HOMO_LUMO_gap:9.6f}"
             
-        log(f"\n Koopmans' theorem ionisation energy:  {ionisation_energy:9.6f}", calculation, 2)
-        log(f" Koopmans' theorem electron affinity:  {electron_affinity}", calculation, 2)
-        log(f" Energy gap between HOMO and LUMO:     {HOMO_LUMO_gap}", calculation, 2)
+        log(f"\n Koopmans' theorem ionisation energy:   {ionisation_energy:9.6f}", calculation, 2)
+        log(f" Koopmans' theorem electron affinity:   {electron_affinity}", calculation, 2)
+        log(f" Energy gap between HOMO and LUMO:      {HOMO_LUMO_gap}", calculation, 2)
 
     # As long as there are two real atoms present, calculates rotational constant and dipole moment information
     if len(molecule.atoms) != 1 and not any(atom.ghost for atom in molecule.atoms):

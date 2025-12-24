@@ -731,7 +731,7 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
                 damping_factor = max(damping_factor, 0)
                 
                 # Damping will never exceed this value
-                damping_factor = damping_factor if damping_factor < calculation.max_damping else calculation.max_damping
+                damping_factor = damping_factor if damping_factor < min(calculation.max_damping, 1) else calculation.max_damping
 
 
     # Mixes old density with new, in proportion of damping factor
@@ -1205,8 +1205,8 @@ def run_self_consistent_field_cycle(molecule, calculation, T, V_NE, ERI_AO, V_NN
             E, E_old, P, P_old, P_alpha, P_beta, commutator, damping_factor, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons_alpha, epsilons_beta, energy_components, F_alpha, F_beta, alpha_density, beta_density, density = run_unrestricted_SCF_cycle(step, E, P_alpha, P_old_alpha, P_beta, P_old_beta, P, P_old, P_before_damping_alpha, P_before_damping_beta, DIIS_error_vector, Fock_vector, calculation, molecule, T, V_NE, ERI_AO, S, X, molecule.n_alpha, molecule.n_beta, silent, bfs_on_grid, bf_gradients_on_grid, exchange_functional, correlation_functional, weights)
 
             # Combines the molecular orbitals and eigenvalues into one array
-            epsilons_combined = np.concatenate((epsilons_alpha, epsilons_beta))
-            molecular_orbitals_combined = np.concatenate((molecular_orbitals_alpha, molecular_orbitals_beta), axis=1)
+            epsilons_combined = np.concatenate((epsilons_alpha, epsilons_beta)) if molecule.n_electrons > 1 else epsilons_alpha
+            molecular_orbitals_combined = np.concatenate((molecular_orbitals_alpha, molecular_orbitals_beta), axis=1) if molecule.n_electrons > 1 else molecular_orbitals_alpha
 
             epsilons = epsilons_combined[np.argsort(epsilons_combined)]
             molecular_orbitals = molecular_orbitals_combined[:, np.argsort(epsilons_combined)]

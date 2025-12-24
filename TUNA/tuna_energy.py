@@ -29,7 +29,6 @@ The module contains:
 
 
 
-
 def log_convergence_acceleration(calculation, silent=False):
 
     """
@@ -548,7 +547,7 @@ def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
 
 
 
-def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, rotate_guess_mos, no_rotate_guess_mos, calculation, silent=False, S=None):
+def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, rotate_guess_mos, no_rotate_guess_mos, calculation, molecule, silent=False):
 
     """
 
@@ -620,7 +619,7 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
             log("\n Calculating one-electron density for guess...   ", calculation, end="", silent=silent)
 
             # Only rotate guess MOs if there's an even number of electrons, and it hasn't been overridden by NOROTATE
-            rotate_guess_mos = True if (n_alpha + n_beta) % 2 == 0 and not no_rotate_guess_mos else False
+            rotate_guess_mos = True if molecule.multiplicity == 1 and not no_rotate_guess_mos else False
 
             # Diagonalise core Hamiltonian for one-electron guess
             guess_epsilons, guess_mos = scf.diagonalise_Fock_matrix(H_core, X)
@@ -832,7 +831,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
 
     # Calculates one-electron density for initial guess
-    E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, silent=silent, S=S)
+    E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, molecule, silent=silent)
 
     # Forces the trace of the guess density to be correct
     P_guess = dft.clean_density_matrix(P_guess, S, n_electrons)
@@ -850,10 +849,14 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         atomic_orbitals, weights, bf_gradients_on_grid = dft.set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess_alpha, P_guess_beta, calculation, silent=silent) 
 
+        log(f" Using {100 * calculation.DFX_prop:.1f}% density functional exchange and {100 * calculation.HFX_prop:.1f}% Hartree-Fock exchange.", calculation, 2, silent=silent)
+        log(f" Using {100 * calculation.DFC_prop:.1f}% density functional correlation and {100 * calculation.MPC_prop:.1f}% Moller-Plesset correlation.\n", calculation, 2, silent=silent)
+
     else:  
 
         atomic_orbitals, weights, bf_gradients_on_grid = None, None, None
     
+
 
     log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
 
@@ -925,7 +928,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         log(f"\n Integral of the final alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent=silent)
         log(f" Integral of the final beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent=silent)
 
-        log(f" Integral of the final total density: {n_electrons_DFT:13.10f}\n", calculation, 1, silent=silent)
+        log(f" Integral of the final total density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
 
 
     # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
@@ -992,7 +995,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
     else:
         
-        space = " " * max(0, 9 - len(method))
+        space = " " * max(0, 8 - len(method))
 
         log(f"\n Restricted {method} energy: {space}      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
@@ -1001,8 +1004,9 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     # Adds up and prints MP2 energies
     if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2"] or (do_DFT and calculation.MPC_prop != 0): 
         
-        space = " " * max(0, 9 - len(method))
+        space = " " * max(0, 8 - len(method))
 
+        # If a double-hybrid functional is being used, multiply by the correlation proportion
         E_MP2 *= calculation.MPC_prop if do_DFT else 1
 
         final_energy += E_MP2
@@ -1072,7 +1076,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         else:
             
-            space = " " * max(0, 9 - len(method))
+            space = " " * max(0, 8 - len(method))
 
             log(f" Correlation energy from {method}:{space} " + f"{E_CC:16.10f}\n", calculation, 1, silent=silent)
 
@@ -1092,7 +1096,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     
     
     # This is the total final energy
-    log(" Final single point energy:         " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+    log(" Final single point energy:        " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
     # Adds on D2 energy, and prints this as dispersion-corrected final energy
     if calculation.D2:

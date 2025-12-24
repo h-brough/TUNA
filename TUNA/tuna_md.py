@@ -337,18 +337,14 @@ def run_MD(calculation, atoms, coordinates):
         # Optional (default) reading in of orbitals from previous MD step
         if calculation.MO_read: 
             
-            P_guess = SCF_output.P; 
+            P_guess = SCF_output.P
             P_guess_alpha = SCF_output.P_alpha
             P_guess_beta = SCF_output.P_beta
             E_guess = SCF_output.energy
 
         else: 
             
-            P_guess = None
-            P_guess_alpha = None
-            P_guess_beta = None
-            E_guess = None
-
+            P_guess, P_guess_alpha, P_guess_beta, E_guess = None, None, None, None
 
         # Defines a 3D vector of the differences between atomic positions to rotate to the z axis
         difference_vector = np.array([coordinates[0][0] - coordinates[1][0], 
@@ -371,7 +367,7 @@ def run_MD(calculation, atoms, coordinates):
         forces = calculate_forces(aligned_coordinates, calculation, atoms, rotation_matrix)
 
         accelerations_new = calculate_accelerations(forces, inv_masses) 
-        velocities += 0.5 * timestep_au * (accelerations + accelerations_new) 
+        velocities += (1 / 2) * timestep_au * (accelerations + accelerations_new) 
 
         # Updates accelerations and increments timestep
         accelerations = accelerations_new

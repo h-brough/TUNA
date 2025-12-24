@@ -348,7 +348,7 @@ def build_molecular_grid(radial_grid_cutoff, n_radial, lebedev_order, bond_lengt
     X_A, Y_A, Z_A = points_A
 
     # If its just an atomic calculation, return this grid
-    if len(atoms) == 1:
+    if len(atoms) == 1 or len(atoms) == 2 and any(atom.ghost for atom in atoms):
 
         return points_A, atomic_weights_A
     
@@ -1605,7 +1605,7 @@ def calculate_UPBE_correlation(alpha_density, beta_density, density, sigma_aa, s
     cbrt_plus = clean(np.cbrt(1 + zeta))
     cbrt_minus = clean(np.cbrt(1 - zeta))
 
-    phi = (1 / 2) * (cbrt_plus ** 2 + cbrt_minus ** 2)
+    phi = (1 / 2) * (cbrt_plus * cbrt_plus + cbrt_minus * cbrt_minus)
     phi_prime = (1 / cbrt_plus - 1 / cbrt_minus) / 3
 
     # Repeatedly used grid quantities

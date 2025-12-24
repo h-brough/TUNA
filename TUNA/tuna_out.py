@@ -7,7 +7,6 @@ import pickle
 from matplotlib import font_manager as fm
 import warnings, logging
 import os
-from matplotlib.colors import LogNorm
 
 
 
@@ -232,43 +231,6 @@ def build_Cartesian_grid(bond_length, extent=3, number_of_points=500):
 
 
 
-def calculate_nuclear_electrostatic_potential(grid, bond_length, nuclear_charges):
-    
-    """
-    
-    Calculates the nuclear electrostatic potential.
-
-    Args:
-        grid (array): Grid on which to calculate electrostatic potential
-        bond-length (float): Bond length in bohr
-        nuclear_charges (list): List of relative nuclear charges
-
-    Returns:
-
-        V_nuclear (array): Nuclear potential for molecule
-
-    """
-
-    X, Z = grid
-
-    Z_A, Z_B = nuclear_charges
-
-    # Builds nuclear potential for both atoms, then adds them together
-    V_nuclear_A = Z_A / (X ** 2 + Z ** 2) ** (1 / 2)
-    V_nuclear_B = Z_B / (X ** 2 + (Z - bond_length) ** 2) ** (1 / 2)
-
-    V_nuclear = V_nuclear_A + V_nuclear_B
-
-    return V_nuclear
-
-
-
-
-
-
-
-
-
 
 def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, nuclear_charges=None, transition=False):
 
@@ -353,22 +315,6 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
         ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
 
 
-
-    if nuclear_charges is not None:
-        
-        # Calculates the nuclear electrostatic potential
-        view = calculate_nuclear_electrostatic_potential(grid, bond_length, nuclear_charges)
-
-        # Nuclear potential is always positive
-        cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)])
-
-        vmin = 1
-        vmax = np.max(view)
-
-        # Shows the image of the plot on the two-dimensional grid, log scale due to extreme behaviour near nuclei
-        ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, norm=LogNorm(vmin=vmin, vmax=vmax))
-
-
     # Plots dots for one of both atomic centres
     ax.scatter([0.0, bond_length],[0.0, 0.0], c="black", s=8, zorder=3)
 
@@ -422,11 +368,6 @@ def show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_al
     # Build grid and express basis functions on the grid
     grid = build_Cartesian_grid(bond_length)
     basis_functions_on_grid = dft.construct_basis_functions_on_grid(basis_functions, grid)
-
-    # Plots electrostatic potential
-    if calculation.plot_ESP:
-
-        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, atomic_charges=nuclear_charges)
 
     # Plots electron density
     if calculation.plot_density: 

@@ -92,6 +92,8 @@ class Molecule:
         for i, symbol in enumerate(atomic_symbols):
 
             if "X" in symbol:
+                
+                if symbol == "X": error("One or more atom types not recognised! Check the manual for available atoms.")
 
                 atom_data = atomic_properties["X"]
                 which_ghost = atomic_properties[symbol.split("X")[1]]
@@ -200,6 +202,7 @@ class Molecule:
         self.n_SO = 2 * self.n_atomic_orbitals
         self.n_virt = self.n_SO - self.n_occ
 
+
         # This variable can be used for either RHF or UHF references
         self.n_orbitals = self.n_SO if calculation.reference == "UHF" else self.n_atomic_orbitals
 
@@ -226,9 +229,9 @@ class Molecule:
         if self.n_electrons - self.multiplicity < -1: error("Multiplicity too high for number of electrons!")
         if self.multiplicity < 1: error("Multiplicity must be at least 1!")
         if self.n_electrons > self.n_SO: error("Too many electrons for size of basis set!")
+        if calculation.reference == "UHF" and self.n_electrons > len(self.basis_functions) and self.n_electrons % 2 == 0: error("Too many electrons for size of basis set!")
 
         # Sets off errors for impossible correlated calculations
-
         if calculation.method in correlated_methods:
 
             if self.n_virt <= 0 and calculation.reference == "RHF" or self.n_virt <= 1 and calculation.reference == "UHF": 
@@ -243,7 +246,7 @@ class Molecule:
             if self.n_electrons % 2 != 0: error("Restricted Hartree-Fock is not compatible with an odd number of electrons!")
             if self.multiplicity != 1: error("Restricted Hartree-Fock is not compatible non-singlet states!")
 
-        if calculation.method in ["MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]", "LMP2"] and calculation.reference == "UHF":
+        if calculation.method in ["MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]", "LMP2", "IMP2"] and calculation.reference == "UHF":
                 
             error(f"The {calculation.method} method is only implemented for spin-restricted references!")
 

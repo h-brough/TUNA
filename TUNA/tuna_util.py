@@ -130,6 +130,19 @@ class Calculation:
 
     def __init__(self, calculation_type, method, start_time, params, basis, atomic_symbols):
         
+        """
+
+        Initialises the Calculation object.
+
+        calculation_type (str): What kind of calculation - SPE, OPT, FREQ, etc.
+        method (str): Electronic structure method
+        start_time (time): Start time for calculation, after modules have been imported
+        params (list): Requested parameters for calculation
+        basis (str): Requested basis set 
+        atomic_symbols (list): List of atomic symbols
+
+        """
+
         # Defines fundamental calculation parameters
         self.calculation_type = calculation_type
         self.method = method
@@ -169,7 +182,6 @@ class Calculation:
         self.plot_spin_density = keyword(["SPINDENSPLOT"], False)
         self.plot_HOMO = keyword(["PLOTHOMO"], False)
         self.plot_LUMO = keyword(["PLOTLUMO"], False)
-        self.plot_ESP = keyword(["ESP", "PLOTESP"], False)
         self.plot_difference_density = keyword(["DIFFDENSPLOT"], False)
         self.plot_difference_spin_density = keyword(["DIFFSPINDENSPLOT"], False)
         self.no_DFT_exchange = keyword(["NOX"], False)
@@ -187,7 +199,6 @@ class Calculation:
         self.damping = keyword(["DAMP"], True)
         self.damping = not keyword(["NODAMP"], False)
         self.max_damping = keyword(["MAXDAMP"], 0.700, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-
 
         # Keywords with mandatory parameters
         self.charge = keyword(["CH", "CHARGE"], 0, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -217,7 +228,6 @@ class Calculation:
         self.pressure = keyword(["PRES", "PRESSURE"], 101325, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
 
         # Post-Hartree-Fock keywords
-        # Need to consider case of modify double hybrids
         self.same_spin_scaling = keyword(["SSS"], 1 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.opposite_spin_scaling = keyword(["OSS"], 6 / 5, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.MP3_scaling = keyword(["MP3S", "MP3SCALING", "MP3SCAL"], 1 / 4, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
@@ -236,10 +246,11 @@ class Calculation:
         self.functional = DFT_methods.get(self.method)
         self.X_alpha = keyword(["XA"], 2 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.integral_accuracy_requested, self.integral_accuracy = keyword(["INTACC"], False, check_next_space=True, value_type=float, associated_keyword_default=4.0)
-        self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
-        self.plot_natural_transition_orbital, self.natural_transition_orbital_to_plot = keyword(["PLOTNTO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
-        self.plot_natural_orbital, self.natural_orbital_to_plot = keyword(["PLOTNO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
-        
+        self.DFX_requested, self.DFX_prop = keyword(["DFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+        self.DFC_requested, self.DFC_prop = keyword(["DFC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+        self.MPC_requested, self.MPC_prop = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
+
+        # Checks for Hartree theory requested
         if self.method in ["H", "UH"]:
             
             self.HFX_requested, self.HFX_prop = (False, 0) 
@@ -248,23 +259,17 @@ class Calculation:
              
             self.HFX_requested, self.HFX_prop = keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
         
-        self.DFX_requested, self.DFX_prop = keyword(["DFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
-        self.DFC_requested, self.DFC_prop = keyword(["DFC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
-        self.MPC_requested, self.MPC_prop = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
-
-
-        if self.method in DFT_methods: 
+        if self.DFT_calculation: 
             
+            # Only overwrites HFX, etc., if a DFT calculation is requested
             if not self.HFX_requested: self.HFX_prop = self.functional.HFX
             if not self.DFX_requested: self.DFX_prop = self.functional.DFX
             if not self.DFC_requested: self.DFC_prop = self.functional.DFC
             if not self.MPC_requested: self.MPC_prop = self.functional.MPC
         
-        self.HFX_prop /= 100
-        self.DFX_prop /= 100
-        self.DFC_prop /= 100
-        self.MPC_prop /= 100
-
+        # Brings the percentage into a proportion
+        self.HFX_prop, self.DFX_prop, self.DFC_prop, self.MPC_prop = self.HFX_prop / 100, self.DFX_prop / 100, self.DFC_prop / 100, self.MPC_prop / 100
+        
         self.DFX_prop = 0 if self.no_DFT_exchange else self.DFX_prop
         self.DFC_prop = 0 if self.no_DFT_correlation else self.DFC_prop
 
@@ -278,7 +283,10 @@ class Calculation:
         self.save_plot, self.save_plot_filepath = keyword(["SAVEPLOT"], False, check_next_space=True, associated_keyword_default="TUNA Plot.png", value_type=str, plot_path=True)
         self.scan_plot_colour = next((code for name, code in color_map.items() if name in params), "b")
         self.custom_basis_file = keyword(["BASIS"], None, boolean=False, check_next_space=True, mandatory_value=True, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
-
+        self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
+        self.plot_natural_transition_orbital, self.natural_transition_orbital_to_plot = keyword(["PLOTNTO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
+        self.plot_natural_orbital, self.natural_orbital_to_plot = keyword(["PLOTNO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
+        
         # Convergence keywords for SCF and optimisations
         self.SCF_conv_requested = True if "LOOSE" in params or "LOOSESCF" in params or "MEDIUM" in params or "MEDIUMSCF" in params or "TIGHT" in params or "TIGHTSCF" in params or "EXTREME" in params or "EXTREMESCF" in params else False
         self.geom_conv_requested = True if "LOOSEOPT" in params or "MEDIUMOPT" in params or "TIGHTOPT" in params or "EXTREMEOPT" in params else False
@@ -304,6 +312,7 @@ class Calculation:
 
             self.geom_conv = constants.convergence_criteria_optimisation["tight"] if self.calculation_type == "OPTFREQ" and self.geom_conv != constants.convergence_criteria_optimisation["extreme"] else self.geom_conv
         
+        # Tightness criteria for DFT grid
         self.grid_conv = constants.convergence_criteria_grid["loose"] if "LOOSEGRID" in params else constants.convergence_criteria_grid["medium"]
         self.grid_conv = constants.convergence_criteria_grid["medium"] if "MEDIUMGRID" in params else self.grid_conv
         self.grid_conv = constants.convergence_criteria_grid["tight"] if "TIGHTGRID" in params else self.grid_conv
@@ -312,8 +321,7 @@ class Calculation:
 
         # Processes the NOSINGLES keyword
         self.method = process_no_singles_keyword(self.method, self.no_singles)
-        self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_ESP or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital or self.plot_natural_transition_orbital
-
+        self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital or self.plot_natural_transition_orbital
 
 
 
@@ -367,6 +375,7 @@ class Constants:
         self.h = self.planck_constant_in_joules_seconds / (self.hartree_in_joules * self.atomic_time_in_seconds)
 
 
+        # Convergence criteria for self-consistent field
         self.convergence_criteria_SCF = {
 
             "loose" : {"delta_E": 0.000001, "max_DP": 0.00001, "RMS_DP": 0.000001, "commutator": 0.0001, "name": "loose"},
@@ -376,19 +385,21 @@ class Constants:
             
         }
 
+        # Convergence criteria for geometry optimisation
         self.convergence_criteria_optimisation = {
 
-            "loose" : {"gradient": 0.001, "step": 0.01},
-            "medium" : {"gradient": 0.0001, "step": 0.0001},
-            "tight" : {"gradient": 0.000001, "step": 0.00001},
-            "extreme" : {"gradient": 0.00000001, "step": 0.0000001}   
+            "loose" : {"gradient": 0.001, "step": 0.01, "name": "loose"},
+            "medium" : {"gradient": 0.0001, "step": 0.0001, "name": "medium"},
+            "tight" : {"gradient": 0.000001, "step": 0.00001, "name": "tight"},
+            "extreme" : {"gradient": 0.00000001, "step": 0.0000001, "name": "extreme"}   
 
         }
 
+        # Tightness criteria for the DFT grid
         self.convergence_criteria_grid = {
 
             "loose" : {"integral_accuracy": 3, "extent_multiplier": 0.7, "name": "loose"},
-            "medium" : {"integral_accuracy": 4, "extent_multiplier": 0.8, "name": "medium"},
+            "medium" : {"integral_accuracy": 4, "extent_multiplier": 0.9, "name": "medium"},
             "tight" : {"integral_accuracy": 5, "extent_multiplier": 1, "name": "tight"},
             "extreme" : {"integral_accuracy": 7, "extent_multiplier": 1.2, "name": "extreme"},
 
@@ -412,7 +423,7 @@ class Output:
 
     """
 
-    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, F=None, T=None, V_NE=None, J=None, K=None, F_alpha=None, F_beta=None, density=None, alpha_density=None, beta_density=None):
+    def __init__(self, energy, S, P, P_alpha, P_beta, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, T=None, V_NE=None, J=None, K=None, F_alpha=None, F_beta=None, density=None, alpha_density=None, beta_density=None):
        
         """
 
@@ -438,14 +449,13 @@ class Output:
             T (array, optional): Kinetic matrix in AO basis
             V_NE (array, optional): Nuclear-electron matrix in AO basis
             J (array, optional): Coulomb matrix in AO basis
-    
 
         """
 
         # Key quantities
         self.energy = energy
         self.S = S
-        self.F = F
+        self.F = F_alpha + F_beta
         self.F_alpha = F_alpha
         self.F_beta = F_beta
 
@@ -491,25 +501,55 @@ class Output:
 
 class Functional:
 
-    def __init__(self, x_functional, c_functional, DFX=100, HFX=0, DFC=100, MPC=0, SSS=1, OSS=1, functional_class="LDA"):
+    """
 
+    Defines a DFT exchange-correlation functional.
+
+    """
+
+    def __init__(self, x_functional, c_functional, DFX=100, HFX=0, DFC=100, MPC=0, SSS=1, OSS=1, functional_class="LDA"):
+        
+        """
+
+        Initialises Functional object.
+
+        Args:   
+            x_functional (function): Exchange functional    
+            c_functional (function): Correlation functional    
+            DFX (float, optional): Percentage of DFT exchange    
+            HFX (float, optional): Percentage of Hartree-Fock exchange    
+            DFC (float, optional): Percentage of DFC correlation    
+            MPC (float, optional): Percentage of Moller-Plesset correlation 
+            SSS (float, optional): Same spin scaling for MP2 correlation   
+            OSS (float, optional): Opposite spin scaling for MP2 correlation   
+            functional_class (str, optional): Either LDA, GGA or meta-GGA
+
+        """
+     
+        # Exchange and correlation functional
         self.x_functional = x_functional
         self.c_functional = c_functional
 
+        # Proportions of exchange and correlation
         self.DFX = DFX
         self.HFX = HFX
         self.DFC = DFC
         self.MPC = MPC
 
+        # Same and opposite spin scaling
         self.SSS = SSS
         self.OSS = OSS
 
+        # Either LDA, GGA or meta-GGA which determines how the exchange-correlation matrix in SCF is constructed
         self.functional_class = functional_class
 
         self.functional_type = self.process_functional()
 
-    
+
+
     def process_functional(self):
+
+        # Determines which "type" of functional this is
 
         self.functional_type = "pure"
 
@@ -525,7 +565,10 @@ class Functional:
 
                     self.functional_type = "spin-scaled double-hybrid"
 
+
         return self.functional_type
+
+
 
 
 
@@ -903,6 +946,7 @@ calculation_types = {
     "FORCE": "Force"
     
     }
+
 
 
 
@@ -1311,6 +1355,7 @@ atomic_properties = {
         "mass" : 0,
         "C6" : 0,
         "vdw_radius" : 0,
+        "real_vdw_radius" : 0,
         "core_orbitals": 0,
         "name" : "ghost"
     },
