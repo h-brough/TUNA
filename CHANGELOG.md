@@ -18,7 +18,7 @@
 - Numerical Laplace transform MP2 theory with controlling `MPGRID` keyword
 - New output module, plotting orbitals, densities and spin densities
 - Plot molecular orbitals with `PLOTMO`, `PLOTHOMO` and `PLOTLUMO` keywords
-- Plot natural orbitals and natural transition orbitals with `PLOTNO` and `PLOTNTO` keywords
+- Plot natural orbitals with `PLOTNO` keyword
 - Plot density, spin density and difference densities with `DENSPLOT`, `SPINDENSPLOT`, `DIFFDENSPLOT`, `DIFFSPINDENSPLOT` keywords
 - Hartree method with no Fock exchange, `H`
 - Force calculation type, `FORCE`

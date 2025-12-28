@@ -1850,11 +1850,14 @@ def begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, H
         P (array): Density matrix in AO basis
         P_alpha (array): Alpha spin density matrix in AO basis
         P_beta (array): Beta spin density matrix in AO basis
+        occupancies (array): Natural orbital occupancies
+        natural_orbitals (array): Natural orbitals
 
     """
 
     E_CC = 0
     E_perturbative_triples = 0
+    occupancies, natural_orbitals = None, None
 
     reference = calculation.reference
 
@@ -1925,7 +1928,7 @@ def begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, H
     # If NATORBS is used, calculate and print the natural orbitals
     if calculation.natural_orbitals: 
         
-        mp.calculate_natural_orbitals(P, X, calculation, silent=silent)
+        occupancies, natural_orbitals = mp.calculate_natural_orbitals(P, X, calculation, silent=silent)
 
 
     if "CCSD[T]" in method or "QCISD[T]" in method:
@@ -1942,4 +1945,4 @@ def begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, H
     log_spacer(calculation, silent=silent)
 
 
-    return E_CC, E_perturbative_triples, P, P_alpha, P_beta
+    return E_CC, E_perturbative_triples, P, P_alpha, P_beta, occupancies, natural_orbitals

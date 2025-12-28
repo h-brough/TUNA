@@ -232,13 +232,14 @@ def build_Cartesian_grid(bond_length, extent=3, number_of_points=500):
 
 
 
-def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, nuclear_charges=None, transition=False):
+def plot_on_two_dimensional_grid(calculation, basis_functions_on_grid, grid, bond_length, P=None, molecular_orbitals=None, which_MO=None, transition=False):
 
     """
     
     Plots requested quantity on a two-dimensional grid and shows the image with Matplotlib.
 
     Args:
+        calculation (Calculation): Calculation object
         basis_functions_on_grid (array): Basis functions evaluated on grid
         grid (array): Two-dimensional grid for plotting
         bond_length (float): Bond length in bohr
@@ -260,8 +261,34 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
 
         bond_length = 0 
 
+    logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+    logging.getLogger("matplotlib").setLevel(logging.ERROR)
+    warnings.filterwarnings("ignore", module="matplotlib.font_manager")
 
+    _ = fm.fontManager.ttflist
+
+    plot_font = ["Consolas", "Liberation Mono", "Courier New", "DejaVu Sans"]
+
+    matplotlib.rcParams['font.family'] = plot_font
+
+    def mag_then_sign(n):
+
+        if n == 1: return '+'
+        if n == -1: return '-'
+        
+        return f"{abs(n)}{'+' if n > 0 else '-'}"
+
+    charge = "" if calculation.charge == 0 else mag_then_sign(calculation.charge)
+    
     if P is not None:
+
+        if len(calculation.atomic_symbols) == 2:
+
+            plt.title(f"Density from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+
+        else:
+
+            plt.title(f"Density from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
 
         # Builds density on grid
         density = dft.construct_density_on_grid(P, basis_functions_on_grid, clean_density=False)
@@ -274,8 +301,9 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
             view = np.clip(density, np.quantile(density, 1 - density_cut_off), np.quantile(density, density_cut_off))
 
             # Difference densities have both positive and negative parts
-            cmap = "bwr"
-
+            #cmap = "bwr"
+            cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (247/255,)*3, (1,0,0)], 257)
+            
             max_abs = np.max(np.abs(view))
 
             vmin, vmax = -max_abs, max_abs
@@ -285,7 +313,7 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
             view = np.clip(density, None, np.quantile(density, density_cut_off))
 
             # Electron density is only positive
-            cmap = LinearSegmentedColormap.from_list("wp", [(1, 1, 1), (1, 0, 1)]) 
+            cmap = LinearSegmentedColormap.from_list("wp", [(247/255, 247/255, 247/255), (1, 0, 1)]) 
 
             vmin, vmax = 0, np.max(view)
 
@@ -295,6 +323,14 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
 
 
     if molecular_orbitals is not None:
+
+        if len(calculation.atomic_symbols) == 2:
+
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+
+        else:
+
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
 
         # Builds molecular orbitals on grid
         molecular_orbitals_on_grid = np.einsum("ikl,ij->jkl", basis_functions_on_grid, molecular_orbitals, optimize=True)
@@ -307,6 +343,7 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
         
         # Molecular orbitals can be positive or negative in sign
         cmap = "bwr"
+        cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (247/255,)*3, (1,0,0)], 257)
 
         max_abs = np.max(np.abs(view))
         vmin, vmax = -max_abs, max_abs
@@ -318,7 +355,9 @@ def plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=N
     # Plots dots for one of both atomic centres
     ax.scatter([0.0, bond_length],[0.0, 0.0], c="black", s=8, zorder=3)
 
+
     # Shows the plot
+    plt.savefig("test.pdf", transparent=True, dpi=1200)
     plt.tight_layout()
     plt.show()
 
@@ -372,17 +411,17 @@ def show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_al
     # Plots electron density
     if calculation.plot_density: 
         
-        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P)
+        plot_on_two_dimensional_grid(calculation, basis_functions_on_grid, grid, bond_length, P=P)
 
     # Plots difference density
     if calculation.plot_difference_density:
 
-        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P, transition=True)
+        plot_on_two_dimensional_grid(calculation, basis_functions_on_grid, grid, bond_length, P=P, transition=True)
 
     # Plots spin density
     if calculation.plot_spin_density or calculation.plot_difference_spin_density: 
         
-        plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, P=P_alpha-P_beta)
+        plot_on_two_dimensional_grid(calculation, basis_functions_on_grid, grid, bond_length, P=P_alpha-P_beta)
 
     # Plots molecular orbital
     if calculation.plot_HOMO or calculation.plot_LUMO or calculation.plot_molecular_orbital:
@@ -400,7 +439,7 @@ def show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_al
 
         try:
             
-            plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, molecular_orbitals=molecular_orbitals, which_MO=which_MO)
+            plot_on_two_dimensional_grid(calculation, basis_functions_on_grid, grid, bond_length, molecular_orbitals=molecular_orbitals, which_MO=which_MO)
 
         except IndexError:
 
@@ -413,7 +452,7 @@ def show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_al
 
         try:
             
-            plot_on_two_dimensional_grid(basis_functions_on_grid, grid, bond_length, molecular_orbitals=natural_orbitals, which_MO=which_MO)
+            plot_on_two_dimensional_grid(calculation, basis_functions_on_grid, grid, bond_length, molecular_orbitals=natural_orbitals, which_MO=which_MO)
 
         except IndexError:
 

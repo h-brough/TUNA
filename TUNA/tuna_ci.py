@@ -603,7 +603,10 @@ def calculate_CIS_density_matrix(n_SO, n_occ, C_spin_block, o, v, b_ia):
         P (array): Density matrix in AO basis
         P_alpha (array): Density matrix for alpha orbitals in AO basis
         P_beta (array): Density matrix for beta orbitals in AO basis
-
+        P_transition (array): Difference density matrix for in AO basis
+        P_transition_alpha (array): Difference density matrix for alpha orbitals in AO basis
+        P_transition_beta (array): Difference density matrix for beta orbitals in AO basis
+        
     """
     
     # Equation from Foresman 1992 - this is the transition density, delta P_CIS
@@ -620,11 +623,6 @@ def calculate_CIS_density_matrix(n_SO, n_occ, C_spin_block, o, v, b_ia):
     P_SO = P_transition.copy()
 
     P_SO[o, o] += np.identity(n_occ)
-
-    # This stuff is the transition density (not the difference density), which is needed to compute NTOs
-    T_SO = np.zeros((n_SO, n_SO))
-    T_SO[v, o] = b_ia.T
-    U, s, Vh = np.linalg.svd(b_ia, full_matrices=False)
 
     P, P_alpha, P_beta = transform_P_SO_to_AO(P_SO, C_spin_block, n_SO)
     P_transition, P_transition_alpha, P_transition_beta = transform_P_SO_to_AO(P_transition, C_spin_block, n_SO)

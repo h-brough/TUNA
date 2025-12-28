@@ -947,7 +947,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     # If a coupled-cluster calculation is requested, calculates the energy
     elif "CC" in method or "CEPA" in method or "QCISD" in method:
 
-        E_CC, E_CCSD_T, P, P_alpha, P_beta = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
+        E_CC, E_CCSD_T, P, P_alpha, P_beta, _, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
         
         postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "Coupled cluster", silent=silent)
 
@@ -997,7 +997,12 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         
         space = " " * max(0, 8 - len(method))
 
-        log(f"\n Restricted {method} energy: {space}      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+        if reference == "RHF":
+
+            log(f"\n Restricted {method} energy: {space}      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+        else:
+            
+            log(f"\n Unrestricted {method} energy: {space}    " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
 
 

@@ -2510,7 +2510,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dzeta_dnb = -2 * alpha_density * inv_n2
 
     # Key spin polarisation machinery
-    one_minus = 1 - zeta
+    one_minus = clean(1 - zeta, SIGMA_FLOOR)
     one_plus = 1 + zeta
     one_minus2 = one_minus * one_minus
     one_plus2  = one_plus * one_plus
@@ -2552,8 +2552,8 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dC0_dna = dC0_dzeta * dzeta_dna
     dC0_dnb = dC0_dzeta * dzeta_dnb
 
-    inv_m43_plus = 1 / (np.cbrt(one_plus) ** 4)
-    inv_m43_minus = 1 / (np.cbrt(one_minus) ** 4)
+    inv_m43_plus = 1 / np.cbrt(one_plus) ** 4
+    inv_m43_minus = 1 / np.cbrt(one_minus) ** 4
     s = inv_m43_plus + inv_m43_minus
 
     dinv_m43_plus_dzeta  = -(4 / 3) * inv_m43_plus / one_plus

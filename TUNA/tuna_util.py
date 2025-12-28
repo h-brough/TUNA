@@ -284,7 +284,6 @@ class Calculation:
         self.scan_plot_colour = next((code for name, code in color_map.items() if name in params), "b")
         self.custom_basis_file = keyword(["BASIS"], None, boolean=False, check_next_space=True, mandatory_value=True, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
         self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
-        self.plot_natural_transition_orbital, self.natural_transition_orbital_to_plot = keyword(["PLOTNTO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
         self.plot_natural_orbital, self.natural_orbital_to_plot = keyword(["PLOTNO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
         
         # Convergence keywords for SCF and optimisations
@@ -321,7 +320,7 @@ class Calculation:
 
         # Processes the NOSINGLES keyword
         self.method = process_no_singles_keyword(self.method, self.no_singles)
-        self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital or self.plot_natural_transition_orbital
+        self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital
 
 
 
@@ -1145,7 +1144,7 @@ DFT_methods = {
     "UHFB" : Functional("B", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
     "BVWN" : Functional("B", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "UBVWN" : Functional("B", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "SBWN3" : Functional("B", "VWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
+    "BVWN3" : Functional("B", "VWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "UBVWN3" : Functional("B", "UVWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "BVWN5" : Functional("B", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "UBVWN5" : Functional("B", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
@@ -1157,7 +1156,6 @@ DFT_methods = {
     "UB1LYP" : Functional("B", "ULYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
     "PWP" : Functional("PW", "P86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "UPWP" : Functional("PW", "UP86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "USLYP" : Functional("S", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "SLYP" : Functional("S", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "USLYP" : Functional("S", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
     "B3LYP" : Functional("B3", "3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
