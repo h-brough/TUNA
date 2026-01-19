@@ -1,4 +1,4 @@
-import tuna_optfreq as optfreq
+import tuna_opt as opt
 import tuna_energy as energ
 import numpy as np
 from tuna_util import *
@@ -133,7 +133,7 @@ def calculate_forces(coordinates, calculation, atoms, rotation_matrix):
 
     """
 
-    force = optfreq.calculate_gradient(coordinates, calculation, atoms, silent=True)
+    force = opt.calculate_gradient(coordinates, calculation, atoms, silent=True)
 
     force_array_1D = [0.0, 0.0, force]
 

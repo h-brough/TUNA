@@ -22,8 +22,9 @@ import numpy as np; sys.stdout.flush()
 import time
 from tuna_util import *
 import tuna_energy as energ
-import tuna_optfreq as optfreq
+import tuna_opt as opt
 import tuna_md as md
+import tuna_freq as freq
 
 print(colored("[Done]\n", "light_grey", force_color=True))
 
@@ -89,7 +90,7 @@ def parse_input():
     if len(atomic_symbols) != len(coordinates_1D): error("Two atoms requested without a bond length!")
 
     # Rejects requests for tiny bond lengths, such as two atoms on top of each other
-    if len(coordinates_1D) == 2 and coordinates_1D[1] < 0.05: error(f"Bond length ({coordinates_1D[1]} angstroms) is too small! Minimum bond length is 0.05 angstroms.")
+    if len(coordinates_1D) == 2 and coordinates_1D[1] < 0.01: error(f"Bond length ({coordinates_1D[1]} angstroms) is too small! Minimum bond length is 0.01 angstroms.")
 
     # Converts 1D coordinate array in angstroms to 3D array ion bohr
     coordinates = one_dimension_to_three(angstrom_to_bohr(np.array(coordinates_1D)))
@@ -146,7 +147,7 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
             
             multiple_iterations = False if calculation_type == "FORCE" else True
 
-            optfreq.optimise_geometry(calculation, atomic_symbols, coordinates, multiple_iterations=multiple_iterations)
+            opt.optimise_geometry(calculation, atomic_symbols, coordinates, multiple_iterations=multiple_iterations)
         
         else: error("Geometry optimisation requested for single atom!")
         
@@ -156,18 +157,30 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
 
         if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            optfreq.calculate_frequency(calculation, atomic_symbols=atomic_symbols, coordinates=coordinates)
+            freq.calculate_frequency(calculation, atomic_symbols=atomic_symbols, coordinates=coordinates)
         
         else: error("Harmonic frequency requested for single atom!")
-        
-        
+
+
+    # Anharmonic frequency
+    elif calculation_type == "ANHARM":
+
+        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+            
+            optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
+            _, reduced_mass, harmonic_frequency_per_cm = freq.calculate_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
+            freq.solve_numerical_schrodinger_equation(reduced_mass, calculation, atomic_symbols, optimised_molecule.coordinates,harmonic_frequency_per_cm)    
+
+        else: error("Anharmonic frequency requested for single atom!")
+
+
     # Geometry optimisation and harmonic frequency
     elif calculation_type == "OPTFREQ":
 
         if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            optimised_molecule, optimised_energy = optfreq.optimise_geometry(calculation, atomic_symbols, coordinates)
-            optfreq.calculate_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
+            optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
+            freq.calculate_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
 
         else: error("Geometry optimisation requested for single atom!")
         

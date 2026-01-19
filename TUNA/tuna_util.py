@@ -159,6 +159,7 @@ class Calculation:
         # Simple boolean keywords
         self.additional_print = keyword(["P"], False)
         self.terse = keyword(["T"], False)
+        self.debug = keyword("DEBUG", False)
         self.decontract = keyword(["DECONTRACT"], False)
 
         self.natural_orbitals = keyword(["NATORBS"], False)
@@ -186,6 +187,8 @@ class Calculation:
         self.plot_difference_spin_density = keyword(["DIFFSPINDENSPLOT"], False)
         self.no_DFT_exchange = keyword(["NOX"], False)
         self.no_DFT_correlation = keyword(["NOC"], False)
+        self.stability_analysis = keyword(["STAB"], False)
+        self.plot_vibrational_wavefunctions = keyword("PLOTVIB", False)
 
         # Convergence keywords with optional parameters
         self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
@@ -298,8 +301,8 @@ class Calculation:
         
         if not self.SCF_conv_requested:
         
-            self.SCF_conv = constants.convergence_criteria_SCF["tight"] if self.calculation_type in ["OPT", "FREQ", "OPTFREQ", "MD"] and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
-            self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if self.calculation_type in ["FREQ", "OPTFREQ"] else self.SCF_conv
+            self.SCF_conv = constants.convergence_criteria_SCF["tight"] if self.calculation_type in ["OPT", "FREQ", "OPTFREQ", "MD", "ANHARM"] and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
+            self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if self.calculation_type in ["FREQ", "OPTFREQ", "ANHARM"] else self.SCF_conv
             self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "CIS" in self.method and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
 
         self.geom_conv = constants.convergence_criteria_optimisation["loose"] if "LOOSEOPT" in params else constants.convergence_criteria_optimisation["medium"]
@@ -355,7 +358,6 @@ class Constants:
         self.atomic_mass_unit_in_kg = 0.001 / self.avogadro
         self.reduced_planck_constant_in_joules_seconds = self.planck_constant_in_joules_seconds / (2 * np.pi)
         self.bohr_in_metres = 4 * np.pi * self.permittivity_in_farad_per_metre * self.reduced_planck_constant_in_joules_seconds ** 2 / (self.electron_mass_in_kilograms * self.elementary_charge_in_coulombs ** 2)
-        self.bohr_in_metres = 5.291772105443e-11
         
         self.hartree_in_joules = self.reduced_planck_constant_in_joules_seconds ** 2 / (self.electron_mass_in_kilograms * self.bohr_in_metres ** 2)
         self.atomic_time_in_seconds = self.reduced_planck_constant_in_joules_seconds /  self.hartree_in_joules
@@ -908,6 +910,7 @@ def log(message, calculation, priority=1, end="\n", silent=False, colour="light_
         if priority == 1: print(colored(message, colour), end=end)
         elif priority == 2 and not calculation.terse: print(colored(message, colour, force_color = True), end=end)
         elif priority == 3 and calculation.additional_print: print(colored(message, colour, force_color = True), end=end)
+        elif priority == 4 and calculation.debug: print(colored(message, colour, force_color = True), end=end)
 
 
 
@@ -942,7 +945,8 @@ calculation_types = {
     "OPTFREQ": "Optimisation and harmonic frequency",
     "SCAN": "Coordinate scan",
     "MD": "Ab initio molecular dynamics",
-    "FORCE": "Force"
+    "FORCE": "Force",
+    "ANHARM": "Anharmonic frequency"
     
     }
 

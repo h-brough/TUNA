@@ -323,3 +323,33 @@ def calculate_free_energy(H, temperature, S):
     """
     
     return H - temperature * S
+
+
+
+
+
+def calculate_thermochemical_corrections(calculation, frequency_per_cm, point_group, rotational_constant_per_cm, masses, temperature, pressure, energy, ZPE):
+
+    # Uses thermochemistry module to calculate various thermochemical properties
+    U, translational_internal_energy, rotational_internal_energy, vibrational_internal_energy = calculate_internal_energy(energy, ZPE, temperature, frequency_per_cm)
+
+    H = calculate_enthalpy(U, temperature)
+
+    S, translational_entropy, rotational_entropy, vibrational_entropy, electronic_entropy = calculate_entropy(temperature, frequency_per_cm, point_group, rotational_constant_per_cm * 100, masses, pressure)
+    
+    G = calculate_free_energy(H, temperature, S)
+
+    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+    log("                                   Thermochemistry", calculation, 2, colour="white")
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+    log(f"  Electronic energy:   {energy:16.10f}     Electronic entropy:   {temperature*electronic_entropy:16.10f}", calculation, 2)
+    log(f"\n  Translational energy:{translational_internal_energy:16.10f}     Translational entropy:{temperature*translational_entropy:16.10f}", calculation, 2)
+    log(f"  Rotational energy:   {rotational_internal_energy:16.10f}     Rotational entropy:   {temperature*rotational_entropy:16.10f}", calculation, 2)
+    log(f"  Vibrational energy:  {vibrational_internal_energy:16.10f}     Vibrational entropy:  {temperature*vibrational_entropy:16.10f}  ", calculation, 2)
+    log(f"  Zero-point energy:   {ZPE:16.10f}", calculation, 2)
+    log(f"\n  Internal energy:     {U:16.10f}", calculation, 2)
+    log(f"  Enthalpy:            {H:16.10f}     Entropy:              {temperature*S:16.10f}", calculation, 2)
+    log(f"\n  Gibbs free energy:   {G:16.10f}     Non-electronic energy:{energy - G:16.10f}", calculation, 2)
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
+
+    return

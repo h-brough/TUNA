@@ -452,8 +452,8 @@ def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI
 
     log("      [Done]", calculation, 1, silent=silent)
     
-    # If not, not requested, calculates and prints the natural orbitals
-    if not calculation.no_natural_orbitals: 
+    # If requested, calculates and prints the natural orbitals
+    if calculation.natural_orbitals: 
         
         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
@@ -494,6 +494,8 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
         P_beta (array): MP2 unrelaxed density matrix for beta orbitals in AO basis
 
     """
+
+    natural_orbital_occupancies, natural_orbitals = None, None
 
     # Builds doubles epsilons tensor
     e_ijab = ci.build_doubles_epsilons_tensor(epsilons, epsilons, o, o, v, v)
@@ -571,9 +573,9 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
     log("     [Done]", calculation, 1, silent=silent)
     
     # Calculates and prints natural orbital occupancies
-    if not calculation.no_natural_orbitals: 
+    if calculation.natural_orbitals: 
         
-         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
+        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
     return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
@@ -609,6 +611,8 @@ def run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, v, ERI_spin
         P_beta (array): MP2 unrelaxed density matrix for beta orbitals in AO basis
 
     """
+    
+    natural_orbital_occupancies, natural_orbitals = None, None
 
     molecular_orbitals_alpha = SCF_output.molecular_orbitals_alpha
     molecular_orbitals_beta = SCF_output.molecular_orbitals_beta
@@ -738,7 +742,7 @@ def run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, v, ERI_spin
     log("     [Done]", calculation, 1, silent=silent)
     
     # Calculates and prints natural orbital occupancies
-    if not calculation.no_natural_orbitals: 
+    if calculation.natural_orbitals: 
         
          natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
@@ -915,7 +919,7 @@ def run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, E_HF
     log("       [Done]", calculation, 1, silent=silent)
 
     # Calculates natural orbitals from OMP2 density
-    if not calculation.no_natural_orbitals: 
+    if calculation.natural_orbitals: 
         
          natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 

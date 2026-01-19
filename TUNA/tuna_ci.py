@@ -425,6 +425,7 @@ def begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, n_occ, calculat
     else:
         
         log(f"\n All electrons will be correlated.", calculation, 1, silent=silent)
+    
 
 
     return g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels_sorted, spin_orbital_labels_sorted
@@ -1112,3 +1113,208 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
 
 
     return E_CIS, E_transition, P_CIS, P_CIS_a, P_CIS_b, P_transition, P_transition_alpha, P_transition_beta
+
+
+
+
+
+
+
+
+
+def calculate_B_matrix(ERI_MO, o, v):
+    """
+
+    Calculates the TDHF/stability B matrix (restricted HF, spatial orbitals).
+
+    With chemist-order spatial ERIs (pq|rs), the RHF stability decomposition
+    can be written with:
+        B_{ia,jb} = J_{ia,jb} = (ia|jb)
+
+    Returns:
+        B (array): shape (i, a, j, b)
+
+    """
+
+    # ERI_MO is assumed CHEMIST order here: ERI_MO[p,q,r,s] = (pq|rs)
+    tmp = ERI_MO[v, o, o, v]          # (a, i, j, b) = (ai|jb) = (ia|jb)
+    B = tmp.transpose(1, 0, 2, 3)     # (i, a, j, b)
+
+    return B
+
+
+
+
+
+
+def calculate_A_matrix(ERI_MO, epsilons, o, v):
+    """
+
+    Calculates the A matrix used to form RHF stability Hessians via:
+        H_plus  = A + B = Δ + 2J - K
+        H_minus = A - B = Δ - K
+
+    where:
+        J_{ia,jb} = (ia|jb)
+        K_{ia,jb} = (ib|ja) = (aj|ib)
+        Δ_{ia,jb} = (eps_a - eps_i) δ_ij δ_ab
+
+    Returns:
+        A (array): shape (i, a, j, b)
+
+    """
+
+    # --- Build J_{ia,jb} = (ia|jb)
+    tmp = ERI_MO[v, o, o, v]          # (a, i, j, b) = (ai|jb)
+    J = tmp.transpose(1, 0, 2, 3)     # (i, a, j, b)
+
+    # --- Build K_{ia,jb} = (aj|ib) = (ib|ja)
+    # From (a, i, j, b) -> swap i<->j to get (a, j, i, b) then transpose to (i,a,j,b)
+    K = tmp.swapaxes(1, 2).transpose(2, 0, 1, 3)   # (i, a, j, b)
+    tmp_oovv = ERI_MO[o, o, v, v]                    # (i,j,a,b)
+    K   = tmp_oovv.transpose(0,2,1,3) 
+    # --- Orbital energy differences Δ_{ia,jb}
+    eps_occ  = epsilons[o]           # (i,)
+    eps_virt = epsilons[v]           # (a,)
+    e_ia = eps_virt[None, :] - eps_occ[:, None]    # (i, a)
+
+    n_occ, n_virt = e_ia.shape
+    A = (J - K).reshape(n_occ * n_virt, n_occ * n_virt)
+
+    # add Δ on the (ia,ia) diagonal in the same flattening convention
+    A[np.diag_indices_from(A)] += e_ia.reshape(-1)
+
+    return A.reshape(n_occ, n_virt, n_occ, n_virt)
+
+
+
+
+
+
+def calculate_electronic_hessians(ERI_MO, epsilons, o, v):
+    
+    """
+
+    Builds the electronic Hessians.
+
+    Args:
+        ERI_MO (array): Electron repulsion integrals in spatial orbital basis
+        epsilons (array): Fock matrix eigenvalues
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+    
+    Returns:
+        H_plus (array): Electronic hessian for first channel
+        H_minus (array): Electronic hessian for second channel
+    
+    """
+
+    # Calculates the TDHF A and B matrices
+    A = calculate_A_matrix(ERI_MO, epsilons, o, v)
+    B = calculate_B_matrix(ERI_MO, o, v)
+
+
+    # Builds the two electronic hessians, shape (i, a, j, b)
+    H_plus = A + B
+    H_minus = A - B
+
+    return H_plus, H_minus
+
+
+
+
+
+
+
+def diagonalise_electronic_hessian(H):
+
+    """
+
+    Finds the eigenvalues of an electronic Hessian.
+
+    Args:
+        H (array): Electronic Hessian shape (a, i, b, j)
+    
+    Returns:
+        eigvals (array): Electronic Hessian eigenvalues
+    
+    """
+
+    # Reads Hessian for number of virtual and occupied orbitals
+    n_occ, n_virt, _, _ = H.shape
+
+    # Reshapes the Hessian to (ia, jb)
+    M = H.reshape(n_virt * n_occ, n_virt * n_occ)
+
+    # Symmetrises the matrix
+    M = symmetrise(M)
+
+    # Finds the eigenvalues
+    eigvals,_ = np.linalg.eigh(M)
+
+    return eigvals
+
+
+
+
+
+
+
+def check_electronic_stability(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=False):
+
+    """
+
+    Checks if a RHF SCF solution is a local minimum or saddle point.
+
+    Args:
+        molecule (Molecule): Molecule object
+        ERI_AO (array): Electron repulsion integrals in AO basis
+        SCF_output (Output): Output object
+        n_doubly_occ (int): Number of doubly occupied orbitals
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    """
+
+
+    # This only works for RHF references, performs the transformation to molecular orbital basis
+    ERI_MO, _, epsilons, o, v = begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=silent)
+
+    ERI_MO = ERI_MO.transpose(0, 2, 1, 3)
+
+    log_spacer(calculation, 1, silent=silent, start="\n")
+    log("         Restricted SCF Stability Analysis", calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent=silent)
+
+    log("  Calculating the electronic Hessian...      ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+
+    # Calculates the electronic hessians
+    H_plus, H_minus = calculate_electronic_hessians(ERI_MO, epsilons, o, v)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    log("  Diagonalising the electronic Hessian...    ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+
+    # Calculates the eigenvalues for both electronic hessians
+    eigvals_plus = diagonalise_electronic_hessian(H_plus)
+    eigvals_minus = diagonalise_electronic_hessian(H_minus)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    # Joins the eigenvalues into one array then sorts from smallest to largest
+    eigvals = np.sort(np.concatenate((eigvals_plus, eigvals_minus)))
+    
+    log(f"\n  The smallest eigenvalue is {eigvals[0]:6.5f}.", calculation, 1, silent=silent)
+    print(eigvals)
+    if eigvals[0] < 0:
+
+        warning(f"There is a negative eigenvalue present!")
+
+    else:
+        
+        log(f"\n  All eigenvalues are positive!", calculation, 1, silent=silent)
+
+
+    log_spacer(calculation, 1, silent=silent)
+
+    return

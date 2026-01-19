@@ -460,3 +460,24 @@ def show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_al
 
 
     return
+
+
+
+
+
+
+
+def plot_vibrational_wavefunctions(x, eigvals, eigvecs, x_vals, V_vals):
+
+    V_vals -= min(V_vals)
+
+    plt.plot(x, eigvecs[:, 0], label='n=0')
+    plt.plot(x, eigvecs[:, 1] + eigvals[1] - eigvals[0], label='n=0')
+    plt.plot(x, eigvecs[:, 2] + eigvals[2] - eigvals[0], label='n=0')
+    plt.plot(x, eigvecs[:, 3] + eigvals[3] - eigvals[0], label='n=0')
+    plt.plot(x, eigvecs[:, 4] + eigvals[4] - eigvals[0], label='n=0')
+    plt.plot(x, eigvecs[:, 5] + eigvals[5] - eigvals[0], label='n=0')
+    plt.plot(x_vals[V_vals<0.3], V_vals[V_vals<0.3])
+
+    plt.show()
+

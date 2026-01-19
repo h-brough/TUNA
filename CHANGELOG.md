@@ -1,5 +1,30 @@
 # Changelog
 
+## TUNA 0.10.0 — 01/03/2026
+
+### Added
+
+- Stability analysis for restricted Hartree-Fock and restricted Kohn-Sham DFT with `STAB` keyword
+- Anharmonic frequencies and intensities, solving nuclear SChrofinger equation on TUNA-calculated PES
+- Updated CIS module
+- New tuna_guess module
+- Split up tuna_optfreq into tuna_opt and tuna_freq
+- Extended Huckel theory and superposition of atomic densities guess strategies
+- Plot anharm keywrod #PLOTVIB'
+- New DEBUG keyword for extreme levels of printing
+
+### Changed
+
+- Natural orbitals are no longer calculated by default for MP2
+- Minimum bond length decreased from 0.05 to 0.01 angstrom
+
+### Fixed
+
+- The `NONATORBS` keyword was causing crashes with MP2
+- Small basis sets would sometimes cause a crash for large diatomics
+
+<br>
+
 ## TUNA 0.9.0 — 01/01/2026
 
 ### Added

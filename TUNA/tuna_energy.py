@@ -9,6 +9,7 @@ import tuna_cc as cc
 import tuna_ci as ci
 import tuna_molecule as mol
 import tuna_dft as dft
+import tuna_guess as guess
 
 
 
@@ -20,9 +21,8 @@ The module contains:
 
 1. Some utility functions to extrapolate the energy with respect to the basis set
 2. Functions to calculate molecular integrals (calculate_one_electron_integrals, calculate_two_electron_integrals)
-3. Utility functions to calculate the nuclear-nuclear energy and set up the initial guess (rotate_molecular_orbitals, etc.)
-4. The large calculate_energy function, which runs the SCF loop and sets off and processes all correlated calculations
-5. The function to scan the bond length, calculating energies at each point
+3. The large calculate_energy function, which runs the SCF loop and sets off and processes all correlated calculations
+4. The function to scan the bond length, calculating energies at each point
 
 """
 
@@ -332,6 +332,7 @@ def calculate_two_electron_integrals(n_basis, basis_functions):
     
     Returns:
         ERI_AO (array): Electron repulsion integrals in AO basis
+        
     """
 
     ERI_AO = np.zeros((n_basis, n_basis, n_basis, n_basis))  
@@ -495,156 +496,6 @@ def check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=False):
     return
 
 
-
-
-
-
-
-
-def rotate_molecular_orbitals(molecular_orbitals, n_occ, theta):
-    
-    """
-
-    Rotates HOMO and LUMO of molecular orbitals by given angle theta to break the symmetry.
-
-    Args:
-        molecular_orbitals (array): Molecular orbital array in AO basis
-        n_occ (int): Number of occupied molecular orbitals
-        theta (float): Angle in radians to rotate orbitals
-
-    Returns:
-        rotated_molecular_orbitals (array): Molecular orbitals with HOMO and LUMO rotated
-
-    """
-
-    # Converts to radians
-    theta *= np.pi / 180
-
-    homo_index = n_occ - 1
-    lumo_index = n_occ
-
-    dimension = len(molecular_orbitals)
-    rotation_matrix = np.eye(dimension)
-
-    # Makes sure there is a HOMO and a LUMO to rotate, builds rotation matrix using sine and cosine of the requested angle, at the HOMO and LUMO indices
-    try:
-        
-        rotation_matrix[homo_index:lumo_index + 1, homo_index:lumo_index + 1] = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta),  np.cos(theta)]])
-    
-    except: error("Basis set too small to rotate initial guess orbitals! Use a larger basis or the NOROTATE keyword.")
-
-    # Rotates molecular orbitals with this matrix
-    rotated_molecular_orbitals = molecular_orbitals @ rotation_matrix
-
-
-    return rotated_molecular_orbitals
-
-
-
-
-
-
-
-
-
-def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, rotate_guess_mos, no_rotate_guess_mos, calculation, molecule, silent=False):
-
-    """
-
-    Either calculates or passes on the guess energy and density.
-
-    Args:
-        P_guess (array): Density matrix from previous step in AO basis
-        P_guess_alpha (array): Alpha density matrix from previous step in AO basis
-        P_guess_beta (array): Beta density matrix from previous step in AO basis
-        E_guess (float): Final energy from previous step
-        reference (str): Either RHF or UHF
-        T (array): Kinetic energy integral matrix in AO basis
-        V_NE (array): Nuclear-electron attraction integral matrix in AO basis
-        X (array): Fock transformation matrix
-        n_doubly_occ (int): Number of doubly occupied orbitals
-        n_alpha (int): Number of alpha electrons
-        n_beta (int): Number of beta electrons
-        rotate_guess_mos (bool): Force rotation of guess molecular orbitals
-        no_rotate_guess_mos (bool): Force no rotation of guess molecular orbitals
-        calculation (Calculation): Calculation object
-        silent (bool, optional): Should output be printed
-
-    Returns:
-        E_guess (float): Guess energy
-        P_guess (array): Guess density matrix in AO basis
-        P_guess_alpha (array): Guess alpha density matrix in AO basis
-        P_guess_beta (array): Guess beta density matrix in AO basis
-        guess_epsilons (array): Guess one-electron Fock matrix eigenvalues
-        guess_mos (array): Guess one-electron Fock matrix eigenvectors
-
-    """
-    
-    H_core = T + V_NE
-    
-    guess_epsilons = []
-    guess_mos = []
-
-
-    if reference == "RHF":
-        
-        # If there's a guess density, just use that
-        if P_guess is not None: 
-            
-            log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent=silent)
-
-        else:
-            
-            log("\n Calculating one-electron density for guess...  ", calculation, end="", silent=silent); sys.stdout.flush()
-
-            # Diagonalise core Hamiltonian for one-electron guess, then build density matrix (2 electrons per orbital) from these guess molecular orbitals
-            guess_epsilons, guess_mos = scf.diagonalise_Fock_matrix(H_core, X)
-
-            P_guess = scf.construct_density_matrix(guess_mos, n_doubly_occ, 2)
-            P_guess_alpha = P_guess_beta = P_guess / 2
-
-            # Take lowest energy guess epsilon for guess energy
-            E_guess = guess_epsilons[0]       
-
-            log("[Done]\n", calculation, silent=silent)
-
-
-    elif reference == "UHF":    
-
-        # If there's a guess density, just use that
-        if P_guess_alpha is not None and P_guess_beta is not None: log("\n Using density matrices from previous step for guess. \n", calculation, silent=silent)
-
-        else:
-
-            log("\n Calculating one-electron density for guess...   ", calculation, end="", silent=silent)
-
-            # Only rotate guess MOs if there's an even number of electrons, and it hasn't been overridden by NOROTATE
-            rotate_guess_mos = True if molecule.multiplicity == 1 and not no_rotate_guess_mos else False
-
-            # Diagonalise core Hamiltonian for one-electron guess
-            guess_epsilons, guess_mos = scf.diagonalise_Fock_matrix(H_core, X)
-
-            # Rotate the alpha MOs if this is requested, otherwise take the alpha guess to equal the beta guess
-            guess_mos_alpha = rotate_molecular_orbitals(guess_mos, n_alpha, calculation.theta) if rotate_guess_mos else guess_mos
-
-            # Construct density matrices (1 electron per orbital) for the alpha and beta guesses
-            P_guess_alpha = scf.construct_density_matrix(guess_mos_alpha, n_alpha, 1)
-            P_guess_beta = scf.construct_density_matrix(guess_mos, n_beta, 1)
-
-            # Take lowest energy guess epsilon for guess energy
-            E_guess = guess_epsilons[0]
-
-            # Add together alpha and beta densities for total density
-            P_guess = P_guess_alpha + P_guess_beta
-
-            log("[Done]\n", calculation, silent=silent)
-
-            if rotate_guess_mos: 
-                
-                log(f" Initial guess density uses molecular orbitals rotated by {(calculation.theta):.1f} degrees.\n", calculation, silent=silent)
-
-
-    return E_guess, P_guess, P_guess_alpha, P_guess_beta, guess_epsilons, guess_mos
 
 
 
@@ -831,7 +682,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
     check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
 
     # Calculates one-electron density for initial guess
-    E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, molecule, silent=silent)
+    E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, molecule, silent=silent)
 
     # Forces the trace of the guess density to be correct
     P_guess = dft.clean_density_matrix(P_guess, S, n_electrons)
@@ -929,6 +780,13 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         log(f" Integral of the final beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent=silent)
 
         log(f" Integral of the final total density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
+
+
+    # If the STAB keyword is used, perform a stability analysis
+    if calculation.stability_analysis and reference == "RHF":
+
+        ci.check_electronic_stability(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=silent)
+
 
 
     # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
@@ -1131,7 +989,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
 
-def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
+def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=False, reverse=False):
 
     """
 
@@ -1142,6 +1000,10 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
         atomic_symbols (list): List of atomic symbols
         starting_coordinates (array): Atomic coordinates to being coordinate scan calculation in 3D
 
+    Returns:
+        bond_lengths (list): List of bond lengths at each scan step
+        energies (list): List of energies at each scan step 
+
     """
 
     coordinates = starting_coordinates
@@ -1150,11 +1012,14 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
     # Unpacks useful quantities
     number_of_steps = calculation.scan_number
     step_size = angstrom_to_bohr(calculation.scan_step)
-
-    log(f"Initialising a {number_of_steps} step coordinate scan in {step_size:.4f} angstrom increments.", calculation, 1) 
-    log(f"Starting at a bond length of {bohr_to_angstrom(bond_length):.4f} angstroms.\n", calculation, 1)
     
-    bond_lengths, energies = [], []
+    # Reverses step size if requested
+    if reverse: step_size *= -1
+
+    log(f"Initialising a {number_of_steps} step coordinate scan in {step_size:.4f} angstrom increments.", calculation, 1, silent=silent) 
+    log(f"Starting at a bond length of {bohr_to_angstrom(bond_length):.4f} angstroms.\n", calculation, 1, silent=silent)
+    
+    bond_lengths, energies, dipole_moments = [], [], []
     P_guess, P_guess_alpha, P_guess_beta, E_guess = None, None, None, None
 
 
@@ -1163,13 +1028,15 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
         # This is safe for molecules not stuck on the z axis
         bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
-        log_big_spacer(calculation, start="\n",space="")
-        log(f"Starting scan step {step} of {number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1)
-        log_big_spacer(calculation,space="")
+        log_big_spacer(calculation, start="\n",space="", silent=silent)
+        log(f"Starting scan step {step} of {number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1, silent=silent)
+        log_big_spacer(calculation,space="", silent=silent)
 
         #Calculates the energy at the coordinates (in bohr) specified
         energy_function = extrapolate_energy if calculation.extrapolate else calculate_energy
-        SCF_output, _, energy, _ = energy_function(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True)
+        SCF_output, molecule, energy, _ = energy_function(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True, silent=silent)
+
+        dipole_moments.append(postscf.calculate_dipole_moment(molecule.centre_of_mass, molecule.charges, coordinates, SCF_output.P, SCF_output.D)[0])
 
         #If MOREAD keyword is used, then the energy and densities are used for the next calculation
         if calculation.MO_read: 
@@ -1184,25 +1051,27 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
         bond_lengths.append(bond_length)
 
         # Builds new coordinates by adding step size on
-        coordinates = np.array([coordinates[0], [0, 0, bond_length + step_size]])
-        
-    log_big_spacer(calculation, start="\n",space="")    
+        coordinates = np.array([coordinates[0], [0, 0, bond_length + step_size]]) 
+
+        if bond_length + step_size <= angstrom_to_bohr(0.05): break
+
+    log_big_spacer(calculation, start="\n",space="", silent=silent)    
     
-    log("\nCoordinate scan calculation finished!\n\n Printing energy as a function of bond length...\n", calculation, 1)
-    log_spacer(calculation)
-    log("                   Coordinate Scan", calculation, 1, colour="white")
-    log_spacer(calculation)
-    log("  Step         Bond Length               Energy", calculation, 1)
-    log_spacer(calculation)
+    log("\nCoordinate scan calculation finished!\n\n Printing energy as a function of bond length...\n", calculation, 1, silent=silent)
+    log_spacer(calculation, silent=silent)
+    log("                   Coordinate Scan", calculation, 1, colour="white", silent=silent)
+    log_spacer(calculation, silent=silent)
+    log("  Step         Bond Length               Energy", calculation, 1, silent=silent)
+    log_spacer(calculation, silent=silent)
 
     # Prints a table of bond lengths and corresponding energies
     for i, (energy, bond_length) in enumerate(zip(energies, bond_lengths)):
         
         step = i + 1
 
-        log(f" {step:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1)
+        log(f" {step:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1, silent=silent)
 
-    log_spacer(calculation)
+    log_spacer(calculation, silent=silent)
 
     # If DELPLOT keyword is used, delete saved pickle plot 
     if calculation.delete_plot:
@@ -1218,4 +1087,5 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates):
   
         out.scan_plot(calculation, bohr_to_angstrom(np.array(bond_lengths)), energies)
 
-    return
+
+    return bond_lengths, energies, dipole_moments

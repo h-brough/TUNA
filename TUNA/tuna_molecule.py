@@ -229,7 +229,7 @@ class Molecule:
         if self.n_electrons - self.multiplicity < -1: error("Multiplicity too high for number of electrons!")
         if self.multiplicity < 1: error("Multiplicity must be at least 1!")
         if self.n_electrons > self.n_SO: error("Too many electrons for size of basis set!")
-        if calculation.reference == "UHF" and self.n_electrons > len(self.basis_functions) and self.n_electrons % 2 == 0: error("Too many electrons for size of basis set!")
+        if calculation.reference == "UHF" and self.n_electrons > len(self.basis_functions) and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons: error("Too many electrons for size of basis set!")
 
         # Sets off errors for impossible correlated calculations
         if calculation.method in correlated_methods:

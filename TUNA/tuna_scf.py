@@ -699,7 +699,7 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
 
     # Only runs if NODAMP is not used
     if calculation.damping:
-        
+
         # Runs if a damping value is specified
         if calculation.damping_factor != None: 
 

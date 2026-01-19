@@ -1,5 +1,5 @@
 
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 from Cython.Build import cythonize
 import numpy
 import scipy
@@ -34,5 +34,3 @@ setup(
     include_package_data=True,
     zip_safe=False,
 )
-
-#Need to include PDF next time too as well as bat
