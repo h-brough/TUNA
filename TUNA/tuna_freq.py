@@ -21,7 +21,7 @@ The module contains:
 
 
 
-def calculate_anharmonicity_constant(transition_matrix, harmonic_frequency):
+def calculate_anharmonicity_constant(transition_matrix, harmonic_frequency) -> np.float64:
 
     """
 
@@ -47,7 +47,7 @@ def calculate_anharmonicity_constant(transition_matrix, harmonic_frequency):
 
 
 
-def calculate_transition_intensity(frequency_matrix, dipole_matrix):
+def calculate_transition_intensity(frequency_matrix, dipole_matrix) -> np.ndarray:
     
     """
 
@@ -80,7 +80,7 @@ def calculate_transition_intensity(frequency_matrix, dipole_matrix):
 
 
 
-def calculate_dipole_matrix(vibrational_wavefunctions, dipole_moments_interpolated):
+def calculate_dipole_matrix(vibrational_wavefunctions, dipole_moments_interpolated) -> np.ndarray:
 
     """
 
@@ -107,7 +107,7 @@ def calculate_dipole_matrix(vibrational_wavefunctions, dipole_moments_interpolat
 
 
 
-def diagonalise_hamiltonian_tridiagonal(main_diag, off_diag):
+def diagonalise_hamiltonian_tridiagonal(main_diag, off_diag) -> tuple:
 
     """
 
@@ -135,7 +135,7 @@ def diagonalise_hamiltonian_tridiagonal(main_diag, off_diag):
 
 
 
-def calculate_transition_matrix(vibrational_energy_levels):
+def calculate_transition_matrix(vibrational_energy_levels) -> np.ndarray:
 
     """
 
@@ -161,31 +161,90 @@ def calculate_transition_matrix(vibrational_energy_levels):
 
 
 
-def construct_nuclear_hamiltonian(x, V, reduced_mass):
-    
-    dx = x[1] - x[0]
+def construct_nuclear_hamiltonian(x_interpolated, V_interpolated, reduced_mass) -> tuple:
 
+    """
+
+    Constructs the nuclear Hamiltonian matrix for the potential energy surface.
+
+    Args:
+        x_interpolated (array): Interpolated nuclear coordinate
+        V_interpolated (array): Interpolated potential energy surface
+        reduced_mass (float): Molecular reduced mass
+
+    Returns:
+        main_diag (array): Main diagonal part of tridiagonal Hamiltonian
+        off_diag (array): Off diagonal part of tridiagonal Hamiltonian
+
+    """
+
+    # Differential assuming the coordinate array is very fine
+    dx = x_interpolated[1] - x_interpolated[0]
+
+    # Kinetic term
     T = 1 / (reduced_mass * dx ** 2) 
 
-    main_diag = T + V
-    off_diag = np.full(len(V) - 1, -T / 2)
+    # The potential energy surface affects the diagonal term only, the off-diagonal includes coupling between grid points in the kinetic term
+    main_diag = T + V_interpolated
+    off_diag = np.full(len(V_interpolated) - 1, -T / 2)
 
     return main_diag, off_diag
 
 
 
-def interpolate_potential_energy(V_vals, x_vals, N):
 
-    x = np.linspace(min(x_vals), max(x_vals), int(N))
 
-    f = sp.interpolate.interp1d(x_vals, V_vals, kind='cubic')
-    V = f(x)
+
+
+
+def interpolate_potential_energy(V_raw, x_raw, n_grid_points) -> tuple:
+
+    """
+
+    Uses cubic splines to interpolate the potential energy surface.
+
+    Args:
+        V_raw (array): Potential energy surface before interpolation
+        x_raw (array): Nuclear coordinate array before interpolation
+        n_grid_points (int): Number of interpolation grid points
+
+    Returns:
+        x (array): Interpolated nuclear coordinate array
+        V (array): Interpolated potential energy surface
+
+    """
+
+    # Builds a linearly spaced x-axis between the computed end points, to the desired grid density
+    x = np.linspace(x_raw.min(), x_raw.max(), int(n_grid_points))
+
+    # Cubic interpolation of the potential energy surface
+    interpolation_function = sp.interpolate.interp1d(x_raw, V_raw, kind="cubic")
+    V = interpolation_function(x)
 
     return x, V
 
 
 
-def print_absorption_spectrum(calculation, transition_matrix, frequency_matrix, wavelength_matrix, intensity_matrix):
+
+
+
+
+
+
+def print_absorption_spectrum(calculation, transition_matrix, frequency_matrix, wavelength_matrix, intensity_matrix) -> None:
+
+    """
+
+    Prints the absorption spectrum for anharmonic vibrational spectroscopy.
+
+    Args:
+        calculation (Calculation): Calculation object
+        transition_matrix (array): Matrix of transition energies
+        frequency_matrix (array): Matrix of transition frequencies in per cm
+        wavelength_matrix (array): Matrix of wavelengths in nm
+        intensity_matrix (array): Matrix of intensities in km per mol
+
+    """
 
     log_big_spacer(calculation, 1, start="\n")
     log("                                        Anharmonic Absorption Spectrum", calculation, 1, colour="white")
@@ -193,6 +252,7 @@ def print_absorption_spectrum(calculation, transition_matrix, frequency_matrix, 
     log("  Transition         Energy          Frequency (per cm)       Wavelength (nm)     Intensity (km per mol)", calculation, 1)
     log_big_spacer(calculation, 1)
 
+    # Only transitions up to the third energy level are shown
     for i in range(3):
         for j in range(i + 1, 4):
                 
@@ -203,7 +263,14 @@ def print_absorption_spectrum(calculation, transition_matrix, frequency_matrix, 
     return
 
 
-def solve_numerical_schrodinger_equation(reduced_mass, calculation, atomic_symbols, optimised_coordinates, harmonic_frequency_per_cm):
+
+
+
+
+
+
+
+def solve_numerical_schrodinger_equation(reduced_mass, calculation, atomic_symbols, optimised_coordinates, harmonic_frequency_per_cm) -> None:
 
     # This value is more than enough for accuracy and extrapolation is not going to be the rate limiting step
     extrapolation_grid_density = 1000
@@ -304,7 +371,8 @@ def solve_numerical_schrodinger_equation(reduced_mass, calculation, atomic_symbo
 
 
 
-def calculate_frequency(calculation, atomic_symbols=None, coordinates=None, molecule=None, energy=None):
+
+def calculate_frequency(calculation, atomic_symbols=None, coordinates=None, molecule=None, energy=None) -> tuple:
 
     """
 

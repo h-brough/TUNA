@@ -342,6 +342,7 @@ def calculate_two_electron_integrals(n_basis, basis_functions):
 
     ERI_AO = np.asarray(ERI_AO)
 
+
     return ERI_AO
 
 
@@ -977,6 +978,16 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         out.show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_alpha, P_beta, n_electrons, P_difference_alpha=P_transition_alpha, P_difference_beta=P_transition_beta, P_difference=P_transition, molecular_orbitals=molecular_orbitals, natural_orbitals=natural_orbitals, nuclear_charges=molecule.basis_charges)
 
+    np.savetxt("eri.dat", eps)
+
+
+    with open("mo.dat", "w") as f:
+
+        f.write(np.array2string(molecular_orbitals, threshold=np.inf))
+
+    with open("eps.dat", "w") as f:
+
+        f.write(np.array2string(epsilons, threshold=np.inf))
 
     return SCF_output, molecule, final_energy, P
 
