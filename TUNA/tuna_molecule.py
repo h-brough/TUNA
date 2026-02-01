@@ -1,6 +1,7 @@
 from tuna_integrals import tuna_integral as ints
 from tuna_util import *
 import tuna_basis as bas
+import tuna_postscf as postscf
 import numpy as np
 
 
@@ -110,9 +111,13 @@ class Molecule:
 
 
         # Charge array in relative atomic charge units and mass array in electron mass units
-        self.basis_charges = np.array([atom.basis_charge for atom in self.atoms], dtype=int)
-        self.charges = np.array([atom.charge for atom in self.atoms], dtype=int)
-        self.masses = np.array([atom.mass for atom in self.atoms], dtype=float) * constants.atomic_mass_unit_in_electron_mass
+        self.basis_charges = np.array([atom.basis_charge for atom in self.atoms])
+        self.charges = np.array([atom.charge for atom in self.atoms])
+        self.masses = np.array([atom.mass for atom in self.atoms]) * constants.atomic_mass_unit_in_electron_mass
+        
+        # Useful structure-based constants
+        self.reduced_mass = postscf.calculate_reduced_mass(self.masses)
+        self.rotational_constant_per_cm, _ = postscf.calculate_rotational_constant(self.masses, self.coordinates)
 
         # Generates basis data for one type of atom
         self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0], calculation)

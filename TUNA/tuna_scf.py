@@ -788,6 +788,7 @@ def calculate_DIIS_error(F_alpha, F_beta, P_alpha, P_beta, S, X, DIIS_error_vect
 
         return commutator, orthogonalised_DIIS_error
 
+
     # Calculates commutator for both spin channels
     commutator_alpha, orthogonalised_DIIS_error_alpha = calculate_commutator(F_alpha, P_alpha)
     commutator_beta, orthogonalised_DIIS_error_beta = calculate_commutator(F_beta, P_beta)
@@ -1146,13 +1147,11 @@ def run_self_consistent_field_cycle(molecule, calculation, T, V_NE, ERI_AO, V_NN
 
     """
 
-
     log_big_spacer(calculation, silent=silent)
     log("                                   Self-consistent Field Cycle Iterations", calculation, 1, silent=silent, colour="white")
     log_big_spacer(calculation, silent=silent)
     log("  Step          E                DE              RMS(DP)          MAX(DP)           Error       Damping", calculation, 1, silent=silent)
     log_big_spacer(calculation, silent=silent)
-
 
     # Unpacks useful calculation properties
     reference = calculation.reference

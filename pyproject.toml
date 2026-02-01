@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 name = "QuantumTUNA"
 dynamic = ["version"]
 authors = [
-  { name = "Harry Brough", email = "harry.brough@icloud.com"}
+  { name = "Harry Brough", email = "harry.brough@postgrad.manchester.ac.uk"}
 ]
 keywords = ["quantum chemistry", "molecular physics", "hartree-fock", "mp2", "dft", "coupled cluster", "theoretical chemistry", "computational chemistry", "molecular modeling"]
 dependencies = [

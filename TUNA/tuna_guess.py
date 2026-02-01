@@ -150,3 +150,21 @@ def setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference
 
 
 
+
+
+def calculate_superposition_of_atomic_densities():
+
+
+
+    return
+
+
+
+def purify_density_matrix(P, n_electrons_per_orbital):
+
+    eigenvalues, natural_orbitals = np.linalg.eigh(P)
+
+    P = scf.construct_density_matrix(natural_orbitals, n_electrons_per_orbital)
+
+    return P
+

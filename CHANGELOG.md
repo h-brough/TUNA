@@ -12,11 +12,16 @@
 - Extended Huckel theory and superposition of atomic densities guess strategies
 - Plot anharm keywrod #PLOTVIB'
 - New DEBUG keyword for extreme levels of printing
+- Wrapper for calc_energy, extrapolate_energy = evaluate_energy which decides
+- Parse out central energy evaluation from calculate Hessian, reduced cost of frequency calculations by 20% without loss of accuracy
+- Check vs orca if vibrational energy shouold be zero
+- Electronic entropy
 
 ### Changed
 
 - Natural orbitals are no longer calculated by default for MP2
 - Minimum bond length decreased from 0.05 to 0.01 angstrom
+- Print atomic masses in frequency calculations with additional pritn 
 
 ### Fixed
 

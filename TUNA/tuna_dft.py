@@ -1,4 +1,4 @@
-from tuna_util import log, warning, error, symmetrise
+from tuna_util import log, warning, error, symmetrise, constants
 import numpy as np
 import sys
 from scipy.integrate import lebedev_rule
@@ -28,12 +28,6 @@ reason, although higher powers do not benefit as much. Optimising all of these l
 observed about a factor of two increase for DFT functionals generally by optimising the cubing and cube rooting.
 
 """
-
-
-# These are constants for cleaning grid-based arrays - the sigma floor needs to be the square of the density floor
-DENSITY_FLOOR = 1e-26
-SIGMA_FLOOR = DENSITY_FLOOR ** 2
-
 
 
 def calculate_seitz_radius(density):
@@ -81,7 +75,7 @@ def calculate_f_prime_zeta(zeta):
 
 
 
-def clean(function_on_grid, floor=DENSITY_FLOOR):
+def clean(function_on_grid, floor=constants.density_floor):
 
     # Makes sure there are no zero or negative values in the electron density
     
@@ -576,7 +570,7 @@ def calculate_density_gradient(P, bfs_on_grid, bf_gradients_on_grid):
 
     # It is important that this is cleaned at the square of the floor that the density and kinetic energy density are cleaned
     # Quantities that rely on ratios between the density and its gradient will break if they're cleaned equally
-    sigma = clean(sigma, floor=SIGMA_FLOOR)
+    sigma = clean(sigma, floor=constants.sigma_floor)
 
     return sigma, density_gradient
 
@@ -606,7 +600,7 @@ def calculate_kinetic_energy_density(P, bf_gradients_on_grid):
     tau = (1 / 2) * np.einsum("ij,aikl,ajkl->kl", P, bf_gradients_on_grid, bf_gradients_on_grid, optimize=True)
     
     # This needs to be cleaned with the same floor as the density, higher than sigma
-    tau = clean(tau, floor=DENSITY_FLOOR)
+    tau = clean(tau, floor=constants.density_floor)
 
     return tau
 
@@ -1588,7 +1582,7 @@ def calculate_UPBE_correlation(alpha_density, beta_density, density, sigma_aa, s
     """
     
     # The PBE correlation functional only depends on the full sigma, not the spin channels. This is cleaned at the square of the density floor.
-    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=SIGMA_FLOOR)
+    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=constants.sigma_floor)
 
     # Key parameters for PBE - gamma is exact and beta has many more significant figures than in the original PBE paper
     gamma = (1 - np.log(2)) / np.pi ** 2
@@ -1939,7 +1933,7 @@ def calculate_UP86_correlation(alpha_density, beta_density, density, sigma_aa, s
     alpha, beta, gamma, delta, f_tilde = 0.023266, 0.000007389, 8.723, 0.472, 0.11
 
     # Calculates the cleans the total sigma
-    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=SIGMA_FLOOR)
+    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=constants.sigma_floor)
 
     # Calculates the local Seitz radius
     r_s, inv_density = calculate_seitz_radius(density)
@@ -2156,7 +2150,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     df_dn_alpha_LDA, df_dn_beta_LDA, _, _, _, _, _, e_C_LDA = calculate_UPWLDA_correlation(alpha_density, beta_density, density, None, None, None, None, None, None)
     
     # This functional only depends on the total square density gradient, not its spin components
-    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=SIGMA_FLOOR)
+    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=constants.sigma_floor)
 
     C_0, C_X, alpha = 0.004235, -0.001667212, 0.09
 
@@ -2431,7 +2425,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     
     # Forms total density, cleaned total sigma and total tau
     density = alpha_density + beta_density
-    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab,floor=SIGMA_FLOOR)
+    sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab,floor=constants.sigma_floor)
     tau = tau_alpha + tau_beta
 
     # Defining constant for TPSS
@@ -2510,13 +2504,13 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dzeta_dnb = -2 * alpha_density * inv_n2
 
     # Key spin polarisation machinery
-    one_minus = clean(1 - zeta, SIGMA_FLOOR)
+    one_minus = clean(1 - zeta, constants.sigma_floor)
     one_plus = 1 + zeta
     one_minus2 = one_minus * one_minus
     one_plus2  = one_plus * one_plus
     one_minus_z2 = 1 - zeta * zeta
 
-    B = clean(one_minus2 * sigma_aa + one_plus2 * sigma_bb - 2 * one_minus_z2 * sigma_ab, floor=SIGMA_FLOOR)
+    B = clean(one_minus2 * sigma_aa + one_plus2 * sigma_bb - 2 * one_minus_z2 * sigma_ab, floor=constants.sigma_floor)
     sqrtB = B ** (1 / 2)
     inv_sqrtB = 1 / sqrtB
 

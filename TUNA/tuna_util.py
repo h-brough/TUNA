@@ -188,7 +188,7 @@ class Calculation:
         self.no_DFT_exchange = keyword(["NOX"], False)
         self.no_DFT_correlation = keyword(["NOC"], False)
         self.stability_analysis = keyword(["STAB"], False)
-        self.plot_vibrational_wavefunctions = keyword("PLOTVIB", False)
+        self.plot_vibrational_wavefunctions = keyword(["PLOTVIB"], False)
 
         # Convergence keywords with optional parameters
         self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
@@ -218,7 +218,7 @@ class Calculation:
         # Convergence and optimisation keywords
         self.max_iter = keyword(["MAXITER"], 100, boolean=False, check_next_space=True, value_type=int, mandatory_value=True) + 1
         self.max_step = keyword(["MAXSTEP"], 0.2, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.default_Hessian = keyword(["DEFAULTHESS"], 0.25, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+        self.default_hessian = keyword(["DEFAULTHESS"], 0.25, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.geom_max_iter = keyword(["GEOMMAXITER", "MAXGEOMITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.scan_step = keyword(["STEP", "SCANSTEP"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.scan_number = keyword(["NUM", "SCANNUMBER"], None, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -375,6 +375,10 @@ class Constants:
         self.k = self.k_in_joules_per_kelvin / self.hartree_in_joules
         self.h = self.planck_constant_in_joules_seconds / (self.hartree_in_joules * self.atomic_time_in_seconds)
 
+        # System-wide consistent parameters
+        self.numerical_derivative_prod = 0.0001
+        self.density_floor = 1e-26
+        self.sigma_floor = self.density_floor ** 2
 
         # Convergence criteria for self-consistent field
         self.convergence_criteria_SCF = {
@@ -1359,7 +1363,8 @@ atomic_properties = {
         "vdw_radius" : 0,
         "real_vdw_radius" : 0,
         "core_orbitals": 0,
-        "name" : "ghost"
+        "name" : "ghost",
+        "density" : None
     },
 
     "H" : {
@@ -1369,7 +1374,8 @@ atomic_properties = {
         "vdw_radius" : 1.8916,
         "real_vdw_radius" : 120,
         "core_orbitals": 0,
-        "name" : "hydrogen"
+        "name" : "hydrogen",
+        "density" : np.array([[1]])
     },
 
     "HE" : {
@@ -1379,7 +1385,8 @@ atomic_properties = {
         "vdw_radius" : 1.9124,
         "real_vdw_radius" : 140,
         "core_orbitals": 0,
-        "name" : "helium"
+        "name" : "helium",
+        "density" : np.array([[2]])
     },
 
     "LI" : {
@@ -1389,7 +1396,9 @@ atomic_properties = {
         "vdw_radius" : 1.55902,
         "real_vdw_radius" : 182,
         "core_orbitals": 0,
-        "name" : "lithium"
+        "name" : "lithium",
+        "density" : np.array([[2.04424896, -0.22217986, 0, 0, 0], [-0.22217986, 1.06290242, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
+
     },
 
     "BE" : {
@@ -1399,7 +1408,9 @@ atomic_properties = {
         "vdw_radius" : 2.66073,
         "real_vdw_radius" : 153,
         "core_orbitals": 0,
-        "name" : "beryllium"
+        "name" : "beryllium",
+        "density" : np.array([[2.14442543, -0.55651555, 0, 0, 0], [-0.55651555, 2.14442543, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
+
     },
 
     "B" : {
@@ -1409,7 +1420,9 @@ atomic_properties = {
         "vdw_radius" : 2.80624,
         "real_vdw_radius" : 192,
         "core_orbitals": 1,
-        "name" : "boron"
+        "name" : "boron",
+        "density" : np.array([[2.15642129, -0.58078413, 0, 0, 0], [-0.58078413, 2.15642129, 0, 0, 0], [0, 0, 1/3, 0, 0], [0, 0, 0, 1/3, 0], [0, 0, 0, 0, 1/3]])
+
     },
 
     "C" : {
@@ -1419,7 +1432,9 @@ atomic_properties = {
         "vdw_radius" : 2.74388,
         "real_vdw_radius" : 170,
         "core_orbitals": 1,
-        "name" : "carbon"
+        "name" : "carbon",
+        "density" : np.array([[2.13147782, -0.52937894, 0, 0, 0], [-0.5293789, 2.13147782, 0, 0, 0], [0, 0, 2/3, 0, 0], [0, 0, 0, 2/3, 0], [0, 0, 0, 0, 2/3]])
+
     },
 
     "N" : {
@@ -1429,7 +1444,9 @@ atomic_properties = {
         "vdw_radius" : 2.63995,
         "real_vdw_radius" : 155,
         "core_orbitals": 1,
-        "name" : "nitrogen"
+        "name" : "nitrogen",
+        "density" : np.array([[2.11694591, -0.49756223, 0, 0, 0], [-0.49756223, 2.11694591, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
+
     },
 
     "O" : {
@@ -1439,7 +1456,9 @@ atomic_properties = {
         "vdw_radius" : 2.53601,
         "real_vdw_radius" : 152,
         "core_orbitals": 1,
-        "name" : "oxygen"
+        "name" : "oxygen",
+        "density" : np.array([[2.11870859, -0.50150663, 0, 0, 0], [-0.50150663, 2.11870859, 0, 0, 0], [0, 0, 4/3, 0, 0], [0, 0, 0, 4/3, 0], [0, 0, 0, 0, 4/3]])
+
     },
 
     "F" : {
@@ -1449,7 +1468,9 @@ atomic_properties = {
         "vdw_radius" : 2.43208,
         "real_vdw_radius" : 147,
         "core_orbitals": 1,
-        "name" : "fluorine"
+        "name" : "fluorine",
+        "density" : np.array([[2.12007958, -0.50455749, 0, 0, 0], [-0.50455749, 2.12007958, 0, 0, 0], [0, 0, 5/3, 0, 0], [0, 0, 0, 5/3, 0], [0, 0, 0, 0, 5/3]])
+
     },
 
     "NE" : {
@@ -1459,7 +1480,9 @@ atomic_properties = {
         "vdw_radius" : 2.34893,
         "real_vdw_radius" : 154,
         "core_orbitals": 1,
-        "name" : "neon"
+        "name" : "neon",
+        "density" : np.array([[2.12526962, -0.51597648, 0, 0, 0], [-0.51597648, 2.12526962, 0, 0, 0], [0, 0, 2, 0, 0], [0, 0, 0, 2, 0], [0, 0, 0, 0, 2]])
+
     },
 
     "NA" : {

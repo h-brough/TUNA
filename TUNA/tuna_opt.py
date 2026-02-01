@@ -23,39 +23,25 @@ def calculate_gradient(coordinates, calculation, atoms, silent=False):
 
     """
 
-    prod = 0.0001
-
-    prodding_coords = np.array([[0,0,0], [0,0, prod]])  
+    prodding_coords = np.array([[0,0,0], [0,0, constants.numerical_derivative_prod]])  
 
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
 
     log(" Calculating energy on displaced geometry 1 of 2...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
-    if calculation.extrapolate:
-
-        _, _, energy_forward, _ = energ.extrapolate_energy(calculation, atoms, forward_coords, silent=True)
-
-    else:
-        
-        _, _, energy_forward, _ = energ.calculate_energy(calculation, atoms, forward_coords, silent=True)
+    _, _, energy_forward, _ = energ.evaluate_molecular_energy(calculation, atoms, forward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)
 
     log(" Calculating energy on displaced geometry 2 of 2...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-    
-    if calculation.extrapolate:
 
-        _, _, energy_backward, _ = energ.extrapolate_energy(calculation, atoms, backward_coords, silent=True)
-
-    else:
-        
-        _, _, energy_backward, _ = energ.calculate_energy(calculation, atoms, backward_coords, silent=True)
+    _, _, energy_backward, _ = energ.evaluate_molecular_energy(calculation, atoms, backward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)
 
 
-    gradient = (energy_forward - energy_backward) / (2 * prod)
+    gradient = (energy_forward - energy_backward) / (2 * constants.numerical_derivative_prod)
 
     return gradient
     
@@ -63,45 +49,45 @@ def calculate_gradient(coordinates, calculation, atoms, silent=False):
 
 
 
-def calculate_approximate_Hessian(delta_coords, delta_grad): 
+def calculate_approximate_hessian(delta_coords, delta_grad): 
 
     """
 
-    Calculates the approximate Hessian.
+    Calculates the approximate hessian.
 
     Args:   
         delta_coords (float): Change in bond length
         delta_grad (float): Change in gradient
 
     Returns:
-        Hessian (float): Approximate second derivative of energy wrt. bond length
+        hessian (float): Approximate second derivative of energy wrt. bond length
 
     """
 
-    Hessian = delta_grad / delta_coords
+    hessian = delta_grad / delta_coords
 
-    return Hessian
-
-
+    return hessian
 
 
 
 
 
-def calculate_Hessian(coordinates, calculation, atoms, silent=False):
+
+
+def calculate_hessian(coordinates, calculation, atomic_symbols, energy, silent=False):
 
     """
 
-    Calculates the Hessian, the second derivative of molecular energy with respect to bond length.
+    Calculates the hessian, the second derivative of molecular energy with respect to bond length.
 
     Args:   
         coordinates (array): Atomic coordinates
         calculation (Calculation): Calculation object
-        atoms (list): Atomic symbol list
+        atomic_symbols (list): Atomic symbol list
         silent (bool, optional): Should anything be printed
 
     Returns:
-        Hessian (float): Second derivative of energy wrt. bond length
+        hessian (float): Second derivative of energy wrt. bond length
         SCF_output_forward (Output): SCF output object from forward prodded coordinates
         P_forward (array): Density matrix in AO basis from forward prodded coordinates
         SCF_output_backward (Output): SCF output object from backward prodded coordinates
@@ -109,79 +95,41 @@ def calculate_Hessian(coordinates, calculation, atoms, silent=False):
 
     """
 
-    prod = 0.0001
-
-    prodding_coords = np.array([[0,0,0], [0,0, prod]])  
+    prodding_coords = np.array([[0,0,0], [0,0,  constants.numerical_derivative_prod]])  
 
     far_forward_coords = coordinates + 2 * prodding_coords
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
     far_backward_coords = coordinates - 2 * prodding_coords  
 
-    log("\n Calculating energy on displaced geometry 1 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log("\n Calculating energy on displaced geometry 1 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    if calculation.extrapolate:
-
-        _, _, energy_far_forward, _ = energ.extrapolate_energy(calculation, atoms, far_forward_coords, silent=True)
-
-    else:
-        
-        _, _, energy_far_forward, _ = energ.calculate_energy(calculation, atoms, far_forward_coords, silent=True)
+    _, _, energy_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_forward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)   
 
-    log(" Calculating energy on displaced geometry 2 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 2 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    if calculation.extrapolate:
-
-        SCF_output_forward, _, energy_forward, P_forward = energ.extrapolate_energy(calculation, atoms, forward_coords, silent=True)
-
-    else:
-        
-        SCF_output_forward, _, energy_forward, P_forward = energ.calculate_energy(calculation, atoms, forward_coords, silent=True)
+    SCF_output_forward, _, energy_forward, P_forward = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)   
 
-    log(" Calculating energy on displaced geometry 3 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 3 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    if calculation.extrapolate:
-
-        _, _, energy, _ = energ.extrapolate_energy(calculation, atoms, coordinates, silent=True)
-
-    else:
-        
-        _, _, energy, _ = energ.calculate_energy(calculation, atoms, coordinates, silent=True)
+    SCF_output_backward, _, energy_backward, P_backward = energ.evaluate_molecular_energy(calculation, atomic_symbols, backward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)   
 
-    log(" Calculating energy on displaced geometry 4 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 4 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    if calculation.extrapolate:
-
-        SCF_output_backward, _, energy_backward, P_backward = energ.extrapolate_energy(calculation, atoms, backward_coords, silent=True)
-
-    else:
-        
-        SCF_output_backward, _, energy_backward, P_backward = energ.calculate_energy(calculation, atoms, backward_coords, silent=True)
-
-    log("[Done]", calculation, 1, silent=silent)   
-
-    log(" Calculating energy on displaced geometry 5 of 5...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-    if calculation.extrapolate:
-
-        _, _, energy_far_backward, _ = energ.extrapolate_energy(calculation, atoms, far_backward_coords, silent=True)
-
-    else:
-        
-        _, _, energy_far_backward, _ = energ.calculate_energy(calculation, atoms, far_backward_coords, silent=True)
+    _, _, energy_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_backward_coords, silent=True)
 
     log("[Done]\n", calculation, 1, silent=silent)   
 
     # Equation from Wikipedia page on numerical second derivative methods, fairly noise-resistant formula
-    Hessian = (-energy_far_forward + 16 * energy_forward - 30 * energy + 16 * energy_backward -  energy_far_backward) / (12 * prod ** 2)
+    hessian = (-energy_far_forward + 16 * energy_forward - 30 * energy + 16 * energy_backward -  energy_far_backward) / (12 * constants.numerical_derivative_prod ** 2)
 
-    return Hessian, SCF_output_forward, P_forward, SCF_output_backward, P_backward
+    return hessian, SCF_output_forward, P_forward, SCF_output_backward, P_backward
 
 
 
@@ -208,14 +156,12 @@ def calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_o
 
     """
 
-    prod = 0.0001
-
     masses = molecule.masses
     charges = molecule.charges
 
     # Forward and backward coordinates are symmetrical by the mass weighting, to prevent influence of centre of mass in dipole moment calculations
-    forward_coords = coordinates + np.array([[0,0,0 - masses[1] * prod], [0,0,0 + masses[0] * prod]]) / np.sum(masses)
-    backward_coords = coordinates - np.array([[0,0,0 - masses[1] * prod], [0,0,0 + masses[0] * prod]]) / np.sum(masses)
+    forward_coords = coordinates + np.array([[0,0,0 - masses[1] * constants.numerical_derivative_prod], [0,0,0 + masses[0] * constants.numerical_derivative_prod]]) / np.sum(masses)
+    backward_coords = coordinates - np.array([[0,0,0 - masses[1] * constants.numerical_derivative_prod], [0,0,0 + masses[0] * constants.numerical_derivative_prod]]) / np.sum(masses)
 
     # Calculates centre of mass for unperturbed molecule
     centre_of_mass = postscf.calculate_centre_of_mass(masses, coordinates)
@@ -225,7 +171,7 @@ def calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_o
     dipole_moment_backward = postscf.calculate_dipole_moment(centre_of_mass, charges, backward_coords, P_backward, SCF_output_backward.D)[0]
 
     # Calculates dipole derivative by central differences method
-    dipole_derivative = (dipole_moment_forward - dipole_moment_backward) / (2 * prod)
+    dipole_derivative = (dipole_moment_forward - dipole_moment_backward) / (2 * constants.numerical_derivative_prod)
 
     # Converts to normal coordinates by mass weighting
     dipole_derivative /= np.sqrt(postscf.calculate_reduced_mass(masses))
@@ -257,7 +203,7 @@ def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True)
     """
 
     maximum_step = angstrom_to_bohr(calculation.max_step)
-    default_Hessian = calculation.default_Hessian
+    default_hessian = calculation.default_hessian
     geom_conv_criteria = calculation.geom_conv
     max_geom_iter = calculation.geom_max_iter
     opt_max = calculation.opt_max
@@ -276,8 +222,8 @@ def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True)
         with open(trajectory_path, 'w'): pass
 
 
-    if calc_hess: log(f"Using exact Hessian in convex region, Hessian of {default_Hessian:.3f} outside.\n", calculation, 1)
-    else: log(f"Using approximate Hessian in convex region, Hessian of {default_Hessian:.3f} outside.\n", calculation, 1)
+    if calc_hess: log(f"Using exact hessian in convex region, hessian of {default_hessian:.3f} outside.\n", calculation, 1)
+    else: log(f"Using approximate hessian in convex region, hessian of {default_hessian:.3f} outside.\n", calculation, 1)
 
     log(f"Convergence criteria for gradient is {geom_conv_criteria.get("gradient"):.8f}, step convergence is {geom_conv_criteria.get("step"):.8f} angstroms.", calculation, 1)
     log(f"Geometry iterations will not exceed {max_geom_iter}, maximum step is {bohr_to_angstrom(maximum_step)} angstroms.", calculation, 1)
@@ -323,34 +269,34 @@ def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True)
         gradient = calculate_gradient(coordinates, calculation, atoms, silent=False)
 
         bond_length = molecule.bond_length
-        Hessian = default_Hessian
+        hessian = default_hessian
 
      
         if iteration > 1:
 
             if calc_hess: 
 
-                log("\n Beginning calculation of exact Hessian...    ", calculation, 1); sys.stdout.flush()
+                log("\n Beginning calculation of exact hessian...    ", calculation, 1); sys.stdout.flush()
 
-                hess, _, _, _, _ = calculate_Hessian(coordinates, calculation, atoms, silent=False)
+                hess, _, _, _, _ = calculate_hessian(coordinates, calculation, atoms, energy, silent=False)
 
             else: 
 
-                # Calculates approximate Hessian if CALCHESS keyword not used
-                hess = calculate_approximate_Hessian(bond_length - old_bond_length, gradient - old_gradient)
+                # Calculates approximate hessian if CALCHESS keyword not used
+                hess = calculate_approximate_hessian(bond_length - old_bond_length, gradient - old_gradient)
 
 
-            # Checks if region is convex or concave, if in the correct region for opt to min/max, sets the Hessian to the second derivative
+            # Checks if region is convex or concave, if in the correct region for opt to min/max, sets the hessian to the second derivative
             if opt_max:
 
-                if hess < 0.01: Hessian = -hess
+                if hess < 0.01: hessian = -hess
 
-            elif hess > 0.01: Hessian = hess
+            elif hess > 0.01: hessian = hess
 
 
         # Calculates step to be taken using Wikipedia equation for Newton's method
-        inverse_Hessian = 1 / Hessian           
-        step = inverse_Hessian * gradient
+        inverse_hessian = 1 / hessian           
+        step = inverse_hessian * gradient
         
 
         def bool_to_word(bool):

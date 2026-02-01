@@ -116,88 +116,90 @@ def run_calculation(calculation_type, calculation, atomic_symbols, coordinates):
 
     ghost_atom_present = any("X" in atom for atom in atomic_symbols)
 
-    # Single point energy
-    if calculation_type == "SPE": 
-        
-        if calculation.extrapolate:
+    match calculation_type:
 
-            energ.extrapolate_energy(calculation, atomic_symbols, coordinates)
-
-        else:
+        # Single point energy
+        case "SPE": 
             
-            energ.calculate_energy(calculation, atomic_symbols, coordinates)
+            if calculation.extrapolate:
 
+                energ.extrapolate_energy(calculation, atomic_symbols, coordinates)
 
-    # Coordinate scan
-    elif calculation_type == "SCAN":
-
-        if calculation.scan_step:
-            if calculation.scan_number: 
+            else:
                 
-                energ.scan_coordinate(calculation, atomic_symbols, coordinates)
+                energ.calculate_energy(calculation, atomic_symbols, coordinates)
+
+
+        # Coordinate scan
+        case "SCAN": 
+
+            if calculation.scan_step:
+                if calculation.scan_number: 
+                    
+                    energ.scan_coordinate(calculation, atomic_symbols, coordinates)
+                    
+                else: error(f"Coordinate scan requested but no number of steps given by keyword \"NUM\"!")
+            else: error(f"Coordinate scan requested but no step size given by keyword \"STEP\"!")
+            
+
+        # Geometry optimisation
+        case "OPT" | "FORCE": 
+            
+            if not len(atomic_symbols) == 1 and not ghost_atom_present: 
                 
-            else: error(f"Coordinate scan requested but no number of steps given by keyword \"NUM\"!")
-        else: error(f"Coordinate scan requested but no step size given by keyword \"STEP\"!")
-        
+                multiple_iterations = False if calculation_type == "FORCE" else True
 
-    # Geometry optimisation
-    elif calculation_type == "OPT" or calculation_type == "FORCE":
-        
-        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+                opt.optimise_geometry(calculation, atomic_symbols, coordinates, multiple_iterations=multiple_iterations)
             
-            multiple_iterations = False if calculation_type == "FORCE" else True
-
-            opt.optimise_geometry(calculation, atomic_symbols, coordinates, multiple_iterations=multiple_iterations)
-        
-        else: error("Geometry optimisation requested for single atom!")
-        
-
-    # Harmonic frequency
-    elif calculation_type == "FREQ":
-
-        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+            else: error("Geometry optimisation requested for single atom!")
             
-            freq.calculate_frequency(calculation, atomic_symbols=atomic_symbols, coordinates=coordinates)
-        
-        else: error("Harmonic frequency requested for single atom!")
 
+        # Harmonic frequency
+        case "FREQ": 
 
-    # Anharmonic frequency
-    elif calculation_type == "ANHARM":
-
-        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+            if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+                
+                freq.calculate_harmonic_frequency(calculation, atomic_symbols=atomic_symbols, coordinates=coordinates)
             
-            optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
-            _, reduced_mass, harmonic_frequency_per_cm = freq.calculate_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
-            freq.solve_numerical_schrodinger_equation(reduced_mass, calculation, atomic_symbols, optimised_molecule.coordinates,harmonic_frequency_per_cm)    
-
-        else: error("Anharmonic frequency requested for single atom!")
+            else: error("Harmonic frequency requested for single atom!")
 
 
-    # Geometry optimisation and harmonic frequency
-    elif calculation_type == "OPTFREQ":
+        # Anharmonic frequency
+        case "ANHARM": 
 
-        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+            if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+                
+                optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
+                _, _, harmonic_frequency_per_cm = freq.calculate_harmonic_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
+                freq.solve_nuclear_schrodinger_equation(calculation, atomic_symbols, harmonic_frequency_per_cm, optimised_molecule)    
+
+            else: error("Anharmonic frequency requested for single atom!")
+
+
+        # Geometry optimisation and harmonic frequency
+        case "OPTFREQ": 
+
+            if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+                
+                optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
+                freq.calculate_harmonic_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
+
+            else: error("Geometry optimisation requested for single atom!")
             
-            optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
-            freq.calculate_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
-
-        else: error("Geometry optimisation requested for single atom!")
-        
-        
-    # Ab initio molecular dynamics
-    elif calculation_type == "MD":
-
-        # Turns on printing the trajectory only if NOTRAJ parameter has not been used
-        if not calculation.no_trajectory: calculation.trajectory = True
-
-        if not len(atomic_symbols) == 1 and not ghost_atom_present: 
             
-            md.run_MD(calculation, atomic_symbols, coordinates)
-        
-        else: error("Molecular dynamics simulation requested for single atom!")
-        
-        
+        # Ab initio molecular dynamics
+        case "MD": 
+
+            # Turns on printing the trajectory only if NOTRAJ parameter has not been used
+            if not calculation.no_trajectory: calculation.trajectory = True
+
+            if not len(atomic_symbols) == 1 and not ghost_atom_present: 
+                
+                md.run_MD(calculation, atomic_symbols, coordinates)
+            
+            else: error("Molecular dynamics simulation requested for single atom!")
+            
+            
 
 
 

@@ -155,6 +155,25 @@ def calculate_extrapolated_energy(basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3):
 
 
 
+def evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False):
+    
+    """
+  
+    Wrapper to evaluate the energy, either with or without extrapolation.
+
+    """
+
+    if calculation.extrapolate:
+
+        SCF_output, molecule, final_energy, P = extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse)
+
+    else:
+
+        SCF_output, molecule, final_energy, P = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse)
+
+
+    return SCF_output, molecule, final_energy, P
+
 
 
 
@@ -978,16 +997,13 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
         out.show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_alpha, P_beta, n_electrons, P_difference_alpha=P_transition_alpha, P_difference_beta=P_transition_beta, P_difference=P_transition, molecular_orbitals=molecular_orbitals, natural_orbitals=natural_orbitals, nuclear_charges=molecule.basis_charges)
 
-    np.savetxt("eri.dat", eps)
+    np.savetxt("eps.dat", np.array(epsilons))
+    np.savetxt("mos.dat", np.array(molecular_orbitals))
 
+    flat = ERI_AO.astype(np.float64).tobytes(order='F')
 
-    with open("mo.dat", "w") as f:
-
-        f.write(np.array2string(molecular_orbitals, threshold=np.inf))
-
-    with open("eps.dat", "w") as f:
-
-        f.write(np.array2string(epsilons, threshold=np.inf))
+    with open("eri.bin", "wb") as f:
+        f.write(flat)
 
     return SCF_output, molecule, final_energy, P
 
@@ -1044,8 +1060,7 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=Fa
         log_big_spacer(calculation,space="", silent=silent)
 
         #Calculates the energy at the coordinates (in bohr) specified
-        energy_function = extrapolate_energy if calculation.extrapolate else calculate_energy
-        SCF_output, molecule, energy, _ = energy_function(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True, silent=silent)
+        SCF_output, molecule, energy, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True, silent=silent)
 
         dipole_moments.append(postscf.calculate_dipole_moment(molecule.centre_of_mass, molecule.charges, coordinates, SCF_output.P, SCF_output.D)[0])
 

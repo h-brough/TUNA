@@ -304,13 +304,7 @@ def run_MD(calculation, atoms, coordinates):
     log_big_spacer(calculation)
 
     # Remains silent to prevent too much printing, just prints to table
-    if calculation.extrapolate:
-
-        SCF_output, molecule, electronic_energy, _ = energ.extrapolate_energy(calculation, atoms, coordinates, silent=True)
-
-    else:
-        
-        SCF_output, molecule, electronic_energy, _ = energ.calculate_energy(calculation, atoms, coordinates, silent=True)
+    SCF_output, molecule, electronic_energy, _ = energ.evaluate_molecular_energy(calculation, atoms, coordinates, silent=True)
 
     # Calculates inverse mass array for acceleration calculation
     masses = molecule.masses
@@ -356,13 +350,7 @@ def run_MD(calculation, atoms, coordinates):
         aligned_coordinates = np.array([[0.0, 0.0, 0.0], -1 * difference_vector_rotated])
 
         # Additional print makes a big mess - prints all energy calculations to console
-        if calculation.extrapolate:
-
-            SCF_output, molecule, electronic_energy, _ = energ.extrapolate_energy(calculation, atoms, aligned_coordinates, P_guess=P_guess, E_guess=E_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, silent=not(calculation.additional_print))
-
-        else:
-            
-            SCF_output, molecule, electronic_energy, _ = energ.calculate_energy(calculation, atoms, aligned_coordinates, P_guess=P_guess, E_guess=E_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, silent=not(calculation.additional_print))
+        SCF_output, molecule, electronic_energy, _ = energ.evaluate_molecular_energy(calculation, atoms, aligned_coordinates, P_guess=P_guess, E_guess=E_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, silent=not(calculation.additional_print))
 
         forces = calculate_forces(aligned_coordinates, calculation, atoms, rotation_matrix)
 

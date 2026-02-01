@@ -299,9 +299,13 @@ def run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, F, n_doubly_occ, calc
 
     log("\n  Calculating energy components...           ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    f = []
+    f, X_list, Y_list = [],[],[]
+
 
     # Construction of energy-weighted density matrices can not be easily vectorised, more efficient to calculate each e within a loop than through separate contraction
+    np.savetxt("P.dat", np.array(P))
+    np.savetxt("Q.dat", np.array(Q))
+    np.savetxt("F.dat", np.array(F))
 
     for i in range(len(s)):
 
@@ -310,9 +314,14 @@ def run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, F, n_doubly_occ, calc
 
         e = np.einsum("mg,nd,kl,es,gdke,mnls->", X, Y, X, Y, ERI_AO, L_AO, optimize=True)
 
+        X_list.append(X)
+        Y_list.append(Y)
+
         f.append(e * ds_dr[i])
 
     log("[Done]", calculation, 1, silent=silent)
+
+
 
     log("\n  Integrating MP2 energy...                  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
@@ -320,6 +329,11 @@ def run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, F, n_doubly_occ, calc
     E_MP2 = -1 / (tau + 1) * np.sum(f) 
 
     log("[Done]", calculation, 1, silent=silent)
+    with open('X.bin', 'wb') as f:
+        f.write(np.array(X_list).tobytes(order='F'))
+
+    with open('Y.bin', 'wb') as f:
+        f.write(np.array(Y_list).tobytes(order='F'))
 
     log(f"\n  MP2 correlation energy:           {E_MP2:15.10f}", calculation, 1, silent=silent)
 
