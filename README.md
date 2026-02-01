@@ -72,10 +72,10 @@ The syntax of the command to run a TUNA calculation is
 TUNA [Calculation] : [Atom A] [Atom B] [Distance] : [Method] [Basis]
 ```
 
-For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms with the B3LYP/6-31G model chemistry is
+For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms with B3LYP/6-31G is
 
 ```
-TUNA OPTFREQ : H H 1.0 : B3LYP 6-31G
+TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
 Read the manual for details!
