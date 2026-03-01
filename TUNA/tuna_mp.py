@@ -467,12 +467,12 @@ def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI
     log("      [Done]", calculation, 1, silent=silent)
     
     # If requested, calculates and prints the natural orbitals
-    if calculation.natural_orbitals: 
-        
-        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
+    natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent) if calculation.natural_orbitals else (None, None)
 
 
     return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
+
+
 
 
 

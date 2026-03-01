@@ -1,8 +1,9 @@
 import numpy as np
+from numpy import ndarray
 from tuna_util import *
 
 
-def calculate_reduced_mass(masses): 
+def calculate_reduced_mass(masses: ndarray) -> float: 
 
     """
 
@@ -55,7 +56,7 @@ def calculate_nuclear_dipole_moment(centre_of_mass, charges, coordinates):
 
 
 
-def calculate_rotational_constant(masses, coordinates):
+def calculate_rotational_constant(masses, coordinates, calculation, silent=False):
 
     """
 
@@ -81,6 +82,9 @@ def calculate_rotational_constant(masses, coordinates):
     rotational_constant_per_bohr = rotational_constant_hartree / (constants.h * constants.c)
     rotational_constant_per_cm = rotational_constant_per_bohr / (100 * constants.bohr_in_metres)
     rotational_constant_GHz = constants.per_cm_in_GHz * rotational_constant_per_cm
+                    
+    log(f"\n Rotational constant (GHz): {rotational_constant_GHz:.3f}", calculation, 2, silent=silent)
+    log(f" Rotational constant (per cm): {rotational_constant_per_cm:.3f}", calculation, 2, silent=silent)
     
     return rotational_constant_per_cm, rotational_constant_GHz
 
@@ -90,7 +94,7 @@ def calculate_rotational_constant(masses, coordinates):
 
 
 
-def calculate_Koopmans_parameters(epsilons, n_occ):
+def calculate_Koopmans_parameters(epsilons, n_occ, calculation):
 
     """
 
@@ -123,6 +127,13 @@ def calculate_Koopmans_parameters(epsilons, n_occ):
         
         warning("Size of basis is too small for electron affinity calculation!")
 
+    if electron_affinity != "---": electron_affinity = f"{electron_affinity:9.6f}"
+    if HOMO_LUMO_gap != "---": HOMO_LUMO_gap = f"{HOMO_LUMO_gap:9.6f}"
+        
+    log(f"\n Koopmans' theorem ionisation energy:   {ionisation_energy:9.6f}", calculation, 2)
+    log(f" Koopmans' theorem electron affinity:   {electron_affinity}", calculation, 2)
+    log(f" Energy gap between HOMO and LUMO:      {HOMO_LUMO_gap}", calculation, 2)
+
 
     return ionisation_energy, electron_affinity, HOMO_LUMO_gap
  
@@ -131,61 +142,61 @@ def calculate_Koopmans_parameters(epsilons, n_occ):
 
 
 
-def print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation, silent=False):
+def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calculation, silent: bool = False) -> None:
 
     """
 
-    Prints the various components of the Hartree-Fock energy to the console.
+    Prints the various components of the self-consistent field energy to the terminal.
 
     Args:   
-        nuclear_electron_energy (float): Nuclear-electron attraction energy
-        kinetic_energy (float): Electronic kinetic energy
-        exchange_energy (float): Exchange energy
-        coulomb_energy (float): Coulomb energy
-        correlation_energy (float): Correlation energy
+        SCF_output (Output): Output object
         V_NN (float): Nuclear-nuclear repulsion energy
         calculation (Calculation): Calculation object
-
-    Returns:
-        None: Nothing is returned
 
     """
 
     # Adds up different energy components
-    one_electron_energy = nuclear_electron_energy + kinetic_energy
-    two_electron_energy = exchange_energy + coulomb_energy + correlation_energy
+    one_electron_energy = SCF_output.nuclear_electron_energy + SCF_output.kinetic_energy + SCF_output.electric_field_energy
+    two_electron_energy = SCF_output.exchange_energy + SCF_output.coulomb_energy + SCF_output.correlation_energy
     electronic_energy = one_electron_energy + two_electron_energy
 
     total_energy = electronic_energy + V_NN
     
-    virial_ratio = -1 * (total_energy - kinetic_energy) / kinetic_energy
+    # Calculates Virial ration between potential and kinetic energy
+    virial_ratio = -1 * (total_energy - SCF_output.kinetic_energy) / SCF_output.kinetic_energy
            
     log_spacer(calculation, priority=2, silent=silent)
     log("                  Energy Components       ", calculation, 2, colour="white", silent=silent)
-    log_spacer(calculation, priority=2, silent=silent)            
-    log(f"  Kinetic energy:                   {kinetic_energy:15.10f}", calculation, 2, silent=silent)
-    log(f"  Coulomb energy:                   {coulomb_energy:15.10f}", calculation, 2, silent=silent)
-    log(f"  Exchange energy:                  {exchange_energy:15.10f}", calculation, 2, silent=silent)
+    log_spacer(calculation, priority=2, silent=silent)    
+
+    log(f"  Kinetic energy:                   {SCF_output.kinetic_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"  Coulomb energy:                   {SCF_output.coulomb_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"  Exchange energy:                  {SCF_output.exchange_energy:15.10f}", calculation, 2, silent=silent)
 
     if calculation.method in DFT_methods:
         
-        log(f"  Correlation energy:               {correlation_energy:15.10f}", calculation, 2, silent=silent)
+        log(f"  Correlation energy:               {SCF_output.correlation_energy:15.10f}", calculation, 2, silent=silent)
 
     log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2, silent=silent)
-    log(f"  Nuclear attraction energy:        {nuclear_electron_energy:15.10f}\n", calculation, 2, silent=silent)      
+    log(f"  Nuclear attraction energy:        {SCF_output.nuclear_electron_energy:15.10f}", calculation, 2, silent=silent)      
+    log(f"  Electric field energy:            {SCF_output.electric_field_energy:15.10f}", calculation, 2, silent=silent)
 
-    log(f"  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"\n  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent=silent)
     log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent=silent)
 
     if calculation.method in DFT_methods:
         
-        log(f"  Exchange-correlation energy:      {exchange_energy + correlation_energy:15.10f}", calculation, 2, silent=silent)
+        log(f"  Exchange-correlation energy:      {SCF_output.exchange_energy + SCF_output.correlation_energy:15.10f}", calculation, 2, silent=silent)
 
     log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2, silent=silent)
     log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2, silent=silent)
             
     log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2, silent=silent)
+
     log_spacer(calculation, priority=2, silent=silent)
+
+
+    return
 
 
 
@@ -633,9 +644,7 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
             has_printed_1 = False    
             has_printed_2 = False    
             
-            n_orbitals_to_print = min([len(molecular_orbitals.T[mo]), 10])
-
-            for k in range(n_orbitals_to_print):
+            for k in range(len(molecular_orbitals.T[mo])):
 
                 # Formats ghost atoms nicely, ignores decontracting basis
                 try:
@@ -721,6 +730,31 @@ def print_molecular_orbital_coefficients(molecule, atoms, calculation, reference
 
 
 
+def print_density_information(method: str, calculation: Calculation) -> None:
+
+    """
+    
+    Prints the type of density matrix used in property calculations.
+
+    Args:
+        method (str): Electronic structure method
+        calculation (Calculation): Calculation object
+
+    """
+
+    # Specifies which density matrix is used for the property calculations
+    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2"]: log("\n Using the MP2 unrelaxed density for property calculations.", calculation, 1)
+    elif method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
+    elif method in ["LMP2"]: warning("Using the Hartree-Fock density, not the MP2 density, for property calculations.")
+    elif method in ["MP3", "SCS-MP3", "UMP3", "USCS-MP3", "MP4", "MP4[SDQ]"]: warning("Using the unrelaxed MP2 density for property calculations.")
+    
+    if "CC" in method or "CEPA" in method or "QC" in method: log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
+    if method in ["CCSD[T]", "UCCSD[T]"]: warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")
+    if method in ["QCISD[T]", "UQCISD[T]"]: warning("Using the linearised QCISD density, not the QCISD(T) density, for property calculations.")
+
+    return
+
+
 
 
 
@@ -763,15 +797,7 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
     charges = molecule.charges
     molecular_structure = molecule.molecular_structure
 
-
-    # Specifies which density matrix is used for the property calculations
-    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2"]: log("\n Using the MP2 unrelaxed density for property calculations.", calculation, 1)
-    elif method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
-    elif method in ["LMP2"]: warning("Using the Hartree-Fock density, not the MP2 density, for property calculations.")
-    elif method in ["MP3", "SCS-MP3", "UMP3", "USCS-MP3", "MP4", "MP4[SDQ]"]: warning("Using the unrelaxed MP2 density for property calculations.")
-    if "CC" in method or "CEPA" in method or "QC" in method: log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
-    if method in ["CCSD[T]", "UCCSD[T]"]: warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")
-    if method in ["QCISD[T]", "UQCISD[T]"]: warning("Using the linearised QCISD density, not the QCISD(T) density, for property calculations.")
+    print_density_information(method, calculation)
 
     # Prints molecular orbital eigenvalues and coefficients
     print_molecular_orbital_eigenvalues(calculation, reference, n_doubly_occ, n_alpha, n_beta, epsilons, epsilons_alpha, epsilons_beta)
@@ -780,22 +806,12 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
     # Prints Koopmans' theorem parameters if RHF reference is used
     if calculation.reference == "RHF":
         
-        ionisation_energy, electron_affinity, HOMO_LUMO_gap = calculate_Koopmans_parameters(epsilons, molecule.n_doubly_occ)
-
-        if electron_affinity != "---": electron_affinity = f"{electron_affinity:9.6f}"
-        if HOMO_LUMO_gap != "---": HOMO_LUMO_gap = f"{HOMO_LUMO_gap:9.6f}"
-            
-        log(f"\n Koopmans' theorem ionisation energy:   {ionisation_energy:9.6f}", calculation, 2)
-        log(f" Koopmans' theorem electron affinity:   {electron_affinity}", calculation, 2)
-        log(f" Energy gap between HOMO and LUMO:      {HOMO_LUMO_gap}", calculation, 2)
+         calculate_Koopmans_parameters(epsilons, molecule.n_doubly_occ, calculation)
 
     # As long as there are two real atoms present, calculates rotational constant and dipole moment information
     if len(molecule.atoms) != 1 and not any(atom.ghost for atom in molecule.atoms):
 
-        B_per_cm, B_GHz = calculate_rotational_constant(masses, coordinates)
-                
-        log(f"\n Rotational constant (GHz): {B_GHz:.3f}", calculation, 2)
-        log(f" Rotational constant (per cm): {B_per_cm:.3f}", calculation, 2)
+        calculate_rotational_constant(masses, coordinates, calculation)
 
         # Calculates centre of mass for dipole moment calculations
         centre_of_mass = calculate_centre_of_mass(masses, coordinates)

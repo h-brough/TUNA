@@ -2,160 +2,31 @@ import numpy as np
 import tuna_scf as scf
 import sys, time
 from tuna_util import *
-from tuna_integrals import tuna_integral as ints
+from tuna_util import Calculation, Integrals
 import tuna_postscf as postscf
-import tuna_mp as mp
-import tuna_cc as cc
-import tuna_ci as ci
-import tuna_molecule as mol
+from numpy import ndarray
+from tuna_molecule import Molecule
 import tuna_dft as dft
 import tuna_guess as guess
+import tuna_kernel as kern
 
 
 
 """
 
-This is the TUNA module for calculating molecular energies, written first for version 0.1.0 and rewritten for version 0.9.0.
+This is the TUNA module for calculating molecular energies, written first for version 0.1.0 and rewritten in version 0.10.0.
 
-The module contains:
-
-1. Some utility functions to extrapolate the energy with respect to the basis set
-2. Functions to calculate molecular integrals (calculate_one_electron_integrals, calculate_two_electron_integrals)
-3. The large calculate_energy function, which runs the SCF loop and sets off and processes all correlated calculations
-4. The function to scan the bond length, calculating energies at each point
+Any mathematical functions should be in tuna_kernel. This is for wrappers only.
 
 """
 
 
 
 
-def log_convergence_acceleration(calculation, silent=False):
-
-    """
-    
-    Logs information about convergence acceleration.
-
-    Args:
-        calculation (Calculation): Calculation object
-        silent (bool, optional): Should anything be printed
-    
-    """
-
-    DIIS = calculation.DIIS
-    damping = calculation.damping
-    damping_factor = calculation.damping_factor
-
-
-    if DIIS:
-
-        log(f" Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration", calculation, silent=silent, end="")
-
-        if damping:
-            
-            if damping_factor: 
-                
-                log(f", with static damping.", calculation, silent=silent)
-
-            else: 
-                
-                log(f", with dynamic damping.", calculation, silent=silent)
-
-        else:
-
-            log(f".", calculation, silent=silent)
-            
-    else:
-
-        if damping:
-            
-            if damping_factor: 
-
-                log(f" Using static damping for convergence acceleration.", calculation, silent=silent)
-
-            else:
-                
-                log(f" Using dynamic damping for convergence acceleration.", calculation, silent=silent)
-
-
-    if not DIIS and not damping:
-
-        log(" No convergence acceleration used.", calculation, 1, silent=silent)
-
-
-    log("", calculation, silent=silent)
-
-    return
 
 
 
-
-
-
-
-
-def calculate_extrapolated_energy(basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3):
-
-    """
-    
-    Calculates the extrapolated energy, from input energies.
-
-    Args:
-        basis (str): Basis to extrapolate
-        E_SCF_2 (float): SCF Energy from double-zeta basis
-        E_SCF_3 (float): SCF Energy from triple-zeta basis
-        E_corr_2 (float): Correlation energy from double-zeta basis
-        E_corr_3 (float): Correlation energy from triple-zeta basis
-    
-    Returns:
-        E_extrapolated (float): Extrapolated energy
-        E_SCF_extrapolated (float): Extrapolated SCF energy
-        E_corr_extrapolated (float): Extrapolated correlation energy
-    
-    
-    """
-
-    # Values from ORCA manual
-    alpha_values = {
-
-        "CC-PVDZ" : 4.42,
-        "AUG-CC-PVDZ" : 4.30,
-        "PC-1": 7.02,
-        "DEF2-SVP" : 10.39,
-        "DEF2-SVPD" : 10.39,
-        "ANO-PVDZ" : 5.41,
-        "AUG-ANO-PVDZ": 5.12
-    }
-
-    beta_values = {
-
-        "CC-PVDZ" : 2.46,
-        "AUG-CC-PVDZ" : 2.51,
-        "PC-1": 2.01,
-        "DEF2-SVP" : 2.40,
-        "DEF2-SVPD" : 2.40,
-        "ANO-PVDZ" : 2.43,
-        "AUG-ANO-PVDZ" : 2.41
-    }
-
-    alpha = alpha_values.get(basis)
-    beta = beta_values.get(basis)
-
-    # Same SCF extrapolation as used in ORCA
-    E_SCF_extrapolated = E_SCF_2 + (E_SCF_3 - E_SCF_2) / (1 - np.exp(alpha * (np.sqrt(2) - np.sqrt(3))))
-
-    # Same correlation energy extrapolation as used in ORCA
-    E_corr_extrapolated = (2 ** beta * E_corr_2 - 3 ** beta  * E_corr_3) / (2 ** beta - 3 ** beta)
-
-    E_extrapolated = E_SCF_extrapolated + E_corr_extrapolated
-
-    return E_extrapolated, E_SCF_extrapolated, E_corr_extrapolated
-
-
-
-
-
-
-def evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False):
+def evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False, dboc=True, polar=True, integrals=None):
     
     """
   
@@ -165,11 +36,11 @@ def evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess=
 
     if calculation.extrapolate:
 
-        SCF_output, molecule, final_energy, P = extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse)
+        SCF_output, molecule, final_energy, P = extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse, dboc=dboc, polar=polar, integrals=integrals)
 
     else:
 
-        SCF_output, molecule, final_energy, P = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse)
+        SCF_output, molecule, final_energy, P = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse, dboc=dboc, polar=polar, integrals=integrals)
 
 
     return SCF_output, molecule, final_energy, P
@@ -178,7 +49,14 @@ def evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess=
 
 
 
-def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False):
+
+
+
+
+
+
+
+def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False, dboc=True, polar=True, integrals=None):
     
     """
     
@@ -203,15 +81,26 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
 
     """
 
+    double_zeta_bases = ["CC-PVDZ", "AUG-CC-PVDZ", "PC-1", "DEF2-SVP", "DEF2-SVPD", "ANO-PVDZ", "AUG-ANO-PVDZ"]
+
     basis_pairs = {
 
         "CC-PVDZ" : "CC-PVTZ",
+        "CC-PVTZ" : "CC-PVQZ",
         "AUG-CC-PVDZ" : "AUG-CC-PVTZ",
+        "AUG-CC-PVTZ" : "AUG-CC-PVQZ",
         "PC-1": "PC-2",
+        "PC-2": "PC-3",
         "DEF2-SVP" : "DEF2-TZVPP",
+        "DEF2-TZVP" : "DEF2-QZVP",
+        "DEF2-TZVPP" : "DEF2-QZVPP",
         "DEF2-SVPD" : "DEF2-TZVPPD",
+        "DEF2-TZVPD" : "DEF2-QZVPD",
+        "DEF2-TZVPPD" : "DEF2-QZVPPD",
         "ANO-PVDZ" : "ANO-PVTZ",
-        "AUG-ANO-PVDZ" : "AUG-ANO-PVTZ"
+        "ANO-PVTZ" : "ANO-PVQZ",
+        "AUG-ANO-PVDZ" : "AUG-ANO-PVTZ",
+        "AUG-ANO-PVTZ" : "AUG-ANO-PVQZ"
     }
 
     # Takes out original and secondary basis set
@@ -220,27 +109,46 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
 
     if not second_basis: error(f"Basis set extrapolation is not available for \"{first_basis}\". Check the manual for compatible basis sets!")
 
+    if first_basis in double_zeta_bases:
 
-    log(f"\nBeginning basis set extrapolation with double- and triple- zeta basis sets...", calculation, 1, silent=silent)
-    log(f"Double-zeta basis is {basis_types.get(first_basis)}, triple-zeta basis is {basis_types.get(second_basis)}.", calculation, 1, silent=silent)
+        log(f"\nBeginning basis set extrapolation with double- and triple-zeta basis sets...", calculation, 1, silent=silent)
+        log(f"Double-zeta basis is {basis_types.get(first_basis)}, triple-zeta basis is {basis_types.get(second_basis)}.", calculation, 1, silent=silent)
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log(f"               Double-zeta Calculation", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+        log_spacer(calculation, silent=silent, start="\n")
+        log(f"               Double-zeta Calculation", calculation, 1, silent=silent, colour="white")
+        log_spacer(calculation, silent=silent)
+
+    else:
+
+        log(f"\nBeginning basis set extrapolation with triple- and quadruple-zeta basis sets...", calculation, 1, silent=silent)
+        log(f"Triple-zeta basis is {basis_types.get(first_basis)}, quadruple-zeta basis is {basis_types.get(second_basis)}.", calculation, 1, silent=silent)
+
+        log_spacer(calculation, silent=silent, start="\n")
+        log(f"               Triple-zeta Calculation", calculation, 1, silent=silent, colour="white")
+        log_spacer(calculation, silent=silent)
+
 
     calculation.basis = first_basis
 
     # Calculates the energy with the first basis, using the guess densities
-    SCF_output_2, molecule_2, E_total_2, P_2  = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse, silent=silent)
+    SCF_output_2, molecule_2, E_total_2, P_2  = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse, silent=silent, dboc=dboc, polar=polar, integrals=integrals)
 
     calculation.basis = second_basis
-
+    
     log_spacer(calculation, silent=silent, start="\n")
-    log(f"               Triple-zeta Calculation", calculation, 1, silent=silent, colour="white")
+
+    if first_basis in double_zeta_bases:
+
+        log(f"               Triple-zeta Calculation", calculation, 1, silent=silent, colour="white")
+
+    else:
+
+        log(f"             Quadruple-zeta Calculation", calculation, 1, silent=silent, colour="white")
+
     log_spacer(calculation, silent=silent)
 
     # Calculates the energy with the second basis
-    SCF_output_3, _, E_total_3, _  = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, silent=silent)
+    SCF_output_3, _, E_total_3, _  = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, silent=silent, dboc=dboc)
 
     E_SCF_2 = SCF_output_2.energy
     E_SCF_3 = SCF_output_3.energy
@@ -249,19 +157,33 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
     E_corr_3 = E_total_3 - E_SCF_3
 
     # Extrapolates the energies
-    E_extrapolated, E_SCF_extrapolated, E_corr_extrapolated = calculate_extrapolated_energy(first_basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3)
+    E_extrapolated, E_SCF_extrapolated, E_corr_extrapolated = kern.calculate_extrapolated_energy(first_basis, E_SCF_2, E_SCF_3, E_corr_2, E_corr_3)
 
     log_spacer(calculation, silent=silent, start="\n")
     log(f"              Basis Set Extrapolation", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
-    log(f"  Double-zeta SCF energy:          {E_SCF_2:16.10f}", calculation, 1, silent=silent)
-    log(f"  Triple-zeta SCF energy:          {E_SCF_3:16.10f}", calculation, 1, silent=silent)
+    if first_basis in double_zeta_bases:
+
+        log(f"  Double-zeta SCF energy:          {E_SCF_2:16.10f}", calculation, 1, silent=silent)
+        log(f"  Triple-zeta SCF energy:          {E_SCF_3:16.10f}", calculation, 1, silent=silent)
+
+    else:
+
+        log(f"  Triple-zeta SCF energy:          {E_SCF_2:16.10f}", calculation, 1, silent=silent)
+        log(f"  Quadruple-zeta SCF energy:       {E_SCF_3:16.10f}", calculation, 1, silent=silent)
 
     if calculation.method not in ["RHF", "HF", "UHF"]:
+        
+        if first_basis in double_zeta_bases:
 
-        log(f"\n  Double-zeta correlation energy:  {E_corr_2:16.10f}", calculation, 1, silent=silent)
-        log(f"  Triple-zeta correlation energy:  {E_corr_3:16.10f}", calculation, 1, silent=silent)
+            log(f"\n  Double-zeta correlation energy:  {E_corr_2:16.10f}", calculation, 1, silent=silent)
+            log(f"  Triple-zeta correlation energy:  {E_corr_3:16.10f}", calculation, 1, silent=silent)
+
+        else:
+
+            log(f"\n  Triple-zeta correlation energy:  {E_corr_2:16.10f}", calculation, 1, silent=silent)
+            log(f"  Quadruple-zeta correlation energy: {E_corr_3:14.10f}", calculation, 1, silent=silent)
 
     log(f"\n  Extrapolated SCF energy:         {E_SCF_extrapolated:16.10f}", calculation, 1, silent=silent)
 
@@ -283,730 +205,408 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
 
 
 
-
-
-
-def calculate_one_electron_integrals(atoms, n_basis, basis_functions, centre_of_mass):
-
-    """"
-    
-    Calculates one-electron integrals.
-
-    Args:
-        atoms (list): List of atoms
-        n_basis (int): Number of basis functions
-        basis_functions (array): Basis functions
-        centre_of_mass (float): Z-coordinate of centre of mass
-
-    Returns:
-        S (array): Overlap matrix in AO basis
-        T (array): Kinetic energy matrix in AO basis
-        V_NE (array): Nuclear-electron matrix in AO basis
-        D[2] (array): Dipole integral (z component) in AO basis
+def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: list[str], coordinates: ndarray, molecule: Molecule, S_inverse: ndarray, silent: bool = False) -> tuple[ndarray, ndarray, ndarray, float]:
 
     """
 
-    # Initialises the matrces
-    S = np.zeros((n_basis, n_basis)) 
-    V_NE = np.zeros((n_basis, n_basis)) 
-    T = np.zeros((n_basis, n_basis)) 
-    D = np.zeros((3, n_basis, n_basis)) 
-
-    for i in range(n_basis):
-        for j in range(i + 1):
-            
-            # Forms the overlap and kinetic matrices
-            S[i, j] = S[j, i] = ints.S(basis_functions[i], basis_functions[j])
-            T[i, j] = T[j, i] = ints.T(basis_functions[i], basis_functions[j])
-
-            # This only takes the z-components of the dipole (the others are always zero for diatomics)
-            D[2, i, j] = D[2, j, i] = ints.Mu(basis_functions[i], basis_functions[j], np.array([0, 0, centre_of_mass]), "z")
-
-            for atom in atoms:
-
-                # Adds to the nuclear-electron attraction matrix
-                V_NE[i, j] += -atom.charge * ints.V(basis_functions[i], basis_functions[j], atom.origin)
-
-            V_NE[j, i] = V_NE[i, j]
-
-
-    return S, T, V_NE, D[2]
-
-
-
-
-
-
-
-
-def calculate_two_electron_integrals(n_basis, basis_functions):
-
-    """"
-    
-    Calculates two-electron integrals.
-
-    Args:
-        n_basis (int): Number of basis functions
-        basis_functions (array): Basis functions
-    
-    Returns:
-        ERI_AO (array): Electron repulsion integrals in AO basis
-        
-    """
-
-    ERI_AO = np.zeros((n_basis, n_basis, n_basis, n_basis))  
-
-    # Calculates electron repulsion integrals - diatomic parity skips over known zero values if molecule is aligned on the z axis
-    ERI_AO = ints.doERIs(n_basis, ERI_AO, basis_functions, use_diatomic_parity=True)
-
-    ERI_AO = np.asarray(ERI_AO)
-
-
-    return ERI_AO
-
-
-
-
-
-
-
-def calculate_analytical_integrals(atoms, basis_functions, centre_of_mass, calculation, silent=False):
-    
-    """
-
-    Calculates the prints information about the one and two electron Gaussian integrals.
-
-    Args:
-        atoms (list): List of atoms
-        basis_functions (list): List of Basis objects
-        centre_of_mass (float): Centre of mass of the molecule along the z axis
-        calculation (Calculation): Calculation object
-        silent (bool, optional): Should anything be printed
-
-    Returns:
-        S (array): Overlap matrix
-        T (array): Kinetic matrix
-        V_NE (array): Nuclear-electron matrix
-        D (array): Dipole moment matrix
-        ERI_AO (array): Two electron integral matrix
-
-    """
-
-    n_basis = len(basis_functions)
-
-    # Calculates the one-electron integrals
-    log(" Calculating one-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-    S, T, V_NE, D = calculate_one_electron_integrals(atoms, n_basis, basis_functions, centre_of_mass)
-
-    log("[Done]", calculation, 1, silent=silent)
-
-    # Makes sure the two-electron integrals can fit in memory, and calculate them
-    log(" Calculating two-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-    try:
-
-        ERI_AO = calculate_two_electron_integrals(n_basis, basis_functions)
-
-    except np._core._exceptions._ArrayMemoryError:
-
-        error("Not enough memory to build two-electron integrals array! Uh oh!")
-    
-    log("[Done]", calculation, 1, silent=silent)
-
-    # Measure the time taken to calculate the integrals, print if requested
-    calculation.integrals_time = time.perf_counter()
-
-    log(f"\n Time taken for integrals:  {calculation.integrals_time - calculation.start_time:.2f} seconds", calculation, 3, silent=silent)
-
-    return S, T, V_NE, D, ERI_AO
-
-
-
-
-
-
-
-
-
-def calculate_nuclear_repulsion(charges, coordinates):
-    
-    """
-
-    Calculates nuclear repulsion energy.
-
-    Args:
-        charges (array): Nuclear charges
-        coordinates (array): Atomic coordinates
-
-    Returns:
-        V_NN (float): Nuclear-nuclear repulsion energy
-
-    """
-
-    # Does not rely on molecule being aligned on z axis
-    V_NN = np.prod(charges) / np.linalg.norm(coordinates[1] - coordinates[0])
-    
-    return V_NN
-    
-
-
-
-
-
-
-
-def calculate_Fock_transformation_matrix(S):
-
-    """
-
-    Diagonalises the overlap matrix to find its square root, then inverts this as X = S^-1/2.
-
-    Args:
-        S (array): Overlap matrix in AO basis
-
-    Returns:
-        X (array): Fock transformation matrix
-        smallest_S_eigenvalue (float): Smallest overlap matrix eigenvalue.
-        
-    """
-
-    # Diagonalises overlap matrix
-    S_vals, S_vecs = np.linalg.eigh(S)
-    S_sqrt = S_vecs * np.sqrt(S_vals) @ S_vecs.T
-    
-    # Finds the smalest eigenvalue of the overlap matrix to check for linear dependencies
-    smallest_S_eigenvalue = np.min(S_vals)
-
-    # Inverse squart root of overlap matrix is Fock transformation matrix
-    X = np.linalg.inv(S_sqrt)
-
-    return X, smallest_S_eigenvalue
-
-
-
-
-
-
-
-
-def check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=False):
-
-    """
-
-    Checks the smallest eigenvalue of the overlap matrix against a threshold, raising an error if it is too small.
-
-    Args:
-        smallest_S_eigenvalue (float): Smallest eigenvalue of the overlap matrix
-        calculation (Calculation): Calculation object
-        silent (bool, optional): Should output be printed
-
-    """
-
-    log(f"\n Smallest overlap matrix eigenvalue is {smallest_S_eigenvalue:.8f}, threshold is {calculation.S_eigenvalue_threshold:.8f}.", calculation, 2, silent=silent)
-
-    if smallest_S_eigenvalue < calculation.S_eigenvalue_threshold:
-
-        error("An overlap matrix eigenvalue is too small! Change the basis set or decrease the threshold with STHRESH.")
-    
-    elif smallest_S_eigenvalue < 10 * calculation.S_eigenvalue_threshold:
-
-        warning(f"Smallest overlap matrix eigenvalue is close to the threshold, at {smallest_S_eigenvalue:.8f} \n",space=1)
-
-    return
-
-
-
-
-
-
-
-
-
-
-
-def calculate_D2_energy(atoms, bond_length):
-
-    """
-
-    Calculates the D2 semi-empirical dispersion energy.
-
-    Args:
-        atoms (list(Atom)): List of atoms
-        bond_length (float): Distance between two atoms
-
-    Returns:
-        E_D2 (float): D2 semi-empirical dispersion energy
-
-    """
-
-    # These parameters were chosen to match the implementation of Hartree-Fock in ORCA
-    s6 = 1.2 
-    damping_factor = 20
-    
-    C6 = np.sqrt(atoms[0].C6 * atoms[1].C6)
-    vdw_sum = atoms[0].vdw_radius + atoms[1].vdw_radius
-
-    f_damp = 1 / (1 + np.exp(-1 * damping_factor * (bond_length / (vdw_sum) - 1)))
-    
-    # Uses conventional dispersion energy expression, with damping factor to account for short bond lengths
-    E_D2 = -1 * s6 * C6 / (bond_length ** 6) * f_damp
-    
-    return E_D2
-        
-
-
-
-
-
-
-
-
-def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, terse=False, silent=False):
-    
-    """
-
-    Calculates the molecular energy and electronic density based on a requested calculation and coordinates.
+    Calculates a minimal basis self-consistent field calculation for a guess density. This can't be in tuna_guess because it needs to call calculate_energy.
 
     Args:
         calculation (Calculation): Calculation object
-        atomic_symbols (list): Atomic symbol list
-        coordinates (array): Atomic coordinates
-        P_guess (array, optional): Guess density matrix in AO basis
-        P_guess_alpha (array, optional): Alpha guess density matrix in AO basis
-        P_guess_beta (array, optional): Beta guess density matrix in AO basis
-        E_guess (float, optional): Guess energy
-        terse (bool, optional): Should post-SCF stuff be done
-        silent (bool, optional): Should anything be printed
-
-    Returns:
-        SCF_output (Output): Output object
+        atomic_symbols (list): List of atomic symbols
+        coordinates  (array): Nuclear coordinates
         molecule (Molecule): Molecule object
-        final_energy (float): Final energy including dispersion and correlation
-        P (array): Final density matrix including correlation
+        S_inverse (array): Inverse overlap matrix
+        silent (bool, optional): Should anything be printed
+    
+    Returns:
+        P_guess (array): Guess density matrix
+        P_guess_alpha (array): Guess alpha density matrix
+        P_guess_beta (array): Guess beta density matrix
+        guess_energy (float): Energy guess
 
     """
 
-    log("\n Setting up molecule...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating self-consistent density for guess...  ", calculation, end="", silent=silent); sys.stdout.flush()
 
-    # Builds molecule object using calculation and atomic parameters
-    molecule = mol.Molecule(atomic_symbols, coordinates, calculation)
+    # Stores the full basis
+    old_basis = calculation.basis
+
+    calculation.basis = "STO-3G"
     
-    # Unpacking of various useful calculation quantities
-    method = calculation.method
-    reference = calculation.reference
-    do_DFT = calculation.DFT_calculation
+    # Performs a minimal basis SCF calculation
+    SCF_output, molecule_minimal, guess_energy = calculate_energy(calculation, atomic_symbols, coordinates, terse=True, silent=True, guess_calculation=True)
 
-    # Unpacking of various useful molecular properties
-    atomic_symbols = molecule.atomic_symbols
-    atoms = molecule.atoms
-    charges = molecule.charges
-    basis_functions = molecule.basis_functions
-    coordinates = molecule.coordinates
-    bond_length = molecule.bond_length
-    centre_of_mass = molecule.centre_of_mass
-    n_doubly_occ = molecule.n_doubly_occ
-    n_occ = molecule.n_occ
-    n_virt = molecule.n_virt
-    n_SO = molecule.n_SO
+    # Restores calculation to old basis
+    calculation.basis = old_basis
 
-    n_electrons = molecule.n_electrons
-    n_alpha = molecule.n_alpha
-    n_beta = molecule.n_beta
+    S_cross = guess.calculate_cross_basis_overlap_matrix(molecule, molecule_minimal)
 
-    natural_orbitals = None
+    P_guess_alpha_minimal = SCF_output.P_alpha
+    P_guess_beta_minimal = SCF_output.P_beta
 
-    # Finds the number of occupied orbitals for RHF or UHF references
-    n_occ_print, n_virt_print = (n_occ, n_virt) if reference == "UHF" else (n_occ // 2, n_virt // 2)
+    # Projects minimal density matrices onto larger basis with cross overlap matrix
+    P_guess_alpha = guess.project_density_matrix(P_guess_alpha_minimal, S_cross, S_inverse)
+    P_guess_beta = guess.project_density_matrix(P_guess_beta_minimal, S_cross, S_inverse)
 
-    log("[Done]\n", calculation, 1, silent=silent)
-    
-    # Prints various information about the molecule
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
-    log("    Molecule and Basis Information", calculation, 1, silent=silent, colour="white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
-    log("  Molecular structure: " + molecule.molecular_structure, calculation, 1, silent=silent)
-    log("\n  Number of basis functions: " + str(len(basis_functions)), calculation, 1, silent=silent)
-    log("  Number of primitive Gaussians: " + str(np.sum(molecule.primitive_Gaussians)), calculation, 1, silent=silent)
-    log("\n  Charge: " + str(molecule.charge), calculation, 1, silent=silent)
-    log("  Multiplicity: " + str(molecule.multiplicity), calculation, 1, silent=silent)
-    log("  Number of electrons: " + str(n_electrons), calculation, 1, silent=silent)
-    log("  Number of alpha electrons: " + str(n_alpha), calculation, 1, silent=silent)
-    log("  Number of beta electrons: " + str(n_beta), calculation, 1, silent=silent)
-    log("  Number of occupied orbitals: " + str(n_occ_print), calculation, 1, silent=silent)
-    log("  Number of virtual orbitals: " + str(n_virt_print), calculation, 1, silent=silent)
-    log(f"\n  Point group: {molecule.point_group}", calculation, 1, silent=silent)
-    if len(atomic_symbols) == 2: log(f"  Bond length: {bohr_to_angstrom(bond_length):.5f} ", calculation, 1, silent=silent)
+    P_guess = P_guess_alpha + P_guess_beta
 
-    for atom in atoms:
-        
-        # If the same atom makes up both atoms in the molecule, print the basis data only once
-        if len(atoms) == 2 and atoms[0].basis_charge == atoms[1].basis_charge and atom == atoms[1]: break
+    log("[Done]\n", calculation, silent=silent)
 
-        log(f"\n  Basis set for {atom.symbol_formatted} :\n", calculation, 3, silent=silent)
 
-        values = molecule.basis_data[atom.basis_charge]
+    return P_guess, P_guess_alpha, P_guess_beta, guess_energy
 
-        # Print the basis function data for the atoms
-        for orbital, params in values:
 
-            log(f"   {orbital}", calculation, 3, silent=silent)
 
-            for exponent, coefficient in params:
 
-                log(f"      {exponent:15.10f}     {coefficient:10.10f}", calculation, 3, silent=silent)
 
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent=silent)
 
 
 
-    # Nuclear repulsion and dispersion energy are only calculated if there are two real atoms present
-    if len(atomic_symbols) == 2 and not any(atom.ghost for atom in atoms):
-
-        #Calculates nuclear repulsion energy
-        log(" Calculating nuclear repulsion energy...  ", calculation, 1, end="", silent=silent)
-
-        V_NN = calculate_nuclear_repulsion(charges, coordinates)
-
-        log(f"[Done]\n\n Nuclear repulsion energy: {V_NN:.10f}\n", calculation, 1, silent=silent)
-        
-        # Calculates D2 dispersion energy if requested
-        if calculation.D2:  
-
-            log(" Calculating semi-empirical dispersion energy...  ", calculation, 1, end="", silent=silent)
-
-            E_D2 = calculate_D2_energy(atoms, bond_length)
-
-            log(f"[Done]\n\n Dispersion energy (D2): {E_D2:.10f}\n", calculation, 1, silent=silent)
-            
-        else: E_D2 = 0
-        
-    else: V_NN = 0; E_D2 = 0
-
-    # For printing
-    reference_type = "Kohn-Sham" if method in DFT_methods else "Hartree-Fock"
-
-    if reference == "RHF": log(f" Beginning restricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
-    else: log(f" Beginning unrestricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
-
-    # Calculates the Gaussian integrals between basis functions
-    S, T, V_NE, D, ERI_AO = calculate_analytical_integrals(atoms, basis_functions, centre_of_mass, calculation, silent=silent)
-
-    # Calculates Fock transformation matrix from overlap matrix
-    log("\n Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-    X, smallest_S_eigenvalue = calculate_Fock_transformation_matrix(S)
-    log("[Done]", calculation, 1, silent=silent)
-
-    # Makes sure there is no linear dependency in the basis set
-    check_S_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
-
-    # Calculates one-electron density for initial guess
-    E_guess, P_guess, P_guess_alpha, P_guess_beta, _, _ = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, reference, T, V_NE, X, n_doubly_occ, n_alpha, n_beta, calculation.rotate_guess, calculation.no_rotate_guess, calculation, molecule, silent=silent)
-
-    # Forces the trace of the guess density to be correct
-    P_guess = dft.clean_density_matrix(P_guess, S, n_electrons)
-    P_guess_alpha = dft.clean_density_matrix(P_guess_alpha, S, n_alpha)
-    P_guess_beta = dft.clean_density_matrix(P_guess_beta, S, n_beta)
-    
-
-    if do_DFT:
-
-        # Appends a "U" to the requested DFT method if UKS is present
-        if reference == "UHF" and "U" not in method:
-            
-            # Redefines the calculation method, reapplies it
-            method = calculation.method = "U" + method
-
-        atomic_orbitals, weights, bf_gradients_on_grid = dft.set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_guess_alpha, P_guess_beta, calculation, silent=silent) 
-
-        log(f" Using {100 * calculation.DFX_prop:.1f}% density functional exchange and {100 * calculation.HFX_prop:.1f}% Hartree-Fock exchange.", calculation, 2, silent=silent)
-        log(f" Using {100 * calculation.DFC_prop:.1f}% density functional correlation and {100 * calculation.MPC_prop:.1f}% Moller-Plesset correlation.\n", calculation, 2, silent=silent)
-
-    else:  
-
-        atomic_orbitals, weights, bf_gradients_on_grid = None, None, None
-    
-
-
-    log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
-
-    # Prints convergence criteria specified
-    log(f" Using \"{calculation.SCF_conv["name"]}\" SCF convergence criteria.", calculation, 1, silent=silent)
-
-    # Prints the chosen SCF convergence acceleration options
-    log_convergence_acceleration(calculation, silent=silent)
-
-    # The guess energy should just be the electronic energy
-    E_guess -= V_NN + E_D2
-
-    # Starts SCF cycle for two-electron energy
-    SCF_output = scf.run_self_consistent_field_cycle(molecule, calculation, T, V_NE, ERI_AO, V_NN, S, X, E_guess, P_guess, P_guess_alpha, P_guess_beta, atomic_orbitals, bf_gradients_on_grid, weights, silent=silent)
-
-    calculation.SCF_time = time.perf_counter()
-    log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
-
-    # Extracts useful quantities from SCF output object
-    molecular_orbitals = SCF_output.molecular_orbitals
-    molecular_orbitals_alpha = SCF_output.molecular_orbitals_alpha  
-    molecular_orbitals_beta = SCF_output.molecular_orbitals_beta   
-    epsilons = SCF_output.epsilons
-    epsilons_alpha = SCF_output.epsilons_alpha
-    epsilons_beta = SCF_output.epsilons_beta
-    P = SCF_output.P
-    P_alpha = SCF_output.P_alpha
-    P_beta = SCF_output.P_beta
-    final_energy = SCF_output.energy
-    kinetic_energy = SCF_output.kinetic_energy
-    nuclear_electron_energy = SCF_output.nuclear_electron_energy
-    coulomb_energy = SCF_output.coulomb_energy
-    exchange_energy = SCF_output.exchange_energy
-    correlation_energy = SCF_output.correlation_energy
-    density = SCF_output.density
-    alpha_density = SCF_output.alpha_density
-    beta_density = SCF_output.beta_density
-
-    # Packs dipole integrals into SCF output object
-    SCF_output.D = D
-
-
-    if reference == "UHF": 
-        
-        type = "UKS" if do_DFT else "UHF"
-
-        # Calculates UHF spin contamination and prints to the console
-        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, type, silent=silent)
-
-        # Calculates the natural orbitals if requested
-        if calculation.natural_orbitals and not calculation.no_natural_orbitals: 
-                
-            _, natural_orbitals = mp.calculate_natural_orbitals(P, X, calculation, silent=silent)
-
-            log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent=silent)
-
-
-    # Prints the individual components of the total SCF energy
-    postscf.print_energy_components(nuclear_electron_energy, kinetic_energy, exchange_energy, coulomb_energy, correlation_energy, V_NN, calculation, silent=silent)
-
-    if do_DFT:
-
-        # Calculates the final integrals of the alpha, beta and total density
-        n_alpha_DFT = dft.integrate_on_grid(alpha_density, weights)
-        n_beta_DFT = dft.integrate_on_grid(beta_density, weights)
-
-        n_electrons_DFT = dft.integrate_on_grid(density, weights)
-
-        log(f"\n Integral of the final alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent=silent)
-        log(f" Integral of the final beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent=silent)
-
-        log(f" Integral of the final total density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
-
-
-    # If the STAB keyword is used, perform a stability analysis
-    if calculation.stability_analysis and reference == "RHF":
-
-        ci.check_electronic_stability(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=silent)
-
-
-
-    # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
-    if "MP" in method and not "MPW" in method or calculation.MPC_prop != 0: 
-
-        if do_DFT:
-            
-            # Reads same and opposite spin scaling from exchange-correlation functional
-            calculation.same_spin_scaling = calculation.functional.SSS
-            calculation.opposite_spin_scaling = calculation.functional.OSS
-            
-        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, _, natural_orbitals = mp.calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, T + V_NE, V_NN, silent=silent)
-        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "MP2", silent=silent)
-
-
-    # If a coupled-cluster calculation is requested, calculates the energy
-    elif "CC" in method or "CEPA" in method or "QCISD" in method:
-
-        E_CC, E_CCSD_T, P, P_alpha, P_beta, _, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
-        
-        postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "Coupled cluster", silent=silent)
-
-
-    if method in correlated_methods:
-
-        # Measures time taken for correlated calculation
-        calculation.correlation_time = time.perf_counter()
-        log(f"\n Time taken for correlated calculation:  {calculation.correlation_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
-
-
-    # Prints post SCF information, as long as its not an optimisation that hasn't finished yet
-    if not terse and not silent:
-        
-        postscf.post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, molecule.partition_ranges, D, P_alpha, P_beta, epsilons_alpha, epsilons_beta, molecular_orbitals_alpha, molecular_orbitals_beta)
-    
-
-    if method in ["CIS", "UCIS", "CIS[D]", "UCIS[D]"]:
-
-        log("\n\n Beginning excited state calculation...", calculation, 1, silent=silent)
-
-        if n_virt <= 0: error("Excited state calculation requested on system with no virtual orbitals!")
-
-        # Calculates the CIS excited states energy and density
-        E_CIS, E_transition, P, P_alpha, P_beta, P_transition, P_transition_alpha, P_transition_beta = ci.run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, silent=silent)
-        
-        # Measures time taken for an excited state calculation
-        calculation.excited_state_time = time.perf_counter()
-        log(f"\n Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
-
-        if calculation.additional_print: 
-           
-           # Optionally uses CIS density for dipole moment and population analysis
-           postscf.post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, molecule.partition_ranges, D, P_alpha, P_beta, epsilons_alpha, epsilons_beta, molecular_orbitals_alpha, molecular_orbitals_beta)
-
-    else:
-        
-        P_transition = P_transition_alpha = P_transition_beta = None
-
-
-
-    # Prints Hartree-Fock energy
-    if reference == "RHF" and not do_DFT: log("\n Restricted Hartree-Fock energy:   " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
-    elif reference == "UHF" and not do_DFT: log("\n Unrestricted Hartree-Fock energy: " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
-
-    else:
-        
-        space = " " * max(0, 8 - len(method))
-
-        if reference == "RHF":
-
-            log(f"\n Restricted {method} energy: {space}      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
-        else:
-            
-            log(f"\n Unrestricted {method} energy: {space}    " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
-
-
-
-    # Adds up and prints MP2 energies
-    if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2"] or (do_DFT and calculation.MPC_prop != 0): 
-        
-        space = " " * max(0, 8 - len(method))
-
-        # If a double-hybrid functional is being used, multiply by the correlation proportion
-        E_MP2 *= calculation.MPC_prop if do_DFT else 1
-
-        final_energy += E_MP2
-
-        if do_DFT:
-            
-            log(f" Double-hybrid correlation energy: " + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
-
-        else:
-            
-            log(f" Correlation energy from {method}: {space}" + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
-
-
-    # Adds up and prints MP3 energies
-    elif method in ["MP3", "UMP3", "SCS-MP3", "USCS-MP3"]:
-        
-        final_energy += E_MP2 + E_MP3
-
-        if method == "SCS-MP3":
-
-            log(f" Correlation energy from SCS-MP2:  " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from SCS-MP3:  " + f"{E_MP3:16.10f}\n", calculation, 1, silent=silent)
-
-        else:
-
-            log(f" Correlation energy from MP2:      " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from MP3:      " + f"{E_MP3:16.10f}\n", calculation, 1, silent=silent)
-
-
-    # Adds up and prints MP4 energies
-    elif method in ["MP4", "MP4[SDQ]", "MP4[DQ]", "MP4[SDTQ]"]:
-        
-        final_energy += E_MP2 + E_MP3 + E_MP4
-
-        log(f" Correlation energy from MP2:      " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
-        log(f" Correlation energy from MP3:      " + f"{E_MP3:16.10f}", calculation, 1, silent=silent)
-
-        if method == "MP4" or method == "MP4[SDTQ]":
-
-            log(f" Correlation energy from MP4:      " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
-
-        elif method == "MP4[SDQ]":
-
-            log(f" Correlation energy from MP4(SDQ): " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
-
-        elif method == "MP4[DQ]":
-
-            log(f" Correlation energy from MP4(DQ):  " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
  
 
 
-    # Adds up and prints coupled cluster energies
-    elif "CC" in method or "CEPA" in method or "QC" in method:
-
-        final_energy += E_CC + E_CCSD_T
 
 
-        if "CCSD[T]" in method:
+def calculate_polarisability(molecule, calculation, E, silent, atomic_symbols, coordinates, integrals):
 
-            log(f" Correlation energy from CCSD:     " + f"{E_CC:16.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from CCSD(T):  " + f"{E_CCSD_T:16.10f}\n", calculation, 1, silent=silent)
+    # Change this to skip the integrals, feed ints in through evaluate?
+    # Requires 8 extra energy evaluations
+
+    electric_field_x = np.array([constants.numerical_derivative_prod, 0, 0]) 
+    electric_field_z = np.array([0, 0, constants.numerical_derivative_prod])
+
+    N = 8 if calculation.diatomic else 4
+
+    log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent=False)
+
+    log_spacer(calculation, 1, silent=False, start="\n")
+    
+    log(f"                    Polarisability", calculation, 1, silent=False)
+
+    log_spacer(calculation, 1, silent=False)
+
+    log(f"  Using a finite field magnitude of {constants.numerical_derivative_prod} au", calculation, 1, silent=False)
+ 
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent=False, end="")
+
+    calculation.electric_field = electric_field_z * 2
+    
+    _, _, E_forward_far_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+
+    calculation.electric_field = electric_field_z 
+
+    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    
+    calculation.electric_field = -electric_field_z
+
+    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    
+    calculation.electric_field = -electric_field_z * 2
+
+    _, _, E_backward_far_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    
+    log(f"[Done]", calculation, 1, silent=False)
+
+    polarisability_z = -1 * calculate_second_derivative(E_backward_far_parallel, E_backward_parallel, E, E_forward_parallel, E_forward_far_parallel, constants.numerical_derivative_prod)
+
+    polarisability_x = 0
+
+
+    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent=False, end="")
+
+    calculation.electric_field = electric_field_x * 2
+    
+    _, _, E_forward_far_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    
+    calculation.electric_field = electric_field_x 
+
+    _, _, E_forward_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+
+    calculation.electric_field = -electric_field_x
+
+    _, _, E_backward_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    
+    calculation.electric_field = -electric_field_x * 2
+
+    _, _, E_backward_far_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+
+    log(f"[Done]", calculation, 1, silent=False)
+
+    polarisability_x = -1 * calculate_second_derivative(E_backward_far_perpendicular, E_backward_perpendicular, E, E_forward_perpendicular, E_forward_far_perpendicular, constants.numerical_derivative_prod)
+
+    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.numerical_derivative_prod)
+
+    anisotropic_polarisability = polarisability_z - polarisability_x
+    isotropic_polarisability = (polarisability_x * 2 + polarisability_z) / 3 if calculation.diatomic else polarisability_z
+
+    nuclear_dipole_moment = postscf.calculate_nuclear_dipole_moment(molecule.centre_of_mass, molecule.charges, coordinates)
+
+    total_dipole_moment = electronic_dipole_moment + nuclear_dipole_moment
+
+
+    log(f"\n  Dipole moment:                         {total_dipole_moment:10.4f}", calculation, 3, silent=False)
+
+    log(f"\n  Parallel component:                    {polarisability_z:10.4f}", calculation, 3, silent=False)
+    log(f"  Perpendicular component:               {polarisability_x:10.4f}", calculation, 3, silent=False)
+
+    log(f"\n  Ansotropic polarisability:             {anisotropic_polarisability:10.4f}", calculation, 1, silent=False)
+    log(f"  Isotropic polarisability:              {isotropic_polarisability:10.4f}", calculation, 1, silent=False)
+
+    log_spacer(calculation, 1, silent=False)
+
+    return isotropic_polarisability
+
+
+    
+
+
+
+def calculate_diagonal_born_oppenheimer_correction(calculation, atomic_symbols, coordinates, molecule, final_energy, silent=False):
+
+    # Todo, simplify this, write a docstring, rotate the molecule onto the z axis to use diatomic parity always works, use arrays for the x,y z components
+    # Just change the [1][z] coordinate to be the Pythagoreaj bond length  - should give same results
+    prod = constants.numerical_derivative_prod
+    
+    n_occ = molecule.n_occ if calculation.reference == "UHF" else molecule.n_doubly_occ
+
+
+    log_spacer(calculation, 1, start="\n")
+    log("         Diagonal Born-Oppenheimer Correction  ", calculation, 1, silent=silent)
+    log_spacer(calculation, 1)
+
+
+    def calculate_DBOC_component(atom_idx, coord_idx):
         
-        elif "QCISD[T]" in method:
+        displacement = np.zeros_like(coordinates)
+        displacement[atom_idx, coord_idx] = prod 
 
-            log(f" Correlation energy from QCISD:    " + f"{E_CC:16.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from QCISD(T): " + f"{E_CCSD_T:16.10f}\n", calculation, 1, silent=silent)
+        coordinates_forward = coordinates + displacement
+        coordinates_backward = coordinates - displacement
+
+        SCF_output_back, molecule_back, _, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates_backward, silent=True, dboc=False)
+        SCF_output_for, molecule_for, _, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates_forward, silent=True, dboc=False)
+
+        C_back = SCF_output_back.molecular_orbitals[:, :n_occ]
+        C_forward = SCF_output_for.molecular_orbitals[:, :n_occ]
+
+        S_cross = guess.calculate_cross_basis_overlap_matrix(molecule_back, molecule_for)
+        S_plus_minus = np.abs(np.linalg.det(C_back.T @ S_cross @ C_forward))
+
+        axis_dboc = 1 / (4 * prod ** 2 * molecule.masses[atom_idx]) * (1 - S_plus_minus)
+
+        return axis_dboc
+
+
+    if calculation.monatomic:
+
+        log("\n  Calculating energy on displaced geometry 1 of 1...       ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+
+        E_DBOC_first_atom_z = calculate_DBOC_component(0, 2)
+
+        E_DBOC_first_atom_x = E_DBOC_first_atom_y = E_DBOC_first_atom_z
+
+        E_DBOC_first_atom = E_DBOC_first_atom_x + E_DBOC_first_atom_y + E_DBOC_first_atom_z
+
+        E_DBOC = E_DBOC_first_atom
+
+        E_DBOC_second_atom = E_DBOC_second_atom_x = E_DBOC_second_atom_y = E_DBOC_second_atom_z = 0
+
+    else:
+        
+        log("\n  Calculating energy on displaced geometry 1 of 4...       ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+
+        E_DBOC_first_atom_x = calculate_DBOC_component(0, 0) * 2
+
+        E_DBOC_first_atom_y = E_DBOC_first_atom_x
+        
+        log("\n  Calculating energy on displaced geometry 2 of 4...       ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+
+        E_DBOC_first_atom_z = calculate_DBOC_component(0, 2) * 2
+
+        if molecule.point_group == "Cinfv":
+            
+            log("\n  Calculating energy on displaced geometry 3 of 4...       ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+
+            E_DBOC_second_atom_x = calculate_DBOC_component(1, 0) * 2
+
+            E_DBOC_second_atom_y = E_DBOC_second_atom_x
+            
+            log("\n  Calculating energy on displaced geometry 4 of 4...       ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+
+            E_DBOC_second_atom_z = calculate_DBOC_component(1, 2) * 2
 
         else:
-            
-            space = " " * max(0, 8 - len(method))
 
-            log(f" Correlation energy from {method}:{space} " + f"{E_CC:16.10f}\n", calculation, 1, silent=silent)
+            E_DBOC_second_atom_x, E_DBOC_second_atom_y, E_DBOC_second_atom_z = E_DBOC_first_atom_x, E_DBOC_first_atom_y, E_DBOC_first_atom_z
 
 
 
-    # Prints CIS energy of state of interest
-    elif method in excited_state_methods:
+        E_DBOC_first_atom = E_DBOC_first_atom_x + E_DBOC_first_atom_y + E_DBOC_first_atom_z
+        E_DBOC_second_atom = E_DBOC_second_atom_x + E_DBOC_second_atom_y + E_DBOC_second_atom_z
 
-        final_energy = E_CIS
+        E_DBOC = E_DBOC_first_atom + E_DBOC_second_atom
 
-        method = method.replace("[", "(").replace("]", ")")
-        space = " " * max(0, 8 - len(method))
+    log("[Done]", calculation, 1, silent=silent)
 
-        log(f"\n Excitation energy is the energy difference to excited state {calculation.root}.", calculation, 1, silent=silent)
+    log("\n        First Atom                Second Atom", calculation, 1, silent=silent)
+
+    log(f"\n  X{E_DBOC_first_atom_x:16.10f}           {E_DBOC_second_atom_x:16.10f}", calculation, 1, silent=silent)
+    log(f"  Y{E_DBOC_first_atom_y:16.10f}           {E_DBOC_second_atom_y:16.10f}", calculation, 1, silent=silent)
+    log(f"  Z{E_DBOC_first_atom_z:16.10f}           {E_DBOC_second_atom_z:16.10f}", calculation, 1, silent=silent)
+
+    log(f"\n   {E_DBOC_first_atom:16.10f}           {E_DBOC_second_atom:16.10f}", calculation, 1, silent=silent)
+
+
+    log(f"\n  Total diagonal correction:       {E_DBOC:16.10f}", calculation, 1, silent=silent)
+
+    log_spacer(calculation, 1)
+
+    final_energy += E_DBOC
+
+    log("\n Diagonal Born-Oppenheimer energy: " + f"{E_DBOC:16.10f}", calculation, 1, silent=silent)
+    log(" DBOC-corrected final energy:      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+
+
+    return final_energy, E_DBOC
+
+
+
+
+
+
+
+
+
+
+def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list, coordinates: ndarray, silent: bool, guess_container: tuple[ndarray, ndarray, ndarray, float], guess_calculation: bool, integrals: Integrals = None) -> tuple[Molecule, Integrals, tuple[ndarray, ndarray, ndarray, float], tuple[ndarray, ndarray, ndarray], ndarray, float, float]:
+    
+    """
+    
+    Builds a molecule, calculates the molecular integrals and sets up the guess density.
+
+    Args:
+        calculation (Calculation): Calculation object
+        atomic_symbols (list): List of atomic symbols
+        coordinates (array): Atomic coordinates
+        silent (bool): Should anything be printed
+        guess_container (tuple): Tuple containing the guess density matrices and guess energy
+        guess_calculation (bool): Is this molecular build for a guess calculation
+    
+    Returns:
+        molecule (Molecule): Molecule object
+        integrals (Integrals): Integrals object containing the one- and two-electron integrals
+        guess_container (tuple): Tuple containing the guess density matrices and guess energy
+        grid_container (tuple): Tuple containing the basis functions on the grid, the grid weights and the basis function gradients on the grid
+        X (array): Fock transformation matrix
+        V_NN (float): Nuclear repulsion energy
+        E_D2 (float): D2 dispersion energy
+
+    """
+
+    log("\n Setting up molecule...  ", calculation, 1, silent=silent, end="")
+
+    # Builds molecule object using calculation and atomic parameters
+    molecule = Molecule(atomic_symbols, coordinates, calculation, guess=guess_calculation)
+
+    log("[Done]\n", calculation, 1, silent=silent)
+    
+    # Prints out the information about the molecule and calculation
+    kern.print_molecule_information(molecule, calculation, silent)
+    
+    # Calculates nuclear repulsion energy
+    V_NN = kern.calculate_nuclear_repulsion_energy(molecule.charges, coordinates, calculation, silent) if calculation.diatomic else 0
+    
+    # Calculates D2 dispersion energy if requested
+    E_D2 = kern.calculate_D2_dispersion_energy(molecule, calculation, silent) if calculation.diatomic and calculation.D2 else 0
+    
+    # Prints "Beginning RHF/UHF/KS calculation..."
+    kern.print_reference_type(calculation.method, calculation, silent)
+
+    # Calculates the Gaussian integrals between basis functions
+    integrals = kern.calculate_analytical_integrals(molecule, calculation, silent) if integrals is None else integrals
+
+    # Calculates Fock transformation matrix from overlap matrix
+    X, smallest_S_eigenvalue, S_inverse = kern.calculate_Fock_transformation_matrix(integrals.S, calculation, silent)
+
+    # Makes sure there is no linear dependency in the basis set
+    kern.check_overlap_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
+
+    # Unpacks guess container
+    P_guess, P_guess_alpha, P_guess_beta, E_guess = guess_container
+
+    # Calculates one-electron density for initial guess
+    E_guess, P_guess, P_guess_alpha, P_guess_beta = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, integrals.T, integrals.V_NE, X, calculation, molecule, S_inverse, atomic_symbols,  silent=silent)
+
+    # This calls a minimal SCF calculation to get a self-consistent guess density
+    if calculation.self_consistent_guess and not guess_calculation:
+
+        P_guess, P_guess_alpha, P_guess_beta, E_guess = calculate_self_consistent_guess(calculation, atomic_symbols, coordinates, molecule, S_inverse, silent=silent)
+
+    # Force the trace of the guess density to be correct
+    P_guess, P_guess_alpha, P_guess_beta = kern.enforce_density_matrix_idempotency(P_guess_alpha, P_guess_beta, integrals.S, molecule.n_alpha, molecule.n_beta, calculation, silent)
+
+    # Repacks guess container
+    guess_container = P_guess, P_guess_alpha, P_guess_beta, E_guess
+
+    # Redefines the calculation method, reapplies it
+    calculation.method = "U" + calculation.method if calculation.reference == "UHF" and not calculation.method.startswith("U") else calculation.method
+
+    # Sets up the integration grid for DFT calculations
+    bfs_on_grid, weights, bf_gradients_on_grid = dft.set_up_integration_grid(molecule.basis_functions, molecule.atoms, molecule.bond_length, molecule.n_electrons, P_guess_alpha, P_guess_beta, calculation, silent=silent) if calculation.DFT_calculation else (None, None, None)
+
+    grid_container = bfs_on_grid, weights, bf_gradients_on_grid
+
+
+    return molecule, integrals, guess_container, grid_container, X, V_NN, E_D2
+
+
+
+
+
+
+
+
+
+
+
+def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, terse=False, silent=False, guess_calculation=False, dboc=True, polar=True, integrals=None):
         
-        log(f"\n Excitation energy from {method}:  {space}" + f"{E_transition:16.10f}", calculation, 1, silent=silent)
+    # Packages the guess container
+    guess_container = P_guess, P_guess_alpha, P_guess_beta, E_guess
     
+    # Builds the molecule, calcualtes molecular integrals and prepares the guess density
+    molecule, integrals, guess_container, grid_container, X, V_NN, E_D2 = build_molecule_and_integrals(calculation, atomic_symbols, coordinates, silent, guess_container, guess_calculation, integrals=integrals)
     
-    # This is the total final energy
-    log(" Final single point energy:        " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+    # Updates the integral matrices if an electric field is applied
+    integrals.Q = kern.apply_electric_field(integrals.D, calculation.electric_field) if calculation.electric_field is not None else np.zeros_like(integrals.D)
 
-    # Adds on D2 energy, and prints this as dispersion-corrected final energy
-    if calculation.D2:
+    # Runs the self-consistent field cycle, returning an Output object with the results
+    SCF_output = scf.run_self_consistent_field_cycle(molecule, calculation, integrals, V_NN, X, guess_container, grid_container, silent)
     
-        final_energy += E_D2
+    calculation.SCF_time = time.perf_counter()
+    log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
 
-        log("\n Semi-empirical dispersion energy: " + f"{E_D2:16.10f}", calculation, 1, silent=silent)
-        log(" Dispersion-corrected final energy:" + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+    # If this is a guess calculation, don't continue to the correlated part, just return the guess density and energy
+    if guess_calculation:
 
+        return SCF_output, molecule, SCF_output.energy
 
-    # If plotting has been requested, send the density and orbital information to the plotting module
-    if not silent and calculation.plot_something:
+    # Performs correlated calculations and prints the energy calculation output
+    final_energy, P = kern.do_stuff_after_scf(SCF_output, calculation, molecule, calculation.reference, silent, molecule.n_alpha, molecule.n_beta, grid_container[1], calculation.method, integrals.ERI_AO, X, integrals.one_electron_integrals, V_NN, calculation.DFT_calculation, terse, E_D2)
+    
 
-        import tuna_out as out
+    if not silent and calculation.polarisability:
+        # Make polar and dboc the same thing
+        polarisability = calculate_polarisability(molecule, calculation, final_energy, False, atomic_symbols, coordinates, integrals)
 
-        out.show_two_dimensional_plot(calculation, basis_functions, bond_length, P, P_alpha, P_beta, n_electrons, P_difference_alpha=P_transition_alpha, P_difference_beta=P_transition_beta, P_difference=P_transition, molecular_orbitals=molecular_orbitals, natural_orbitals=natural_orbitals, nuclear_charges=molecule.basis_charges)
-
-    np.savetxt("eps.dat", np.array(epsilons))
-    np.savetxt("mos.dat", np.array(molecular_orbitals))
-
-    flat = ERI_AO.astype(np.float64).tobytes(order='F')
-
-    with open("eri.bin", "wb") as f:
-        f.write(flat)
+    # If requested, calculate the diagonal Born-Oppenheimer correction
+    if not silent and calculation.diagonal_born_oppenheimer_correction: 
+        
+        final_energy, E_DBOC = calculate_diagonal_born_oppenheimer_correction(calculation, atomic_symbols, coordinates, molecule, final_energy, silent=silent)
+        
 
     return SCF_output, molecule, final_energy, P
-
 
     
 
@@ -1079,7 +679,7 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=Fa
         # Builds new coordinates by adding step size on
         coordinates = np.array([coordinates[0], [0, 0, bond_length + step_size]]) 
 
-        if bond_length + step_size <= angstrom_to_bohr(0.05): break
+        if bond_length + step_size <= angstrom_to_bohr(0.2): break
 
     log_big_spacer(calculation, start="\n",space="", silent=silent)    
     
@@ -1111,7 +711,7 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=Fa
         
         import tuna_out as out
   
-        out.scan_plot(calculation, bohr_to_angstrom(np.array(bond_lengths)), energies)
+        out.plot_coordinate_scan(calculation, bohr_to_angstrom(np.array(bond_lengths)), energies)
 
 
     return bond_lengths, energies, dipole_moments

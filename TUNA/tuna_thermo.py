@@ -106,7 +106,7 @@ def calculate_vibrational_internal_energy(vibrational_frequency: float, temperat
 
 
 
-def calculate_internal_energy(energy: float, zero_point_energy: float, temperature: float, vibrational_frequency: float) -> tuple:
+def calculate_internal_energy(energy: float, zero_point_energy: float, temperature: float, vibrational_frequency: float) -> tuple[float, float, float, float]:
 
     """
 
@@ -188,8 +188,7 @@ def calculate_rotational_entropy(point_group: str, temperature: float, rotationa
 
     rotational_constant_per_bohr = bohr_to_angstrom(rotational_constant_per_m) * 1e-10
 
-    if point_group == "Dinfh": symmetry_number = 2
-    elif point_group == "Cinfv": symmetry_number = 1
+    symmetry_number = 2 if point_group == "Dinfh" else 1
 
     rotational_entropy = k * (1 + np.log(k * temperature / (symmetry_number * rotational_constant_per_bohr * h * c)))
 
@@ -254,7 +253,7 @@ def calculate_electronic_entropy(multiplicity: int) -> float:
 
 
 
-def calculate_entropy(temperature: float, vibrational_frequency: float, point_group: str, rotational_constant_per_m: float, masses: np.ndarray, pressure: float, multiplicity: int) -> tuple:
+def calculate_entropy(temperature: float, vibrational_frequency: float, point_group: str, rotational_constant_per_m: float, masses: np.ndarray, pressure: float, multiplicity: int) -> tuple[float, float, float, float, float]:
     
     """
 

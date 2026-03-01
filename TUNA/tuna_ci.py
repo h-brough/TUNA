@@ -3,7 +3,7 @@ from tuna_util import *
 
 
 
-def spin_block_core_Hamiltonian(H_core):
+def spin_block_core_Hamiltonian(H_core: ndarray) -> ndarray:
 
     """
     
@@ -25,7 +25,9 @@ def spin_block_core_Hamiltonian(H_core):
 
 
 
-def build_spin_orbital_Fock_matrix(H_core_SO, g, o):
+
+
+def build_spin_orbital_Fock_matrix(H_core_SO: ndarray, g: ndarray, o: slice) -> ndarray:
 
     """
     
@@ -42,7 +44,7 @@ def build_spin_orbital_Fock_matrix(H_core_SO, g, o):
     """
 
 
-    F_SO = H_core_SO + np.einsum('piqi->pq', g[:, o, :, o], optimize=True)
+    F_SO = H_core_SO + np.einsum("piqi->pq", g[:, o, :, o], optimize=True)
 
     return F_SO
 
@@ -50,7 +52,7 @@ def build_spin_orbital_Fock_matrix(H_core_SO, g, o):
 
 
 
-def antisymmetrise_integrals(ERI):
+def antisymmetrise_integrals(ERI: ndarray) -> ndarray:
 
     """
 
@@ -73,7 +75,7 @@ def antisymmetrise_integrals(ERI):
 
 
 
-def spin_block_molecular_orbitals(molecular_orbitals_alpha, molecular_orbitals_beta, epsilons):
+def spin_block_molecular_orbitals(molecular_orbitals_alpha: ndarray, molecular_orbitals_beta: ndarray, epsilons: ndarray) -> ndarray:
 
     """
 
@@ -99,7 +101,7 @@ def spin_block_molecular_orbitals(molecular_orbitals_alpha, molecular_orbitals_b
 
 
 
-def transform_ERI_AO_to_SO(ERI_AO, C_1, C_2):
+def transform_ERI_AO_to_SO(ERI_AO: ndarray, C_1: ndarray, C_2: ndarray) -> ndarray:
 
     """
 
@@ -126,7 +128,7 @@ def transform_ERI_AO_to_SO(ERI_AO, C_1, C_2):
 
 
 
-def transform_ERI_AO_to_MO(ERI_AO, C):
+def transform_ERI_AO_to_MO(ERI_AO: ndarray, C: ndarray) -> ndarray:
 
     """
 
@@ -143,6 +145,7 @@ def transform_ERI_AO_to_MO(ERI_AO, C):
 
     ERI_MO = np.einsum("mi,nj,mnkl,ka,lb->ijab", C, C, ERI_AO, C, C, optimize=True)       
 
+
     return ERI_MO
 
 
@@ -152,16 +155,17 @@ def transform_ERI_AO_to_MO(ERI_AO, C):
 
 
 
-def build_singles_epsilons_tensor(epsilons, o, v):
+def build_singles_epsilons_tensor(epsilons: ndarray, o: slice, v: slice, level_shift: float = 0) -> ndarray:
 
     """
 
-    Builds inverse epsilon tensor with shape ijab.
+    Builds inverse epsilon tensor with shape ia.
 
     Args:   
         epsilons (array): Orbital eigenvalues
         o (slice): Occupied slice
         v (slice): Virtual slice
+        level_shift (float, optional): Level shift
 
     Returns:
         e_ia (array): Inverse epsilons tensor for single excitations with shape ia
@@ -170,7 +174,7 @@ def build_singles_epsilons_tensor(epsilons, o, v):
 
     n = np.newaxis
 
-    e_ia = 1 / (epsilons[o, n] - epsilons[n, v])
+    e_ia = 1 / (epsilons[o, n] - epsilons[n, v] - level_shift)
 
     return e_ia
 
@@ -182,7 +186,7 @@ def build_singles_epsilons_tensor(epsilons, o, v):
 
 
 
-def build_doubles_epsilons_tensor(epsilons_1, epsilons_2, o_1, o_2, v_1, v_2):
+def build_doubles_epsilons_tensor(epsilons_1: ndarray, epsilons_2: ndarray, o_1: slice, o_2: slice, v_1: slice, v_2: slice, level_shift: float = 0) -> ndarray:
 
     """
 
@@ -195,6 +199,7 @@ def build_doubles_epsilons_tensor(epsilons_1, epsilons_2, o_1, o_2, v_1, v_2):
         o_2 (slice): Occupied slice
         v_1 (slice): Virtual slice
         v_2 (slice): Virtual slice
+        level_shift (float, optional): Level shift
 
     Returns:
         e_ijab (array): Inverse epsilons tensor with shape ijab
@@ -203,7 +208,7 @@ def build_doubles_epsilons_tensor(epsilons_1, epsilons_2, o_1, o_2, v_1, v_2):
 
     n = np.newaxis
 
-    e_ijab = 1 / (epsilons_1[o_1, n, n, n] + epsilons_2[n, o_2, n, n] - epsilons_1[n, n, v_1, n] - epsilons_2[n, n, n, v_2])
+    e_ijab = 1 / (epsilons_1[o_1, n, n, n] + epsilons_2[n, o_2, n, n] - epsilons_1[n, n, v_1, n] - epsilons_2[n, n, n, v_2] - 2 * level_shift)
 
     return e_ijab
 
@@ -214,7 +219,7 @@ def build_doubles_epsilons_tensor(epsilons_1, epsilons_2, o_1, o_2, v_1, v_2):
 
 
 
-def build_triples_epsilons_tensor(epsilons, o, v):
+def build_triples_epsilons_tensor(epsilons: ndarray, o: slice, v: slice, level_shift: float = 0) -> ndarray:
 
     """
 
@@ -224,6 +229,7 @@ def build_triples_epsilons_tensor(epsilons, o, v):
         epsilons (array): Orbital eigenvalues
         o (slice): Occupied slice
         v (slice): Virtual slice
+        level_shift (float, optional): Level shift
 
     Returns:
         e_ijkabc (array): Inverse epsilons tensor with shape ijkabc
@@ -232,7 +238,7 @@ def build_triples_epsilons_tensor(epsilons, o, v):
 
     n = np.newaxis
 
-    e_ijkabc = 1 / (epsilons[o, n, n, n, n, n] + epsilons[n, o, n, n, n, n] + epsilons[n, n, o, n, n, n] - epsilons[n, n, n, v, n, n] - epsilons[n, n, n, n, v, n] - epsilons[n, n, n, n, n, v])
+    e_ijkabc = 1 / (epsilons[o, n, n, n, n, n] + epsilons[n, o, n, n, n, n] + epsilons[n, n, o, n, n, n] - epsilons[n, n, n, v, n, n] - epsilons[n, n, n, n, v, n] - epsilons[n, n, n, n, n, v] - 3 * level_shift)
 
     return e_ijkabc
 
@@ -243,8 +249,37 @@ def build_triples_epsilons_tensor(epsilons, o, v):
 
 
 
+def build_quadruples_epsilons_tensor(epsilons: ndarray, o: slice, v: slice, level_shift: float = 0) -> ndarray:
 
-def build_MP2_t_amplitudes(g, e_ijab):
+    """
+
+    Builds inverse epsilon tensor with shape ijklabcd.
+
+    Args:   
+        epsilons (array): Orbital eigenvalues
+        o (slice): Occupied slice
+        v (slice): Virtual slice
+        level_shift (float, optional): Level shift
+
+    Returns:
+        e_ijklabcd (array): Inverse epsilons tensor with shape ijklabcd
+
+    """
+
+    n = np.newaxis
+
+    e_ijklabcd = 1 / (epsilons[o, n, n, n, n, n, n, n] + epsilons[n, o, n, n, n, n, n, n] + epsilons[n, n, o, n, n, n, n, n] + epsilons[n, n, n, o, n, n, n, n] - epsilons[n, n, n, n, v, n, n, n] - epsilons[n, n, n, n, n, v, n, n] - epsilons[n, n, n, n, n, n, v, n] - epsilons[n, n, n, n, n, n, n, v] - 4 * level_shift)
+
+    return e_ijklabcd
+
+
+
+
+
+
+
+
+def build_MP2_t_amplitudes(g: ndarray, e_ijab: ndarray) -> ndarray:
 
     """
 
@@ -271,7 +306,7 @@ def build_MP2_t_amplitudes(g, e_ijab):
 
 
 
-def transform_matrix_AO_to_SO(M, C):
+def transform_matrix_AO_to_SO(M: ndarray, C: ndarray) -> ndarray:
 
     """
 
@@ -667,6 +702,8 @@ def calculate_transition_dipoles(D, weights, excitations, C_spin_block):
 
 
 
+
+
 def calculate_oscillator_strengths(transition_dipoles, excitation_energies):
 
     """
@@ -685,6 +722,7 @@ def calculate_oscillator_strengths(transition_dipoles, excitation_energies):
     oscillator_strengths = (2 / 3) * excitation_energies * transition_dipoles ** 2
 
     return oscillator_strengths
+
 
 
 
@@ -1117,204 +1155,3 @@ def run_CIS(ERI_AO, n_occ, n_virt, n_SO, calculation, SCF_output, molecule, sile
 
 
 
-
-
-
-
-
-def calculate_B_matrix(ERI_MO, o, v):
-    """
-
-    Calculates the TDHF/stability B matrix (restricted HF, spatial orbitals).
-
-    With chemist-order spatial ERIs (pq|rs), the RHF stability decomposition
-    can be written with:
-        B_{ia,jb} = J_{ia,jb} = (ia|jb)
-
-    Returns:
-        B (array): shape (i, a, j, b)
-
-    """
-
-    # ERI_MO is assumed CHEMIST order here: ERI_MO[p,q,r,s] = (pq|rs)
-    tmp = ERI_MO[v, o, o, v]          # (a, i, j, b) = (ai|jb) = (ia|jb)
-    B = tmp.transpose(1, 0, 2, 3)     # (i, a, j, b)
-
-    return B
-
-
-
-
-
-
-def calculate_A_matrix(ERI_MO, epsilons, o, v):
-    """
-
-    Calculates the A matrix used to form RHF stability Hessians via:
-        H_plus  = A + B = Δ + 2J - K
-        H_minus = A - B = Δ - K
-
-    where:
-        J_{ia,jb} = (ia|jb)
-        K_{ia,jb} = (ib|ja) = (aj|ib)
-        Δ_{ia,jb} = (eps_a - eps_i) δ_ij δ_ab
-
-    Returns:
-        A (array): shape (i, a, j, b)
-
-    """
-
-    # --- Build J_{ia,jb} = (ia|jb)
-    tmp = ERI_MO[v, o, o, v]          # (a, i, j, b) = (ai|jb)
-    J = tmp.transpose(1, 0, 2, 3)     # (i, a, j, b)
-
-    # --- Build K_{ia,jb} = (aj|ib) = (ib|ja)
-    # From (a, i, j, b) -> swap i<->j to get (a, j, i, b) then transpose to (i,a,j,b)
-    K = tmp.swapaxes(1, 2).transpose(2, 0, 1, 3)   # (i, a, j, b)
-    tmp_oovv = ERI_MO[o, o, v, v]                    # (i,j,a,b)
-    K   = tmp_oovv.transpose(0,2,1,3) 
-    # --- Orbital energy differences Δ_{ia,jb}
-    eps_occ  = epsilons[o]           # (i,)
-    eps_virt = epsilons[v]           # (a,)
-    e_ia = eps_virt[None, :] - eps_occ[:, None]    # (i, a)
-
-    n_occ, n_virt = e_ia.shape
-    A = (J - K).reshape(n_occ * n_virt, n_occ * n_virt)
-
-    # add Δ on the (ia,ia) diagonal in the same flattening convention
-    A[np.diag_indices_from(A)] += e_ia.reshape(-1)
-
-    return A.reshape(n_occ, n_virt, n_occ, n_virt)
-
-
-
-
-
-
-def calculate_electronic_hessians(ERI_MO, epsilons, o, v):
-    
-    """
-
-    Builds the electronic Hessians.
-
-    Args:
-        ERI_MO (array): Electron repulsion integrals in spatial orbital basis
-        epsilons (array): Fock matrix eigenvalues
-        o (slice): Occupied orbital slice
-        v (slice): Virtual orbital slice
-    
-    Returns:
-        H_plus (array): Electronic hessian for first channel
-        H_minus (array): Electronic hessian for second channel
-    
-    """
-
-    # Calculates the TDHF A and B matrices
-    A = calculate_A_matrix(ERI_MO, epsilons, o, v)
-    B = calculate_B_matrix(ERI_MO, o, v)
-
-
-    # Builds the two electronic hessians, shape (i, a, j, b)
-    H_plus = A + B
-    H_minus = A - B
-
-    return H_plus, H_minus
-
-
-
-
-
-
-
-def diagonalise_electronic_hessian(H):
-
-    """
-
-    Finds the eigenvalues of an electronic Hessian.
-
-    Args:
-        H (array): Electronic Hessian shape (a, i, b, j)
-    
-    Returns:
-        eigvals (array): Electronic Hessian eigenvalues
-    
-    """
-
-    # Reads Hessian for number of virtual and occupied orbitals
-    n_occ, n_virt, _, _ = H.shape
-
-    # Reshapes the Hessian to (ia, jb)
-    M = H.reshape(n_virt * n_occ, n_virt * n_occ)
-
-    # Symmetrises the matrix
-    M = symmetrise(M)
-
-    # Finds the eigenvalues
-    eigvals,_ = np.linalg.eigh(M)
-
-    return eigvals
-
-
-
-
-
-
-
-def check_electronic_stability(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=False):
-
-    """
-
-    Checks if a RHF SCF solution is a local minimum or saddle point.
-
-    Args:
-        molecule (Molecule): Molecule object
-        ERI_AO (array): Electron repulsion integrals in AO basis
-        SCF_output (Output): Output object
-        n_doubly_occ (int): Number of doubly occupied orbitals
-        calculation (Calculation): Calculation object
-        silent (bool, optional): Should anything be printed
-
-    """
-
-
-    # This only works for RHF references, performs the transformation to molecular orbital basis
-    ERI_MO, _, epsilons, o, v = begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=silent)
-
-    ERI_MO = ERI_MO.transpose(0, 2, 1, 3)
-
-    log_spacer(calculation, 1, silent=silent, start="\n")
-    log("         Restricted SCF Stability Analysis", calculation, 1, silent=silent)
-    log_spacer(calculation, 1, silent=silent)
-
-    log("  Calculating the electronic Hessian...      ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
-
-    # Calculates the electronic hessians
-    H_plus, H_minus = calculate_electronic_hessians(ERI_MO, epsilons, o, v)
-
-    log("[Done]", calculation, 1, silent=silent)
-
-    log("  Diagonalising the electronic Hessian...    ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
-
-    # Calculates the eigenvalues for both electronic hessians
-    eigvals_plus = diagonalise_electronic_hessian(H_plus)
-    eigvals_minus = diagonalise_electronic_hessian(H_minus)
-
-    log("[Done]", calculation, 1, silent=silent)
-
-    # Joins the eigenvalues into one array then sorts from smallest to largest
-    eigvals = np.sort(np.concatenate((eigvals_plus, eigvals_minus)))
-    
-    log(f"\n  The smallest eigenvalue is {eigvals[0]:6.5f}.", calculation, 1, silent=silent)
-    print(eigvals)
-    if eigvals[0] < 0:
-
-        warning(f"There is a negative eigenvalue present!")
-
-    else:
-        
-        log(f"\n  All eigenvalues are positive!", calculation, 1, silent=silent)
-
-
-    log_spacer(calculation, 1, silent=silent)
-
-    return

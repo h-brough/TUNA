@@ -1,10 +1,12 @@
-from tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer
+from tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer, Calculation
 import tuna_energy as energ
 import tuna_out as out
 import tuna_opt as opt
 import tuna_thermo as thermo
 from scipy import linalg, interpolate
 import numpy as np
+from numpy import ndarray
+from tuna_molecule import Molecule
 import sys
 
 
@@ -21,7 +23,7 @@ The module contains:
 
 1. Some utility functions that are shared between harmonic and anharmonic calculations (e.g. calculate_transition_intensity)
 2. Useful functions for the anharmonic frequency calculations (e.g. diagonalise_hamiltonian_tridiagonal, frequency_is_converged, calculate_dipole_matrix)
-3. The main function for the anharmonic frequency calculation, solve_nuclear_schrodinger_equation
+3. The main function for the anharmonic frequency calculation, calculate_anharmonic_frequency
 4. The main function for the harmonic frequency calculation, calculate_harmonic_frequency
 
 """
@@ -29,8 +31,7 @@ The module contains:
 
 
 
-
-def calculate_transition_intensity(frequency_matrix, dipole_matrix) -> np.ndarray:
+def calculate_transition_intensity(frequency_matrix: ndarray, dipole_matrix: ndarray) -> ndarray:
     
     """
 
@@ -63,7 +64,7 @@ def calculate_transition_intensity(frequency_matrix, dipole_matrix) -> np.ndarra
 
 
 
-def check_sign_of_hessian(hessian, reduced_mass) -> tuple:
+def check_sign_of_hessian(hessian: ndarray, reduced_mass: float) -> tuple[float, float]:
 
     """
 
@@ -103,7 +104,7 @@ def check_sign_of_hessian(hessian, reduced_mass) -> tuple:
 
 
 
-def calculate_anharmonicity_constant(transition_matrix, harmonic_frequency) -> float:
+def calculate_anharmonicity_constant(transition_matrix: ndarray, harmonic_frequency: float) -> float:
 
     """
 
@@ -129,7 +130,7 @@ def calculate_anharmonicity_constant(transition_matrix, harmonic_frequency) -> f
 
 
 
-def calculate_dipole_matrix(vibrational_wavefunctions, dipole_moments_interpolated) -> np.ndarray:
+def calculate_dipole_matrix(vibrational_wavefunctions: ndarray, dipole_moments_interpolated: ndarray) -> ndarray:
 
     """
 
@@ -157,7 +158,7 @@ def calculate_dipole_matrix(vibrational_wavefunctions, dipole_moments_interpolat
 
 
 
-def calculate_transition_matrix(vibrational_energy_levels) -> np.ndarray:
+def calculate_transition_matrix(vibrational_energy_levels: ndarray) -> ndarray:
 
     """
 
@@ -172,7 +173,7 @@ def calculate_transition_matrix(vibrational_energy_levels) -> np.ndarray:
     """
 
     # This allows easy indexing for the transitions ([0][1] is the transition from level 0 to level 1, etc.)
-    transition_matrix = np.abs(vibrational_energy_levels[:, np.newaxis] - vibrational_energy_levels[np.newaxis, :])
+    transition_matrix = np.abs(vibrational_energy_levels[:, None] - vibrational_energy_levels[None, :])
 
     return transition_matrix
 
@@ -183,7 +184,7 @@ def calculate_transition_matrix(vibrational_energy_levels) -> np.ndarray:
 
 
 
-def interpolate_and_build_hamiltonian(x_values, V_values, reduced_mass, extent, extrapolation_grid_density, dipole_moments) -> tuple:
+def interpolate_and_build_hamiltonian(x_values: ndarray, V_values: ndarray, reduced_mass: float, extent: float, extrapolation_grid_density: float, dipole_moments: ndarray) -> tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
 
     """
 
@@ -202,14 +203,15 @@ def interpolate_and_build_hamiltonian(x_values, V_values, reduced_mass, extent, 
         vibrational_wavefunctions (array): Nuclear Hamiltonian eigenvectors
         dipole_moments_interpolated (array): Interpolated dipole moments
         x (array): Interpolated bond lengths
+        V (array): Interpolated potential energies
 
     """
 
-    n_interpolation_points = extrapolation_grid_density * extent
+    n_grid_points = int(extrapolation_grid_density * extent)
 
     # Interpolates the potential energies and dipole moments using the grid density multiplied by the extent, to give a consistent number of interpolation points
-    x, V = interpolate_potential_energy(V_values, x_values, n_interpolation_points)
-    _, dipole_moments_interpolated = interpolate_potential_energy(dipole_moments, x_values, n_interpolation_points)
+    x, V = interpolate_potential_energy(V_values, x_values, n_grid_points)
+    _, dipole_moments_interpolated = interpolate_potential_energy(dipole_moments, x_values, n_grid_points)
 
     # Builds the main and off diagonal parts of the nuclear Hamiltonian
     main_diag, off_diag = construct_nuclear_hamiltonian(x, V, reduced_mass)
@@ -217,7 +219,7 @@ def interpolate_and_build_hamiltonian(x_values, V_values, reduced_mass, extent, 
     # Diagonalises the nuclear Hamiltonian
     vibrational_energy_levels, vibrational_wavefunctions = diagonalise_hamiltonian_tridiagonal(main_diag, off_diag)
 
-    return vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x
+    return vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x, V
 
 
 
@@ -226,7 +228,7 @@ def interpolate_and_build_hamiltonian(x_values, V_values, reduced_mass, extent, 
 
 
 
-def construct_nuclear_hamiltonian(x_interpolated, V_interpolated, reduced_mass) -> tuple:
+def construct_nuclear_hamiltonian(x_interpolated: ndarray, V_interpolated: ndarray, reduced_mass: float) -> tuple[ndarray, ndarray]:
 
     """
 
@@ -264,7 +266,7 @@ def construct_nuclear_hamiltonian(x_interpolated, V_interpolated, reduced_mass) 
 
 
 
-def interpolate_potential_energy(F_raw, x_raw, n_grid_points) -> tuple:
+def interpolate_potential_energy(F_raw: ndarray, x_raw: ndarray, n_grid_points: int) -> tuple[ndarray, ndarray]:
 
     """
 
@@ -277,27 +279,27 @@ def interpolate_potential_energy(F_raw, x_raw, n_grid_points) -> tuple:
 
     Returns:
         x (array): Interpolated nuclear coordinate array
-        F (array): Interpolated function of coordinates
+        function_interpolated (array): Interpolated function of coordinates
 
     """
 
     # Builds a linearly spaced x-axis between the computed end points, to the desired grid density
-    x = np.linspace(x_raw.min(), x_raw.max(), int(n_grid_points))
+    x = np.linspace(x_raw.min(), x_raw.max(), n_grid_points)
 
     # Cubic interpolation of the potential energy surface
     interpolation_function = interpolate.interp1d(x_raw, F_raw, kind="cubic")
-    F = interpolation_function(x)
+    function_interpolated = interpolation_function(x)
 
-    return x, F
-
-
+    return x, function_interpolated
 
 
 
 
 
 
-def diagonalise_hamiltonian_tridiagonal(main_diag, off_diag, n_states=6) -> tuple:
+
+
+def diagonalise_hamiltonian_tridiagonal(main_diag: ndarray, off_diag: ndarray, n_states=6) -> tuple[ndarray, ndarray]:
 
     """
 
@@ -327,7 +329,7 @@ def diagonalise_hamiltonian_tridiagonal(main_diag, off_diag, n_states=6) -> tupl
 
 
 
-def print_absorption_spectrum(calculation, transition_matrix, frequency_matrix, wavelength_matrix, intensity_matrix) -> None:
+def print_absorption_spectrum(calculation: Calculation, transition_matrix: ndarray, frequency_matrix: ndarray, wavelength_matrix: ndarray, intensity_matrix: ndarray) -> None:
 
     """
 
@@ -366,22 +368,23 @@ def print_absorption_spectrum(calculation, transition_matrix, frequency_matrix, 
 
 
 
-def frequency_is_converged(frequency, frequency_old) -> bool:
+def frequency_is_converged(frequency: float, frequency_old: float, calculation: Calculation) -> bool:
 
     """
 
-    Checks the convergence of the fundamental anharmonic frequency, to 0.01 per cm.
+    Checks the convergence of the fundamental anharmonic frequency, to 0.01 per cm by default.
 
     Args:
-        frequency (float): Frequency from current step
-        frequency_old (float): Frequency from previous step
+        frequency (float): Frequency from current step in per cm
+        frequency_old (float): Frequency from previous step in per cm
+        calculation (Calculation): Calculation object
 
     Returns:
         frequency_is_converged (bool): Is the frequency converged
 
     """
 
-    if np.abs(frequency - frequency_old) < 0.01:
+    if np.abs(frequency - frequency_old) < calculation.anharm_convergence:
 
         return True
     
@@ -395,7 +398,7 @@ def frequency_is_converged(frequency, frequency_old) -> bool:
 
 
 
-def process_anharmonic_output(calculation, x_values, V_values, vibrational_wavefunctions, vibrational_energy_levels, transition_matrix, chi, dipole_moments_interpolated, x, molecule) -> None:
+def process_anharmonic_output(calculation: Calculation, vibrational_wavefunctions: ndarray, vibrational_energy_levels: ndarray, transition_matrix: ndarray, chi: float, dipole_moments_interpolated: ndarray, x: ndarray, V: ndarray, molecule: Molecule) -> None:
 
     """
 
@@ -403,19 +406,18 @@ def process_anharmonic_output(calculation, x_values, V_values, vibrational_wavef
 
     Args:
         calculation (Calculation): Calculation object
-        x_values (array): Raw bond length values
-        V_values (array): Raw potential energy values
         vibrational_wavefunctions (array): Vibrational wavefunctions
         vibrational_energy_levels (array): Nuclear Hamiltonian eigenvalues
         transition_matrix (array): Matrix of transition energies between states
         chi (float): Anharmonicity constant
         dipole_moments_interpolated (array): Interpolated dipole moments
         x (array): Interpolated bond lengths
+        V (array): Interpolated potential energies
         molecule (Molecule): Molecule object
 
     """
 
-    zero_point_energy = vibrational_energy_levels[0] - min(V_values)
+    zero_point_energy = vibrational_energy_levels[0] - min(V)
 
     # Uses unit conversions to get the transition matrix in per cm and in nm
     frequency_matrix = transition_matrix * constants.per_cm_in_hartree
@@ -443,7 +445,7 @@ def process_anharmonic_output(calculation, x_values, V_values, vibrational_wavef
     # Plots the vibrational wavefunctions and nuclear potential energy, if requested by "PLOTVIB" keyword
     if calculation.plot_vibrational_wavefunctions:
 
-        out.plot_vibrational_wavefunctions(x, vibrational_energy_levels, vibrational_wavefunctions, x_values, V_values)
+        out.plot_vibrational_wavefunctions(calculation, x, V, vibrational_energy_levels, vibrational_wavefunctions)
 
     return
 
@@ -456,7 +458,7 @@ def process_anharmonic_output(calculation, x_values, V_values, vibrational_wavef
 
 
 
-def solve_nuclear_schrodinger_equation(calculation, atomic_symbols, harmonic_frequency_per_cm, molecule) -> np.ndarray:
+def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: list[str], harmonic_frequency_per_cm: float, molecule: Molecule) -> ndarray:
 
     """
 
@@ -480,7 +482,7 @@ def solve_nuclear_schrodinger_equation(calculation, atomic_symbols, harmonic_fre
     calculation.scan_step = 0.05 if calculation.scan_step is None else calculation.scan_step
     
     # The extent is the total distance (in angstroms) of the first scan around the minimum - half backwards, half forwards
-    extent = 0.5
+    extent = 0.4
 
     # Initialises fundamental transition frequency for loop
     transition_per_cm = 0
@@ -492,7 +494,7 @@ def solve_nuclear_schrodinger_equation(calculation, atomic_symbols, harmonic_fre
     log(f"\n Using a scan step length of {calculation.scan_step} angstroms.\n", calculation, 1)
     log(f" Using atomic mass of {(molecule.masses[0] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[0].capitalize()}, {(molecule.masses[1] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[1].capitalize()}.", calculation, 3)
 
-    log(" Calculating initial potential energy surface around minimum... ", calculation, 1, end=""); sys.stdout.flush()
+    log(" Calculating initial potential energy surface around minimum...  ", calculation, 1, end=""); sys.stdout.flush()
 
     # Determines how many scan steps are necessary, based on extent and step length
     calculation.scan_number = int(extent / calculation.scan_step) + 1
@@ -538,7 +540,7 @@ def solve_nuclear_schrodinger_equation(calculation, atomic_symbols, harmonic_fre
         dipole_moments = np.concatenate((np.array(new_dipole_moments_left[1:][::-1]), np.array(dipole_moments), np.array(new_dipole_moments_right[1:])))
         
         # Interpolates the energy and dipole moments, and solves the eigenvalue equation 
-        vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x = interpolate_and_build_hamiltonian(x_values, V_values, molecule.reduced_mass, extent, extrapolation_grid_density, dipole_moments)
+        vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x, V = interpolate_and_build_hamiltonian(x_values, V_values, molecule.reduced_mass, extent, extrapolation_grid_density, dipole_moments)
 
         transition_matrix = calculate_transition_matrix(vibrational_energy_levels)
         transition_per_cm = transition_matrix[0][1] * constants.per_cm_in_hartree
@@ -548,11 +550,11 @@ def solve_nuclear_schrodinger_equation(calculation, atomic_symbols, harmonic_fre
 
         log(f"    {iteration + 1}               {transition_per_cm:8.2f}                 {chi:8.5f}             {harmonic_frequency_per_cm:8.2f}             {bohr_to_angstrom(min(x_values)):.5f} - {bohr_to_angstrom(max(x_values)):.5f}", calculation, 1)
 
-        if frequency_is_converged(transition_per_cm, transition_per_cm_old):
+        if frequency_is_converged(transition_per_cm, transition_per_cm_old, calculation):
             
             log_big_spacer(calculation, 1)
 
-            process_anharmonic_output(calculation, x_values, V_values, vibrational_wavefunctions, vibrational_energy_levels, transition_matrix, chi, dipole_moments_interpolated, x, molecule)
+            process_anharmonic_output(calculation, vibrational_wavefunctions, vibrational_energy_levels, transition_matrix, chi, dipole_moments_interpolated, x, V, molecule)
 
             return vibrational_energy_levels
 
@@ -566,7 +568,7 @@ def solve_nuclear_schrodinger_equation(calculation, atomic_symbols, harmonic_fre
 
 
 
-def calculate_harmonic_frequency(calculation, atomic_symbols=None, coordinates=None, molecule=None, energy=None) -> tuple:
+def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[str] = None, coordinates: ndarray = None, molecule: Molecule = None, energy: float = None) -> tuple[ndarray, float, float]:
 
     """
 
@@ -592,17 +594,11 @@ def calculate_harmonic_frequency(calculation, atomic_symbols=None, coordinates=N
         _, molecule, energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
 
     # Unpacks useful molecular quantities
-    point_group = molecule.point_group
     bond_length = molecule.bond_length
     atomic_symbols = molecule.atomic_symbols
     coordinates = molecule.coordinates
     masses = molecule.masses
     reduced_mass = molecule.reduced_mass
-    rotational_constant_per_cm = molecule.rotational_constant_per_cm
-
-    # Unpacks useful calculation quantities from user-defined parameters
-    temperature = calculation.temperature
-    pressure = calculation.pressure  
 
     log_spacer(calculation, 1, start="\n", space="")
     log(" Beginning harmonic frequency calculation...", calculation, 1, colour="white")
@@ -643,8 +639,8 @@ def calculate_harmonic_frequency(calculation, atomic_symbols=None, coordinates=N
     log(f"\n  Frequency (per cm): {frequency_per_cm:.2f}{imaginary_unit}                Intensity (km per mol): {transition_intensity_km_per_mol:.2f}", calculation, 1)
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
 
-
     # Calculates and prints thermochemical corrections
     thermo.calculate_thermochemical_corrections(molecule, calculation, frequency_hartree, energy, zero_point_energy)
+
 
     return hessian, reduced_mass, frequency_per_cm

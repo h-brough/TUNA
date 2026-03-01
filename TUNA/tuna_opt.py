@@ -40,11 +40,12 @@ def calculate_gradient(coordinates, calculation, atoms, silent=False):
 
     log("[Done]", calculation, 1, silent=silent)
 
-
-    gradient = (energy_forward - energy_backward) / (2 * constants.numerical_derivative_prod)
+    gradient = calculate_first_derivative(energy_backward, energy_forward, constants.numerical_derivative_prod)
 
     return gradient
     
+
+
 
 
 
@@ -127,9 +128,10 @@ def calculate_hessian(coordinates, calculation, atomic_symbols, energy, silent=F
     log("[Done]\n", calculation, 1, silent=silent)   
 
     # Equation from Wikipedia page on numerical second derivative methods, fairly noise-resistant formula
-    hessian = (-energy_far_forward + 16 * energy_forward - 30 * energy + 16 * energy_backward -  energy_far_backward) / (12 * constants.numerical_derivative_prod ** 2)
-
+    hessian = calculate_second_derivative(energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, constants.numerical_derivative_prod)
+    
     return hessian, SCF_output_forward, P_forward, SCF_output_backward, P_backward
+
 
 
 
@@ -171,8 +173,8 @@ def calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_o
     dipole_moment_backward = postscf.calculate_dipole_moment(centre_of_mass, charges, backward_coords, P_backward, SCF_output_backward.D)[0]
 
     # Calculates dipole derivative by central differences method
-    dipole_derivative = (dipole_moment_forward - dipole_moment_backward) / (2 * constants.numerical_derivative_prod)
-
+    dipole_derivative = calculate_first_derivative(dipole_moment_backward, dipole_moment_forward, constants.numerical_derivative_prod)
+    
     # Converts to normal coordinates by mass weighting
     dipole_derivative /= np.sqrt(postscf.calculate_reduced_mass(masses))
 
@@ -322,7 +324,7 @@ def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True)
         if calculation.trajectory: 
             import tuna_out as out
 
-            out.print_trajectory(molecule, energy, coordinates, trajectory_path)
+            out.save_trajectory_to_file(molecule, energy, coordinates, trajectory_path)
 
         # If optimisation is converged, begin post SCF output and print to console, then finish calculation
         if converged_grad and converged_step: 
@@ -367,5 +369,3 @@ def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True)
     if multiple_iterations:
 
         error(F"Geometry optimisation did not converge in {max_geom_iter} iterations! Increase the maximum or give up!")
-
-

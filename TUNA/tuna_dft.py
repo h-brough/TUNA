@@ -1,5 +1,6 @@
-from tuna_util import log, warning, error, symmetrise, constants
+from tuna_util import log, warning, error, symmetrise, constants, Calculation
 import numpy as np
+from numpy import ndarray
 import sys
 from scipy.integrate import lebedev_rule
 
@@ -30,7 +31,7 @@ observed about a factor of two increase for DFT functionals generally by optimis
 """
 
 
-def calculate_seitz_radius(density):
+def calculate_seitz_radius(density: ndarray) -> tuple[ndarray, ndarray]:
 
     # Calculates the Seitz radius for a given density, cube rooting via numpy is faster and more accurate than in pure Python
 
@@ -42,7 +43,7 @@ def calculate_seitz_radius(density):
 
 
 
-def calculate_zeta(alpha_density, beta_density):
+def calculate_zeta(alpha_density: ndarray, beta_density: ndarray) -> ndarray:
 
     # The local spin polarisation, zeta, depends on the alpha and beta densities
 
@@ -55,7 +56,7 @@ def calculate_zeta(alpha_density, beta_density):
 
 
 
-def calculate_f_zeta(zeta):
+def calculate_f_zeta(zeta: ndarray) -> ndarray:
 
     # This is the spin polarisation function used in eg. VWN5 correlation in interpolation
 
@@ -65,7 +66,7 @@ def calculate_f_zeta(zeta):
 
 
 
-def calculate_f_prime_zeta(zeta):
+def calculate_f_prime_zeta(zeta: ndarray) -> ndarray:
 
     # This is the derivative of spin polarisation function used in eg. VWN5 correlation in interpolation
 
@@ -75,7 +76,7 @@ def calculate_f_prime_zeta(zeta):
 
 
 
-def clean(function_on_grid, floor=constants.density_floor):
+def clean(function_on_grid: ndarray, floor: float = constants.density_floor) -> ndarray:
 
     # Makes sure there are no zero or negative values in the electron density
     
@@ -85,7 +86,7 @@ def clean(function_on_grid, floor=constants.density_floor):
 
 
 
-def clean_density_matrix(P, S, n_electrons):
+def clean_density_matrix(P: ndarray, S: ndarray, n_electrons: int) -> ndarray:
 
     # Forces the trace of the density matrix to be correct
 
@@ -95,7 +96,7 @@ def clean_density_matrix(P, S, n_electrons):
 
 
 
-def integrate_on_grid(integrand, weights):
+def integrate_on_grid(integrand: ndarray, weights: ndarray) -> float:
 
     # Uses quadrature to calculate the integral of a function expressed on a grid
 
@@ -104,6 +105,21 @@ def integrate_on_grid(integrand, weights):
     return integral
 
 
+
+def integrate_final_density(alpha_density: ndarray, beta_density: ndarray, density: ndarray, weights: ndarray, calculation: Calculation, silent: bool = False) -> None:
+
+    # Calculates the final integrals of the alpha, beta and total density
+    n_alpha_DFT = integrate_on_grid(alpha_density, weights)
+    n_beta_DFT = integrate_on_grid(beta_density, weights)
+
+    n_electrons_DFT = integrate_on_grid(density, weights)
+
+    log(f"\n Integral of the final alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent=silent)
+    log(f" Integral of the final beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent=silent)
+
+    log(f" Integral of the final total density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
+
+    return
 
 
 
@@ -162,7 +178,7 @@ def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_
     log(f"\n Integration grid has {n_radial} radial and {points.shape[2]} angular points, a Lebedev order of {Lebedev_order}.", calculation, 1, silent=silent)
     log(f" In total there are {total_points} grid points, {points_per_atom} per atom.", calculation, 1, silent=silent)
 
-    log("\n Building guess density on grid...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log("\n Building guess density on grid...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     # Calculates the basis functions expressed on the integration grid
     bfs_on_grid = construct_basis_functions_on_grid(basis_functions, points)
@@ -198,6 +214,8 @@ def set_up_integration_grid(basis_functions, atoms, bond_length, n_electrons, P_
 
             error("Integral for the density is completely wrong!")
     
+    log(f" Using {100 * calculation.DFX_prop:.1f}% density functional exchange and {100 * calculation.HFX_prop:.1f}% Hartree-Fock exchange.", calculation, 2, silent=silent)
+    log(f" Using {100 * calculation.DFC_prop:.1f}% density functional correlation and {100 * calculation.MPC_prop:.1f}% Moller-Plesset correlation.\n", calculation, 2, silent=silent)
 
     return bfs_on_grid, weights, bf_gradients_on_grid
 

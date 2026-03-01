@@ -1,32 +1,42 @@
 # Changelog
 
-## TUNA 0.10.0 — 01/03/2026
+## TUNA 0.10.0 — 15/03/2026
 
 ### Added
 
-- Stability analysis for restricted Hartree-Fock and restricted Kohn-Sham DFT with `STAB` keyword
-- Anharmonic frequencies and intensities, solving nuclear SChrofinger equation on TUNA-calculated PES
-- Updated CIS module
-- New tuna_guess module
-- Split up tuna_optfreq into tuna_opt and tuna_freq
-- Extended Huckel theory and superposition of atomic densities guess strategies
-- Plot anharm keywrod #PLOTVIB'
-- New DEBUG keyword for extreme levels of printing
-- Wrapper for calc_energy, extrapolate_energy = evaluate_energy which decides
-- Parse out central energy evaluation from calculate Hessian, reduced cost of frequency calculations by 20% without loss of accuracy
-- Check vs orca if vibrational energy shouold be zero
-- Electronic entropy
+- Spin-restricted CCSDT, CCSDT(Q) and CCSDTQ
+- Anharmonic vibrational frequencies and intensities by solving the nuclear Schrodinger equation on the full potential energy surface via `ANHARM` calculation type
+- Plot vibrational wavefunctions with the `PLOTVIB` keyword
+- Control convergence of anharmonic frequencies systematically with `ANHARMCONV` keyword
+- Polarisability calculations for all methods via `POLAR` keyword
+- Calculations in electric field by `EX`, `EY`, `EZ` keywords
+- Numerical calculation of dipole moments for all electronic structure methods
+- Superposition of atomic densities and self-consistent minimal basis guess strategies, making SCF for heavy elements up to 50% faster
+- Keywords for guess strategies, `COREGUESS`, `SADGUESS` and `SCFGUESS`
+- Electronic contribution to entropy is now calculated
+- Diagonal Born-Oppenheimer correction with `DBOC` keyword
+- Implemented D2 dispersion parameters for DFT methods including PBE, BLYP, B3LYP, BP86, TPSS and B2PLYP
+- Basis set extrapolation extended to use triple and quadruple zeta basis sets
+- New `DEBUG` keyword, for extreme levels of printing
 
 ### Changed
 
+- Default SCF guess strategy is now self-consistent minimal basis guess, via superposition of atomic densities
+- Restructured code for Hessian evaluation, reducing cost by 20% with identical results
+- New tuna_guess module; split tuna_optfreq into tuna_opt and tuna_freq; split tuna_kernel module away from tuna_energ
+- Density matrix idempotency is now forced after the guess density, to increase stability
 - Natural orbitals are no longer calculated by default for MP2
-- Minimum bond length decreased from 0.05 to 0.01 angstrom
-- Print atomic masses in frequency calculations with additional pritn 
+- Minimum requestable bond length decreased from 0.05 angstroms to 0.01 angstroms
+- Atomic masses can now be printed in frequency calculations with additional print, `P`
+- Major refactors to code, including new modules written with type hints, made code more object-oriented
+- Coupled cluster maximum iterations default increased from 30 to 50
 
 ### Fixed
 
 - The `NONATORBS` keyword was causing crashes with MP2
 - Small basis sets would sometimes cause a crash for large diatomics
+- Only some molecular orbital information was printing for RHF or RKS calculations
+- The unrestricted CCSDT energy was not including the disconnected doubles contribution
 
 <br>
 

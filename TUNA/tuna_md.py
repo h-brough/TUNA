@@ -256,7 +256,7 @@ def calculate_MD_components(molecule, masses, velocities, starting_energy, degre
 
 
 
-def run_MD(calculation, atoms, coordinates):
+def run_molecular_dynamics_simulation(calculation, atoms, coordinates):
 
     """
 
@@ -370,7 +370,7 @@ def run_MD(calculation, atoms, coordinates):
             
             import tuna_out as out
 
-            out.print_trajectory(molecule, potential_energy, coordinates, trajectory_path)
+            out.save_trajectory_to_file(molecule, potential_energy, coordinates, trajectory_path)
         
 
 

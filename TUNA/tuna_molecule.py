@@ -1,62 +1,46 @@
 from tuna_integrals import tuna_integral as ints
 from tuna_util import *
+from numpy import ndarray
 import tuna_basis as bas
 import tuna_postscf as postscf
 import numpy as np
 
 
 
+@dataclass
 class Atom:
 
-    def __init__(self, basis_charge, mass, origin, C6, vdw_radius, real_vdw_radius, symbol, core_orbitals, ghost=False):
+    """
 
-        """
+    An object representing data about an atom in a molecule.
 
-        Defines an atom to be used in a TUNA calculation.
+    """
 
-        Args:
-            basis_charge (int): Relative nuclear charge for basis set formation
-            mass (float): Atomic mass in AMU
-            origin (array): Coordinates in form [0, 0, z-coord]
-            C6 (float): C6 parameter for D2 dispersion
-            vdw_radius (float): Van der Waals radius for D2 dispersion
-            symbol (str): Atomic symbol
-            ghost (bool, optional): This is a ghost atom
-        
-        """
+    basis_charge: int   # Relative nuclear charge for basis set formation
+    mass: float   # Atomic mass in AMU
+    origin: ndarray   # Coordinates
 
-        # Defines key atomic parameters
-        self.basis_charge = basis_charge
-        self.mass = mass
-        self.origin = origin
+    C6: float   # Parameters for D2 dispersion
+    vdw_radius: float   # Parameters for D2 dispersion
+    real_vdw_radius: float   # Size of atom for DFT grid formation for heteronuclear diatomics
+    
+    symbol: str   # Atomic symbol
+   
+    core_orbitals: int   # How many orbitals are core
 
-        # Defines D2 dispersion parameters
-        self.C6 = C6
-        self.vdw_radius = vdw_radius
-        self.real_vdw_radius = real_vdw_radius
+    density: ndarray   # Atomic HF/STO-3G density matrix
 
-        # Defines capitalised atomic symbol
-        self.symbol = symbol
-        
-        if "X" in symbol:
+    ghost: bool   # Is the atom a ghost atom
 
-            if len(symbol) == 2: self.symbol_formatted = self.symbol.upper()
-            elif len(symbol) == 3: self.symbol_formatted = "X" + self.symbol[1].upper() + self.symbol[2].lower()
+    @property
+    def charge(self):
 
-        else:
+        return self.basis_charge if not self.ghost else 0
 
-            self.symbol_formatted = self.symbol.lower().capitalize() 
+    @property
+    def symbol_formatted(self):
 
-
-        # Defines whether this is a ghost atom
-        self.ghost = ghost
-        
-        # Defines number of core orbitals
-        self.core_orbitals = core_orbitals
-
-        # The nuclear charge will be the same as the basis charge, unless this is a ghost atom with zero charge
-        self.charge = self.basis_charge if not ghost else 0
-
+        return "X" + self.symbol[1:].capitalize() if self.symbol.startswith("X") else self.symbol.capitalize()
 
 
 
@@ -66,7 +50,7 @@ class Atom:
 class Molecule:
 
 
-    def __init__(self, atomic_symbols, coordinates, calculation):
+    def __init__(self, atomic_symbols, coordinates, calculation, guess=False):
 
         """
 
@@ -82,6 +66,9 @@ class Molecule:
         # Defines key molecular parameters
         self.atomic_symbols = atomic_symbols
         self.basis = calculation.basis
+
+        # Ignores errors for guess calculations
+        self.guess = guess
 
         self.coordinates = coordinates
         self.charge = calculation.charge
@@ -99,13 +86,13 @@ class Molecule:
                 atom_data = atomic_properties["X"]
                 which_ghost = atomic_properties[symbol.split("X")[1]]
 
-                atom = Atom(which_ghost["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], ghost=True)
+                atom = Atom(which_ghost["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], atom_data["density"], ghost=True)
             
             else:
 
                 atom_data = atomic_properties[symbol]
 
-                atom = Atom(atom_data["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], ghost=False)
+                atom = Atom(atom_data["charge"], atom_data["mass"], self.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], atom_data["density"], ghost=False)
                 
             self.atoms.append(atom)
 
@@ -116,8 +103,11 @@ class Molecule:
         self.masses = np.array([atom.mass for atom in self.atoms]) * constants.atomic_mass_unit_in_electron_mass
         
         # Useful structure-based constants
-        self.reduced_mass = postscf.calculate_reduced_mass(self.masses)
-        self.rotational_constant_per_cm, _ = postscf.calculate_rotational_constant(self.masses, self.coordinates)
+
+        if calculation.diatomic:
+
+            self.reduced_mass = postscf.calculate_reduced_mass(self.masses)
+            self.rotational_constant_per_cm, _ = postscf.calculate_rotational_constant(self.masses, self.coordinates, calculation, silent=True)
 
         # Generates basis data for one type of atom
         self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0], calculation)
@@ -207,7 +197,6 @@ class Molecule:
         self.n_SO = 2 * self.n_atomic_orbitals
         self.n_virt = self.n_SO - self.n_occ
 
-
         # This variable can be used for either RHF or UHF references
         self.n_orbitals = self.n_SO if calculation.reference == "UHF" else self.n_atomic_orbitals
 
@@ -237,13 +226,14 @@ class Molecule:
         if calculation.reference == "UHF" and self.n_electrons > len(self.basis_functions) and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons: error("Too many electrons for size of basis set!")
 
         # Sets off errors for impossible correlated calculations
-        if calculation.method in correlated_methods:
+        if calculation.method in correlated_methods and not self.guess:
 
             if self.n_virt <= 0 and calculation.reference == "RHF" or self.n_virt <= 1 and calculation.reference == "UHF": 
-                
+
                 error("Correlated calculation requested on system with insufficient virtual orbitals!")
         
-        if calculation.method in ["CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "QCISD[T]", "UQCISD[T]"] and self.n_electrons == 2: error("Triple excitations have been requested on a two-electron system!")
+        if calculation.method in ["CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "QCISD[T]", "UQCISD[T]", "CCSDTQ", "CCSDT[Q]"] and self.n_electrons == 2: error("Triple excitations have been requested on a two-electron system!")
+        if calculation.method in ["CCSDT[Q]", "CCSDTQ"] and self.n_electrons in [2, 3]: error("Quadruple excitations have been requested on a two- or three-electron system!")
         
         # Sets off errors for invalid use of restricted Hartree-Fock
         if calculation.reference == "RHF" or calculation.method == "RHF":
@@ -251,7 +241,7 @@ class Molecule:
             if self.n_electrons % 2 != 0: error("Restricted Hartree-Fock is not compatible with an odd number of electrons!")
             if self.multiplicity != 1: error("Restricted Hartree-Fock is not compatible non-singlet states!")
 
-        if calculation.method in ["MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]", "LMP2", "IMP2"] and calculation.reference == "UHF":
+        if calculation.method in ["MP4", "MP4[SDQ]", "MP4[SDTQ]", "MP4[DQ]", "LMP2", "IMP2", "CCSDT[Q]", "CCSDTQ"] and calculation.reference == "UHF":
                 
             error(f"The {calculation.method} method is only implemented for spin-restricted references!")
 
