@@ -4,7 +4,7 @@
 
 ### Added
 
-- Spin-restricted CCSDT, CCSDT(Q) and CCSDTQ
+- Spin-restricted CCSDT, CCSDT(Q) and CCSDTQ energy
 - Anharmonic vibrational frequencies and intensities by solving the nuclear Schrodinger equation on the full potential energy surface via `ANHARM` calculation type
 - Plot vibrational wavefunctions with the `PLOTVIB` keyword
 - Control convergence of anharmonic frequencies systematically with `ANHARMCONV` keyword
@@ -37,6 +37,7 @@
 - Small basis sets would sometimes cause a crash for large diatomics
 - Only some molecular orbital information was printing for RHF or RKS calculations
 - The unrestricted CCSDT energy was not including the disconnected doubles contribution
+- The CEPA method keywords were not working correctly
 
 <br>
 

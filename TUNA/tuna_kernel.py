@@ -352,7 +352,7 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
 
 
-def do_stuff_after_scf(SCF_output, calculation, molecule, reference, silent, n_alpha, n_beta, weights, method, ERI_AO, X, one_electron_integrals, V_NN, do_DFT, terse, E_D2):
+def do_stuff_after_scf(SCF_output, calculation, molecule, reference, silent, n_alpha, n_beta, weights, method, ERI_AO, X, one_electron_integrals, V_NN, do_DFT, terse, E_D2, integrals):
 
     import tuna_postscf as postscf
     import tuna_mp as mp
@@ -425,7 +425,7 @@ def do_stuff_after_scf(SCF_output, calculation, molecule, reference, silent, n_a
     # If a coupled-cluster calculation is requested, calculates the energy
     elif "CC" in method or "CEPA" in method or "QCISD" in method:
 
-        E_CC, E_CC_perturbative, P, P_alpha, P_beta, _, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, ERI_AO, X, T + V_NE, calculation, silent=silent)
+        E_CC, E_CC_perturbative, (P, P_alpha, P_beta), _, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
         
         postscf.calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculation, "Coupled cluster", silent=silent)
 

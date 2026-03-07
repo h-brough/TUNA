@@ -527,7 +527,7 @@ def begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ
     # Logs information about freezing orbitals
     if calculation.freeze_core and molecule.n_core_orbitals != 0: 
 
-        log(f"\n The {molecule.n_core_orbitals} lowest energy spatial-orbitals will be frozen.", calculation, 1, silent=silent)
+        log(f"\n The {molecule.n_core_orbitals} lowest energy orbitals will be frozen.", calculation, 1, silent=silent)
 
     else:
         

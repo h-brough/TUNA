@@ -593,7 +593,7 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
         return SCF_output, molecule, SCF_output.energy
 
     # Performs correlated calculations and prints the energy calculation output
-    final_energy, P = kern.do_stuff_after_scf(SCF_output, calculation, molecule, calculation.reference, silent, molecule.n_alpha, molecule.n_beta, grid_container[1], calculation.method, integrals.ERI_AO, X, integrals.one_electron_integrals, V_NN, calculation.DFT_calculation, terse, E_D2)
+    final_energy, P = kern.do_stuff_after_scf(SCF_output, calculation, molecule, calculation.reference, silent, molecule.n_alpha, molecule.n_beta, grid_container[1], calculation.method, integrals.ERI_AO, X, integrals.one_electron_integrals, V_NN, calculation.DFT_calculation, terse, E_D2, integrals)
     
 
     if not silent and calculation.polarisability:

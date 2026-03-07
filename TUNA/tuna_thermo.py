@@ -18,6 +18,7 @@ The module contains:
 
 
 # Boltzmann constant, speed of light and Planck constant all in atomic units
+
 k = constants.k
 c = constants.c
 h = constants.h

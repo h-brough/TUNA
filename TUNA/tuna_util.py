@@ -320,7 +320,7 @@ class Calculation:
         
 
         # Processes the NOSINGLES keyword
-        self.method = process_no_singles_keyword(self.method) if self.no_singles else self.method
+        self.method = process_no_singles_keyword(self.method, self.no_singles) 
         self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital
 
         # Initial guess keywords
@@ -449,6 +449,10 @@ class Integrals:
 
     @property
     def H_core(self):
+
+        if self.Q is not None:
+
+            return self.T + self.V_NE + self.Q
 
         return self.T + self.V_NE
     
@@ -593,7 +597,7 @@ class Functional:
 
 
 
-def process_no_singles_keyword(method: str) -> str:
+def process_no_singles_keyword(method: str, no_singles: bool) -> str:
 
     """"
     
@@ -601,6 +605,7 @@ def process_no_singles_keyword(method: str) -> str:
 
     Args:
         method (str): Electronic structure method
+        no_singles (bool): Don't calculate single excitations
 
     Returns:
         method (str): Updated electronic structure method
@@ -618,16 +623,18 @@ def process_no_singles_keyword(method: str) -> str:
     # CEPA0 defaults to LCCSD, but turns into LCCD if NOSINGLES is used
     method = "LCCSD" if "CEPA" in method else method
 
-    match method:
+    if no_singles:
 
-        case "LCCSD": method = "LCCD"
-        case "CCSD": method = "CCD"
-        case "CCSD[T]": method = "CCD"
-        case "CCSDT": method = "CCD"
-        case "CCSDT[Q]": method = "CCD"
-        case "CCSDTQ": method = "CCD"
+        match method:
 
-    method = prefix + method  
+            case "LCCSD": method = "LCCD"
+            case "CCSD": method = "CCD"
+            case "CCSD[T]": method = "CCD"
+            case "CCSDT": method = "CCD"
+            case "CCSDT[Q]": method = "CCD"
+            case "CCSDTQ": method = "CCD"
+
+        method = prefix + method  
 
     return method
 
