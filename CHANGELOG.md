@@ -30,6 +30,8 @@
 - Atomic masses can now be printed in frequency calculations with additional print, `P`
 - Major refactors to code, including new modules written with type hints, made code more object-oriented
 - Coupled cluster maximum iterations default increased from 30 to 50
+- A coupled cluster damping parameter now must be given when `CCDAMP` is used
+- You can now request same and opposite spin scaling on double-hybrid functionals
 
 ### Fixed
 
@@ -38,6 +40,8 @@
 - Only some molecular orbital information was printing for RHF or RKS calculations
 - The unrestricted CCSDT energy was not including the disconnected doubles contribution
 - The CEPA method keywords were not working correctly
+- Natural orbitals were not being transformed back to the atomic orbital basis
+- Spin-component scaling keywords were not working for double-hybrid functionals
 
 <br>
 

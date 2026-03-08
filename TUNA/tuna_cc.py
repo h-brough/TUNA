@@ -11,7 +11,9 @@ from tuna_molecule import Molecule
 This is the TUNA module for coupled cluster theory, written first for version 0.7.0 and rewritten for version 0.10.0.
 
 All iterative coupled cluster calculations run through the same function, calculate_coupled_cluster_energy, which updates the amplitudes
-using damping and DIIS. For most methods, interleaved physicist's notation is used for the molecular orbital basis two-electron integrals.
+using damping and DIIS. For most methods, interleaved physicist's notation is used for the molecular orbital basis two-electron integrals. The
+einsum function of NumPy is used throughout with "optimize=True" to approximate the most efficient contraction path, leading to huge speedups and 
+reductions in memory requirements.
 
 The module contains:
 

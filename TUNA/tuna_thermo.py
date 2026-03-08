@@ -94,6 +94,7 @@ def calculate_vibrational_internal_energy(vibrational_frequency: float, temperat
     vibrational_temperature = calculate_vibrational_temperature(vibrational_frequency)
     
     # Makes sure an error message isn't printed when dividing by a very small number
+
     with np.errstate(divide="ignore"):
         
         vibrational_internal_energy = k * vibrational_temperature / (np.exp(vibrational_temperature / temperature) - 1)
@@ -132,6 +133,7 @@ def calculate_internal_energy(energy: float, zero_point_energy: float, temperatu
     vibrational_internal_energy = calculate_vibrational_internal_energy(vibrational_frequency, temperature)
 
     # Adds together all contributions to internal energy
+
     internal_energy = energy + zero_point_energy + translational_internal_energy + rotational_internal_energy + vibrational_internal_energy
 
     return internal_energy, translational_internal_energy, rotational_internal_energy, vibrational_internal_energy
@@ -287,6 +289,7 @@ def calculate_entropy(temperature: float, vibrational_frequency: float, point_gr
     electronic_entropy = calculate_electronic_entropy(multiplicity)
 
     # Total entropy is just the sum of all the contributions
+
     S = translational_entropy + rotational_entropy + vibrational_entropy + electronic_entropy
 
     return S, translational_entropy, rotational_entropy, vibrational_entropy, electronic_entropy
@@ -388,8 +391,7 @@ def calculate_thermochemical_corrections(molecule: any, calculation: any, vibrat
         G (float): Gibbs free energy in hartree
 
     """
-
-    # Extracts useful quantities
+    
     point_group = molecule.point_group
     rotational_constant_per_cm = molecule.rotational_constant_per_cm
     masses = molecule.masses
@@ -399,6 +401,7 @@ def calculate_thermochemical_corrections(molecule: any, calculation: any, vibrat
     pressure = calculation.pressure
 
     # Prints thermochemical information unless terse keyword is used 
+    
     log(f"\n Temperature used is {temperature:.2f} K, pressure used is {(pressure)} Pa.", calculation, 2)
     log(" Entropies multiplied by temperature to give units of energy.", calculation, 2)
     log(f" Using symmetry number derived from {point_group} point group for rotational entropy.", calculation, 2)

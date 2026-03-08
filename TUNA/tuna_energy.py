@@ -9,41 +9,63 @@ from tuna_molecule import Molecule
 import tuna_dft as dft
 import tuna_guess as guess
 import tuna_kernel as kern
-
+import tuna_out as out
 
 
 """
 
 This is the TUNA module for calculating molecular energies, written first for version 0.1.0 and rewritten in version 0.10.0.
 
-Any mathematical functions should be in tuna_kernel. This is for wrappers only.
+Any mathematical functions that don't call calculate_energy should be in tuna_kernel -- this is for wrappers only. Energy evaluations may
+use extrapolation of the basis set, and begin by building the molecule then calculating the molecular integrals. The self-consistent field
+cycle is then entered within tuna_scf before correlated or excited state calculations are performed. Finally, properties are calculated
+in tuna_postscf or numerical derivatives of the energy are calculated and the energy evaluation process is repeated.
+
+This module contains:
+
+1. Functions to manage basis set extrapolation (evaluate_molecular_energy, extrapolate_energy)
+2. The self-consistent guess function (calculate_self_consistent_guess)
+3. Functions that calculate properties requiring numerical energy derivatives (calculate_polarisability, etc.)
+4. Fundamental functions for energy evaluation (build_molecule_and_integrals, calculate_energy)
+5. The coordinate scan function, which calls evaluate_molecular_energy several times (scan_coordinate)
 
 """
 
 
 
 
-
-
-
-def evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False, dboc=True, polar=True, integrals=None):
+def evaluate_molecular_energy(calculation: Calculation, atomic_symbols: list, coordinates: ndarray, P_guess: ndarray = None, P_guess_alpha: ndarray = None, 
+                              P_guess_beta: ndarray = None, E_guess: float = None, silent: bool = False, terse: bool = False, integrals: Integrals = None) -> tuple:
     
     """
   
     Wrapper to evaluate the energy, either with or without extrapolation.
 
+    Args:
+        calculation (Calculation): Calculation object
+        atomic_symbols (list): Atomic symbols
+        coordinates (array): Atomic coordinates
+        P_guess (array, optional): Guess density matrix
+        P_guess_alpha (array, optional): Guess alpha density matrix
+        P_guess_beta (array, optional): Guess beta density matrix
+        E_guess (float, optional): Guess energy
+        silent (bool, optional): Cancel logging
+        terse (bool, optional): Cancel post-SCF output
+        integrals (Integrals, optional): Molecular integrals
+        
+    Returns:
+        SCF_output (Output): Output object
+        molecule (Molecule): Molecule object
+        final_energy (float): Final energy
+        P (array): Final density matrix
+
     """
 
-    if calculation.extrapolate:
+    # The choice of function depends if basis set extrapolation is used
 
-        SCF_output, molecule, final_energy, P = extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse, dboc=dboc, polar=polar, integrals=integrals)
+    energy_function = extrapolate_energy if calculation.extrapolate else calculate_energy
 
-    else:
-
-        SCF_output, molecule, final_energy, P = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse, dboc=dboc, polar=polar, integrals=integrals)
-
-
-    return SCF_output, molecule, final_energy, P
+    return energy_function(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, terse=terse, integrals=integrals)
 
 
 
@@ -53,11 +75,10 @@ def evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess=
 
 
 
-
-
-
-def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False, dboc=True, polar=True, integrals=None):
+def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, silent=False, terse=False, integrals=None):
     
+    #Todo get this working with polarisability calculation and simplifty, type hints
+
     """
     
     Calculates the extrapolated energy, from two energy calculations.
@@ -131,7 +152,7 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
     calculation.basis = first_basis
 
     # Calculates the energy with the first basis, using the guess densities
-    SCF_output_2, molecule_2, E_total_2, P_2  = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse, silent=silent, dboc=dboc, polar=polar, integrals=integrals)
+    SCF_output_2, molecule_2, E_total_2, P_2  = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse, silent=silent, integrals=integrals)
 
     calculation.basis = second_basis
     
@@ -148,7 +169,7 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
     log_spacer(calculation, silent=silent)
 
     # Calculates the energy with the second basis
-    SCF_output_3, _, E_total_3, _  = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, silent=silent, dboc=dboc)
+    SCF_output_3, _, E_total_3, _  = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, silent=silent)
 
     E_SCF_2 = SCF_output_2.energy
     E_SCF_3 = SCF_output_3.energy
@@ -205,7 +226,7 @@ def extrapolate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P
 
 
 
-def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: list[str], coordinates: ndarray, molecule: Molecule, S_inverse: ndarray, silent: bool = False) -> tuple[ndarray, ndarray, ndarray, float]:
+def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: list[str], coordinates: ndarray, molecule: Molecule, S_inverse: ndarray, silent: bool = False) -> tuple:
 
     """
 
@@ -230,14 +251,17 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
     log(" Calculating self-consistent density for guess...  ", calculation, end="", silent=silent); sys.stdout.flush()
 
     # Stores the full basis
+
     old_basis = calculation.basis
 
     calculation.basis = "STO-3G"
     
     # Performs a minimal basis SCF calculation
+
     SCF_output, molecule_minimal, guess_energy = calculate_energy(calculation, atomic_symbols, coordinates, terse=True, silent=True, guess_calculation=True)
 
     # Restores calculation to old basis
+
     calculation.basis = old_basis
 
     S_cross = guess.calculate_cross_basis_overlap_matrix(molecule, molecule_minimal)
@@ -246,6 +270,7 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
     P_guess_beta_minimal = SCF_output.P_beta
 
     # Projects minimal density matrices onto larger basis with cross overlap matrix
+
     P_guess_alpha = guess.project_density_matrix(P_guess_alpha_minimal, S_cross, S_inverse)
     P_guess_beta = guess.project_density_matrix(P_guess_beta_minimal, S_cross, S_inverse)
 
@@ -263,102 +288,123 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
 
 
 
- 
 
 
+def calculate_polarisability(molecule: Molecule, calculation: Calculation, energy: float, silent: bool, atomic_symbols: list, coordinates: ndarray, integrals: Integrals) -> float:
 
+    """
+    
+    Calculates the dipole-dipole polarisability with finite electric fields.
 
-def calculate_polarisability(molecule, calculation, E, silent, atomic_symbols, coordinates, integrals):
+    This requires the diatomic molecule to be aligned along the z-axis.
 
-    # Change this to skip the integrals, feed ints in through evaluate?
-    # Requires 8 extra energy evaluations
+    Args:
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        energy (float): Molecular energy in zero field
+        silent (bool): Cancel logging
+        atomic_symbols (list): List of atomic symbols
+        coordinates (array): Atomic coordinates
+        integrals (Integrals): Molecular integrals
+    
+    Returns:
+        isotropic_polarisability (float): Isotropic polarisability
+
+    """
 
     electric_field_x = np.array([constants.numerical_derivative_prod, 0, 0]) 
     electric_field_z = np.array([0, 0, constants.numerical_derivative_prod])
 
-    N = 8 if calculation.diatomic else 4
+    log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent=silent)
 
-    log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent=False)
+    log_spacer(calculation, 1, silent=silent, start="\n")
+    log(f"                    Polarisability", calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent=silent)
 
-    log_spacer(calculation, 1, silent=False, start="\n")
-    
-    log(f"                    Polarisability", calculation, 1, silent=False)
-
-    log_spacer(calculation, 1, silent=False)
-
-    log(f"  Using a finite field magnitude of {constants.numerical_derivative_prod} au", calculation, 1, silent=False)
+    log(f"  Using a finite field magnitude of {constants.numerical_derivative_prod:.5f} au.", calculation, 1, silent=silent)
  
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent=False, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent=silent, end="")
+
+    # Performs second derivative of energy with respect to electric field along the z axis
 
     calculation.electric_field = electric_field_z * 2
     
-    _, _, E_forward_far_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    _, _, E_forward_far_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
 
     calculation.electric_field = electric_field_z 
 
-    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
     
-    calculation.electric_field = -electric_field_z
+    calculation.electric_field = -1 * electric_field_z
 
-    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
     
-    calculation.electric_field = -electric_field_z * 2
+    calculation.electric_field = -1 * electric_field_z * 2
 
-    _, _, E_backward_far_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
+    _, _, E_backward_far_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
     
-    log(f"[Done]", calculation, 1, silent=False)
+    log(f"[Done]", calculation, 1, silent=silent)
 
-    polarisability_z = -1 * calculate_second_derivative(E_backward_far_parallel, E_backward_parallel, E, E_forward_parallel, E_forward_far_parallel, constants.numerical_derivative_prod)
+    polarisability_z = -1 * calculate_second_derivative(E_backward_far_parallel, E_backward_parallel, energy, E_forward_parallel, E_forward_far_parallel, constants.numerical_derivative_prod)
 
     polarisability_x = 0
 
+    if calculation.diatomic:
 
-    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent=False, end="")
+        log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent=silent, end="")
 
-    calculation.electric_field = electric_field_x * 2
+        # Performs second derivative of energy with respect to electric field along the x/y axis
+
+        calculation.electric_field = electric_field_x * 2
+        
+        _, _, E_forward_far_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+        
+        calculation.electric_field = electric_field_x 
+
+        _, _, E_forward_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates,  silent=True, integrals=integrals)
+
+        calculation.electric_field = -electric_field_x
+
+        _, _, E_backward_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates,  silent=True, integrals=integrals)
+        
+        calculation.electric_field = -electric_field_x * 2
+
+        _, _, E_backward_far_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates,  silent=True, integrals=integrals)
+
+        log(f"[Done]", calculation, 1, silent=silent)
+
+        polarisability_x = -1 * calculate_second_derivative(E_backward_far_perpendicular, E_backward_perpendicular, energy, E_forward_perpendicular, E_forward_far_perpendicular, constants.numerical_derivative_prod)
     
-    _, _, E_forward_far_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
-    
-    calculation.electric_field = electric_field_x 
+    # Calculates the two linearly independent components of polarisability for diatomics
 
-    _, _, E_forward_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
-
-    calculation.electric_field = -electric_field_x
-
-    _, _, E_backward_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
-    
-    calculation.electric_field = -electric_field_x * 2
-
-    _, _, E_backward_far_perpendicular, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, polar=False, silent=True, integrals=integrals)
-
-    log(f"[Done]", calculation, 1, silent=False)
-
-    polarisability_x = -1 * calculate_second_derivative(E_backward_far_perpendicular, E_backward_perpendicular, E, E_forward_perpendicular, E_forward_far_perpendicular, constants.numerical_derivative_prod)
-
-    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.numerical_derivative_prod)
-
-    anisotropic_polarisability = polarisability_z - polarisability_x
+    anisotropic_polarisability = polarisability_z - polarisability_x 
     isotropic_polarisability = (polarisability_x * 2 + polarisability_z) / 3 if calculation.diatomic else polarisability_z
+
+    # Calculates numerical dipole moment - this can be done for all electronic structure methods
 
     nuclear_dipole_moment = postscf.calculate_nuclear_dipole_moment(molecule.centre_of_mass, molecule.charges, coordinates)
 
+    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.numerical_derivative_prod)
+
     total_dipole_moment = electronic_dipole_moment + nuclear_dipole_moment
 
+    log(f"\n  Dipole moment:                         {total_dipole_moment:10.5f}", calculation, 1, silent=silent)
 
-    log(f"\n  Dipole moment:                         {total_dipole_moment:10.4f}", calculation, 3, silent=False)
+    log(f"\n  Parallel component:                    {polarisability_z:10.5f}", calculation, 3, silent=silent)
+    log(f"  Perpendicular component:               {polarisability_x:10.5f}", calculation, 3, silent=silent) 
 
-    log(f"\n  Parallel component:                    {polarisability_z:10.4f}", calculation, 3, silent=False)
-    log(f"  Perpendicular component:               {polarisability_x:10.4f}", calculation, 3, silent=False)
+    log(f"\n  Ansotropic polarisability:             {anisotropic_polarisability:10.5f}", calculation, 1, silent=silent)
+    log(f"  Isotropic polarisability:              {isotropic_polarisability:10.5f}", calculation, 1, silent=silent)
 
-    log(f"\n  Ansotropic polarisability:             {anisotropic_polarisability:10.4f}", calculation, 1, silent=False)
-    log(f"  Isotropic polarisability:              {isotropic_polarisability:10.4f}", calculation, 1, silent=False)
-
-    log_spacer(calculation, 1, silent=False)
+    log_spacer(calculation, 1, silent=silent)
 
     return isotropic_polarisability
 
 
     
+
+
+
 
 
 
@@ -384,8 +430,8 @@ def calculate_diagonal_born_oppenheimer_correction(calculation, atomic_symbols, 
         coordinates_forward = coordinates + displacement
         coordinates_backward = coordinates - displacement
 
-        SCF_output_back, molecule_back, _, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates_backward, silent=True, dboc=False)
-        SCF_output_for, molecule_for, _, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates_forward, silent=True, dboc=False)
+        SCF_output_back, molecule_back, _, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates_backward, silent=True)
+        SCF_output_for, molecule_for, _, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates_forward, silent=True)
 
         C_back = SCF_output_back.molecular_orbitals[:, :n_occ]
         C_forward = SCF_output_for.molecular_orbitals[:, :n_occ]
@@ -479,7 +525,7 @@ def calculate_diagonal_born_oppenheimer_correction(calculation, atomic_symbols, 
 
 
 
-def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list, coordinates: ndarray, silent: bool, guess_container: tuple[ndarray, ndarray, ndarray, float], guess_calculation: bool, integrals: Integrals = None) -> tuple[Molecule, Integrals, tuple[ndarray, ndarray, ndarray, float], tuple[ndarray, ndarray, ndarray], ndarray, float, float]:
+def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list, coordinates: ndarray, silent: bool, guess_container: tuple, guess_calculation: bool, integrals: Integrals = None) -> tuple:
     
     """
     
@@ -507,52 +553,63 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
     log("\n Setting up molecule...  ", calculation, 1, silent=silent, end="")
 
     # Builds molecule object using calculation and atomic parameters
+
     molecule = Molecule(atomic_symbols, coordinates, calculation, guess=guess_calculation)
 
     log("[Done]\n", calculation, 1, silent=silent)
     
     # Prints out the information about the molecule and calculation
+
     kern.print_molecule_information(molecule, calculation, silent)
     
     # Calculates nuclear repulsion energy
+
     V_NN = kern.calculate_nuclear_repulsion_energy(molecule.charges, coordinates, calculation, silent) if calculation.diatomic else 0
     
     # Calculates D2 dispersion energy if requested
+
     E_D2 = kern.calculate_D2_dispersion_energy(molecule, calculation, silent) if calculation.diatomic and calculation.D2 else 0
     
     # Prints "Beginning RHF/UHF/KS calculation..."
+
     kern.print_reference_type(calculation.method, calculation, silent)
 
-    # Calculates the Gaussian integrals between basis functions
+    # Calculates the integrals between Gaussian basis functions
+
     integrals = kern.calculate_analytical_integrals(molecule, calculation, silent) if integrals is None else integrals
 
     # Calculates Fock transformation matrix from overlap matrix
+
     X, smallest_S_eigenvalue, S_inverse = kern.calculate_Fock_transformation_matrix(integrals.S, calculation, silent)
 
     # Makes sure there is no linear dependency in the basis set
+
     kern.check_overlap_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
 
-    # Unpacks guess container
     P_guess, P_guess_alpha, P_guess_beta, E_guess = guess_container
 
-    # Calculates one-electron density for initial guess
+    # Calculates initial guess
+
     E_guess, P_guess, P_guess_alpha, P_guess_beta = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, integrals.T, integrals.V_NE, X, calculation, molecule, S_inverse, atomic_symbols,  silent=silent)
 
-    # This calls a minimal SCF calculation to get a self-consistent guess density
+    # Calls a minimal SCF calculation to get a self-consistent guess density
+
     if calculation.self_consistent_guess and not guess_calculation:
 
         P_guess, P_guess_alpha, P_guess_beta, E_guess = calculate_self_consistent_guess(calculation, atomic_symbols, coordinates, molecule, S_inverse, silent=silent)
 
     # Force the trace of the guess density to be correct
+
     P_guess, P_guess_alpha, P_guess_beta = kern.enforce_density_matrix_idempotency(P_guess_alpha, P_guess_beta, integrals.S, molecule.n_alpha, molecule.n_beta, calculation, silent)
 
-    # Repacks guess container
     guess_container = P_guess, P_guess_alpha, P_guess_beta, E_guess
 
     # Redefines the calculation method, reapplies it
+
     calculation.method = "U" + calculation.method if calculation.reference == "UHF" and not calculation.method.startswith("U") else calculation.method
 
     # Sets up the integration grid for DFT calculations
+
     bfs_on_grid, weights, bf_gradients_on_grid = dft.set_up_integration_grid(molecule.basis_functions, molecule.atoms, molecule.bond_length, molecule.n_electrons, P_guess_alpha, P_guess_beta, calculation, silent=silent) if calculation.DFT_calculation else (None, None, None)
 
     grid_container = bfs_on_grid, weights, bf_gradients_on_grid
@@ -569,38 +626,67 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
 
 
+def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates: ndarray, P_guess: ndarray = None, P_guess_alpha: ndarray = None, P_guess_beta: ndarray = None,
+                     E_guess: float = None, terse: bool = False, silent: bool = False, guess_calculation: bool = False, integrals: Integrals = None) -> tuple:
+    
+    """
+    
+    Calculates the full molecular energy.
 
-def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_guess_alpha=None, P_guess_beta=None, E_guess=None, terse=False, silent=False, guess_calculation=False, dboc=True, polar=True, integrals=None):
-        
-    # Packages the guess container
+    Args:
+        calculation (Calculation): Calculation object
+        atomic_symbols (list): Atomic symbols
+        coordinates (array): Atomic coordinates
+        P_guess (array, optional): Guess density matrix
+        P_guess_alpha (array, optional): Guess alpha density matrix
+        P_guess_beta (array, optional): Guess beta density matrix
+        E_guess (array, optional): Guess energy
+        terse (bool, optional): Cancel post-SCF output
+        silent (bool, optional): Cancel logging
+        guess_calculation (bool, optional): Is this a calculation to generate guess orbitals
+        integrals (Integrals, optional): Molecular integrals
+    
+    Returns:
+        SCF_output (Output): Output object
+        molecule (Molecule): Molecule object
+        final_energy (float): Final energy
+        P (array): Final density matrix
+    
+    """
+
     guess_container = P_guess, P_guess_alpha, P_guess_beta, E_guess
     
     # Builds the molecule, calcualtes molecular integrals and prepares the guess density
+
     molecule, integrals, guess_container, grid_container, X, V_NN, E_D2 = build_molecule_and_integrals(calculation, atomic_symbols, coordinates, silent, guess_container, guess_calculation, integrals=integrals)
     
     # Updates the integral matrices if an electric field is applied
+
     integrals.Q = kern.apply_electric_field(integrals.D, calculation.electric_field) if calculation.electric_field is not None else np.zeros_like(integrals.D)
 
     # Runs the self-consistent field cycle, returning an Output object with the results
+
     SCF_output = scf.run_self_consistent_field_cycle(molecule, calculation, integrals, V_NN, X, guess_container, grid_container, silent)
     
     calculation.SCF_time = time.perf_counter()
+
     log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
 
-    # If this is a guess calculation, don't continue to the correlated part, just return the guess density and energy
     if guess_calculation:
 
         return SCF_output, molecule, SCF_output.energy
 
     # Performs correlated calculations and prints the energy calculation output
-    final_energy, P = kern.do_stuff_after_scf(SCF_output, calculation, molecule, calculation.reference, silent, molecule.n_alpha, molecule.n_beta, grid_container[1], calculation.method, integrals.ERI_AO, X, integrals.one_electron_integrals, V_NN, calculation.DFT_calculation, terse, E_D2, integrals)
+
+    final_energy, P = kern.run_post_SCF_energy_calculation(molecule, integrals, SCF_output, grid_container[1], calculation, X, E_D2, V_NN, silent, terse)
     
+    # Checking if "not silent" here ensures these functions only run once, not when multiple energy evaluations are needed for silent derivatives
 
     if not silent and calculation.polarisability:
-        # Make polar and dboc the same thing
-        polarisability = calculate_polarisability(molecule, calculation, final_energy, False, atomic_symbols, coordinates, integrals)
 
-    # If requested, calculate the diagonal Born-Oppenheimer correction
+        calculate_polarisability(molecule, calculation, final_energy, False, atomic_symbols, coordinates, integrals)
+
+
     if not silent and calculation.diagonal_born_oppenheimer_correction: 
         
         final_energy, E_DBOC = calculate_diagonal_born_oppenheimer_correction(calculation, atomic_symbols, coordinates, molecule, final_energy, silent=silent)
@@ -616,7 +702,8 @@ def calculate_energy(calculation, atomic_symbols, coordinates, P_guess=None, P_g
 
 
 
-def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=False, reverse=False):
+
+def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coordinates: ndarray, silent: bool = False, reverse: bool = False) -> tuple:
 
     """
 
@@ -625,23 +712,28 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=Fa
     Args:
         calculation (Calculation): Calculation object
         atomic_symbols (list): List of atomic symbols
-        starting_coordinates (array): Atomic coordinates to being coordinate scan calculation in 3D
-
+        starting_coordinates (array): Atomic coordinates to being coordinate scan 
+        silent (bool, optional): Cancel logging
+        reverse (bool, optional): Scan bond length in negative direction
+    
     Returns:
-        bond_lengths (list): List of bond lengths at each scan step
-        energies (list): List of energies at each scan step 
+        bond_lengths (list): Bond lengths at each scan step
+        energies (list): Eenergies at each scan step 
+        dipole_moments (list): Dipole moments at each scan step 
 
     """
 
     coordinates = starting_coordinates
     bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
-    # Unpacks useful quantities
     number_of_steps = calculation.scan_number
     step_size = angstrom_to_bohr(calculation.scan_step)
     
     # Reverses step size if requested
-    if reverse: step_size *= -1
+
+    if reverse: 
+        
+        step_size = -1 * step_size   
 
     log(f"Initialising a {number_of_steps} step coordinate scan in {step_size:.4f} angstrom increments.", calculation, 1, silent=silent) 
     log(f"Starting at a bond length of {bohr_to_angstrom(bond_length):.4f} angstroms.\n", calculation, 1, silent=silent)
@@ -653,18 +745,23 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=Fa
     for step in range(1, number_of_steps + 1):
         
         # This is safe for molecules not stuck on the z axis
+
         bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
         log_big_spacer(calculation, start="\n",space="", silent=silent)
         log(f"Starting scan step {step} of {number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1, silent=silent)
         log_big_spacer(calculation,space="", silent=silent)
 
-        #Calculates the energy at the coordinates (in bohr) specified
+        # Calculates the energy at the coordinates (in bohr) specified
+
         SCF_output, molecule, energy, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True, silent=silent)
 
-        dipole_moments.append(postscf.calculate_dipole_moment(molecule.centre_of_mass, molecule.charges, coordinates, SCF_output.P, SCF_output.D)[0])
+        dipole_moment = postscf.calculate_dipole_moment(molecule.centre_of_mass, molecule.charges, coordinates, SCF_output.P, SCF_output.D)[0]
 
-        #If MOREAD keyword is used, then the energy and densities are used for the next calculation
+        dipole_moments.append(dipole_moment)
+
+        #If "MOREAD" keyword is used, then the energy and densities are used for the next calculation
+
         if calculation.MO_read: 
             
             P_guess = SCF_output.P
@@ -672,14 +769,17 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=Fa
             P_guess_alpha = SCF_output.P_alpha 
             P_guess_beta = SCF_output.P_beta
 
-        # Appends energies and bond lengths to lists
+
         energies.append(energy)
         bond_lengths.append(bond_length)
 
         # Builds new coordinates by adding step size on
+
         coordinates = np.array([coordinates[0], [0, 0, bond_length + step_size]]) 
 
-        if bond_length + step_size <= angstrom_to_bohr(0.2): break
+        # Don't let the bond length get too small when doing a reverse scan
+
+        if bond_length + step_size <= angstrom_to_bohr(0.2) and reverse: break
 
     log_big_spacer(calculation, start="\n",space="", silent=silent)    
     
@@ -691,26 +791,23 @@ def scan_coordinate(calculation, atomic_symbols, starting_coordinates, silent=Fa
     log_spacer(calculation, silent=silent)
 
     # Prints a table of bond lengths and corresponding energies
+
     for i, (energy, bond_length) in enumerate(zip(energies, bond_lengths)):
         
-        step = i + 1
-
-        log(f" {step:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1, silent=silent)
+        log(f" {i + 1:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1, silent=silent)
 
     log_spacer(calculation, silent=silent)
 
-    # If DELPLOT keyword is used, delete saved pickle plot 
+    # If "DELPLOT" keyword is used, delete saved pickle plot 
+
     if calculation.delete_plot:
         
-        import tuna_out as out
-
         out.delete_saved_plot()
         
     # If SCANPLOT keyword is used, plots and shows a matplotlib graph of the data
+
     if calculation.scan_plot: 
         
-        import tuna_out as out
-  
         out.plot_coordinate_scan(calculation, bohr_to_angstrom(np.array(bond_lengths)), energies)
 
 

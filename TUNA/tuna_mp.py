@@ -64,7 +64,7 @@ def six_index_permute(array):
 
 
 
-def calculate_restricted_t_amplitude_energy(t_ijab, g):
+def calculate_restricted_t_amplitude_energy(t_ijab, g_oovv):
 
     """
 
@@ -72,14 +72,14 @@ def calculate_restricted_t_amplitude_energy(t_ijab, g):
 
     Args:
         t_ijab (array): Amplitude with shape ijab
-        g (array): Electron repulsion integrals in spatial orbital basis
+        g_oovv (array): Electron repulsion integrals in spatial orbital basis
 
     Returns:
         E_MP2 (float): Contribution to MP2 energy
 
     """
 
-    E_MP2 = np.einsum("ijab,ijab->", t_ijab, 2 * g - g.transpose(0, 1, 3, 2), optimize=True)
+    E_MP2 = np.einsum("ijab,ijab->", t_ijab, 2 * g_oovv - g_oovv.transpose(0, 1, 3, 2), optimize=True)
 
     return E_MP2
 
@@ -92,7 +92,7 @@ def calculate_restricted_t_amplitude_energy(t_ijab, g):
 
 
 
-def calculate_t_amplitude_energy(t_ijab, ERI_SO):
+def calculate_t_amplitude_energy(t_ijab, ERI_SO_oovv):
 
     """
 
@@ -100,14 +100,14 @@ def calculate_t_amplitude_energy(t_ijab, ERI_SO):
 
     Args:
         t_ijab (array): Amplitude with shape ijab
-        ERI_SO (array): Electron repulsion integrals (optionally antisymmetrised) in SO basis
+        ERI_SO_oovv (array): Electron repulsion integrals (optionally antisymmetrised) in SO basis
 
     Returns:
         E_MP2 (float): Contribution to MP2 energy
 
     """
 
-    E_MP2 = (1 / 4) * np.einsum("ijab,ijab->", t_ijab, ERI_SO, optimize=True)
+    E_MP2 = (1 / 4) * np.einsum("ijab,ijab->", t_ijab, ERI_SO_oovv, optimize=True)
 
     return E_MP2
 
@@ -188,7 +188,7 @@ def spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, same_spin_scaling, oppos
 
 
 
-def calculate_natural_orbitals(P, X, calculation, silent=False):
+def calculate_natural_orbitals(P: ndarray, X: ndarray, calculation: Calculation, silent: bool = False) -> tuple:
 
     """
 
@@ -207,7 +207,8 @@ def calculate_natural_orbitals(P, X, calculation, silent=False):
     """
 
     # Transforms density matrix to orthogonal basis
-    P_orthogonal = np.linalg.inv(X) @ P @ np.linalg.inv(X)
+
+    P_orthogonal = np.linalg.inv(X) @ P @ np.linalg.inv(X).T
 
     natural_orbital_occupancies, natural_orbitals = np.linalg.eigh(P_orthogonal)
 
@@ -216,12 +217,18 @@ def calculate_natural_orbitals(P, X, calculation, silent=False):
 
     natural_orbitals = natural_orbitals[:, natural_orbital_occupancies.argsort()] 
 
+    # Transforms back the orbitals to the AO basis
+
+    natural_orbitals = X @ natural_orbitals
+
     # This ensures consistent spacing across UHF and correlated calculations
+
     if calculation.method != "UHF": log("", calculation, 2, silent=silent)
 
     log("  Natural orbital occupancies: \n", calculation, 2, silent=silent)
 
     # Prints out all the natural orbital occupancies, the sum and the trace of the density matrix
+
     for i in range(len(natural_orbital_occupancies)): 
         
         log(f"    {(i + 1):2.0f}. {natural_orbital_occupancies[i]:12.8f}", calculation, 2, silent=silent)
@@ -299,13 +306,9 @@ def run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, F, n_doubly_occ, calc
 
     log("\n  Calculating energy components...           ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    f, X_list, Y_list = [],[],[]
-
+    f = []
 
     # Construction of energy-weighted density matrices can not be easily vectorised, more efficient to calculate each e within a loop than through separate contraction
-    np.savetxt("P.dat", np.array(P))
-    np.savetxt("Q.dat", np.array(Q))
-    np.savetxt("F.dat", np.array(F))
 
     for i in range(len(s)):
 
@@ -314,14 +317,9 @@ def run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, F, n_doubly_occ, calc
 
         e = np.einsum("mg,nd,kl,es,gdke,mnls->", X, Y, X, Y, ERI_AO, L_AO, optimize=True)
 
-        X_list.append(X)
-        Y_list.append(Y)
-
         f.append(e * ds_dr[i])
 
     log("[Done]", calculation, 1, silent=silent)
-
-
 
     log("\n  Integrating MP2 energy...                  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
@@ -329,11 +327,6 @@ def run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, F, n_doubly_occ, calc
     E_MP2 = -1 / (tau + 1) * np.sum(f) 
 
     log("[Done]", calculation, 1, silent=silent)
-    with open('X.bin', 'wb') as f:
-        f.write(np.array(X_list).tobytes(order='F'))
-
-    with open('Y.bin', 'wb') as f:
-        f.write(np.array(Y_list).tobytes(order='F'))
 
     log(f"\n  MP2 correlation energy:           {E_MP2:15.10f}", calculation, 1, silent=silent)
 
@@ -538,7 +531,7 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
 
 
     # Optionally scales the same- and opposite-spin contributions to energy
-    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"] or calculation.DFT_calculation and calculation.functional.functional_type == "spin-scaled double-hybrid": 
+    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"] or calculation.DFT_calculation and calculation.functional.functional_type == "spin-scaled double-hybrid" or calculation.DFT_calculation and (calculation.SSS_requested or calculation.OSS_requested): 
         
         E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent=silent)
 
@@ -590,6 +583,7 @@ def run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_atomic_orbi
     if calculation.natural_orbitals: 
         
         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
+
 
     return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
@@ -701,7 +695,7 @@ def run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, v, ERI_spin
     log("     [Done]\n", calculation, 1, silent=silent)
 
     # Optionally scales the same- and opposite-spin contributions to energy
-    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"] or calculation.DFT_calculation and calculation.functional.functional_type == "spin-scaled double-hybrid": 
+    if calculation.method in ["SCS-MP2", "USCS-MP2", "SCS-MP3", "USCS-MP3"] or calculation.DFT_calculation and calculation.functional.functional_type == "spin-scaled double-hybrid" or calculation.DFT_calculation and (calculation.SSS_requested or calculation.OSS_requested): 
         
         E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent=silent)
 
@@ -1217,7 +1211,7 @@ def run_restricted_MP4(e_ijab, t_ijab, t_tilde_ijab, L, g, epsilons, o, v, calcu
 
 
 
-def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, X, H_core, V_NN, silent=False):
+def calculate_Moller_Plesset(method, molecule, SCF_output, integrals, calculation, X, V_NN, silent=False):
 
     """
 
@@ -1227,10 +1221,9 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
         method (str): Electronic structure method
         molecule (Molecule): Molecule object
         SCF_output (Output): SCF output object
-        ERI_AO (array): Electron repulsion integrals in AO basis 
+        integrals (Integrals): Molecular integrals
         calculation (Calculation): Calculation object
         X (array): Fock transformation matrix
-        H_core (array): Core Hamiltonian matrix in AO basis
         V_NN (float): Nuclear-nuclear repulsion energy
         silent (bool, optional): Should anything be printed
 
@@ -1255,6 +1248,9 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, ERI_AO, calculation, 
     n_SO = molecule.n_SO
     n_occ = molecule.n_occ
     n_doubly_occ = molecule.n_doubly_occ
+
+    ERI_AO = integrals.ERI_AO
+    H_core = integrals.H_core
 
     natural_orbital_occupancies, natural_orbitals = None, None
 

@@ -1284,6 +1284,11 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
         # Data outputted to console
         format_output_line(E_total, delta_E, maxDP, rmsDP, damping_factor, step, commutator, calculation, silent=silent)
 
+        log(f"Density Matrix:\n {P} \n", calculation, 4, silent=silent)
+        log(f"Fock Matrix:\n {F} \n", calculation, 4, silent=silent)
+        log(f"Epsilons:\n {epsilons} \n", calculation, 4, silent=silent)
+        log(f"Molecular Orbitals:\n {molecular_orbitals} \n", calculation, 4, silent=silent)
+
         # Check for convergence of energy and density
         if check_convergence(calculation.SCF_conv, step, delta_E, maxDP, rmsDP, commutator, calculation, silent=silent): 
             

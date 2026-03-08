@@ -516,7 +516,7 @@ def begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ
     epsilons = SCF_output.epsilons
 
 
-    log("\n Preparing transformation to spatial-orbital basis...", calculation, 1, silent=silent)
+    log("\n Preparing transformation to spatial orbital basis...", calculation, 1, silent=silent)
 
     log("\n Transforming two-electron integrals...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 

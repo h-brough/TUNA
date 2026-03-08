@@ -169,8 +169,8 @@ def calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_o
     centre_of_mass = postscf.calculate_centre_of_mass(masses, coordinates)
 
     # Calculates forward and backward dipole moments, using dipole integrals calculated from centre of mass
-    dipole_moment_forward = postscf.calculate_dipole_moment(centre_of_mass, charges, forward_coords, P_forward, SCF_output_forward.D)[0]
-    dipole_moment_backward = postscf.calculate_dipole_moment(centre_of_mass, charges, backward_coords, P_backward, SCF_output_backward.D)[0]
+    dipole_moment_forward = postscf.calculate_dipole_moment(centre_of_mass, charges, forward_coords, P_forward, SCF_output_forward.D[2])[0]
+    dipole_moment_backward = postscf.calculate_dipole_moment(centre_of_mass, charges, backward_coords, P_backward, SCF_output_backward.D[2])[0]
 
     # Calculates dipole derivative by central differences method
     dipole_derivative = calculate_first_derivative(dipole_moment_backward, dipole_moment_forward, constants.numerical_derivative_prod)
@@ -333,8 +333,8 @@ def optimise_geometry(calculation, atoms, coordinates, multiple_iterations=True)
             log(colored(f"      Optimisation converged in {iteration} iterations!","white"), calculation, 1)
             log_spacer(calculation,space="")
 
-            postscf.post_SCF_output(molecule, calculation, SCF_output.epsilons, SCF_output.molecular_orbitals, P, SCF_output.S, molecule.partition_ranges, SCF_output.D, SCF_output.P_alpha, SCF_output.P_beta, SCF_output.epsilons_alpha, SCF_output.epsilons_beta, SCF_output.molecular_orbitals_alpha, SCF_output.molecular_orbitals_beta)
-          
+            postscf.post_SCF_output(molecule, calculation, P, SCF_output.S, molecule.partition_ranges, SCF_output, SCF_output.P_alpha, SCF_output.P_beta)
+
             log(f"\n Optimisation converged in {iteration} iterations to bond length of {bohr_to_angstrom(bond_length):.5f} angstroms!", calculation, 1)
             log(f"\n Final single point energy: {energy:.10f}", calculation, 1)
 

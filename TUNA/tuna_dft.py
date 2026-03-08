@@ -2032,12 +2032,15 @@ def calculate_RPW_correlation(density, sigma, tau, calculation):
     """
 
     # The local density correlation
+    
     df_dn_LDA, _, _, e_C_LDA = calculate_RPWLDA_correlation(density, None, None, None)
 
     # Defining constants for PW91 correlation
+
     C_0, C_X, alpha = 0.004235, -0.001667212, 0.09
 
     # Various useful quantities
+
     beta = 16 * np.cbrt(3 / np.pi) * C_0
     r_s, inv_density = calculate_seitz_radius(density)
 
@@ -2045,43 +2048,53 @@ def calculate_RPW_correlation(density, sigma, tau, calculation):
     k_s = (4 * k_F / np.pi) ** (1 / 2)
 
     # Reduced density gradient for PW91
+    
     t = sigma ** (1 / 2) / (2 * density * k_s)
 
     # Just squaring for speed
+
     r_s_squared = r_s * r_s
     k_F_squared = k_F * k_F
     k_s_squared = k_s * k_s
     t_squared = t * t
 
     # Form of "C(r_s)" from PW91
+
     C_numerator = 0.002568 + 0.023266 * r_s + 7.389e-6 * r_s_squared
     C_denominator = 1 + 8.723 * r_s + 0.472 * r_s_squared + 7.389e-2 * r_s_squared * r_s
 
     C = -C_X + C_numerator / C_denominator
 
     # Definition of A in PW91
+
     A = 2 * alpha / beta / (np.exp(-2 * alpha * e_C_LDA / beta ** 2) - 1)
     B = (C - C_0 - 3 * C_X / 7)
     
     # Term that will be logged
+
     Y = 1 + 2 * alpha / beta * t_squared * ((1 + A * t_squared) / (1 + A * t_squared + A * A * t_squared * t_squared))
 
     # First correction term to LDA correlation
+
     H_0 = beta ** 2 / (2 * alpha) * np.log(Y)
 
     # Second correction term to LDA correlation
+
     H_1 = 16 * np.cbrt(3 / np.pi) * B * t_squared * np.exp(-100 * t_squared * k_s_squared / k_F_squared)
 
     # Energy density per particle of PW91 correlation
+
     e_C = e_C_LDA + H_0 + H_1
 
     de_C_LDA_dn = (df_dn_LDA - e_C_LDA) * inv_density
 
     # Derivatives of t squared
+
     dt_squared_dn = -7 / 3 * inv_density * t_squared     
     dt_squared_ds = 1 / (4 * k_s_squared) * inv_density * inv_density
 
     # Derivatives of C(r_s) function
+
     dCnum_dr = 0.023266 + 2 * 7.389e-6 * r_s
     dCden_dr = 8.723 + 2 * 0.472 * r_s + 3 * 7.389e-2 * r_s_squared
 
@@ -2093,6 +2106,7 @@ def calculate_RPW_correlation(density, sigma, tau, calculation):
     denom_u = exp_u - 1
 
     # Derivative of A from PW91
+
     dA_dn = (4 * alpha * alpha / beta ** 3) * exp_u / (denom_u * denom_u) * de_C_LDA_dn
 
     p = A * t_squared
@@ -2101,11 +2115,13 @@ def calculate_RPW_correlation(density, sigma, tau, calculation):
     dR_dp = -(p * (p + 2)) / (D1 * D1)
 
     # Derivative of log term
+
     Y = 1 + 2 * alpha / beta * t_squared * R
     dY_dn = 2 * alpha / beta * (dt_squared_dn * R + t_squared * dR_dp * (dA_dn * t_squared + A * dt_squared_dn))
     dY_ds = 2 * alpha / beta * (dt_squared_ds * R + t_squared * dR_dp * A * dt_squared_ds)
 
     # Derivative of first GGA correction
+
     dH_0_dn = (beta ** 2 / (2 * alpha)) * (dY_dn / Y)
     dH_0_ds = (beta ** 2 / (2 * alpha)) * (dY_ds / Y)
 
@@ -2118,14 +2134,17 @@ def calculate_RPW_correlation(density, sigma, tau, calculation):
     dE_ds = E * -100 * dt_squared_ds * Q
 
     # Derivative of second GGA correction
+
     dH_1_dn = pref * (dC_dn * t_squared * E + B * dt_squared_dn * E + B * t_squared * dE_dn)
     dH_1_ds = pref * (B * dt_squared_ds * E + B * t_squared * dE_ds)
 
     # Derivative of correlation energy density
+
     deC_dn = de_C_LDA_dn + dH_0_dn + dH_1_dn
     deC_ds = dH_0_ds + dH_1_ds
 
     # Final derivatives with respect to density and sigma
+
     df_dn = e_C + density * deC_dn
     df_ds = density * deC_ds
 
@@ -2165,14 +2184,17 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     """
     
     # The local density correlation
+
     df_dn_alpha_LDA, df_dn_beta_LDA, _, _, _, _, _, e_C_LDA = calculate_UPWLDA_correlation(alpha_density, beta_density, density, None, None, None, None, None, None)
     
     # This functional only depends on the total square density gradient, not its spin components
+
     sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=constants.sigma_floor)
 
     C_0, C_X, alpha = 0.004235, -0.001667212, 0.09
 
     # Various useful quantities
+
     beta = 16 * np.cbrt(3 / np.pi) * C_0
     r_s, inv_density = calculate_seitz_radius(density)
 
@@ -2180,45 +2202,55 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     k_s = (4 * k_F / np.pi) ** (1 / 2)
 
     # Spin interpolation functions
+
     zeta = calculate_zeta(alpha_density, beta_density)
 
     phi = (1 / 2) * (np.cbrt(1 + zeta) * np.cbrt(1 + zeta) + np.cbrt(1 - zeta) * np.cbrt(1 - zeta))
     phi_cubed = phi * phi * phi
 
     # Reduced density gradient for PW91
+
     t = sigma ** (1 / 2) / (2 * phi * k_s) * inv_density
 
     # Just squaring for speed
+
     r_s_squared = r_s * r_s
     k_F_squared = k_F * k_F
     k_s_squared = k_s * k_s
     t_squared = t * t
 
     # The "C(r_s)" function from PW91
+
     C_numerator = 0.002568 + 0.023266 * r_s + 7.389e-6 * r_s_squared
     C_denominator = 1 + 8.723 * r_s + 0.472 * r_s_squared + 7.389e-2 * r_s_squared * r_s
     C = -C_X + C_numerator / C_denominator
 
     # The A function from PW91
+
     A = 2 * alpha / beta / (np.exp(-2 * alpha * e_C_LDA / (phi_cubed * beta ** 2)) - 1)
     B = (C - C_0 - 3 * C_X / 7)
 
     # The term to be logged
+
     Y = 1 + 2 * alpha / beta * t_squared * ((1 + A * t_squared) / (1 + A * t_squared + A * A * t_squared * t_squared))
 
     # The first GGA correction to the LDA correlation
+
     H_0 = phi_cubed * beta ** 2 / (2 * alpha) * np.log(Y)
 
     # The second GGA correction to the LDA correlation
+
     H_1 = 16 * np.cbrt(3 / np.pi) * B * phi_cubed * t_squared * np.exp(-100 * phi_cubed * phi * t_squared * k_s_squared / k_F_squared)
 
     # The energy density per particle for PW91 correlation
+
     e_C = e_C_LDA + H_0 + H_1
 
     de_C_LDA_dn_alpha = (df_dn_alpha_LDA - e_C_LDA) * inv_density
     de_C_LDA_dn_beta = (df_dn_beta_LDA  - e_C_LDA) * inv_density
 
     # Spin-scaling factor derivatives
+
     dphi_dzeta = (1 / 3) * (1 / np.cbrt(1 + zeta) - 1 / np.cbrt(1 - zeta))
 
     dzeta_dn_alpha = 2 * beta_density * inv_density * inv_density
@@ -2228,6 +2260,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dphi_dn_beta = dphi_dzeta * dzeta_dn_beta
 
     # Spin interpolation dependent terms
+
     phi_squared = phi * phi
     phi_fourth = phi_cubed * phi
 
@@ -2238,6 +2271,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dphi_fourth_dn_beta = 4 * phi_cubed * dphi_dn_beta
 
     # Derivatives of t^2
+
     dt_squared_dn = -(7 / (3 * density)) * t_squared
     dt_squared_dn_alpha = dt_squared_dn - (2 / phi) * t_squared * dphi_dn_alpha
     dt_squared_dn_beta = dt_squared_dn - (2 / phi) * t_squared * dphi_dn_beta
@@ -2245,6 +2279,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dt_squared_ds = 1 / (4 * density * density * phi * phi * k_s_squared)
 
     # C(rs) derivative (rs depends only on total density)
+
     dCnum_dr = 0.023266 + 2 * 7.389e-6 * r_s
     dCden_dr = 8.723 + 2 * 0.472 * r_s + 3 * 7.389e-2 * r_s_squared
 
@@ -2253,6 +2288,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dC_dn = dfrac_drs * -r_s / 3 * inv_density
 
     # Derivative of A 
+
     exp_u = np.exp(-2 * alpha * e_C_LDA / (phi_cubed * beta ** 2))
     denom_u = exp_u - 1
 
@@ -2262,6 +2298,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dA_dn_beta  = (4 * alpha ** 2 / (beta ** 3 * phi_cubed)) * fac_u * de_C_LDA_dn_beta - (12 * alpha ** 2 * e_C_LDA / (beta ** 3 * phi_fourth)) * fac_u * dphi_dn_beta
 
     # Log-term derivative machinery (same notation as restricted)
+
     p = A * t_squared
     D1 = 1 + p + p * p
     R = (1 + p) / D1
@@ -2275,6 +2312,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dY_ds = 2 * alpha / beta * (dt_squared_ds * R + t_squared * dR_dp * A * dt_squared_ds)
 
     # Derivative of H_0
+
     logY = np.log(Y)
 
     dH_0_dn_alpha = beta ** 2 / (2 * alpha) * (dphi_cubed_dn_alpha * logY + phi_cubed * (dY_dn_alpha / Y))
@@ -2283,6 +2321,7 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dH_0_ds = phi_cubed * beta ** 2 / (2 * alpha) * (dY_ds / Y)
 
     # Derivative of H_1
+
     pref = 16 * np.cbrt(3 / np.pi)
 
     Q = k_s_squared / k_F_squared
@@ -2304,12 +2343,14 @@ def calculate_UPW_correlation(alpha_density, beta_density, density, sigma_aa, si
     dH_1_ds = pref * (B * phi_cubed * dt_squared_ds * E + B * phi_cubed * t_squared * dE_ds)
 
     # Per-particle derivatives
+
     deC_dn_alpha = de_C_LDA_dn_alpha + dH_0_dn_alpha + dH_1_dn_alpha
     deC_dn_beta = de_C_LDA_dn_beta + dH_0_dn_beta + dH_1_dn_beta
 
     deC_ds = dH_0_ds + dH_1_ds
 
     # Final derivatives of f = n * e_C for PW91 correlation
+
     df_dn_alpha = e_C + density * deC_dn_alpha
     df_dn_beta = e_C + density * deC_dn_beta
 
@@ -2349,9 +2390,11 @@ def calculate_RTPSS_correlation(density, sigma, tau, calculation):
     """
 
     # Defining constants for TPSS
+
     C, d = 0.53, 2.8
 
     # Repeatedly used quantities
+
     z = sigma / (8 * tau * density)
 
     z_squared = z * z
@@ -2361,17 +2404,21 @@ def calculate_RTPSS_correlation(density, sigma, tau, calculation):
     zeros = np.zeros_like(density)
 
     # Limits for unpolarised and fully polarised spin densities
+
     df_dn_PBE, df_ds_PBE, _, e_C_PBE = calculate_PBE_correlation(density, sigma, tau, calculation)
     df_dna_one, _, df_dsaa_one, _, _, _, _, e_C_PBE_one_spin = calculate_UPBE_correlation(density / 2, zeros, density / 2, sigma / 4, zeros, zeros, None, None, None)
 
     # Picks out the largest PBE correlation
+
     e_C_tilde = np.maximum(e_C_PBE, e_C_PBE_one_spin)
     
     # Energy density for TPSS correlation
+
     e_C_rev = e_C_PBE * (1 + C * z_squared) - (1 + C) * z_squared * e_C_tilde
     e_C = e_C_rev * (1 + d * e_C_rev * z_cubed)
 
     # Derivative of PBE correlation with respect to density and sigma
+
     inv_n = 1 / density
     deC_PBE_dn = (df_dn_PBE - e_C_PBE) * inv_n
     deC_PBE_ds = df_ds_PBE * inv_n
@@ -2380,10 +2427,12 @@ def calculate_RTPSS_correlation(density, sigma, tau, calculation):
     deC_one_ds = (1 / 2) * df_dsaa_one * inv_n    
 
     # Derivative of largest PBE correlation with respect to density and sigma
+
     deC_tilde_dn = np.where(e_C_PBE >= e_C_PBE_one_spin, deC_PBE_dn, deC_one_dn)
     deC_tilde_ds = np.where(e_C_PBE >= e_C_PBE_one_spin, deC_PBE_ds, deC_one_ds)
 
     # Derivative of tau dependent terms with respect to density, sigma and tau
+    
     dz_dn, dz_ds, dz_dt = -z * inv_n, 1 / (8 * tau * density), -z / tau
     dz2_dn, dz2_ds, dz2_dt = 2 * z * dz_dn, 2 * z * dz_ds, 2 * z * dz_dt
     dz3_dn, dz3_ds, dz3_dt = 3 * z_squared * dz_dn, 3 * z_squared * dz_ds, 3 * z_squared * dz_dt
@@ -2393,14 +2442,17 @@ def calculate_RTPSS_correlation(density, sigma, tau, calculation):
     deC_rev_dt = (C * e_C_PBE - (1 + C) * e_C_tilde) * dz2_dt 
 
     # Commonly used prefactor
+
     prefactor = 1 + 2 * d * e_C_rev * z_cubed
 
     # Derivative of energy density with respect to density, sigma and tau
+
     de_dn = deC_rev_dn * prefactor + d * e_C_rev * e_C_rev * dz3_dn
     de_ds = deC_rev_ds * prefactor + d * e_C_rev * e_C_rev * dz3_ds
     de_dt = deC_rev_dt * prefactor + d * e_C_rev * e_C_rev * dz3_dt
 
     # Derivatives of f = n * e_C with respect to density, sigma and tau
+
     df_dn = e_C + density * de_dn
     df_ds = density * de_ds
     df_dt = density * de_dt
@@ -2442,25 +2494,30 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     """
     
     # Forms total density, cleaned total sigma and total tau
+
     density = alpha_density + beta_density
     sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab,floor=constants.sigma_floor)
     tau = tau_alpha + tau_beta
 
     # Defining constant for TPSS
+
     d = 2.8
 
     zeros = np.zeros_like(density)
 
     # PBE correlation (spin-polarised)
+
     df_dna_PBE, df_dnb_PBE, df_dsaa_PBE, df_dsbb_PBE, df_dsab_PBE, _, _, e_C_PBE = calculate_UPBE_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, None, None, None)
 
     # one-spin limits for the max construction in TPSS
+
     df_dna_a0, _, df_dsaa_a0, _, _, _, _, e_C_a0 = calculate_UPBE_correlation(alpha_density, zeros, alpha_density, sigma_aa, zeros, zeros, None, None, None)
     _, df_dnb_0b, _, df_dsbb_0b, _, _, _, e_C_0b = calculate_UPBE_correlation(zeros, beta_density, beta_density, zeros, sigma_bb, zeros, None, None, None)
 
     inv_n = 1 / density
 
     # Derivatives from PBE with respect to density and sigma
+
     deC_PBE_dna = (df_dna_PBE - e_C_PBE) * inv_n
     deC_PBE_dnb = (df_dnb_PBE - e_C_PBE) * inv_n
     deC_PBE_dsaa = df_dsaa_PBE * inv_n
@@ -2471,6 +2528,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     inv_nb = 1 / beta_density
 
     # Derivatives of spin polarised extremes from PBE
+
     deC_a0_dna = (df_dna_a0 - e_C_a0) * inv_na
     deC_0b_dnb = (df_dnb_0b - e_C_0b) * inv_nb
 
@@ -2478,6 +2536,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     deC_0b_dsbb = df_dsbb_0b * inv_nb
 
     # Finds the maximum between the PBE and fully polarised limits
+
     condA = e_C_PBE >= e_C_a0
     condB = e_C_PBE >= e_C_0b
     
@@ -2497,6 +2556,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     deC_tilde_beta_dsab = np.where(condB, deC_PBE_dsab, 0.0)
 
     # weighted tilde: sum_sigma (n_sigma/n) * tilde_e_c^sigma
+
     numer_tilde = alpha_density * e_C_tilde_alpha + beta_density * e_C_tilde_beta
     e_C_tilde = numer_tilde * inv_n
 
@@ -2504,16 +2564,19 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     deC_tilde_dnb = (e_C_tilde_beta + beta_density  * deC_tilde_beta_dnb + alpha_density * deC_tilde_alpha_dnb - e_C_tilde) * inv_n
 
     # Derivatives with respect to sigma spin channels
+
     deC_tilde_dsaa = (alpha_density * deC_tilde_alpha_dsaa + beta_density * deC_tilde_beta_dsaa) * inv_n
     deC_tilde_dsbb = (alpha_density * deC_tilde_alpha_dsbb + beta_density * deC_tilde_beta_dsbb) * inv_n
     deC_tilde_dsab = (alpha_density * deC_tilde_alpha_dsab + beta_density * deC_tilde_beta_dsab) * inv_n
 
     # z = tau_W / tau, used to make iso-orbital indicator
+
     z = sigma / (8 * tau * density)
     z_squared = z * z
     z_cubed = z_squared * z
 
     # Calculates spin polarisation and gradient of spin polarisation with respect to the density
+
     zeta = calculate_zeta(alpha_density, beta_density)
     zeta_squared = zeta * zeta
     inv_n2 = inv_n * inv_n
@@ -2522,6 +2585,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dzeta_dnb = -2 * alpha_density * inv_n2
 
     # Key spin polarisation machinery
+
     one_minus = clean(1 - zeta, constants.sigma_floor)
     one_plus = 1 + zeta
     one_minus2 = one_minus * one_minus
@@ -2538,9 +2602,11 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dB_dnb = dB_dzeta * dzeta_dnb
 
     # Derivative of zeta with respect to the densities
+
     zeta_gradient = sqrtB * inv_n
 
     # Derivatives of gradient of zeta with respect to density spin channels
+
     dzeta_grad_dna = inv_sqrtB * dB_dna * inv_n / 2 - sqrtB * inv_n2
     dzeta_grad_dnb = inv_sqrtB * dB_dnb * inv_n / 2 - sqrtB * inv_n2
 
@@ -2559,6 +2625,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dxi_dsab = inv_den_xi * dzeta_grad_dsab
 
     # C(zeta,xi) from TPSS
+
     C_0 = 0.53 + 0.87 * zeta_squared + 0.50 * zeta_squared * zeta_squared + 2.26 * zeta_squared * zeta_squared * zeta_squared
     dC0_dzeta = 1.74 * zeta + 2 * zeta * zeta_squared + 13.56 * zeta * zeta_squared * zeta_squared
     dC0_dna = dC0_dzeta * dzeta_dna
@@ -2585,9 +2652,11 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     inv_1pA4 = inv_1pA ** 4
 
     # C from TPSS paper
+
     C = C_0 * inv_1pA4
 
     # Derivatives of C with respect to spin densities and sigma channels
+
     dC_dna = inv_1pA4 * (dC0_dna - 4 * C_0 * inv_1pA * dA_dna)
     dC_dnb = inv_1pA4 * (dC0_dnb - 4 * C_0 * inv_1pA * dA_dnb)
 
@@ -2596,6 +2665,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dC_dsab = inv_1pA4 * (-4 * C_0 * inv_1pA * dA_dsab)
 
     # z-derivatives with respect to the unrestricted variables
+
     dz_dna = -z * inv_n
     dz_dnb = -z * inv_n
 
@@ -2623,12 +2693,14 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     dz3_dtb = 3 * z_squared * dz_dtb
 
     # revPKZB (TPSS correlation core)
+
     A_tpss = 1 + C * z_squared
 
     e_C_rev = e_C_PBE * A_tpss - (1 + C) * z_squared * e_C_tilde
     e_C = e_C_rev * (1 + d * e_C_rev * z_cubed)
 
     # de_C_rev / dx  (now includes dC/dx terms!)
+
     deC_rev_dna = (A_tpss * deC_PBE_dna + e_C_PBE * (z_squared * dC_dna + C * dz2_dna) - (1 + C) * (e_C_tilde * dz2_dna + z_squared * deC_tilde_dna) - z_squared * e_C_tilde * dC_dna)
     deC_rev_dnb = (A_tpss * deC_PBE_dnb + e_C_PBE * (z_squared * dC_dnb + C * dz2_dnb) - (1 + C) * (e_C_tilde * dz2_dnb + z_squared * deC_tilde_dnb) - z_squared * e_C_tilde * dC_dnb)
 
@@ -2640,6 +2712,7 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     deC_rev_dtb = (C * e_C_PBE - (1 + C) * e_C_tilde) * dz2_dtb
 
     # final TPSS correlation: e_C = e_C_rev * (1 + d e_C_rev z^3)
+
     prefactor = 1 + 2 * d * e_C_rev * z_cubed
 
     deC_dna = deC_rev_dna * prefactor + d * e_C_rev ** 2 * dz3_dna
@@ -2653,15 +2726,18 @@ def calculate_UTPSS_correlation(alpha_density, beta_density, density, sigma_aa, 
     deC_dtb = deC_rev_dtb * prefactor + d * e_C_rev ** 2 * dz3_dtb
 
     # convert to df/dx for f = n e_C 
+
     df_dn_alpha = e_C + density * deC_dna
     df_dn_beta  = e_C + density * deC_dnb
 
     # Derivatives with respect to sigma channels
+
     df_ds_aa = density * deC_dsaa
     df_ds_bb = density * deC_dsbb
     df_ds_ab = density * deC_dsab
 
     # Derivatives with respect to tau channels
+
     df_dt_alpha = density * deC_dta
     df_dt_beta  = density * deC_dtb
 
@@ -2696,6 +2772,7 @@ def calculate_R3P_correlation(density, sigma, tau, calculation):
     method = calculation.method
 
     # If "/G" is used, uses the Gaussian parameterisation for B3LYP with VWN-III instead of the more commonly used VWN-V
+
     df_dn_LDA, _, _, e_C_LDA = calculate_RVWN3_correlation(density, None, None, calculation) if "G" in method else calculate_RVWN5_correlation(density, None, None, calculation)
 
     # Picks the GGA correlation depending on the method
@@ -2704,9 +2781,11 @@ def calculate_R3P_correlation(density, sigma, tau, calculation):
     if "P86" in method: correlation_functional = calculate_RP86_correlation
 
     # Calculates the energy density and derivatives for the GGA part
+
     df_dn_GGA, df_ds_GGA, _, e_C_GGA = correlation_functional(density, sigma, None, calculation)
 
     # These parameters are the standard B3LYP coefficients for correlation
+
     df_dn = 0.81 * df_dn_GGA + 0.19 * df_dn_LDA
     df_ds = 0.81 * df_ds_GGA
     e_C = 0.81 * e_C_GGA + 0.19 * e_C_LDA
@@ -2748,6 +2827,7 @@ def calculate_U3P_correlation(alpha_density, beta_density, density, sigma_aa, si
     method = calculation.method
 
     # If "/G" is used, uses the Gaussian parameterisation for B3LYP with VWN-III instead of the more commonly used VWN-V
+
     df_dn_alpha_LDA, df_dn_beta_LDA, _, _, _, _, _, e_C_LDA = calculate_UVWN3_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, None, None, calculation) if "G" in method else calculate_UVWN5_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, None, None, calculation)
     
     # Picks the GGA correlation depending on the method
@@ -2756,9 +2836,11 @@ def calculate_U3P_correlation(alpha_density, beta_density, density, sigma_aa, si
     if "P86" in method: correlation_functional = calculate_UP86_correlation
 
     # Calculates the energy density and derivatives for the GGA part
+
     df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, _, _, e_C = correlation_functional(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
     
     # These parameters are the standard B3LYP coefficients for correlation
+
     df_dn_alpha = 0.81 * df_dn_alpha + 0.19 * df_dn_alpha_LDA
     df_dn_beta = 0.81 * df_dn_beta + 0.19 * df_dn_beta_LDA
     

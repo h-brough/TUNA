@@ -526,7 +526,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
 
 
-def show_two_dimensional_plot(calculation: Calculation, basis_functions: list[any], bond_length: float, P: ndarray, P_alpha: ndarray, P_beta: ndarray, n_electrons: int, P_difference_alpha: ndarray, P_difference_beta: ndarray, P_difference: ndarray, molecular_orbitals: ndarray, natural_orbitals: ndarray) -> None:
+def show_two_dimensional_plot(calculation: Calculation, molecule: Molecule, P: ndarray, P_alpha: ndarray, P_beta: ndarray, P_difference_alpha: ndarray, P_difference_beta: ndarray, P_difference: ndarray, molecular_orbitals: ndarray, natural_orbitals: ndarray) -> None:
 
     """
     
@@ -534,12 +534,10 @@ def show_two_dimensional_plot(calculation: Calculation, basis_functions: list[an
 
     Args:
         calculation (Calculation): Calculation object]
-        basis_functions (list): List of basis function objects
-        bond_length (float): Bond length in bohr
+        molecule (Molecule): Molecule object
         P (array): Density matrix in AO basis
         P_alpha (array): Alpha density matrix in AO basis
         P_beta (array): Beta density matrix in AO basis
-        n_electrons (int): Number of electrons
         P_difference_alpha (array): Alpha difference density
         P_difference_beta (array): Beta difference density
         P_difference (array): Difference density
@@ -551,6 +549,7 @@ def show_two_dimensional_plot(calculation: Calculation, basis_functions: list[an
     if calculation.method in excited_state_methods:
 
         # Sets the density matrices to the difference density
+
         if calculation.plot_difference_density or calculation.plot_difference_spin_density: 
 
             P = P_difference
@@ -558,54 +557,61 @@ def show_two_dimensional_plot(calculation: Calculation, basis_functions: list[an
             P_beta = P_difference_beta       
             
     # Build grid and express basis functions on the grid
-    grid = build_Cartesian_grid(bond_length)
-    basis_functions_on_grid = dft.construct_basis_functions_on_grid(basis_functions, grid)
+
+    grid = build_Cartesian_grid(molecule.bond_length)
+    basis_functions_on_grid = dft.construct_basis_functions_on_grid(molecule.basis_functions, grid)
 
     # Plots electron density
+
     if calculation.plot_density: 
         
-        show_cube_plot(calculation, basis_functions_on_grid, grid, bond_length, P=P)
+        show_cube_plot(calculation, basis_functions_on_grid, grid, molecule.bond_length, P=P)
 
     # Plots difference density
+
     if calculation.plot_difference_density:
 
-        show_cube_plot(calculation, basis_functions_on_grid, grid, bond_length, P=P, transition=True)
+        show_cube_plot(calculation, basis_functions_on_grid, grid, molecule.bond_length, P=P, transition=True)
 
     # Plots spin density
+
     if calculation.plot_spin_density or calculation.plot_difference_spin_density: 
         
-        show_cube_plot(calculation, basis_functions_on_grid, grid, bond_length, P=P_alpha-P_beta)
+        show_cube_plot(calculation, basis_functions_on_grid, grid, molecule.bond_length, P=P_alpha-P_beta)
 
     # Plots molecular orbital
+
     if calculation.plot_HOMO or calculation.plot_LUMO or calculation.plot_molecular_orbital:
 
         which_MO = calculation.molecular_orbital_to_plot - 1
 
         # Identifies the index of the HOMO or LUMO if requested
+
         if calculation.plot_HOMO: 
             
-            which_MO = n_electrons - 1 if calculation.reference == "UHF" else n_electrons // 2 - 1
+            which_MO =  molecule.n_electrons - 1 if calculation.reference == "UHF" else  molecule.n_electrons // 2 - 1
 
         elif calculation.plot_LUMO: 
             
-            which_MO = n_electrons if calculation.reference == "UHF" else n_electrons // 2
+            which_MO =  molecule.n_electrons if calculation.reference == "UHF" else  molecule.n_electrons // 2
 
         try:
             
-            show_cube_plot(calculation, basis_functions_on_grid, grid, bond_length, molecular_orbitals=molecular_orbitals, which_MO=which_MO)
+            show_cube_plot(calculation, basis_functions_on_grid, grid, molecule.bond_length, molecular_orbitals=molecular_orbitals, which_MO=which_MO)
 
         except IndexError:
 
             error("Requested molecular orbital is out of range. Increase basis set size to see more!")
 
     # Plots natural orbital
+    
     if calculation.plot_natural_orbital:
 
         which_MO = calculation.natural_orbital_to_plot - 1
 
         try:
             
-            show_cube_plot(calculation, basis_functions_on_grid, grid, bond_length, molecular_orbitals=natural_orbitals, which_MO=which_MO)
+            show_cube_plot(calculation, basis_functions_on_grid, grid, molecule.bond_length, molecular_orbitals=natural_orbitals, which_MO=which_MO)
 
         except IndexError:
 

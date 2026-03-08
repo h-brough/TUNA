@@ -162,9 +162,7 @@ class Calculation:
         self.terse = keyword(["T"], False)
         self.debug = keyword("DEBUG", False)
         self.decontract = keyword(["DECONTRACT"], False)
-
         self.natural_orbitals = keyword(["NATORBS"], False)
-        self.no_natural_orbitals = keyword(["NONATORBS"], False)
         self.no_singles = keyword(["NOSINGLES"], False)
         self.MO_read_requested = keyword(["MOREAD"], False)
         self.MO_read = keyword(["MOREAD"], False)
@@ -237,8 +235,9 @@ class Calculation:
         self.pressure = keyword(["PRES", "PRESSURE"], 101325, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
 
         # Post-Hartree-Fock keywords
-        self.same_spin_scaling = keyword(["SSS"], 1 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.opposite_spin_scaling = keyword(["OSS"], 6 / 5, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+
+        self.SSS_requested, self.same_spin_scaling = keyword(["SSS"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1 / 3)
+        self.OSS_requested, self.opposite_spin_scaling = keyword(["OSS"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=6 / 5)
         self.MP3_scaling = keyword(["MP3S", "MP3SCALING", "MP3SCAL"], 1 / 4, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.MP2_conv = keyword(["MPCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.MP2_max_iter = keyword(["MPMAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -246,7 +245,7 @@ class Calculation:
         self.amp_conv = keyword(["AMPCONV"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.print_n_amplitudes = keyword(["PRINTAMPS"], 10, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
         self.CC_max_iter = keyword(["CCMAXITER"], 50, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.cc_damp_requested, self.coupled_cluster_damping_parameter = keyword(["CCDAMP"], False, check_next_space=True, value_type=float, associated_keyword_default=0.25)
+        self.cc_damp_requested, self.coupled_cluster_damping_parameter = keyword(["CCDAMP"], False, check_next_space=True, value_type=float, mandatory_value=True, associated_keyword_default=0.25)
         self.coupled_cluster_damping_parameter = self.coupled_cluster_damping_parameter if self.cc_damp_requested else 0
         self.freeze_core, self.freeze_n_orbitals = keyword(["FREEZECORE"], False, boolean=True, check_next_space=True, value_type=int, mandatory_value=False, associated_keyword_default=None)
         self.n_MP2_grid_points = keyword(["MPGRID"], 20, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
@@ -271,10 +270,14 @@ class Calculation:
         if self.DFT_calculation: 
             
             # Only overwrites HFX, etc., if a DFT calculation is requested
+
             if not self.HFX_requested: self.HFX_prop = self.functional.HFX
             if not self.DFX_requested: self.DFX_prop = self.functional.DFX
             if not self.DFC_requested: self.DFC_prop = self.functional.DFC
             if not self.MPC_requested: self.MPC_prop = self.functional.MPC
+
+            if not self.SSS_requested: self.same_spin_scaling = self.functional.same_spin_scaling
+            if not self.OSS_requested: self.opposite_spin_scaling = self.functional.opposite_spin_scaling
         
         # Brings the percentage into a proportion
         self.HFX_prop, self.DFX_prop, self.DFC_prop, self.MPC_prop = self.HFX_prop / 100, self.DFX_prop / 100, self.DFC_prop / 100, self.MPC_prop / 100
@@ -305,7 +308,7 @@ class Calculation:
         self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "TIGHT" in params or "TIGHTSCF" in params else self.SCF_conv
         self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if "EXTREME" in params or "EXTREMESCF" in params else self.SCF_conv
 
-        self.geom_conv = constants.convergence_criteria_optimisation["tight"] if self.calculation_type == "OPTFREQ" and self.geom_conv != constants.convergence_criteria_optimisation["extreme"] else constants.convergence_criteria_optimisation["medium"]
+        self.geom_conv = constants.convergence_criteria_optimisation["tight"] if self.calculation_type == "OPTFREQ" else constants.convergence_criteria_optimisation["medium"]
         self.geom_conv = constants.convergence_criteria_optimisation["loose"] if "LOOSEOPT" in params else self.geom_conv 
         self.geom_conv = constants.convergence_criteria_optimisation["medium"] if "MEDIUMOPT" in params else self.geom_conv
         self.geom_conv = constants.convergence_criteria_optimisation["tight"] if "TIGHTOPT" in params else self.geom_conv
@@ -1087,8 +1090,6 @@ method_types = {
     "MP4[DQ]": "MP4 theory with doubles and quadruples",
     "OMP2": "orbital-optimised MP2 theory", 
     "UOMP2": "unrestricted orbital-optimised MP2 theory",
-    "OOMP2": "orbital-optimised MP2 theory", 
-    "UOOMP2": "unrestricted orbital-optimised MP2 theory",
     "CIS": "configuration interaction singles",        
     "UCIS": "unrestricted configuration interaction singles",
     "CIS[D]": "configuration interaction singles with perturbative doubles",
@@ -1210,15 +1211,32 @@ method_types = {
 
 
 
-correlated_methods = [
+coupled_cluster_methods = [
+
+        "CCD", "UCCD", "CEPA0", "UCEPA0", "LCCD", "ULCCD",  "LCCSD", "ULCCSD", "CEPA", "UCEPA", "CEPA[0]", "UCEPA[0]", "QCISD", "UQCISD", "CCSD", "UCCSD", "QCISD[T]", "UQCISD[T]", "CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "CCSDTQ", "CCSDT[Q]"
+
+    ]  
+
+
+second_order_perturbative_methods = [
     
-    "MP2", "UMP2", "SCS-MP2", "USCS-MP2", "MP3", "UMP3", "SCS-MP3", "USCS-MP3", "MP4", "MP4[SDTQ]", "MP4[SDQ]", "MP4[DQ]", "OMP2", "UOMP2", "OOMP2", "UOOMP2", "IMP2", "LMP2",
-    "CCD", "UCCD", "CEPA0", "UCEPA0", "LCCD", "ULCCD",  "LCCSD", "ULCCSD", "CEPA", "UCEPA", "CEPA[0]", "UCEPA[0]", "QCISD", "UQCISD", "CCSD", "UCCSD", "QCISD[T]", "UQCISD[T]", "CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "CCSDTQ", "CCSDT[Q]"
+    "MP2", "UMP2", "SCS-MP2", "USCS-MP2", "OMP2", "UOMP2", "IMP2", "LMP2"
 
     ]
 
 
+third_order_perturbative_methods = [
+    
+    "MP3", "UMP3", "SCS-MP3", "USCS-MP3"
 
+    ]
+
+
+fourth_order_perturbative_methods = [
+    
+    "MP4", "MP4[SDTQ]", "MP4[SDQ]", "MP4[DQ]"
+
+    ]
 
 
 excited_state_methods = [
@@ -1228,6 +1246,10 @@ excited_state_methods = [
     ]
 
 
+
+perturbative_methods = second_order_perturbative_methods + third_order_perturbative_methods + fourth_order_perturbative_methods
+
+correlated_methods = coupled_cluster_methods + perturbative_methods
 
 
 

@@ -122,13 +122,13 @@ def calculate_Koopmans_parameters(epsilons, n_occ, calculation):
         
     else: 
     
-        electron_affinity = "---"
-        HOMO_LUMO_gap = "---"
+        electron_affinity = "   ----"
+        HOMO_LUMO_gap = "   ----"
         
         warning("Size of basis is too small for electron affinity calculation!")
 
-    if electron_affinity != "---": electron_affinity = f"{electron_affinity:9.6f}"
-    if HOMO_LUMO_gap != "---": HOMO_LUMO_gap = f"{HOMO_LUMO_gap:9.6f}"
+    if electron_affinity != "   ----": electron_affinity = f"{electron_affinity:9.6f}"
+    if HOMO_LUMO_gap != "   ----": HOMO_LUMO_gap = f"{HOMO_LUMO_gap:9.6f}"
         
     log(f"\n Koopmans' theorem ionisation energy:   {ionisation_energy:9.6f}", calculation, 2)
     log(f" Koopmans' theorem electron affinity:   {electron_affinity}", calculation, 2)
@@ -744,7 +744,7 @@ def print_density_information(method: str, calculation: Calculation) -> None:
 
     # Specifies which density matrix is used for the property calculations
     if method in ["MP2", "SCS-MP2", "UMP2", "USCS-MP2"]: log("\n Using the MP2 unrelaxed density for property calculations.", calculation, 1)
-    elif method in ["OMP2", "UOMP2", "OOMP2", "UOOMP2"]: log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
+    elif method in ["OMP2", "UOMP2"]: log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
     elif method in ["LMP2"]: warning("Using the Hartree-Fock density, not the MP2 density, for property calculations.")
     elif method in ["MP3", "SCS-MP3", "UMP3", "USCS-MP3", "MP4", "MP4[SDQ]"]: warning("Using the unrelaxed MP2 density for property calculations.")
     
@@ -759,7 +759,7 @@ def print_density_information(method: str, calculation: Calculation) -> None:
 
 
 
-def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, AO_ranges, D, P_alpha, P_beta, epsilons_alpha, epsilons_beta, molecular_orbitals_alpha, molecular_orbitals_beta):
+def post_SCF_output(molecule, calculation, P, S, AO_ranges, SCF_output, P_alpha, P_beta):
 
     """
 
@@ -768,20 +768,15 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
     Args:   
         molecule (Molecule): Molecule object
         calculation (Calculation): Calculation object
-        epsilons (array): Fock matrix eigenvalues
-        molecular_orbitals (array): Molecular orbitals in AO basis    
         P (array): Density matrix in AO basis
         S (array): Overlap matrix in AO basis
         AO_ranges (array): Partition of basis set between atoms
-        D (array): Dipole moment integral matrix in AO basis
         P_alpha (array): Alpha density matrix in AO basis
         P_beta (array): Beta density matrix in AO basis
-        epsilons_alpha (array): Alpha Fock matrix eigenvalues
-        epsilons_beta (array): Beta Fock matrix eigenvalues   
-        molecular_orbitals_alpha (array): Alpha molecular orbitals in AO basis    
-        molecular_orbitals_beta (array): Beta molecular orbitals in AO basis    
 
     """
+
+
 
     log("\n Beginning calculation of TUNA properties... ", calculation, 3)
 
@@ -796,6 +791,12 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
     atoms = molecule.atomic_symbols
     charges = molecule.charges
     molecular_structure = molecule.molecular_structure
+    epsilons = SCF_output.epsilons
+    molecular_orbitals = SCF_output.molecular_orbitals
+    epsilons_alpha = SCF_output.epsilons_alpha
+    epsilons_beta = SCF_output.epsilons_beta
+    molecular_orbitals_alpha = SCF_output.molecular_orbitals_alpha
+    molecular_orbitals_beta = SCF_output.molecular_orbitals_beta
 
     print_density_information(method, calculation)
 
@@ -818,7 +819,7 @@ def post_SCF_output(molecule, calculation, epsilons, molecular_orbitals, P, S, A
 
         log(f"\n Dipole moment origin is the centre of mass, {bohr_to_angstrom(centre_of_mass):.5f} angstroms from the first atom.", calculation, 2)
 
-        total_dipole, D_nuclear, D_electronic = calculate_dipole_moment(centre_of_mass, charges, coordinates, P, D)
+        total_dipole, D_nuclear, D_electronic = calculate_dipole_moment(centre_of_mass, charges, coordinates, P, SCF_output.D[2])
 
         log_spacer(calculation, priority=2, start="\n")
         log("                    Dipole Moment", calculation, 2, colour="white")
