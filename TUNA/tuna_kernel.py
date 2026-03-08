@@ -283,20 +283,20 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
             
             # Forms the overlap and kinetic matrices
 
-            S[i, j] = S[j, i] = ints.S(basis_functions[i], basis_functions[j])
-            T[i, j] = T[j, i] = ints.T(basis_functions[i], basis_functions[j])
+            S[i, j] = S[j, i] = ints.calculate_overlap_integral(basis_functions[i], basis_functions[j])
+            T[i, j] = T[j, i] = ints.calculate_kinetic_integral(basis_functions[i], basis_functions[j])
 
             # Forms the x, y and z components of the dipole moment matrix
 
-            D[0, i, j] = D[0, j, i] = ints.Mu(basis_functions[i], basis_functions[j], dipole_origin, "x")
-            D[1, i, j] = D[1, j, i] = ints.Mu(basis_functions[i], basis_functions[j], dipole_origin, "y")
-            D[2, i, j] = D[2, j, i] = ints.Mu(basis_functions[i], basis_functions[j], dipole_origin, "z")
+            D[0, i, j] = D[0, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "x")
+            D[1, i, j] = D[1, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "y")
+            D[2, i, j] = D[2, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "z")
 
             for atom in atoms:
 
                 # Adds to the nuclear-electron attraction matrix
 
-                V_NE[i, j] += -atom.charge * ints.V(basis_functions[i], basis_functions[j], atom.origin)
+                V_NE[i, j] += -atom.charge * ints.calculate_nuclear_electron_integral(basis_functions[i], basis_functions[j], atom.origin)
 
             V_NE[j, i] = V_NE[i, j]
 
@@ -310,7 +310,7 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
 
 
 
-def calculate_two_electron_integrals(n_basis: int, basis_functions: list, is_aligned_on_z_axis: bool) -> ndarray:
+def calculate_two_electron_integrals(n_basis: int, basis_functions: list) -> ndarray:
 
     """"
     
@@ -319,7 +319,6 @@ def calculate_two_electron_integrals(n_basis: int, basis_functions: list, is_ali
     Args:
         n_basis (int): Number of basis functions
         basis_functions (list): Basis functions
-        is_aligned_on_z_axis (bool): Is the molecule aligned on the z axis
     
     Returns:
         ERI_AO (array): Electron repulsion integrals in AO basis
@@ -330,7 +329,7 @@ def calculate_two_electron_integrals(n_basis: int, basis_functions: list, is_ali
 
     # Calculates electron repulsion integrals - diatomic parity skips over known zero values if molecule is aligned on the z axis
 
-    ERI_AO = ints.doERIs(n_basis, ERI_AO, basis_functions, use_diatomic_parity=is_aligned_on_z_axis)
+    ERI_AO = ints.calculate_electron_repulsion_integrals(n_basis, ERI_AO, basis_functions)
 
     ERI_AO = np.asarray(ERI_AO)
 
@@ -375,7 +374,11 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     try:
 
-        ERI_AO = calculate_two_electron_integrals(n_basis, molecule.basis_functions, is_molecule_aligned_on_z_axis(molecule))
+        if not is_molecule_aligned_on_z_axis(molecule): 
+            
+            error("Molecule is incorrectly aligned! Unable to calculate two-electron integrals.")
+
+        ERI_AO = calculate_two_electron_integrals(n_basis, molecule.basis_functions)
 
     except MemoryError:
 

@@ -1,66 +1,90 @@
 # cython: boundscheck=False, wraparound=False, nonecheck=False, cdivision=True
-# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
-from __future__ import division
 cimport cython
-from cython.parallel import prange, parallel
 import numpy as np
+from numpy import ndarray
 cimport numpy as np
-from libc.math cimport exp, pow, tgamma, sqrt, fabs
+from libc.math cimport exp, pow, sqrt
 from libc.stdlib cimport malloc, free
 from scipy.special.cython_special cimport hyp1f1
-from scipy.special import factorial2
-from cpython.exc cimport PyErr_CheckSignals
 
-cdef double pi = 3.141592653589793238462643383279
-cdef double LINEAR_TOL = 1.0e-14
+
+cdef double PI = 3.141592653589793238462643383279
 
 
 cdef class Basis:
 
     """
+
     Defines basis functions from primitive Gaussians.
+
     """
 
     cdef:
-        double *origin
-        long   *shell
-        long    num_exps
-        double *exps
-        double *coefs
-        double *norm
+        double *origin      # Coordinates of the basis function
+        long   *shell       # Angular momentum of the basis function
+        long    num_exps    # Number of primitive Gaussians
+        double *exps        # Exponents of primitive Gaussians
+        double *coefs       # Coefficients of primitive Gaussians
+        double *norm        # Normalisation constants of primitive Gaussians
 
     property origin:
+
         def __get__(self):
+
             cdef double[::1] view = <double[:3]> self.origin
+
             return np.asarray(view)
 
     property shell:
+
         def __get__(self):
+
             cdef long[::1] view = <long[:3]> self.shell
+
             return np.asarray(view)
 
     property num_exps:
+
         def __get__(self):
+
             cdef long view = <long> self.num_exps
+
             return view
 
     property exps:
+
         def __get__(self):
+
             cdef double[::1] view = <double[:self.num_exps]> self.exps
+
             return np.asarray(view)
 
     property coefs:
+
         def __get__(self):
+
             cdef double[::1] view = <double[:self.num_exps]> self.coefs
+
             return np.asarray(view)
 
     property norm:
+
         def __get__(self):
+
             cdef double[::1] view = <double[:self.num_exps]> self.norm
+
             return np.asarray(view)
 
+
+
     def __cinit__(self, origin, shell, num_exps, exps, coefs):
+
+        """
+        
+        Initialises Basis class to interface with Python.
+        
+        """
 
         self.origin = <double*>malloc(3 * sizeof(double))
         self.shell  = <long*>malloc(3 * sizeof(long))
@@ -70,15 +94,57 @@ cdef class Basis:
         self.norm = <double*>malloc(num_exps * sizeof(double))
 
         for i in range(3):
+
             self.origin[i] = origin[i]
             self.shell[i] = shell[i]
 
         for i in range(num_exps):
+
             self.exps[i] = exps[i]
             self.coefs[i] = coefs[i]
             self.norm[i] = 0.0
 
         self.normalize()
+
+
+
+    def normalize(self):
+
+        """
+        Normalises the primitives, then normalises the contracted functions.
+
+        """
+
+        l = self.shell[0]
+        m = self.shell[1]
+        n = self.shell[2]
+
+        L = l + m + n
+
+        for i in range(self.num_exps):
+
+            self.norm[i] = sqrt(pow(2, 2 * L + 1.5) * pow(self.exps[i], L + 1.5) / double_fact(2 * l - 1) / double_fact(2 * m - 1) / double_fact(2 * n - 1) / pow(PI, 1.5))
+
+        # Normalises the primitive Gaussians
+
+        prefactor = pow(PI, 1.5) * double_fact(2 * l - 1) * double_fact(2 * m - 1) * double_fact(2 * n - 1) / pow(2.0, L)
+
+        N = 0.0
+
+        for i in range(self.num_exps):
+
+            for j in range(self.num_exps):
+
+                N += self.norm[i] * self.norm[j] * self.coefs[i] * self.coefs[j] / pow(self.exps[i] + self.exps[j], L + 1.5)
+                
+        # Normalises the contracted basis functions
+
+        N = 1 / sqrt(prefactor * N)
+
+        for i in range(self.num_exps):
+
+            self.coefs[i] *= N
+
 
     def __dealloc__(self):
 
@@ -88,818 +154,1029 @@ cdef class Basis:
         if self.coefs != NULL: free(self.coefs)
         if self.norm != NULL: free(self.norm)
 
-    def normalize(self):
-
-        """
-        Normalises the primitives, then normalises the contracted functions.
-        """
-
-        l = self.shell[0]
-        m = self.shell[1]
-        n = self.shell[2]
-
-        L = l + m + n
-
-        for ia in range(self.num_exps):
-            self.norm[ia] = np.sqrt(
-                np.power(2, 2 * (l + m + n) + 1.5)
-                * np.power(self.exps[ia], l + m + n + 1.5)
-                / fact2(2 * l - 1)
-                / fact2(2 * m - 1)
-                / fact2(2 * n - 1)
-                / np.power(pi, 1.5)
-            )
-
-        prefactor = (
-            np.power(pi, 1.5)
-            * fact2(2 * l - 1)
-            * fact2(2 * m - 1)
-            * fact2(2 * n - 1)
-            / np.power(2.0, L)
-        )
-
-        N = 0.0
-        for ia in range(self.num_exps):
-            for ib in range(self.num_exps):
-                N += (
-                    self.norm[ia] * self.norm[ib]
-                    * self.coefs[ia] * self.coefs[ib]
-                    / np.power(self.exps[ia] + self.exps[ib], L + 1.5)
-                )
-
-        N *= prefactor
-        N = np.power(N, -0.5)
-
-        for ia in range(self.num_exps):
-            self.coefs[ia] *= N
 
 
-def fact2(n):
+
+
+
+
+
+cdef inline double double_fact(int n):
+
     """
-    Ensures the correct response of double factorial on a negative number.
+    
+    Calculates a dobule factorial.
+
+    Args:
+        n (int): Integer input
+    
+    Returns:
+        result (float): double_factled integer
+    
     """
-    if n == -1:
-        return factorial2(n, extend="complex")
-    return factorial2(n)
 
+    cdef double result = 1.0
 
-def gaussian_product_center(double a, A, double b, B):
-    """
-    Calculates the centre of a product of Gaussians.
-    """
-    return (a * np.asarray(A) + b * np.asarray(B)) / (a + b)
+    if n <= 0:
 
-
-cdef inline double E(int i, int j, int t, double Qx, double a, double b,
-                     int n=0, double Ax=0.0, dict cache=None):
-
-    cdef double p = a + b
-    cdef double u = a * b / p
-    cdef double res = 0.0
-
-    if n == 0:
-
-        if t < 0 or t > (i + j):
-            return 0.0
-
-        elif i == 0 and j == 0 and t == 0:
-            return exp(-u * Qx * Qx)
-
-        elif j == 0:
-            res = (
-                (1.0 / (2.0 * p)) * E(i - 1, j, t - 1, Qx, a, b, 0, 0.0, cache)
-                - (u * Qx / a) * E(i - 1, j, t, Qx, a, b, 0, 0.0, cache)
-                + (t + 1) * E(i - 1, j, t + 1, Qx, a, b, 0, 0.0, cache)
-            )
-
-        else:
-            res = (
-                (1.0 / (2.0 * p)) * E(i, j - 1, t - 1, Qx, a, b, 0, 0.0, cache)
-                + (u * Qx / b) * E(i, j - 1, t, Qx, a, b, 0, 0.0, cache)
-                + (t + 1) * E(i, j - 1, t + 1, Qx, a, b, 0, 0.0, cache)
-            )
-
-    else:
-        res = E(i + 1, j, t, Qx, a, b, n - 1, Ax, cache) + Ax * E(i, j, t, Qx, a, b, n - 1, Ax, cache)
-
-    return res
-
-
-cdef inline double boys(double m, double T, dict cache=None):
-    """
-    Calculates the Boys function.
-    """
-    return hyp1f1(m + 0.5, m + 1.5, -T) / (2.0 * m + 1.0)
-
-
-cdef inline double odd_double_factorial_from_even(int n_even):
-    """
-    Returns (n_even - 1)!! for even n_even >= 0.
-    Examples:
-        n_even = 0 -> (-1)!! = 1
-        n_even = 2 -> 1
-        n_even = 4 -> 3
-        n_even = 6 -> 15
-    """
-    cdef int k
-    cdef double out = 1.0
-
-    if n_even <= 0:
         return 1.0
 
-    for k in range(n_even - 1, 0, -2):
-        out *= k
+    while n > 1:
 
-    return out
+        result *= n
+        n -= 2
+
+    return result
 
 
-cdef inline bint quartet_is_linear_z(double* A, double* B, double* C, double* D):
+
+
+
+
+
+
+
+
+cpdef double calculate_dipole_integral(object bf_1, object bf_2, dipole_origin, str direction):
+
     """
-    Exact linear-z specialization is valid whenever all four centres share
-    the same x and the same y coordinate (up to a tiny tolerance).
-    """
-    return (
-        fabs(A[0] - B[0]) < LINEAR_TOL and
-        fabs(A[0] - C[0]) < LINEAR_TOL and
-        fabs(A[0] - D[0]) < LINEAR_TOL and
-        fabs(A[1] - B[1]) < LINEAR_TOL and
-        fabs(A[1] - C[1]) < LINEAR_TOL and
-        fabs(A[1] - D[1]) < LINEAR_TOL
-    )
+    
+    Calculates a dipole integral between basis functions, <1| r - dipole_origin |2>.
+    
+    Args:
+        bf_1 (Basis): First basis function
+        bf_2 (Basis): Second basis function
+        dipole_origin (array): Coordinates of electric field gauge origin
+        direction (str): Either "x", "y" or "z"
 
-
-cpdef double[:, :, :, :] doERIs(long N,
-                                double[:, :, :, :] TwoE,
-                                list bfs,
-                                bint use_diatomic_parity=True):
-
-    cdef:
-        long i, j, k, l, l_stop
-        double val
-        Basis bi, bj, bk, bl
-
-    for i in range(N):
-        bi = <Basis>bfs[i]
-
-        for j in range(i + 1):
-            bj = <Basis>bfs[j]
-
-            for k in range(i + 1):
-                bk = <Basis>bfs[k]
-
-                # Enforces (k,l) <= (i,j) in pair-index ordering without forming ij/kl
-                if k == i:
-                    l_stop = j + 1
-                else:
-                    l_stop = k + 1
-
-                for l in range(l_stop):
-                    bl = <Basis>bfs[l]
-
-                    # Exact diatomic (z-axis) parity screening
-                    if use_diatomic_parity and (
-                        ((bi.shell[0] + bj.shell[0] + bk.shell[0] + bl.shell[0]) & 1) or
-                        ((bi.shell[1] + bj.shell[1] + bk.shell[1] + bl.shell[1]) & 1)
-                    ):
-                        val = 0.0
-                    else:
-                        val = ERI(bi, bj, bk, bl)
-
-                    TwoE[i, j, k, l] = val
-                    TwoE[k, l, i, j] = val
-                    TwoE[j, i, l, k] = val
-                    TwoE[l, k, j, i] = val
-                    TwoE[j, i, k, l] = val
-                    TwoE[l, k, i, j] = val
-                    TwoE[i, j, l, k] = val
-                    TwoE[k, l, j, i] = val
-
-    return TwoE
-
-
-cpdef double ERI(Basis a, Basis b, Basis c, Basis d):
-    """
-    Calculates the electron repulsion integrals for contracted Gaussians.
-    Uses a specialized exact kernel for quartets whose centres lie on the z axis.
+    Returns:
+        integral (float): Dipole integral between contracted Gaussians
+        
     """
 
-    cdef double eri = 0.0
-    cdef double primitive = 0.0
-    cdef long ja, jb, jc, jd
-    cdef double an, bn, cn, dn
-    cdef double ac, bc, cc2, dc
-    cdef double pref
-    cdef bint use_linear_z
+    cdef double integral = 0.0
 
-    use_linear_z = quartet_is_linear_z(a.origin, b.origin, c.origin, d.origin)
+    for ia, ca in enumerate(bf_1.coefs):
 
-    for ja in range(a.num_exps):
-        for jb in range(b.num_exps):
-            for jc in range(c.num_exps):
-                for jd in range(d.num_exps):
+        for ib, cb in enumerate(bf_2.coefs):
 
-                    an = a.norm[ja]
-                    ac = a.coefs[ja]
-                    bn = b.norm[jb]
-                    bc = b.coefs[jb]
-                    cn = c.norm[jc]
-                    cc2 = c.coefs[jc]
-                    dn = d.norm[jd]
-                    dc = d.coefs[jd]
+            # Applies coefficients and norms to integrals between primitive Gaussians
 
-                    pref = an * bn * cn * dn * ac * bc * cc2 * dc
-
-                    if use_linear_z:
-                        primitive = electron_repulsion_linear_z(
-                            a.exps[ja], a.shell, a.origin,
-                            b.exps[jb], b.shell, b.origin,
-                            c.exps[jc], c.shell, c.origin,
-                            d.exps[jd], d.shell, d.origin
-                        )
-                    else:
-                        primitive = electron_repulsion(
-                            a.exps[ja], a.shell, a.origin,
-                            b.exps[jb], b.shell, b.origin,
-                            c.exps[jc], c.shell, c.origin,
-                            d.exps[jd], d.shell, d.origin
-                        )
-
-                    eri += pref * primitive
-
-    return eri
+            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * dipole(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, dipole_origin, direction)
 
 
-cdef inline void fill_boys_table(int M, double T, double* F):
+    return integral
+
+
+
+
+
+
+
+
+
+def dipole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, dipole_origin: ndarray, direction: str) -> float:
+   
     """
-    Fill F[0..M] with Boys values F_m(T).
-    Uses one hyp1f1 evaluation at m=M, then downward recurrence:
-        F_{m-1} = (2*T*F_m + exp(-T)) / (2m - 1)
-    """
-    cdef int m
-    cdef double e, twoT
+    
+    Calculates a Cartesian component of a dipole integral between primitive Gaussians, <1| r - dipole_origin |2>.
+    
+    Args:
+        exponent_1 (float): Gaussian exponent on first centre
+        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
+        centre_1 (array): Coordinates of first centre
+        exponent_2 (float): Gaussian exponent on second centre
+        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
+        centre_2 (array): Coordinates of second centre
+        dipole_origin (array): Electric field origin
+        direction (str): Either "x", "y" or "z"
+    
+    Returns:
+        integral (float): Dipole integral between primitive Gaussians
 
-    if T == 0.0:
-        for m in range(M + 1):
-            F[m] = 1.0 / (2.0 * m + 1.0)
-        return
-
-    F[M] = hyp1f1(M + 0.5, M + 1.5, -T) / (2.0 * M + 1.0)
-
-    e = exp(-T)
-    twoT = 2.0 * T
-
-    for m in range(M, 0, -1):
-        F[m - 1] = (twoT * F[m] + e) / (2.0 * m - 1.0)
-
-
-cdef inline void fill_pow_table(int M, double p, double* P):
-    """
-    P[n] = (-2*p)^n for n=0..M.
-    """
-    cdef int n
-    cdef double fac = -2.0 * p
-
-    P[0] = 1.0
-    for n in range(1, M + 1):
-        P[n] = P[n - 1] * fac
-
-
-cdef inline void fill_Rz_linear_table(int Vmax, int Nmax, double PCz,
-                                      double* boys_tab, double* pow_tab,
-                                      double* Rz):
-    """
-    Fills a row-major table Rz[v, n] = R(0,0,v,n) for the linear-z case.
-    stride = Nmax + 1
-    """
-    cdef int v, n, stride = Nmax + 1
-
-    # Base row: Rz[0, n] = (-2*alpha)^n F_n(T)
-    for n in range(Nmax + 1):
-        Rz[n] = pow_tab[n] * boys_tab[n]
-
-    # Recurrence:
-    # Rz(v,n) = PCz * Rz(v-1,n+1) + (v-1) * Rz(v-2,n+1)
-    for v in range(1, Vmax + 1):
-        for n in range(Nmax - v, -1, -1):
-            Rz[v * stride + n] = PCz * Rz[(v - 1) * stride + (n + 1)]
-            if v > 1:
-                Rz[v * stride + n] += (v - 1) * Rz[(v - 2) * stride + (n + 1)]
-
-
-cdef inline double R(int t, int u, int v, int n,
-                     double p, double PCx, double PCy, double PCz, double RPC,
-                     dict cache=None,
-                     double* boys_tab=NULL,
-                     double* pow_tab=NULL):
-
-    cdef double val = 0.0
-    cdef long long key
-    cdef object tmp
-
-    if cache is not None:
-        key = ((<long long>t) << 48) | ((<long long>u) << 32) | ((<long long>v) << 16) | (<long long>n)
-        tmp = cache.get(key, None)
-        if tmp is not None:
-            return <double>tmp
-
-    if t == 0 and u == 0 and v == 0:
-        if boys_tab != NULL and pow_tab != NULL:
-            val = pow_tab[n] * boys_tab[n]
-        else:
-            val = pow(-2.0 * p, n) * boys(n, p * RPC * RPC)
-
-    elif t == 0 and u == 0:
-        if v > 1:
-            val += (v - 1) * R(t, u, v - 2, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
-        val += PCz * R(t, u, v - 1, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
-
-    elif t == 0:
-        if u > 1:
-            val += (u - 1) * R(t, u - 2, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
-        val += PCy * R(t, u - 1, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
-
-    else:
-        if t > 1:
-            val += (t - 1) * R(t - 2, u, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
-        val += PCx * R(t - 1, u, v, n + 1, p, PCx, PCy, PCz, RPC, cache, boys_tab, pow_tab)
-
-    if cache is not None:
-        cache[key] = val
-
-    return val
-
-
-cdef double electron_repulsion_linear_z(double a, long *lmn1, double *A,
-                                        double b, long *lmn2, double *B,
-                                        double c, long *lmn3, double *C,
-                                        double d, long *lmn4, double *D):
-    """
-    Exact primitive ERI specialization for quartets whose centres lie on the z axis
-    (more precisely: all four centres share the same x and y coordinates).
-
-    Uses:
-      - x/y parity selection rules
-      - x/y collapse of the Hermite Coulomb recurrence
-      - a z-only auxiliary table Rz(v,n) = R(0,0,v,n)
     """
 
-    cdef:
-        long l1 = lmn1[0]
-        long m1 = lmn1[1]
-        long n1 = lmn1[2]
-        long l2 = lmn2[0]
-        long m2 = lmn2[1]
-        long n2 = lmn2[2]
-        long l3 = lmn3[0]
-        long m3 = lmn3[1]
-        long n3 = lmn3[2]
-        long l4 = lmn4[0]
-        long m4 = lmn4[1]
-        long n4 = lmn4[2]
+    l_1, m_1, n_1 = angmom_1
+    l_2, m_2, n_2 = angmom_2
 
-        double p = a + b
-        double q = c + d
-        double alpha = p * q / (p + q)
+    R_12 = centre_1 - centre_2
 
-        double Pz = (a * A[2] + b * B[2]) / p
-        double Qz = (c * C[2] + d * D[2]) / q
-        double PCz = Pz - Qz
-        double RPQ = fabs(PCz)
+    exponent_sum = exponent_1 + exponent_2
+    prefactor = pow(PI / exponent_sum, 1.5)
 
-        double ABz = A[2] - B[2]
-        double CDz = C[2] - D[2]
+    P = (exponent_1 * centre_1 + exponent_2 * centre_2) / exponent_sum - dipole_origin
 
-        int ntx = <int>(l1 + l2 + 1)
-        int nty = <int>(m1 + m2 + 1)
-        int ntz = <int>(n1 + n2 + 1)
+    # Calculates the overlap integrals between primitive Gaussians
+    
+    Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
+    Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
+    Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
 
-        int nkx = <int>(l3 + l4 + 1)
-        int nky = <int>(m3 + m4 + 1)
-        int nkz = <int>(n3 + n4 + 1)
-
-        int Vmax = <int>(n1 + n2 + n3 + n4)
-        int Mmax = <int>((l1 + m1 + n1) + (l2 + m2 + n2) + (l3 + m3 + n3) + (l4 + m4 + n4))
-        int stride = Mmax + 1
-
-        int t, u, v, tau, nu, phi
-        int Tx, Uy, W, nx, nxy
-
-        double val = 0.0
-        double pref
-        double ex, ey, ez, exk, eyk, ezk
-        double xfac, xyfac
-        double sign_xy, sign
-
-        double *Etx = NULL
-        double *Ety = NULL
-        double *Etz = NULL
-        double *Eux = NULL
-        double *Euy = NULL
-        double *Euz = NULL
-
-        double *boys_tab = NULL
-        double *pow_tab  = NULL
-        double *Rz = NULL
-
-    if PyErr_CheckSignals() != 0:
-        return 0.0
-
-    Etx = <double*>malloc(ntx * sizeof(double))
-    Ety = <double*>malloc(nty * sizeof(double))
-    Etz = <double*>malloc(ntz * sizeof(double))
-    Eux = <double*>malloc(nkx * sizeof(double))
-    Euy = <double*>malloc(nky * sizeof(double))
-    Euz = <double*>malloc(nkz * sizeof(double))
-
-    if Etx == NULL or Ety == NULL or Etz == NULL or Eux == NULL or Euy == NULL or Euz == NULL:
-        if Etx != NULL: free(Etx)
-        if Ety != NULL: free(Ety)
-        if Etz != NULL: free(Etz)
-        if Eux != NULL: free(Eux)
-        if Euy != NULL: free(Euy)
-        if Euz != NULL: free(Euz)
-        return 0.0
-
-    boys_tab = <double*>malloc((Mmax + 1) * sizeof(double))
-    pow_tab  = <double*>malloc((Mmax + 1) * sizeof(double))
-    Rz       = <double*>malloc((Vmax + 1) * (Mmax + 1) * sizeof(double))
-
-    if boys_tab == NULL or pow_tab == NULL or Rz == NULL:
-        if boys_tab != NULL: free(boys_tab)
-        if pow_tab  != NULL: free(pow_tab)
-        if Rz       != NULL: free(Rz)
-        free(Etx); free(Ety); free(Etz)
-        free(Eux); free(Euy); free(Euz)
-        return 0.0
-
-    fill_boys_table(Mmax, alpha * RPQ * RPQ, boys_tab)
-    fill_pow_table(Mmax, alpha, pow_tab)
-    fill_Rz_linear_table(Vmax, Mmax, PCz, boys_tab, pow_tab, Rz)
-
-    # x and y displacements are exactly zero in the specialized geometry
-    for t in range(ntx):
-        if ((l1 + l2 + t) & 1):
-            Etx[t] = 0.0
-        else:
-            Etx[t] = E(l1, l2, t, 0.0, a, b)
-
-    for u in range(nty):
-        if ((m1 + m2 + u) & 1):
-            Ety[u] = 0.0
-        else:
-            Ety[u] = E(m1, m2, u, 0.0, a, b)
-
-    for v in range(ntz):
-        Etz[v] = E(n1, n2, v, ABz, a, b)
-
-    for tau in range(nkx):
-        if ((l3 + l4 + tau) & 1):
-            Eux[tau] = 0.0
-        else:
-            Eux[tau] = E(l3, l4, tau, 0.0, c, d)
-
-    for nu in range(nky):
-        if ((m3 + m4 + nu) & 1):
-            Euy[nu] = 0.0
-        else:
-            Euy[nu] = E(m3, m4, nu, 0.0, c, d)
-
-    for phi in range(nkz):
-        Euz[phi] = E(n3, n4, phi, CDz, c, d)
-
-    for t in range(ntx):
-        ex = Etx[t]
-        if ex == 0.0:
-            continue
-
-        for tau in range(nkx):
-            exk = Eux[tau]
-            if exk == 0.0:
-                continue
-
-            Tx = t + tau
-
-            # Should be even for surviving quartets, but keep the guard explicit.
-            if (Tx & 1):
-                continue
-
-            nx = Tx >> 1
-            xfac = ex * exk * odd_double_factorial_from_even(Tx)
-
-            for u in range(nty):
-                ey = Ety[u]
-                if ey == 0.0:
-                    continue
-
-                for nu in range(nky):
-                    eyk = Euy[nu]
-                    if eyk == 0.0:
-                        continue
-
-                    Uy = u + nu
-                    if (Uy & 1):
-                        continue
-
-                    nxy = nx + (Uy >> 1)
-                    xyfac = xfac * ey * eyk * odd_double_factorial_from_even(Uy)
-                    sign_xy = -1.0 if ((tau + nu) & 1) else 1.0
-
-                    for v in range(ntz):
-                        ez = Etz[v]
-                        if ez == 0.0:
-                            continue
-
-                        for phi in range(nkz):
-                            ezk = Euz[phi]
-                            if ezk == 0.0:
-                                continue
-
-                            W = v + phi
-                            sign = -sign_xy if (phi & 1) else sign_xy
-
-                            val += xyfac * ez * ezk * sign * Rz[W * stride + nxy]
-
-    pref = 2.0 * pow(pi, 2.5) / (p * q * sqrt(p + q))
-    val *= pref
-
-    free(Etx); free(Ety); free(Etz)
-    free(Eux); free(Euy); free(Euz)
-    free(boys_tab); free(pow_tab); free(Rz)
-
-    return val
-
-
-cdef double electron_repulsion(double a, long *lmn1, double *A,
-                               double b, long *lmn2, double *B,
-                               double c, long *lmn3, double *C,
-                               double d, long *lmn4, double *D):
-    """
-    General primitive ERI kernel retained as the fallback for non-linear quartets.
-    """
-
-    cdef:
-        long l1 = lmn1[0], m1 = lmn1[1], n1 = lmn1[2]
-        long l2 = lmn2[0], m2 = lmn2[1], n2 = lmn2[2]
-        long l3 = lmn3[0], m3 = lmn3[1], n3 = lmn3[2]
-        long l4 = lmn4[0], m4 = lmn4[1], n4 = lmn4[2]
-
-        double p = a + b
-        double q = c + d
-        double alpha = p * q / (p + q)
-
-        double Px = (a * A[0] + b * B[0]) / p
-        double Py = (a * A[1] + b * B[1]) / p
-        double Pz = (a * A[2] + b * B[2]) / p
-        double Qx = (c * C[0] + d * D[0]) / q
-        double Qy = (c * C[1] + d * D[1]) / q
-        double Qz = (c * C[2] + d * D[2]) / q
-
-        double dx = Px - Qx
-        double dy = Py - Qy
-        double dz = Pz - Qz
-        double RPQ = sqrt(dx * dx + dy * dy + dz * dz)
-
-        double ABx = A[0] - B[0]
-        double ABy = A[1] - B[1]
-        double ABz = A[2] - B[2]
-        double CDx = C[0] - D[0]
-        double CDy = C[1] - D[1]
-        double CDz = C[2] - D[2]
-
-        long t, u, v, tau, nu, phi
-        double val = 0.0
-        double Eu, sign, pref
-
-        dict R_cache = {}
-
-        int nt   = <int>(l1 + l2 + 1)
-        int nuu  = <int>(m1 + m2 + 1)
-        int nv   = <int>(n1 + n2 + 1)
-        int ntau = <int>(l3 + l4 + 1)
-        int nnu  = <int>(m3 + m4 + 1)
-        int nphi = <int>(n3 + n4 + 1)
-
-        int Mmax = <int>((l1 + m1 + n1) + (l2 + m2 + n2) + (l3 + m3 + n3) + (l4 + m4 + n4))
-        double Tval = alpha * RPQ * RPQ
-
-        double *Etx = NULL
-        double *Ety = NULL
-        double *Etz = NULL
-        double *Eux = NULL
-        double *Euy = NULL
-        double *Euz = NULL
-
-        double *boys_tab = NULL
-        double *pow_tab  = NULL
-
-    if PyErr_CheckSignals() != 0:
-        return 0.0
-
-    Etx = <double*>malloc(nt   * sizeof(double))
-    Ety = <double*>malloc(nuu  * sizeof(double))
-    Etz = <double*>malloc(nv   * sizeof(double))
-    Eux = <double*>malloc(ntau * sizeof(double))
-    Euy = <double*>malloc(nnu  * sizeof(double))
-    Euz = <double*>malloc(nphi * sizeof(double))
-
-    if Etx == NULL or Ety == NULL or Etz == NULL or Eux == NULL or Euy == NULL or Euz == NULL:
-        if Etx != NULL: free(Etx)
-        if Ety != NULL: free(Ety)
-        if Etz != NULL: free(Etz)
-        if Eux != NULL: free(Eux)
-        if Euy != NULL: free(Euy)
-        if Euz != NULL: free(Euz)
-        return 0.0
-
-    boys_tab = <double*>malloc((Mmax + 1) * sizeof(double))
-    pow_tab  = <double*>malloc((Mmax + 1) * sizeof(double))
-    if boys_tab == NULL or pow_tab == NULL:
-        if boys_tab != NULL: free(boys_tab)
-        if pow_tab  != NULL: free(pow_tab)
-        free(Etx); free(Ety); free(Etz)
-        free(Eux); free(Euy); free(Euz)
-        return 0.0
-
-    fill_boys_table(Mmax, Tval, boys_tab)
-    fill_pow_table(Mmax, alpha, pow_tab)
-
-    for t in range(nt):
-        Etx[t] = E(l1, l2, t, ABx, a, b)
-    for u in range(nuu):
-        Ety[u] = E(m1, m2, u, ABy, a, b)
-    for v in range(nv):
-        Etz[v] = E(n1, n2, v, ABz, a, b)
-
-    for tau in range(ntau):
-        Eux[tau] = E(l3, l4, tau, CDx, c, d)
-    for nu in range(nnu):
-        Euy[nu] = E(m3, m4, nu, CDy, c, d)
-    for phi in range(nphi):
-        Euz[phi] = E(n3, n4, phi, CDz, c, d)
-
-    for t in range(nt):
-        for u in range(nuu):
-            for v in range(nv):
-
-                Eu = Etx[t] * Ety[u] * Etz[v]
-
-                for tau in range(ntau):
-                    for nu in range(nnu):
-                        for phi in range(nphi):
-
-                            sign = -1.0 if ((tau + nu + phi) & 1) else 1.0
-
-                            val += Eu * Eux[tau] * Euy[nu] * Euz[phi] * sign * \
-                                   R(t + tau, u + nu, v + phi, 0,
-                                     alpha, Px - Qx, Py - Qy, Pz - Qz, RPQ,
-                                     R_cache, boys_tab, pow_tab)
-
-    pref = 2.0 * pow(pi, 2.5) / (p * q * sqrt(p + q))
-    val *= pref
-
-    free(Etx); free(Ety); free(Etz)
-    free(Eux); free(Euy); free(Euz)
-    free(boys_tab)
-    free(pow_tab)
-
-    return val
-
-
-cpdef double S(object a, object b):
-
-    cdef double s = 0.0
-
-    for ia, ca in enumerate(a.coefs):
-        for ib, cb in enumerate(b.coefs):
-            s += a.norm[ia] * b.norm[ib] * ca * cb * overlap(a.exps[ia], a.shell, a.origin, b.exps[ib], b.shell, b.origin)
-
-    return s
-
-
-cpdef double Mu(object a, object b, C, str direction):
-
-    cdef double mu = 0.0
-
-    for ia, ca in enumerate(a.coefs):
-        for ib, cb in enumerate(b.coefs):
-            mu += a.norm[ia] * b.norm[ib] * ca * cb * dipole(a.exps[ia], a.shell, a.origin, b.exps[ib], b.shell, b.origin, C, direction)
-
-    return mu
-
-
-cpdef double T(object a, object b):
-
-    cdef double t = 0.0
-
-    for ia, ca in enumerate(a.coefs):
-        for ib, cb in enumerate(b.coefs):
-            t += a.norm[ia] * b.norm[ib] * ca * cb * kinetic(a.exps[ia], a.shell, a.origin, b.exps[ib], b.shell, b.origin)
-
-    return t
-
-
-cpdef double V(object a, object b, double[:] C):
-
-    cdef double v = 0.0
-
-    for ia, ca in enumerate(a.coefs):
-        for ib, cb in enumerate(b.coefs):
-            v += a.norm[ia] * b.norm[ib] * ca * cb * nuclear_attraction(a.exps[ia], a.shell, a.origin, b.exps[ib], b.shell, b.origin, C)
-
-    return v
-
-
-def overlap(a, lmn1, A, b, lmn2, B):
-
-    l1, m1, n1 = lmn1
-    l2, m2, n2 = lmn2
-
-    S1 = E(l1, l2, 0, A[0] - B[0], a, b)
-    S2 = E(m1, m2, 0, A[1] - B[1], a, b)
-    S3 = E(n1, n2, 0, A[2] - B[2], a, b)
-
-    return S1 * S2 * S3 * np.power(pi / (a + b), 1.5)
-
-
-def dipole(a, lmn1, A, b, lmn2, B, C, direction):
-
-    l1, m1, n1 = lmn1
-    l2, m2, n2 = lmn2
-
-    P = gaussian_product_center(a, A, b, B)
+    # Only calculates one component of the dipole integrals
 
     if direction.lower() == "x":
 
-        XPC = P[0] - C[0]
-        D  = E(l1, l2, 1, A[0] - B[0], a, b) + XPC * E(l1, l2, 0, A[0] - B[0], a, b)
-        S2 = E(m1, m2, 0, A[1] - B[1], a, b)
-        S3 = E(n1, n2, 0, A[2] - B[2], a, b)
+        Dx = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2) + P[0] * Sx
 
-        return D * S2 * S3 * np.power(pi / (a + b), 1.5)
+        integral = prefactor * Dx * Sy * Sz
 
     elif direction.lower() == "y":
 
-        YPC = P[1] - C[1]
-        S1 = E(l1, l2, 0, A[0] - B[0], a, b)
-        D  = E(m1, m2, 1, A[1] - B[1], a, b) + YPC * E(m1, m2, 0, A[1] - B[1], a, b)
-        S3 = E(n1, n2, 0, A[2] - B[2], a, b)
+        Dy = hermite_coeff(m_1, m_2, 1, R_12[1], exponent_1, exponent_2) + P[1] * Sy
 
-        return S1 * D * S3 * np.power(pi / (a + b), 1.5)
+        integral = prefactor * Sx * Dy * Sz
 
     elif direction.lower() == "z":
 
-        ZPC = P[2] - C[2]
-        S1 = E(l1, l2, 0, A[0] - B[0], a, b)
-        S2 = E(m1, m2, 0, A[1] - B[1], a, b)
-        D  = E(n1, n2, 1, A[2] - B[2], a, b) + ZPC * E(n1, n2, 0, A[2] - B[2], a, b)
+        Dz = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2) + P[2] * Sz
 
-        return S1 * S2 * D * np.power(pi / (a + b), 1.5)
+        integral = prefactor * Sx * Sy * Dz
 
 
-def kinetic(a, lmn1, A, b, lmn2, B):
-
-    l1, m1, n1 = lmn1
-    l2, m2, n2 = lmn2
-
-    Ax, Ay, Az = (2 * np.asarray(lmn2) + 1) * b
-    Bx = By = Bz = -2 * np.power(b, 2)
-    Cx, Cy, Cz = -0.5 * np.asarray(lmn2) * (np.asarray(lmn2) - 1)
-
-    Tx = Ax * E(l1, l2, 0, A[0] - B[0], a, b) + Bx * E(l1, l2 + 2, 0, A[0] - B[0], a, b) + Cx * E(l1, l2 - 2, 0, A[0] - B[0], a, b)
-    Tx *= E(m1, m2, 0, A[1] - B[1], a, b)
-    Tx *= E(n1, n2, 0, A[2] - B[2], a, b)
-
-    Ty = Ay * E(m1, m2, 0, A[1] - B[1], a, b) + By * E(m1, m2 + 2, 0, A[1] - B[1], a, b) + Cy * E(m1, m2 - 2, 0, A[1] - B[1], a, b)
-    Ty *= E(l1, l2, 0, A[0] - B[0], a, b)
-    Ty *= E(n1, n2, 0, A[2] - B[2], a, b)
-
-    Tz = Az * E(n1, n2, 0, A[2] - B[2], a, b) + Bz * E(n1, n2 + 2, 0, A[2] - B[2], a, b) + Cz * E(n1, n2 - 2, 0, A[2] - B[2], a, b)
-    Tz *= E(l1, l2, 0, A[0] - B[0], a, b)
-    Tz *= E(m1, m2, 0, A[1] - B[1], a, b)
-
-    return (Tx + Ty + Tz) * np.power(pi / (a + b), 1.5)
+    return integral
 
 
-def nuclear_attraction(a, lmn1, A, b, lmn2, B, C):
 
-    l1, m1, n1 = lmn1
-    l2, m2, n2 = lmn2
 
-    p = a + b
-    P = np.asarray(gaussian_product_center(a, A, b, B))
-    RPC = np.linalg.norm(P - C)
 
-    val = 0.0
 
-    for t in range(l1 + l2 + 1):
-        for u in range(m1 + m2 + 1):
-            for v in range(n1 + n2 + 1):
-                val += (
-                    E(l1, l2, t, A[0] - B[0], a, b)
-                    * E(m1, m2, u, A[1] - B[1], a, b)
-                    * E(n1, n2, v, A[2] - B[2], a, b)
-                    * R(t, u, v, 0, p, P[0] - C[0], P[1] - C[1], P[2] - C[2], RPC)
-                )
 
-    val *= 2.0 * pi / p
-    return val
+
+
+cpdef double calculate_nuclear_electron_integral(object bf_1, object bf_2, double[:] nucleus):
+
+    """
+    
+    Calculates a nuclear-electron integral between basis functions, <1| 1/(r-R_N) |2>.
+    
+    Args:
+        bf_1 (Basis): First basis function
+        bf_2 (Basis): Second basis function
+        nucleus (array): Coordinates of nucleus
+
+    Returns:
+        integral (float): Nuclear-electron integral between contracted Gaussians
+        
+    """
+
+    cdef double integral = 0.0
+
+    for ia, ca in enumerate(bf_1.coefs):
+
+        for ib, cb in enumerate(bf_2.coefs):
+
+            # Applies coefficients and norms to integrals between primitive Gaussians
+
+            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * nuclear_attraction(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, nucleus)
+
+
+    return integral
+
+
+
+
+
+
+
+
+
+
+def nuclear_attraction(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, nucleus: ndarray) -> float:
+
+    """
+    
+    Calculates a nuclear-electron integral between primitive Gaussians, <1| 1/(r-R_N) |2>.
+    
+    Args:
+        exponent_1 (float): Gaussian exponent on first centre
+        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
+        centre_1 (array): Coordinates of first centre
+        exponent_2 (float): Gaussian exponent on second centre
+        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
+        centre_2 (array): Coordinates of second centre
+        nucleus (array): Coordinates of nucleus
+    
+    Returns:
+        integral (float): Nuclear-electron integral between primitive Gaussian
+
+    """
+
+    l_1, m_1, n_1 = angmom_1
+    l_2, m_2, n_2 = angmom_2
+
+    cdef double exponent_sum = exponent_1 + exponent_2
+    cdef double PCz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum - nucleus[2]
+    cdef double Rz_12 = centre_1[2] - centre_2[2]
+
+    cdef int Vmax = n_1 + n_2
+    cdef int Nmax = l_1 + l_2 + m_1 + m_2 + n_1 + n_2
+    cdef int stride = Nmax + 1
+
+    cdef double *boys_tab = <double*>malloc((Nmax + 1) * sizeof(double))
+    cdef double *pow_tab = <double*>malloc((Nmax + 1) * sizeof(double))
+    cdef double *Rz = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
+
+    cdef double integral = 0.0
+    cdef double Ex, Ey, Ez
+    cdef int t, u, v, nxy
+
+    fill_boys_table(Nmax, exponent_sum * PCz * PCz, boys_tab)
+    fill_pow_table(Nmax, exponent_sum, pow_tab)
+    fill_Rz_linear_table(Vmax, Nmax, PCz, boys_tab, pow_tab, Rz)
+
+
+    for t in range(0, l_1 + l_2 + 1, 2):
+
+        Ex = hermite_coeff(l_1, l_2, t, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(t)
+
+        for u in range(0, m_1 + m_2 + 1, 2):
+
+            Ey = hermite_coeff(m_1, m_2, u, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(u)
+
+            for v in range(n_1 + n_2 + 1):
+
+                Ez = hermite_coeff(n_1, n_2, v, Rz_12, exponent_1, exponent_2)
+
+                integral += Ex * Ey * Ez * Rz[v * stride + (t + u) // 2]
+
+
+    free(boys_tab)
+    free(pow_tab)
+    free(Rz)
+
+    integral *= 2.0 * PI / exponent_sum
+
+    return integral
+
+
+
+
+
+
+
+
+
+cpdef double calculate_kinetic_integral(object bf_1, object bf_2):
+
+    """
+    
+    Calculates a kinetic integral between basis functions, <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.
+    
+    Args:
+        bf_1 (Basis): First basis function
+        bf_2 (Basis): Second basis function
+
+    Returns:
+        integral (float): Kinetic integral between contracted Gaussians
+        
+    """
+
+    cdef double integral = 0.0
+
+    for ia, ca in enumerate(bf_1.coefs):
+
+        for ib, cb in enumerate(bf_2.coefs):
+
+            # Applies coefficients and norms to integrals between primitive Gaussians
+
+            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * kinetic(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin)
+
+
+    return integral
+
+
+
+
+
+
+
+
+
+def kinetic(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:
+
+    """
+    
+    Calculates a kinetic integral between primitive Gaussians, -1/2 * <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.
+    
+    Args:
+        exponent_1 (float): Gaussian exponent on first centre
+        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
+        centre_1 (array): Coordinates of first centre
+        exponent_2 (float): Gaussian exponent on second centre
+        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
+        centre_2 (array): Coordinates of second centre
+    
+    Returns:
+        integral (float): Kinetic integral between primitive Gaussian
+
+    """
+
+    l_1, m_1, n_1 = angmom_1
+    l_2, m_2, n_2 = angmom_2
+
+    R_12 = centre_1 - centre_2
+
+    A = (2 * angmom_2 + 1) * exponent_2
+    B = -2 * exponent_2 * exponent_2
+    C = -0.5 * angmom_2 * (angmom_2 - 1)
+
+    # Overlap integrals for each Cartesian component
+
+    Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
+    Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
+    Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
+
+    # For each Cartesian component, calculate the second derivative then multiply by overlaps of other two components
+
+    Tx = A[0] * Sx + B * hermite_coeff(l_1, l_2 + 2, 0, R_12[0], exponent_1, exponent_2) + C[0] * hermite_coeff(l_1, l_2 - 2, 0, R_12[0], exponent_1, exponent_2)
+    Ty = A[1] * Sy + B * hermite_coeff(m_1, m_2 + 2, 0, R_12[1], exponent_1, exponent_2) + C[1] * hermite_coeff(m_1, m_2 - 2, 0, R_12[1], exponent_1, exponent_2)
+    Tz = A[2] * Sz + B * hermite_coeff(n_1, n_2 + 2, 0, R_12[2], exponent_1, exponent_2) + C[2] * hermite_coeff(n_1, n_2 - 2, 0, R_12[2], exponent_1, exponent_2)
+
+    # Combines the three Cartesian components into the integral
+
+    integral = (Tx * Sy * Sz + Sx * Ty * Sz + Sx * Sy * Tz) * pow(PI / (exponent_1 + exponent_2), 1.5)
+
+    return integral
+
+
+
+
+
+
+
+    
+cpdef double calculate_overlap_integral(object bf_1, object bf_2):
+
+    """
+    
+    Calculates an overlap integral between basis functions, <1|2>.
+    
+    Args:
+        bf_1 (Basis): First basis function
+        bf_2 (Basis): Second basis function
+
+    Returns:
+        integral (float): Overlap integral between contracted Gaussians
+        
+    """
+
+    cdef double integral = 0.0
+
+    for ia, ca in enumerate(bf_1.coefs):
+
+        for ib, cb in enumerate(bf_2.coefs):
+            
+            # Applies coefficients and norms to integrals between primitive Gaussians
+
+            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * overlap(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin)
+
+
+    return integral
+
+
+
+
+
+
+
+
+def overlap(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:
+
+    """
+    
+    Calculates an overlap integral between primitive Gaussians, <1|2>.
+    
+    Args:
+        exponent_1 (float): Gaussian exponent on first centre
+        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
+        centre_1 (array): Coordinates of first centre
+        exponent_2 (float): Gaussian exponent on second centre
+        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
+        centre_2 (array): Coordinates of second centre
+    
+    Returns:
+        integral (float): Overlap integral between primitive Gaussian
+
+    """
+
+    l_1, m_1, n_1 = angmom_1
+    l_2, m_2, n_2 = angmom_2
+
+    # Calculates the Cartesian components of the overlap integral
+
+    Sx = hermite_coeff(l_1, l_2, 0, centre_1[0] - centre_2[0], exponent_1, exponent_2) 
+    Sy = hermite_coeff(m_1, m_2, 0, centre_1[1] - centre_2[1], exponent_1, exponent_2) 
+    Sz = hermite_coeff(n_1, n_2, 0, centre_1[2] - centre_2[2], exponent_1, exponent_2)
+ 
+    integral = Sx * Sy * Sz * pow(PI / (exponent_1 + exponent_2), 1.5)
+
+    return integral
+
+
+
+
+
+
+
+
+
+cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, double[:, :, :, :] ERI_AO, list bfs):
+
+    """
+    
+    Calculates the electron repulsion integrals array between basis functions, <12(r)| 1/(r-r') |34(r')>.
+    
+    Args:
+        n_basis (int): Number of basis functions
+        ERI_AO (array): Electron repulsion integrals zeroed array
+        bfs (list): List of basis functions
+
+    Returns:
+        ERI_AO (array): Electron repulsion integrals
+        
+    """
+
+    cdef:
+        long i, j, k, l, l_stop
+        double integral
+        Basis bf_1, bf_2, bf_3, bf_4
+
+    for i in range(n_basis):
+
+        bf_1 = <Basis>bfs[i]
+
+        for j in range(i + 1):
+
+            bf_2 = <Basis>bfs[j]
+
+            for k in range(i + 1):
+
+                bf_3 = <Basis>bfs[k]
+
+                # Enforces (k,l) <= (i,j) in pair-index ordering
+
+                l_stop = j + 1 if k == i else k + 1
+
+                for l in range(l_stop):
+
+                    bf_4 = <Basis>bfs[l]
+
+                    # Checks if the sum of angular momenta is odd, in which case, for a diatomic, the integral is zero
+
+                    if (
+                        ((bf_1.shell[0] + bf_2.shell[0] + bf_3.shell[0] + bf_4.shell[0]) & 1) or
+                        ((bf_1.shell[1] + bf_2.shell[1] + bf_3.shell[1] + bf_4.shell[1]) & 1)
+                    ):
+
+                        integral = 0.0
+
+                    else:
+
+                        integral = calculate_electron_repulsion_integral(bf_1, bf_2, bf_3, bf_4)
+
+                    # Enforces the eightfold symmetry of two-electron integrals, saving lots of time
+
+                    ERI_AO[i, j, k, l] = integral
+                    ERI_AO[k, l, i, j] = integral
+                    ERI_AO[j, i, l, k] = integral
+                    ERI_AO[l, k, j, i] = integral
+                    ERI_AO[j, i, k, l] = integral
+                    ERI_AO[l, k, i, j] = integral
+                    ERI_AO[i, j, l, k] = integral
+                    ERI_AO[k, l, j, i] = integral
+
+
+    return ERI_AO
+
+
+
+
+
+
+
+
+
+cpdef double calculate_electron_repulsion_integral(Basis bf_1, Basis bf_2, Basis bf_3, Basis bf_4):
+
+    """
+    
+    Calculates an electron repulsion integral between basis functions, <12(r)| 1/(r-r') |34(r')>.
+    
+    Args:
+        bf_1 (Basis): First basis function
+        bf_2 (Basis): Second basis function
+        bf_3 (Basis): Third basis function
+        bf_4 (Basis): Fourth basis function
+
+    Returns:
+        integral (float): Electron repulsion integral between contracted Gaussians
+        
+    """
+
+    cdef double integral = 0.0
+    cdef double primitive_value
+    cdef long i, j, k, l
+    cdef double contraction_prefactor
+
+    for i in range(bf_1.num_exps):
+
+        for j in range(bf_2.num_exps):
+
+            for k in range(bf_3.num_exps):
+
+                for l in range(bf_4.num_exps):
+
+                    # Applies coefficients and norms to integrals between primitive Gaussians
+
+                    contraction_prefactor = bf_1.norm[i] * bf_2.norm[j] * bf_3.norm[k] * bf_4.norm[l] * bf_1.coefs[i] * bf_2.coefs[j] * bf_3.coefs[k] * bf_4.coefs[l]
+        
+                    primitive_value = electron_repulsion(bf_1.exps[i], bf_1.shell, bf_1.origin, bf_2.exps[j], bf_2.shell, bf_2.origin, bf_3.exps[k], bf_3.shell, bf_3.origin, bf_4.exps[l], bf_4.shell, bf_4.origin)
+
+                    integral += contraction_prefactor * primitive_value
+
+
+    return integral
+
+
+
+
+
+
+
+
+
+
+cdef inline double hermite_coeff(int l_1, int l_2, int t, double R_12, double exponent_1, double exponent_2):
+
+    """
+    
+    Calculates the Hermite coefficient by recursion.
+    
+    Args:
+        l_1 (int): Angular momentum on first Gaussian
+        l_2 (int): Angular momentum on second Gaussian
+        t (int): Hermite index
+        R_12 (float): Distance between primitive Gaussian centres
+        exponent_1 (float): Exponent on first primitive Gaussian
+        exponent_2 (float): Exponent on second primitive Gaussian
+
+    Returns:
+        result (float): Hermite coefficient
+        
+    """
+
+    cdef double exponent_sum = exponent_1 + exponent_2
+    cdef double u = exponent_1 * exponent_2 / exponent_sum
+    cdef double prefactor = 1.0 / (2.0 * exponent_sum)
+    cdef double result = 0.0
+
+    # Checks for an invalid Hermite coefficient
+
+    if t < 0 or t > (l_1 + l_2):
+
+        return 0.0
+
+    # Calculates the Hermite coefficient for (s|s) integrals
+
+    elif l_1 == 0 and l_2 == 0 and t == 0:
+
+        return exp(-u * R_12 * R_12)
+
+    # Build up angular momentum on Gaussian 1, for (X|s)
+
+    elif l_2 == 0:
+
+        result = prefactor * hermite_coeff(l_1 - 1, l_2, t - 1, R_12, exponent_1, exponent_2)
+        result += - (u * R_12 / exponent_1) * hermite_coeff(l_1 - 1, l_2, t, R_12, exponent_1, exponent_2)
+        result += (t + 1) * hermite_coeff(l_1 - 1, l_2, t + 1, R_12, exponent_1, exponent_2)
+    
+    # Build up angular momentum on Gaussian 2
+
+    else:
+
+        result = prefactor * hermite_coeff(l_1, l_2 - 1, t - 1, R_12, exponent_1, exponent_2)
+        result += (u * R_12 / exponent_2) * hermite_coeff(l_1, l_2 - 1, t, R_12, exponent_1, exponent_2)
+        result += (t + 1) * hermite_coeff(l_1, l_2 - 1, t + 1, R_12, exponent_1, exponent_2)
+
+
+    return result
+
+
+
+
+
+
+
+
+cdef inline double boys(int m, double T):
+
+    """
+    
+    Calculates a Boys function.
+    
+    Args:
+        m (int): Boys function order
+        T (float): Boys function argument
+
+    Returns:
+        result (float): Boys function value
+        
+    """
+
+    return hyp1f1(m + 0.5, m + 1.5, -T) / (2.0 * m + 1.0)
+
+
+
+
+
+
+
+
+
+cdef inline double odd_double_double_fact_from_even(int n_even):
+
+    """
+    
+    Calculates (n_even - 1)!! for an even integer.
+    
+    Args:
+        n_even (int): Even integer input
+    
+    Returns:
+        odd_double_double_fact_from_even (float): Odd double factorial
+        
+    """
+
+    return double_fact(n_even - 1)
+
+
+
+
+
+
+
+
+
+
+cdef inline void fill_boys_table(int M, double T, double* boys_table):
+
+    """
+    
+    Fills a table of Boys functions from order 0 to M.
+    
+    Args:
+        M (int): Maximum Boys function order
+        T (float): Boys function argument
+        boys_table (double*): Output table of Boys function values
+        
+    """
+
+    cdef int m
+    cdef double exponential_term
+    cdef double two_T
+
+    if T == 0.0:
+
+        for m in range(M + 1):
+
+            boys_table[m] = 1.0 / (2.0 * m + 1.0)
+
+        return
+
+    boys_table[M] = boys(M, T)
+
+    exponential_term = exp(-T)
+    two_T = 2.0 * T
+
+    for m in range(M, 0, -1):
+
+        boys_table[m - 1] = (two_T * boys_table[m] + exponential_term) / (2.0 * m - 1.0)
+
+
+
+
+
+
+
+
+
+cdef inline void fill_pow_table(int M, double scale, double* pow_table):
+
+    """
+    
+    Fills a table of powers of -2 * scale.
+    
+    Args:
+        M (int): Maximum power
+        scale (float): Scale factor in the recurrence
+        pow_table (double*): Output table of powers
+        
+    """
+
+    cdef int n
+    cdef double factor = -2.0 * scale
+
+    pow_table[0] = 1.0
+
+    for n in range(1, M + 1):
+
+        pow_table[n] = pow_table[n - 1] * factor
+
+
+
+
+
+
+
+
+
+cdef inline void fill_Rz_linear_table(int Vmax, int Nmax, double PCz, double* boys_table, double* pow_table, double* Rz_table):
+
+    """
+    
+    Fills the linear Coulomb Hermite recursion table along the z axis.
+    
+    Args:
+        Vmax (int): Maximum z angular momentum index
+        Nmax (int): Maximum Boys function order
+        PCz (float): Distance between Gaussian product centres along z
+        boys_table (double*): Table of Boys function values
+        pow_table (double*): Table of powers of -2 * scale
+        Rz_table (double*): Output Coulomb Hermite table
+    
+        
+    """
+
+    cdef int v, n
+    cdef int stride = Nmax + 1
+    cdef int row_offset
+    cdef int prev_row_1_offset
+    cdef int prev_row_2_offset
+
+    for n in range(Nmax + 1):
+
+        Rz_table[n] = pow_table[n] * boys_table[n]
+
+    for v in range(1, Vmax + 1):
+
+        row_offset = v * stride
+        prev_row_1_offset = (v - 1) * stride
+        prev_row_2_offset = (v - 2) * stride
+
+        for n in range(Nmax - v, -1, -1):
+
+            Rz_table[row_offset + n] = PCz * Rz_table[prev_row_1_offset + n + 1]
+
+            if v > 1:
+
+                Rz_table[row_offset + n] += (v - 1) * Rz_table[prev_row_2_offset + n + 1]
+
+
+
+
+
+
+
+
+
+cdef inline void fill_hermite_table(int l_1, int l_2, double R_12, double exponent_1, double exponent_2, double* hermite_table, bint use_parity):
+
+    """
+    
+    Fills a Hermite coefficient table for a Cartesian direction.
+    
+    Args:
+        l_1 (int): Angular momentum on first Gaussian
+        l_2 (int): Angular momentum on second Gaussian
+        R_12 (float): Distance between primitive Gaussian centres
+        exponent_1 (float): Exponent on first primitive Gaussian
+        exponent_2 (float): Exponent on second primitive Gaussian
+        hermite_table (double*): Output table of Hermite coefficients
+        use_parity (bool): Whether to zero coefficients forbidden by linear parity
+        
+    """
+
+    cdef int t
+    cdef int n_terms = l_1 + l_2 + 1
+    cdef int t_start
+
+    if use_parity:
+
+        t_start = (l_1 + l_2) & 1
+
+        for t in range(n_terms):
+
+            hermite_table[t] = 0.0
+
+        for t in range(t_start, n_terms, 2):
+
+            hermite_table[t] = hermite_coeff(l_1, l_2, t, R_12, exponent_1, exponent_2)
+
+    else:
+
+        for t in range(n_terms):
+
+            hermite_table[t] = hermite_coeff(l_1, l_2, t, R_12, exponent_1, exponent_2)
+
+
+
+
+
+
+
+
+
+
+cdef double electron_repulsion(double exponent_1, long *angmom_1, double *centre_1, double exponent_2, long *angmom_2, double *centre_2,
+                               double exponent_3, long *angmom_3, double *centre_3, double exponent_4, long *angmom_4, double *centre_4):
+
+    """
+    
+    Calculates an electron repulsion integral between primitive Gaussians, <12(r)| 1/(r-r') |34(r')>.
+    
+    Args:
+        exponent_1 (float): Gaussian exponent on first centre
+        angmom_1 (array): Angular momenta of primitive Gaussian of first centre
+        centre_1 (array): Coordinates of first centre
+        exponent_2 (float): Gaussian exponent on second centre
+        angmom_2 (array): Angular momenta of primitive Gaussian of second centre
+        centre_2 (array): Coordinates of second centre
+        exponent_3 (float): Gaussian exponent on third centre
+        angmom_3 (array): Angular momenta of primitive Gaussian of third centre
+        centre_3 (array): Coordinates of third centre
+        exponent_4 (float): Gaussian exponent on fourth centre
+        angmom_4 (array): Angular momenta of primitive Gaussian of fourth centre
+        centre_4 (array): Coordinates of fourth centre
+    
+    Returns:
+        integral (float): Electron repulsion integral between primitive Gaussians
+        
+    """
+
+    cdef:
+        long l_1 = angmom_1[0]
+        long m_1 = angmom_1[1]
+        long n_1 = angmom_1[2]
+        long l_2 = angmom_2[0]
+        long m_2 = angmom_2[1]
+        long n_2 = angmom_2[2]
+        long l_3 = angmom_3[0]
+        long m_3 = angmom_3[1]
+        long n_3 = angmom_3[2]
+        long l_4 = angmom_4[0]
+        long m_4 = angmom_4[1]
+        long n_4 = angmom_4[2]
+
+        double exponent_sum_12 = exponent_1 + exponent_2
+        double exponent_sum_34 = exponent_3 + exponent_4
+        double reduced_exponent = exponent_sum_12 * exponent_sum_34 / (exponent_sum_12 + exponent_sum_34)
+
+        double Rz_12 = centre_1[2] - centre_2[2]
+        double Rz_34 = centre_3[2] - centre_4[2]
+
+        double Pz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum_12
+        double Qz = (exponent_3 * centre_3[2] + exponent_4 * centre_4[2]) / exponent_sum_34
+        double PQz = Pz - Qz
+
+        int n_hermite_x_12 = <int>(l_1 + l_2 + 1)
+        int n_hermite_y_12 = <int>(m_1 + m_2 + 1)
+        int n_hermite_z_12 = <int>(n_1 + n_2 + 1)
+        int n_hermite_x_34 = <int>(l_3 + l_4 + 1)
+        int n_hermite_y_34 = <int>(m_3 + m_4 + 1)
+        int n_hermite_z_34 = <int>(n_3 + n_4 + 1)
+
+        int Vmax = <int>(n_1 + n_2 + n_3 + n_4)
+        int Nmax = <int>((l_1 + m_1 + n_1) + (l_2 + m_2 + n_2) + (l_3 + m_3 + n_3) + (l_4 + m_4 + n_4))
+        int stride = Nmax + 1
+
+        int t, u, v, tau, nu, phi
+        int t_start = <int>((l_1 + l_2) & 1)
+        int u_start = <int>((m_1 + m_2) & 1)
+        int tau_start = <int>((l_3 + l_4) & 1)
+        int nu_start = <int>((m_3 + m_4) & 1)
+        int n_xy
+
+        double integral = 0.0
+        double prefactor
+        double coefficient_x_12, coefficient_y_12, coefficient_z_12
+        double coefficient_x_34, coefficient_y_34, coefficient_z_34
+        double x_factor, xy_factor
+        double sign
+
+        double *hermite_x_12 = NULL
+        double *hermite_y_12 = NULL
+        double *hermite_z_12 = NULL
+        double *hermite_x_34 = NULL
+        double *hermite_y_34 = NULL
+        double *hermite_z_34 = NULL
+
+        double *boys_table = NULL
+        double *pow_table = NULL
+        double *Rz_table = NULL
+
+    # If the sum of angular momenta is odd, by parity the integral is zero
+
+    if ((l_1 + l_2 + l_3 + l_4) & 1) or ((m_1 + m_2 + m_3 + m_4) & 1):
+
+        return 0.0
+
+
+    hermite_x_12 = <double*>malloc(n_hermite_x_12 * sizeof(double))
+    hermite_y_12 = <double*>malloc(n_hermite_y_12 * sizeof(double))
+    hermite_z_12 = <double*>malloc(n_hermite_z_12 * sizeof(double))
+    hermite_x_34 = <double*>malloc(n_hermite_x_34 * sizeof(double))
+    hermite_y_34 = <double*>malloc(n_hermite_y_34 * sizeof(double))
+    hermite_z_34 = <double*>malloc(n_hermite_z_34 * sizeof(double))
+
+    boys_table = <double*>malloc((Nmax + 1) * sizeof(double))
+    pow_table = <double*>malloc((Nmax + 1) * sizeof(double))
+    Rz_table = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
+
+    if (hermite_x_12 == NULL or hermite_y_12 == NULL or hermite_z_12 == NULL or
+        hermite_x_34 == NULL or hermite_y_34 == NULL or hermite_z_34 == NULL or
+        boys_table == NULL or pow_table == NULL or Rz_table == NULL):
+
+        free(hermite_x_12)
+        free(hermite_y_12)
+        free(hermite_z_12)
+        free(hermite_x_34)
+        free(hermite_y_34)
+        free(hermite_z_34)
+        free(boys_table)
+        free(pow_table)
+        free(Rz_table)
+
+        return 0.0
+
+    fill_hermite_table(l_1, l_2, 0.0, exponent_1, exponent_2, hermite_x_12, True)
+    fill_hermite_table(m_1, m_2, 0.0, exponent_1, exponent_2, hermite_y_12, True)
+    fill_hermite_table(n_1, n_2, Rz_12, exponent_1, exponent_2, hermite_z_12, False)
+
+    fill_hermite_table(l_3, l_4, 0.0, exponent_3, exponent_4, hermite_x_34, True)
+    fill_hermite_table(m_3, m_4, 0.0, exponent_3, exponent_4, hermite_y_34, True)
+    fill_hermite_table(n_3, n_4, Rz_34, exponent_3, exponent_4, hermite_z_34, False)
+
+    fill_boys_table(Nmax, reduced_exponent * PQz * PQz, boys_table)
+    fill_pow_table(Nmax, reduced_exponent, pow_table)
+    fill_Rz_linear_table(Vmax, Nmax, PQz, boys_table, pow_table, Rz_table)
+
+    for t in range(t_start, n_hermite_x_12, 2):
+
+        coefficient_x_12 = hermite_x_12[t]
+
+        for tau in range(tau_start, n_hermite_x_34, 2):
+
+            coefficient_x_34 = hermite_x_34[tau]
+            x_factor = coefficient_x_12 * coefficient_x_34 * odd_double_double_fact_from_even(t + tau)
+
+            for u in range(u_start, n_hermite_y_12, 2):
+
+                coefficient_y_12 = hermite_y_12[u]
+
+                for nu in range(nu_start, n_hermite_y_34, 2):
+
+                    coefficient_y_34 = hermite_y_34[nu]
+                    xy_factor = x_factor * coefficient_y_12 * coefficient_y_34 * odd_double_double_fact_from_even(u + nu)
+                    n_xy = ((t + tau) >> 1) + ((u + nu) >> 1)
+
+                    for v in range(n_hermite_z_12):
+
+                        coefficient_z_12 = hermite_z_12[v]
+
+                        if coefficient_z_12 == 0.0:
+
+                            continue
+
+                        for phi in range(n_hermite_z_34):
+
+                            coefficient_z_34 = hermite_z_34[phi]
+
+                            if coefficient_z_34 == 0.0:
+
+                                continue
+
+                            if ((tau + nu + phi) & 1):
+
+                                sign = -1.0
+
+                            else:
+
+                                sign = 1.0
+
+                            integral += xy_factor * coefficient_z_12 * coefficient_z_34 * sign * Rz_table[(v + phi) * stride + n_xy]
+
+
+    prefactor = 2.0 * pow(PI, 2.5) / (exponent_sum_12 * exponent_sum_34 * sqrt(exponent_sum_12 + exponent_sum_34))
+    integral *= prefactor
+
+    free(hermite_x_12)
+    free(hermite_y_12)
+    free(hermite_z_12)
+    free(hermite_x_34)
+    free(hermite_y_34)
+    free(hermite_z_34)
+    free(boys_table)
+    free(pow_table)
+    free(Rz_table)
+
+    return integral

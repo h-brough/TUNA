@@ -233,7 +233,7 @@ def calculate_cross_basis_overlap_matrix(molecule_1: Molecule, molecule_2: Molec
 
         for j in range(molecule_2.n_basis):
 
-            S_cross[i, j] = ints.S(molecule_1.basis_functions[i], molecule_2.basis_functions[j])
+            S_cross[i, j] = ints.calculate_overlap_integral(molecule_1.basis_functions[i], molecule_2.basis_functions[j])
     
 
     return S_cross
