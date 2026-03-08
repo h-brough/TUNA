@@ -23,6 +23,7 @@
 
 - Default SCF guess strategy is now self-consistent minimal basis guess, via superposition of atomic densities
 - Restructured code for Hessian evaluation, reducing cost by 20% with identical results
+- Took advantage of more x/y symmetry in diatomics in the molecular integral evaluatios, making calculations up to 10x faster
 - New tuna_guess module; split tuna_optfreq into tuna_opt and tuna_freq; split tuna_kernel module away from tuna_energ
 - Density matrix idempotency is now forced after the guess density, to increase stability
 - Natural orbitals are no longer calculated by default for MP2
