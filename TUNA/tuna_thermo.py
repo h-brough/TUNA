@@ -1,10 +1,13 @@
 import numpy as np
 from tuna_util import *
+from tuna_molecule import Molecule
 
 
 """
 
-This is the TUNA module for calculating thermochemical corrections to the molecular energy, written first for version 0.4.0 and rewritten for version 0.10.0.
+This is the TUNA module for calculating thermochemical corrections to the molecular energy, written first for version 0.4.0 
+and rewritten for version 0.10.0. All the contributions to the enthalpy and free energy are calculated here, from their various
+equations involving the partition functions.
 
 The module contains:
 
@@ -51,6 +54,8 @@ def calculate_translational_internal_energy(temperature: float) -> float:
 
 
 
+
+
 def calculate_rotational_internal_energy(temperature: float) -> float: 
     
     """
@@ -68,6 +73,8 @@ def calculate_rotational_internal_energy(temperature: float) -> float:
     rotational_internal_energy = k * temperature
 
     return rotational_internal_energy
+
+
 
 
 
@@ -101,6 +108,9 @@ def calculate_vibrational_internal_energy(vibrational_frequency: float, temperat
 
 
     return vibrational_internal_energy
+
+
+
 
 
 
@@ -144,6 +154,9 @@ def calculate_internal_energy(energy: float, zero_point_energy: float, temperatu
 
 
 
+
+
+
 def calculate_translational_entropy(temperature: float, pressure: float, mass: float) -> float:
 
     """
@@ -173,6 +186,8 @@ def calculate_translational_entropy(temperature: float, pressure: float, mass: f
 
 
 
+
+
 def calculate_rotational_entropy(point_group: str, temperature: float, rotational_constant_per_m: float) -> float:
     
     """
@@ -193,9 +208,11 @@ def calculate_rotational_entropy(point_group: str, temperature: float, rotationa
 
     symmetry_number = 2 if point_group == "Dinfh" else 1
 
-    rotational_entropy = k * (1 + np.log(k * temperature / (symmetry_number * rotational_constant_per_bohr * h * c)))
+    rotational_entropy = k * float(1 + np.log(k * temperature / (symmetry_number * rotational_constant_per_bohr * h * c)))
 
     return rotational_entropy
+
+
 
 
 
@@ -232,6 +249,8 @@ def calculate_vibrational_entropy(vibrational_frequency: float, temperature: flo
 
 
 
+
+
 def calculate_electronic_entropy(multiplicity: int) -> float: 
     
     """
@@ -249,6 +268,9 @@ def calculate_electronic_entropy(multiplicity: int) -> float:
     electronic_entropy = k * np.log(multiplicity)
 
     return electronic_entropy
+
+
+
 
 
 
@@ -300,6 +322,9 @@ def calculate_entropy(temperature: float, vibrational_frequency: float, point_gr
 
 
 
+
+
+
 def calculate_vibrational_temperature(vibrational_frequency: float) -> float:
 
     """
@@ -317,6 +342,9 @@ def calculate_vibrational_temperature(vibrational_frequency: float) -> float:
     vibrational_temperature = vibrational_frequency / k
 
     return vibrational_temperature
+
+
+
 
 
 
@@ -342,6 +370,10 @@ def calculate_enthalpy(internal_energy: float, temperature: float) -> float:
     H = internal_energy + k * temperature
 
     return H
+
+
+
+
 
 
 
@@ -374,7 +406,10 @@ def calculate_free_energy(H: float, temperature: float, S: float) -> float:
 
 
 
-def calculate_thermochemical_corrections(molecule: any, calculation: any, vibrational_frequency: float, energy: float, zero_point_energy: float) -> float:
+
+
+
+def calculate_thermochemical_corrections(molecule: Molecule, calculation: Calculation, vibrational_frequency: float, energy: float, zero_point_energy: float) -> float:
 
     """
 
@@ -402,7 +437,7 @@ def calculate_thermochemical_corrections(molecule: any, calculation: any, vibrat
 
     # Prints thermochemical information unless terse keyword is used 
     
-    log(f"\n Temperature used is {temperature:.2f} K, pressure used is {(pressure)} Pa.", calculation, 2)
+    log(f"\n Temperature used is {temperature:.2f} K, pressure used is {pressure:.0f} Pa.", calculation, 2)
     log(" Entropies multiplied by temperature to give units of energy.", calculation, 2)
     log(f" Using symmetry number derived from {point_group} point group for rotational entropy.", calculation, 2)
 

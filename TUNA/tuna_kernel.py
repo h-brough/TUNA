@@ -13,7 +13,6 @@ import tuna_cc as cc
 import tuna_out as out
 
 
-
 """
 
 This is the TUNA module for various low level calculations, written first for version 0.10.0.
@@ -99,6 +98,8 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
 
 
+
+
 def enforce_density_matrix_idempotency(P_guess_alpha: ndarray, P_guess_beta: ndarray, S: ndarray, n_alpha: int, n_beta: int, calculation: Calculation, silent: bool = False) -> tuple[ndarray, ndarray, ndarray]:
 
     """
@@ -141,23 +142,25 @@ def enforce_density_matrix_idempotency(P_guess_alpha: ndarray, P_guess_beta: nda
 
 
 
-def calculate_extrapolated_energy(basis: str, E_SCF_lower: float, E_SCF_higher: float, E_corr_lower: float, E_corr_higher: float) -> tuple[float, float, float]:
+
+
+def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_large: float, E_corr_small: float, E_corr_large: float, calculation: Calculation, silent: bool) -> float:
 
     """
     
     Calculates the extrapolated energy, from input energies.
 
     Args:
-        basis (str): Basis to extrapolate
-        E_SCF_lower (float): SCF Energy from double-zeta basis
-        E_SCF_higher (float): SCF Energy from triple-zeta basis
-        E_corr_lower (float): Correlation energy from double-zeta basis
-        E_corr_higher (float): Correlation energy from triple-zeta basis
+        small_basis (str): Lower-zeta basis to extrapolate
+        E_SCF_small (float): SCF Energy from lower-zeta basis
+        E_SCF_large (float): SCF Energy from higher-zeta basis
+        E_corr_small (float): Correlation energy from lower-zeta basis
+        E_corr_large (float): Correlation energy from higher-zeta basis
+        calculation (Calculation): Calculation object
+        silent (bool): Cancel logging
     
     Returns:
         E_extrapolated (float): Extrapolated energy
-        E_SCF_extrapolated (float): Extrapolated SCF energy
-        E_corr_extrapolated (float): Extrapolated correlation energy
     
     """
 
@@ -188,23 +191,60 @@ def calculate_extrapolated_energy(basis: str, E_SCF_lower: float, E_SCF_higher: 
         "AUG-ANO-PVDZ" : 2.41, "AUG-ANO-PVTZ" : 2.52
     }
 
-    alpha = alpha_values.get(basis)
-    beta = beta_values.get(basis)
+    alpha = alpha_values.get(small_basis)
+    beta = beta_values.get(small_basis)
 
-    exponent_lower = 2 if basis in double_zeta_bases else 3
-    exponent_higher = 3 if basis in double_zeta_bases else 4
+    exponent_small = 2 if small_basis in double_zeta_bases else 3
+    exponent_large = 3 if small_basis in double_zeta_bases else 4
 
     # Same SCF extrapolation as used in ORCA
 
-    E_SCF_extrapolated = E_SCF_lower + (E_SCF_higher - E_SCF_lower) / (1 - np.exp(alpha * (np.sqrt(exponent_lower) - np.sqrt(exponent_higher))))
+    E_SCF_extrapolated = E_SCF_small + (E_SCF_large - E_SCF_small) / (1 - np.exp(alpha * (np.sqrt(exponent_small) - np.sqrt(exponent_large))))
 
     # Same correlation energy extrapolation as used in ORCA
 
-    E_corr_extrapolated = (exponent_lower ** beta * E_corr_lower - exponent_higher ** beta  * E_corr_higher) / (exponent_lower ** beta - exponent_higher ** beta)
+    E_corr_extrapolated = (exponent_small ** beta * E_corr_small - exponent_large ** beta  * E_corr_large) / (exponent_small ** beta - exponent_large ** beta)
 
     E_extrapolated = E_SCF_extrapolated + E_corr_extrapolated
 
-    return E_extrapolated, E_SCF_extrapolated, E_corr_extrapolated
+    log_spacer(calculation, silent=silent, start="\n")
+    log(f"              Basis Set Extrapolation", calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation, silent=silent)
+
+    if small_basis in double_zeta_bases:
+
+        log(f"  Double-zeta SCF energy:          {E_SCF_small:16.10f}", calculation, 1, silent=silent)
+        log(f"  Triple-zeta SCF energy:          {E_SCF_large:16.10f}", calculation, 1, silent=silent)
+
+    else:
+
+        log(f"  Triple-zeta SCF energy:          {E_SCF_small:16.10f}", calculation, 1, silent=silent)
+        log(f"  Quadruple-zeta SCF energy:       {E_SCF_large:16.10f}", calculation, 1, silent=silent)
+
+    if calculation.method in correlated_methods:
+        
+        if small_basis in double_zeta_bases:
+
+            log(f"\n  Double-zeta correlation energy:  {E_corr_small:16.10f}", calculation, 1, silent=silent)
+            log(f"  Triple-zeta correlation energy:  {E_corr_large:16.10f}", calculation, 1, silent=silent)
+
+        else:
+
+            log(f"\n  Triple-zeta correlation energy:  {E_corr_small:16.10f}", calculation, 1, silent=silent)
+            log(f"  Quadruple-zeta correlation energy: {E_corr_large:14.10f}", calculation, 1, silent=silent)
+
+    log(f"\n  Extrapolated SCF energy:         {E_SCF_extrapolated:16.10f}", calculation, 1, silent=silent)
+
+    if calculation.method in correlated_methods:
+        
+        log(f"  Extrapolated correlation energy: {E_corr_extrapolated:16.10f}", calculation, 1, silent=silent)
+
+    log(f"  Extrapolated total energy:       {E_extrapolated:16.10f}", calculation, 1, silent=silent)
+
+    log_spacer(calculation, silent=silent)
+
+    return E_extrapolated
+
 
 
 
@@ -238,6 +278,7 @@ def print_reference_type(method: str, calculation: Calculation, silent: bool) ->
         log(f" Beginning unrestricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
 
     return
+
 
 
 
@@ -310,6 +351,8 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
 
 
 
+
+
 def calculate_two_electron_integrals(n_basis: int, basis_functions: list) -> ndarray:
 
     """"
@@ -334,6 +377,8 @@ def calculate_two_electron_integrals(n_basis: int, basis_functions: list) -> nda
     ERI_AO = np.asarray(ERI_AO)
 
     return ERI_AO
+
+
 
 
 
@@ -404,6 +449,12 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
 
 
+
+
+
+
+
+
 def apply_electric_field(D: ndarray, electric_field: ndarray) -> ndarray:
 
     """
@@ -422,6 +473,9 @@ def apply_electric_field(D: ndarray, electric_field: ndarray) -> ndarray:
     Q = np.einsum("i,ijk->jk", electric_field, D, optimize=True)
 
     return Q
+
+
+
 
 
 
@@ -456,6 +510,8 @@ def calculate_nuclear_repulsion_energy(charges: ndarray, coordinates: ndarray, c
 
     return V_NN
     
+
+
 
 
 
@@ -514,6 +570,9 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
 
 
 
+
+
+
 def print_SCF_energy(final_energy: float, reference: str, method: str, calculation: Calculation, silent: bool) -> None:
 
     """
@@ -556,6 +615,9 @@ def print_SCF_energy(final_energy: float, reference: str, method: str, calculati
 
 
 
+
+
+
 def check_overlap_eigenvalues(smallest_S_eigenvalue: float, calculation: Calculation, silent: bool = False) -> None:
 
     """
@@ -580,6 +642,8 @@ def check_overlap_eigenvalues(smallest_S_eigenvalue: float, calculation: Calcula
         warning(f"Smallest overlap matrix eigenvalue is close to the threshold, at {smallest_S_eigenvalue:.8f}! \n", space=1)
 
     return
+
+
 
 
 
@@ -629,6 +693,7 @@ def calculate_D2_dispersion_energy(molecule: Molecule, calculation: Calculation,
 
     return E_D2
         
+
 
 
 
@@ -895,4 +960,3 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
 
     return final_energy, P
-

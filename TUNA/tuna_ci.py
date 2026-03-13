@@ -174,7 +174,13 @@ def build_singles_epsilons_tensor(epsilons: ndarray, o: slice, v: slice, level_s
 
     n = np.newaxis
 
-    e_ia = 1 / (epsilons[o, n] - epsilons[n, v] - level_shift)
+    try:
+
+        e_ia = 1 / (epsilons[o, n] - epsilons[n, v] - level_shift)
+    
+    except MemoryError:
+
+        error("Not enough memory to build singles denominator!")
 
     return e_ia
 
@@ -208,7 +214,13 @@ def build_doubles_epsilons_tensor(epsilons_1: ndarray, epsilons_2: ndarray, o_1:
 
     n = np.newaxis
 
-    e_ijab = 1 / (epsilons_1[o_1, n, n, n] + epsilons_2[n, o_2, n, n] - epsilons_1[n, n, v_1, n] - epsilons_2[n, n, n, v_2] - 2 * level_shift)
+    try:
+
+        e_ijab = 1 / (epsilons_1[o_1, n, n, n] + epsilons_2[n, o_2, n, n] - epsilons_1[n, n, v_1, n] - epsilons_2[n, n, n, v_2] - 2 * level_shift)
+    
+    except MemoryError:
+
+        error("Not enough memory to build doubles denominator!")
 
     return e_ijab
 
@@ -238,7 +250,13 @@ def build_triples_epsilons_tensor(epsilons: ndarray, o: slice, v: slice, level_s
 
     n = np.newaxis
 
-    e_ijkabc = 1 / (epsilons[o, n, n, n, n, n] + epsilons[n, o, n, n, n, n] + epsilons[n, n, o, n, n, n] - epsilons[n, n, n, v, n, n] - epsilons[n, n, n, n, v, n] - epsilons[n, n, n, n, n, v] - 3 * level_shift)
+    try:
+
+        e_ijkabc = 1 / (epsilons[o, n, n, n, n, n] + epsilons[n, o, n, n, n, n] + epsilons[n, n, o, n, n, n] - epsilons[n, n, n, v, n, n] - epsilons[n, n, n, n, v, n] - epsilons[n, n, n, n, n, v] - 3 * level_shift)
+    
+    except MemoryError:
+
+        error("Not enough memory to build triples denominator!")
 
     return e_ijkabc
 
@@ -268,7 +286,13 @@ def build_quadruples_epsilons_tensor(epsilons: ndarray, o: slice, v: slice, leve
 
     n = np.newaxis
 
-    e_ijklabcd = 1 / (epsilons[o, n, n, n, n, n, n, n] + epsilons[n, o, n, n, n, n, n, n] + epsilons[n, n, o, n, n, n, n, n] + epsilons[n, n, n, o, n, n, n, n] - epsilons[n, n, n, n, v, n, n, n] - epsilons[n, n, n, n, n, v, n, n] - epsilons[n, n, n, n, n, n, v, n] - epsilons[n, n, n, n, n, n, n, v] - 4 * level_shift)
+    try:
+
+        e_ijklabcd = 1 / (epsilons[o, n, n, n, n, n, n, n] + epsilons[n, o, n, n, n, n, n, n] + epsilons[n, n, o, n, n, n, n, n] + epsilons[n, n, n, o, n, n, n, n] - epsilons[n, n, n, n, v, n, n, n] - epsilons[n, n, n, n, n, v, n, n] - epsilons[n, n, n, n, n, n, v, n] - epsilons[n, n, n, n, n, n, n, v] - 4 * level_shift)
+
+    except MemoryError:
+
+        error("Not enough memory to build quadruples denominator!")
 
     return e_ijklabcd
 

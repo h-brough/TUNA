@@ -32,7 +32,6 @@ This module contains:
 
 
 
-
 def save_and_show_plot(calculation: Calculation) -> None:
 
     """
@@ -60,6 +59,9 @@ def save_and_show_plot(calculation: Calculation) -> None:
     plt.show() 
 
     return
+
+
+
 
 
 
@@ -96,6 +98,9 @@ def delete_saved_plot() -> None:
 
 
 
+
+
+
 def suppress_plot_warnings() -> None:
 
     """
@@ -105,15 +110,19 @@ def suppress_plot_warnings() -> None:
     """
 
     # Ignore everything but a severe error
+
     logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
     logging.getLogger("matplotlib").setLevel(logging.ERROR)
 
     warnings.filterwarnings("ignore", module="matplotlib.font_manager")
 
     # Forces the cache to build to access font list
+
     _ = fm.fontManager.ttflist
 
     return
+
+
 
 
 
@@ -139,20 +148,25 @@ def build_Cartesian_grid(bond_length: float, extent: float = 3, number_of_points
     """
 
     # If bond length is not a float, set it to zero for atoms
+
     if isinstance(bond_length, str):
 
         bond_length = 0 
 
     # The molecule always lies along the z axis, so this axis is extended by the bond length
+
     x = np.linspace(-extent, extent, number_of_points)
     z = np.linspace(-extent, extent + bond_length, number_of_points)
 
     # No Y axis is needed because of the symmetry of linear molecules
+
     X, Z = np.meshgrid(x, z, indexing="ij")
     
     grid = np.stack([X, Z], axis=0)
 
     return grid
+
+
 
 
 
@@ -175,6 +189,7 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
     """
 
     # Path for the temporary file
+
     temporary_pickle_path = "TUNA-plot-temp.pkl"
 
     log("\nPlotting energy profile diagram...      ", calculation, 1, end=""); sys.stdout.flush()
@@ -182,9 +197,11 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
     suppress_plot_warnings()
 
     # Saves temporary file if "ADDPLOT" used
+
     fig, ax = read_temporary_plot_file(temporary_pickle_path) if calculation.add_plot else plt.subplots(figsize=(10, 6))
 
     # For excited state calculations, also print the root
+
     legend_label = f"{calculation.method}/{calculation.basis}" if "CIS" not in calculation.method else f"{calculation.method}/{calculation.basis}, ROOT {calculation.root}"
     linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
 
@@ -195,6 +212,7 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
     log("[Done]", calculation, 1)
 
     # If the "ADDPLOT" keyword is used, save the plot to the pickle temporary file
+
     if calculation.add_plot:
 
         with open(temporary_pickle_path, "wb") as f:
@@ -204,6 +222,8 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
     save_and_show_plot(calculation)
 
     return
+
+
 
 
 
@@ -230,6 +250,7 @@ def read_temporary_plot_file(temporary_pickle_path: str) -> tuple[any, any]:
     try:
         
         # Attempt to open a previous temporary file
+
         with open(temporary_pickle_path, "rb") as f:
 
             fig = pickle.load(f)
@@ -241,10 +262,14 @@ def read_temporary_plot_file(temporary_pickle_path: str) -> tuple[any, any]:
     except:
 
         # If we can't, just open a new plot
+
         fig, ax = plt.subplots(figsize=(10, 6))    
 
 
     return fig, ax
+
+
+
 
 
 
@@ -315,12 +340,14 @@ def format_coordinate_scan_plot(calculation: Calculation, ax: any) -> None:
 
 
     # These are picked in order, if they are present
+
     plot_font = ["Consolas", "Liberation Mono", "Courier New", "DejaVu Sans"]
 
     matplotlib.rcParams["font.family"] = plot_font
     font_prop = fm.FontProperties(family=plot_font, size=12)
 
     # Formats the charge into a nicely readable string
+
     charge = format_charge(calculation.charge)
     
     plt.xlabel("Bond Length (Angstrom)", fontweight="bold", labelpad=10, fontfamily=plot_font, fontsize=14)
@@ -331,15 +358,21 @@ def format_coordinate_scan_plot(calculation: Calculation, ax: any) -> None:
     plt.title(f"TUNA Calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ Molecule", fontweight="bold", fontsize=16, fontfamily=plot_font, pad=15)
     
     # Major and minor ticks
+
     ax.tick_params(axis='both', which='major', labelsize=11, width=1.25, length=6, direction='out')
     ax.tick_params(axis='both', which='minor', labelsize=11, width=1.25, length=3, direction='out')
 
     # Set the linewidth of the border 
-    for spine in ax.spines.values(): spine.set_linewidth(1.25)
+
+    for spine in ax.spines.values(): 
+        
+        spine.set_linewidth(1.25)
     
     plt.minorticks_on()
 
     return
+
+
 
 
 
@@ -368,27 +401,34 @@ def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarr
     fig, ax = plt.subplots(figsize=(10, 6))
 
     # Plots the vibrational wavefunctions
+
     for i in range(len(vibrational_energy_levels)):
 
         # Starts at grey, gets more red with energy
+
         wavefunction_colour = min(i / (len(vibrational_energy_levels) + 1) + 0.3, 1), 0.3, 0.3
 
         # Plots each wavefunction at its energy
+
         vertical_offset = vibrational_energy_levels[i] - min(energies)
 
         plt.plot(bond_lengths, vibrational_wavefunctions[:, i] + vertical_offset, color=wavefunction_colour)
 
     # Set the equilibrium bond length to be zero
+
     energies = energies - min(energies)
 
     # Makes sure the plot is sensibly scaled - without this the repulsive region is too dominant
+
     mask = energies < 0.25
 
     # For excited state calculations, also print the root
+
     legend_label = f"{calculation.method}/{calculation.basis}" if "CIS" not in calculation.method else f"{calculation.method}/{calculation.basis}, ROOT {calculation.root}"
     linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
     
     # Plots the potential energy surface
+
     plt.plot(bond_lengths[mask], energies[mask], color="black", linewidth=1.75, label=legend_label, linestyle=linestyle)
 
     format_coordinate_scan_plot(calculation, ax)
@@ -396,6 +436,7 @@ def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarr
     save_and_show_plot(calculation)
 
     return
+
 
 
 
@@ -430,16 +471,19 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
     ax.axis("off")
 
     # If bond length is not a float, set it to zero for atoms
+
     bond_length = 0 if isinstance(bond_length, str) else bond_length
 
     suppress_plot_warnings()       
     
     # These are picked in order, if they are present
+
     plot_font = ["Consolas", "Liberation Mono", "Courier New", "DejaVu Sans"]
 
     matplotlib.rcParams["font.family"] = plot_font
 
     # Formats the charge into a nicely readable string
+
     charge = format_charge(calculation.charge)
 
     if P is not None:
@@ -453,9 +497,11 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
             plt.title(f"Density from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
 
         # Builds density on grid
+
         density = dft.construct_density_on_grid(P, basis_functions_on_grid, clean_density=False)
         
         # Ignores the extremes of density near the nuclei
+
         density_cut_off = 0.98
 
         if transition:
@@ -463,6 +509,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
             view = np.clip(density, np.quantile(density, 1 - density_cut_off), np.quantile(density, density_cut_off))
 
             # Difference densities have both positive and negative parts
+
             cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (247/255,)*3, (1,0,0)], 257)
             
             max_abs = np.max(np.abs(view))
@@ -474,11 +521,13 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
             view = np.clip(density, None, np.quantile(density, density_cut_off))
 
             # Electron density is only positive
+
             cmap = LinearSegmentedColormap.from_list("wp", [(247/255, 247/255, 247/255), (1, 0, 1)]) 
 
             vmin, vmax = 0, np.max(view)
 
         # Shows the image of the plot on the two-dimensional grid
+
         ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
 
 
@@ -493,15 +542,19 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
             plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
 
         # Builds molecular orbitals on grid
+
         molecular_orbitals_on_grid = np.einsum("ikl,ij->jkl", basis_functions_on_grid, molecular_orbitals, optimize=True)
 
         # Pickks out a particular molecular orbital
+
         view = molecular_orbitals_on_grid[which_MO]
         
         # Ensures consistency in colour by setting the sign to positive on the atom centred at the origin
+
         view *= -1 if np.sign(view[np.unravel_index(np.argmin(X ** 2 + Z ** 2), X.shape)]) < 0 else 1
         
         # Molecular orbitals can be positive or negative in sign
+
         cmap = "bwr"
         cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (247/255,)*3, (1,0,0)], 257)
 
@@ -509,15 +562,19 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
         vmin, vmax = -max_abs, max_abs
         
         # Shows the image of the plot on the two-dimensional grid
+
         ax.imshow(view, extent=(Z.min(), Z.max(), X.min(), X.max()), cmap=cmap, vmin=vmin, vmax=vmax)
 
 
     # Plots dots for one of both atomic centres
+
     ax.scatter([0.0, bond_length], [0.0, 0.0], c="black", s=8, zorder=3)
 
     save_and_show_plot(calculation)
 
     return
+
+
 
 
 
@@ -627,6 +684,8 @@ def show_two_dimensional_plot(calculation: Calculation, molecule: Molecule, P: n
 
 
 
+
+
 def save_trajectory_to_file(molecule: Molecule, energy: float, coordinates: ndarray, trajectory_path: str) -> None:
 
     """
@@ -643,13 +702,15 @@ def save_trajectory_to_file(molecule: Molecule, energy: float, coordinates: ndar
     
     with open(trajectory_path, "a") as file:
         
-        # Prints number of atoms and energy        
+        # Prints number of atoms and energy   
+        #      
         file.write(f"{len(molecule.atoms)}\n")
         file.write(f"Coordinates from TUNA calculation, E = {energy:.10f}\n")
 
         coordinates_angstrom = bohr_to_angstrom(coordinates)
 
         # Prints coordinates
+
         for i in range(len(molecule.atoms)):
 
             file.write(f"  {molecule.atomic_symbols[i]}      {coordinates_angstrom[i][0]:6f}      {coordinates_angstrom[i][1]:6f}      {coordinates_angstrom[i][2]:6f}\n")

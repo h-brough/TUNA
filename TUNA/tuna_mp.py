@@ -341,7 +341,7 @@ def run_restricted_Laplace_MP2(ERI_AO, molecular_orbitals, F, n_doubly_occ, calc
 
 
 
-def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI_AO, n_doubly_occ, X, H_core, calculation, SCF_output, silent=False):
+def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_doubly_occ, X, integrals, calculation, SCF_output, silent=False):
    
     """
 
@@ -356,10 +356,9 @@ def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI
         molecular_orbitals (array): Molecular orbitals
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
-        ERI_AO (array): Electron repulsion integrals in AO basis
         n_doubly_occ (int): Number of doubly occupied orbitals
         X (array): Fock transformation matrix
-        H_core (array): Core Hamiltonian matrix in AO basis
+        integrals (Integrals): Molecular integrals
         calculation (Calculation): Calculation object
         SCF_output (Output): Output object
         silent (bool, optional): Should anything be printed
@@ -380,7 +379,7 @@ def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI
     # Builds atomic orbital density matrix and Fock matrix
     P = scf.construct_density_matrix(molecular_orbitals, n_doubly_occ, 2)
 
-    F_AO, _, _ = scf.construct_restricted_Fock_matrix(H_core / 2, H_core / 2, ERI_AO, P, 1, np.zeros_like(H_core))
+    F_AO, _, _ = scf.construct_restricted_Fock_matrix(integrals, P, 1, np.zeros_like(integrals.H_core))
 
     # Converts the overlap and Fock matrices to the spatial MO basis
     S = molecular_orbitals.T @ SCF_output.S @ molecular_orbitals
@@ -414,8 +413,10 @@ def run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI
         E_MP2_old = E_MP2
 
         # Calculates this residual, minimises over time
-        R_ijab = ERI_MO[o, o, v, v] + np.einsum("ap,ijpq,qb->ijab", F[v, v], t_ijab, S[v, v], optimize=True) + np.einsum("ap,ijpq,qb->ijab", S[v, v], t_ijab, F[v, v], optimize=True)
-        R_ijab += - np.einsum("ap,ik,kjpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize=True) - np.einsum("ap,kj,ikpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize=True)
+        R_ijab = ERI_MO[o, o, v, v] + np.einsum("ap,ijpq,qb->ijab", F[v, v], t_ijab, S[v, v], optimize=True) 
+        R_ijab += np.einsum("ap,ijpq,qb->ijab", S[v, v], t_ijab, F[v, v], optimize=True)
+        R_ijab += -1 * np.einsum("ap,ik,kjpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize=True) 
+        R_ijab += -1 * np.einsum("ap,kj,ikpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize=True)
 
         # Calculates updated doubles amplitudes
         t_ijab += R_ijab * e_ijab
@@ -1271,7 +1272,7 @@ def calculate_Moller_Plesset(method, molecule, SCF_output, integrals, calculatio
     
     elif method == "IMP2":
 
-        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, ERI_AO, n_doubly_occ, X, H_core, calculation, SCF_output, silent=silent)
+        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_doubly_occ, X, integrals, calculation, SCF_output, silent=silent)
 
     elif method == "LMP2":
 

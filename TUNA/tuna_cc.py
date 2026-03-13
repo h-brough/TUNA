@@ -27,6 +27,7 @@ The module contains:
 
 
 
+
 def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, t_amplitudes: tuple, method: str, F: ndarray) -> tuple[float, float, float, float]:
    
     """
@@ -70,6 +71,7 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
     E_CC = E_singles + E_connected_doubles + E_disconnected_doubles
 
     return E_CC, E_singles, E_connected_doubles, E_disconnected_doubles
+
 
 
 
@@ -123,6 +125,7 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
     E_CC = E_singles + E_connected_doubles + E_disconnected_doubles
 
     return E_CC, E_singles, E_connected_doubles, E_disconnected_doubles
+
 
 
 
@@ -199,6 +202,7 @@ def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: 
 
 
 
+
 def permute(array: ndarray, idx_1: int, idx_2: int) -> ndarray:
 
     """
@@ -218,6 +222,10 @@ def permute(array: ndarray, idx_1: int, idx_2: int) -> ndarray:
     permuted_array = array - array.swapaxes(idx_1, idx_2)
 
     return permuted_array
+
+
+
+
 
 
 
@@ -252,6 +260,10 @@ def permute_symmetric(array: ndarray, idx_1: int, idx_2: int, idx_3: int, idx_4:
 
 
 
+
+
+
+
 def permute_three_column_indices(array: ndarray) -> ndarray:
 
     """
@@ -271,6 +283,8 @@ def permute_three_column_indices(array: ndarray) -> ndarray:
     permuted_array = permuted_array + array.transpose(2, 0, 1, 5, 3, 4) + array.transpose(2, 1, 0, 5, 4, 3)
 
     return permuted_array
+
+
 
 
 
@@ -300,6 +314,8 @@ def permute_four_column_indices(array: ndarray) -> ndarray:
     permuted_array = array + array.swapaxes(0, 1).swapaxes(4, 5)
 
     return permuted_array
+
+
 
 
 
@@ -344,6 +360,7 @@ def is_coupled_cluster_converged(delta_E: float, t_amplitudes: tuple, t_amplitud
                 return True
 
     return False
+
 
 
 
@@ -575,9 +592,6 @@ def apply_DIIS(t_amplitudes: tuple, t_amplitudes_old: tuple, t_vectors: tuple, e
 
 
 
-
-
-
 def calculate_coupled_cluster_linearised_density(t_ia: ndarray, t_ijab: ndarray, n_orbitals: int, n_occ: int, o: slice, v: slice, calculation: Calculation, molecular_orbitals: ndarray, silent: bool) -> tuple:
 
     """
@@ -754,7 +768,6 @@ def calculate_T1_diagnostic(molecule: Molecule, t_ia: ndarray, spin_labels_sorte
 
 
 
-
 def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int, calculation: Calculation, spin_orbital_labels_sorted: list, silent: bool) -> None:
     
     """
@@ -898,6 +911,8 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
 
 
 
+
+
 def run_restricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple) -> tuple:
 
     """
@@ -941,6 +956,8 @@ def run_restricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
 
 
 
+
+
 def run_unrestricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple) -> tuple:
 
     """
@@ -971,6 +988,8 @@ def run_unrestricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
     t_amplitudes = None, t_ijab, None, None
 
     return t_amplitudes
+
+
 
 
 
@@ -1033,6 +1052,8 @@ def run_restricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: t
 
 
 
+
+
 def run_unrestricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple) -> tuple:
 
     """
@@ -1072,7 +1093,6 @@ def run_unrestricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
     t_amplitudes = None, t_ijab, None, None
 
     return t_amplitudes
-
 
 
 
@@ -1135,6 +1155,8 @@ def run_restricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 
 
 
+
+
 def run_unrestricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
@@ -1185,6 +1207,7 @@ def run_unrestricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_amplitudes = t_ia, t_ijab, None, None
 
     return t_amplitudes
+
 
 
 
@@ -1257,6 +1280,8 @@ def run_restricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 
 
 
+
+
 def run_unrestricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
@@ -1317,6 +1342,7 @@ def run_unrestricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_amplitudes = t_ia, t_ijab, None, None
 
     return t_amplitudes
+
 
 
 
@@ -1416,6 +1442,7 @@ def run_restricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
 
 
 
+
 def run_unrestricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
@@ -1491,6 +1518,7 @@ def run_unrestricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
     t_amplitudes = t_ia, t_ijab, None, None
 
     return t_amplitudes
+
 
 
 
@@ -1650,6 +1678,7 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
 
 
 
+
 def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
@@ -1672,70 +1701,53 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ia, t_ijab, t_ijkabc, _ = t_amplitudes
     e_ia, e_ijab, e_ijkabc, _ = e_denominators
 
-    # Contributions from singles
 
-    t_ia_temporary = np.einsum('ia->ia', F[o, v], optimize=True) 
-    t_ia_temporary += np.einsum('ab,ib->ia', F[v, v], t_ia, optimize=True) 
-    t_ia_temporary += -1 * np.einsum('ji,ja->ia', F[o, o], t_ia, optimize=True)
+    # Contributions from singles
+    t_ia_temporary = np.einsum('ia->ia', F[o, v], optimize=True) + np.einsum('ab,ib->ia', F[v, v], t_ia, optimize=True) - np.einsum('ji,ja->ia', F[o, o], t_ia, optimize=True)
     t_ia_temporary += np.einsum('ajib,jb->ia', g[v, o, o, v], t_ia, optimize=True)
 
     # Contributions from connected doubles
-
     t_ia_temporary += np.einsum('jb,ijab->ia', F[o, v], t_ijab, optimize=True)
 
     # Contributions from connected doubles
-
-    t_ia_temporary += (1 / 2) * np.einsum('ajbc,ijbc->ia', g[v, o, v, v], t_ijab, optimize=True) 
-    t_ia_temporary += - (1 / 2) * np.einsum('jkib,jkab->ia', g[o, o, o, v], t_ijab, optimize=True)
+    t_ia_temporary += (1 / 2) * np.einsum('ajbc,ijbc->ia', g[v, o, v, v], t_ijab, optimize=True) - (1 / 2) * np.einsum('jkib,jkab->ia', g[o, o, o, v], t_ijab, optimize=True)
     
     # Contributions from disconnected doubles
-
     t_ia_temporary += -np.einsum('jb,ja,ib->ia', F[o, v], t_ia, t_ia, optimize=True)
-    t_ia_temporary += np.einsum('jkib,ka,jb->ia', g[o, o, o, v], t_ia, t_ia, optimize=True) 
-    t_ia_temporary += -1 * np.einsum('ajbc,jb,ic->ia', g[v, o, v, v], t_ia, t_ia, optimize=True)
+    t_ia_temporary += np.einsum('jkib,ka,jb->ia', g[o, o, o, v], t_ia, t_ia, optimize=True) - np.einsum('ajbc,jb,ic->ia', g[v, o, v, v], t_ia, t_ia, optimize=True)
     
     # Contributions from connected triples
-
     t_ia_temporary += (1 / 4) * np.einsum('jkbc,ijkabc->ia', g[o, o, v, v], t_ijkabc, optimize=True)
 
     # Contributions from disconnected triples
-
     t_ia_temporary += -np.einsum('jkbc,ka,jb,ic->ia', g[o, o, v, v], t_ia, t_ia, t_ia, optimize=True)
     t_ia_temporary += np.einsum('jkbc,jb,ikac->ia', g[o, o, v, v], t_ia, t_ijab, optimize=True)
-    t_ia_temporary += -(1 / 2) * np.einsum('jkbc,ja,ikbc->ia', g[o, o, v, v], t_ia, t_ijab, optimize=True) 
-    t_ia_temporary += - (1 / 2) * np.einsum('jkbc,ib,jkac->ia', g[o, o, v, v], t_ia, t_ijab, optimize=True)
+    t_ia_temporary += -(1 / 2) * np.einsum('jkbc,ja,ikbc->ia', g[o, o, v, v], t_ia, t_ijab, optimize=True) - (1 / 2) * np.einsum('jkbc,ib,jkac->ia', g[o, o, v, v], t_ia, t_ijab, optimize=True)
+
 
 
 
 
     # Contributions from singles
-
-    t_ijab_temporary = permute(np.einsum('abic,jc->ijab', g[v, v, o, v], t_ia, optimize=True), 1, 0) 
-    t_ijab_temporary += -1 * permute(np.einsum('akij,kb->ijab', g[v, o, o, o], t_ia, optimize=True), 3, 2)
+    t_ijab_temporary = permute(np.einsum('abic,jc->ijab', g[v, v, o, v], t_ia, optimize=True), 1, 0) - permute(np.einsum('akij,kb->ijab', g[v, o, o, o], t_ia, optimize=True), 3, 2)
     t_ijab_temporary += np.einsum('ijab->ijab', g[o, o, v, v], optimize=True)
 
     # Contributions from connected doubles
-
-    t_ijab_temporary += (1 / 2) * np.einsum('klij,klab->ijab', g[o, o, o, o], t_ijab, optimize=True) 
-    t_ijab_temporary += (1 / 2) * np.einsum('abcd,ijcd->ijab', g[v, v, v, v], t_ijab, optimize=True)
-    t_ijab_temporary += permute(np.einsum('ki,jkab->ijab', F[o, o], t_ijab, optimize=True), 1, 0) 
-    t_ijab_temporary += -1 * permute(np.einsum('ac,ijbc->ijab', F[v, v], t_ijab, optimize=True), 3, 2)
+    t_ijab_temporary += (1 / 2) * np.einsum('klij,klab->ijab', g[o, o, o, o], t_ijab, optimize=True) + (1 / 2) * np.einsum('abcd,ijcd->ijab', g[v, v, v, v], t_ijab, optimize=True)
+    t_ijab_temporary += permute(np.einsum('ki,jkab->ijab', F[o, o], t_ijab, optimize=True), 1, 0) - permute(np.einsum('ac,ijbc->ijab', F[v, v], t_ijab, optimize=True), 3, 2)
     t_ijab_temporary += permute(permute(np.einsum('akic,jkbc->ijab', g[v, o, o, v], t_ijab, optimize=True), 0, 1), 3, 2)
 
     # Contributions from disconnected doubles
-
     t_ijab_temporary += np.einsum('abcd,ic,jd->ijab', g[v, v, v, v], t_ia, t_ia, optimize=True)
     t_ijab_temporary += np.einsum('klij,ka,lb->ijab', g[o, o, o, o], t_ia, t_ia, optimize=True)
     t_ijab_temporary += permute(permute(-np.einsum('akic,kb,jc->ijab', g[v, o, o, v], t_ia, t_ia, optimize=True), 0, 1), 3, 2)
 
     # Contributions from connected triples
-
     t_ijab_temporary += np.einsum('kc,ijkabc->ijab', F[o, v], t_ijkabc, optimize=True)
     t_ijab_temporary += permute((1 / 2) * np.einsum('klic,jklabc->ijab', g[o, o, o, v], t_ijkabc, optimize=True), 1, 0)
     t_ijab_temporary += permute(-(1 / 2) * np.einsum('akcd,ijkbcd->ijab', g[v, o, v, v], t_ijkabc, optimize=True), 3, 2)
 
     # Contributions from disconnected triples
-
     t_ijab_temporary += permute(np.einsum('akcd,kc,ijbd->ijab', g[v, o, v, v], t_ia, t_ijab, optimize=True), 3, 2)
     t_ijab_temporary += permute((1 / 2) * np.einsum('klic,jc,klab->ijab', g[o, o, o, v], t_ia, t_ijab, optimize=True), 1, 0)
     t_ijab_temporary += permute(-np.einsum('klic,kc,jlab->ijab', g[o, o, o, v], t_ia, t_ijab, optimize=True), 1, 0)
@@ -1748,7 +1760,6 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijab_temporary += permute(-np.einsum('akcd,kb,ic,jd->ijab', g[v, o, v, v], t_ia, t_ia, t_ia, optimize=True), 3, 2)
 
     # Contributions from disconnected quadruples
-
     t_ijab_temporary += np.einsum('klcd,kc,ijlabd->ijab', g[o, o, v, v], t_ia, t_ijkabc, optimize=True)
     t_ijab_temporary += permute((1 / 2) * np.einsum('klcd,ic,jklabd->ijab', g[o, o, v, v], t_ia, t_ijkabc, optimize=True), 1, 0)
     t_ijab_temporary += permute((1 / 2) * np.einsum('klcd,ka,ijlbcd->ijab', g[o, o, v, v], t_ia, t_ijkabc, optimize=True), 3, 2)
@@ -1768,7 +1779,6 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
 
     # Contributions from connected doubles
-
     t_ijkabc_temporary = permute(np.einsum('ackd,ijbd->ijkabc', g[v, v, o, v], t_ijab, optimize=True), 4, 3)
     t_ijkabc_temporary += permute(np.einsum('alij,klbc->ijkabc', g[v, o, o, o], t_ijab, optimize=True), 4, 3)
     t_ijkabc_temporary += -np.einsum('abkd,ijcd->ijkabc', g[v, v, o, v], t_ijab, optimize=True)
@@ -1779,7 +1789,6 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(permute(-np.einsum('alik,jlbc->ijkabc', g[v, o, o, o], t_ijab, optimize=True), 1, 0), 4, 3)
     
     # Contributions from connected triples
-
     t_ijkabc_temporary += permute(np.einsum('alkd,ijlbcd->ijkabc', g[v, o, o, v], t_ijkabc, optimize=True), 4, 3)
     t_ijkabc_temporary += permute(np.einsum('clid,jklabd->ijkabc', g[v, o, o, v], t_ijkabc, optimize=True), 1, 0)
     t_ijkabc_temporary += permute(np.einsum('ad,ijkbcd->ijkabc', F[v, v], t_ijkabc, optimize=True), 4, 3)
@@ -1794,7 +1803,6 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(permute(np.einsum('alid,jklbcd->ijkabc', g[v, o, o, v], t_ijkabc, optimize=True), 1, 0), 4, 3)
 
     # Contributions from disconnected triples
-
     t_ijkabc_temporary += -np.einsum('abde,kd,ijce->ijkabc', g[v, v, v, v], t_ia, t_ijab, optimize=True)
     t_ijkabc_temporary += -np.einsum('lmij,lc,kmab->ijkabc', g[o, o, o, o], t_ia, t_ijab, optimize=True)
     t_ijkabc_temporary += permute(np.einsum('acde,kd,ijbe->ijkabc', g[v, v, v, v], t_ia, t_ijab, optimize=True), 4, 3)
@@ -1817,7 +1825,6 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(permute(np.einsum('lmik,la,jmbc->ijkabc', g[o, o, o, o], t_ia, t_ijab, optimize=True), 1, 0), 4, 3)
 
     # Contributions from disconnected quadruples
-
     t_ijkabc_temporary += (1 / 2) * np.einsum('clde,klab,ijde->ijkabc', g[v, o, v, v], t_ijab, t_ijab, optimize=True)
     t_ijkabc_temporary += np.einsum('clde,kd,ijlabe->ijkabc', g[v, o, v, v], t_ia, t_ijkabc, optimize=True)
     t_ijkabc_temporary += np.einsum('lmkd,ld,ijmabc->ijkabc', g[o, o, o, v], t_ia, t_ijkabc, optimize=True)
@@ -1883,7 +1890,6 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(permute(np.einsum('lmkd,ilab,jmcd->ijkabc', g[o, o, o, v], t_ijab, t_ijab, optimize=True), 1, 0), 5, 4)
 
     # Contributions from disconnected quintuples
-
     t_ijkabc_temporary += (1 / 2) * np.einsum('lmde,klab,ijmcde->ijkabc', g[o, o, v, v], t_ijab, t_ijkabc, optimize=True)
     t_ijkabc_temporary += (1 / 2) * np.einsum('lmde,ijcd,klmabe->ijkabc', g[o, o, v, v], t_ijab, t_ijkabc, optimize=True)
     t_ijkabc_temporary += (1 / 2) * np.einsum('lmde,lmcd,ijkabe->ijkabc', g[o, o, v, v], t_ijab, t_ijkabc, optimize=True)
@@ -1953,6 +1959,7 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(np.einsum('lmde,id,jlab,kmce->ijkabc', g[o, o, v, v], t_ia, t_ijab, t_ijab, optimize=True), 1, 0)
     t_ijkabc_temporary += permute(np.einsum('lmde,kd,ilae,jmbc->ijkabc', g[o, o, v, v], t_ia, t_ijab, t_ijab, optimize=True), 1, 0)
     t_ijkabc_temporary += permute(permute(np.einsum('lmde,ilad,jkmbce->ijkabc', g[o, o, v, v], t_ijab, t_ijkabc, optimize=True), 1, 0), 4, 3)
+
 
     # Updates t-amplitudes with epsilons tensors
 
@@ -2192,6 +2199,7 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
 
 
+
 def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndarray, t_ijab: ndarray, o: slice, v: slice, method: str, calculation: Calculation, silent: bool) -> float:
 
     """ 
@@ -2261,6 +2269,7 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
 
     return E_CCSD_T
+
 
 
 
@@ -2361,6 +2370,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
 
     return E_CCSDT_Q
+
 
 
 
@@ -2562,6 +2572,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
 
     return E_CC, t_amplitudes
+
 
 
 

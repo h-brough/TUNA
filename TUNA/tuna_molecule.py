@@ -28,7 +28,7 @@ class Atom:
    
     core_orbitals: int   # How many orbitals are core
 
-    density: ndarray   # Atomic HF/STO-3G density matrix
+    density: ndarray   # Atomic spherically averaged HF/STO-3G density matrix
 
     ghost: bool   # Is the atom a ghost atom
 
@@ -40,7 +40,10 @@ class Atom:
     @property
     def symbol_formatted(self):
 
-        return "X" + self.symbol[1:].capitalize() if self.symbol.startswith("X") else self.symbol.capitalize()
+        return "X" + self.symbol[1:].capitalize() if self.ghost else self.symbol.capitalize()
+
+
+
 
 
 
@@ -50,7 +53,7 @@ class Atom:
 class Molecule:
 
 
-    def __init__(self, atomic_symbols, coordinates, calculation, guess=False):
+    def __init__(self, atomic_symbols: list, coordinates: ndarray, calculation: Calculation, do_correlation: bool = True):
 
         """
 
@@ -60,6 +63,7 @@ class Molecule:
             atomic_symbols (list(str)): List of atomic symbols
             coordinates (array): Three-dimensional atomic coordinates, shaped as [[0, 0, 0], [0, 0, z-coord]]
             calculation (Calculation): Calculation object
+            do_correlation (bool, optional): Should the energy evaluation stop after SCF is complete
         
         """
 
@@ -67,8 +71,8 @@ class Molecule:
         self.atomic_symbols = atomic_symbols
         self.basis = calculation.basis
 
-        # Ignores errors for guess calculations
-        self.guess = guess
+        # Ignores errors for guess calculations if this is false
+        self.do_correlation = do_correlation
 
         self.coordinates = coordinates
         self.charge = calculation.charge
@@ -98,10 +102,12 @@ class Molecule:
 
 
         # Charge array in relative atomic charge units and mass array in electron mass units
+
         self.basis_charges = np.array([atom.basis_charge for atom in self.atoms])
         self.charges = np.array([atom.charge for atom in self.atoms])
         self.masses = np.array([atom.mass for atom in self.atoms]) * constants.atomic_mass_unit_in_electron_mass
-        
+        self.total_mass = np.sum(self.masses)
+
         # Useful structure-based constants
 
         if calculation.diatomic:
@@ -110,9 +116,11 @@ class Molecule:
             self.rotational_constant_per_cm, _ = postscf.calculate_rotational_constant(self.masses, self.coordinates, calculation, silent=True)
 
         # Generates basis data for one type of atom
+
         self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0], calculation)
 
         # If two types of atom are present, generate data for both and combine them into one dictionary
+
         if len(self.atoms) == 2 and self.basis_charges[0] != self.basis_charges[1]: 
             
             self.basis_data = bas.generate_basis(self.basis, self.basis_charges[0], calculation) | bas.generate_basis(self.basis, self.basis_charges[1], calculation)
@@ -156,18 +164,18 @@ class Molecule:
         elif self.n_electrons == 0: error("Zero electrons specified!")
 
 
+        # Checks if there are any X-prefixed ghost atoms present, as a boolean
+        self.ghost_atom_present = any("X" in symbol for symbol in self.atomic_symbols)
 
         # Determines molecular point group and molecular structure
         self.point_group = self.determine_point_group()
         self.molecular_structure = self.determine_molecular_structure()
-
-        # Checks if there are any X-prefixed ghost atoms present, as a boolean
-        self.ghost_atom_present = any("X" in symbol for symbol in self.atomic_symbols)
+        
 
         # If a molecule is supplied, calculate the bond length and centre of mass
         if len(self.atoms) == 2: 
             
-            self.bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
+            self.bond_length = calculate_bond_length(coordinates)
 
             if not self.ghost_atom_present:
 
@@ -226,15 +234,13 @@ class Molecule:
         if calculation.reference == "UHF" and self.n_electrons > len(self.basis_functions) and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons: error("Too many electrons for size of basis set!")
 
         # Sets off errors for impossible correlated calculations
-        if calculation.method in correlated_methods and not self.guess:
+        if calculation.method in correlated_methods and self.do_correlation:
 
             if self.n_virt <= 0 and calculation.reference == "RHF" or self.n_virt <= 1 and calculation.reference == "UHF": 
 
                 error("Correlated calculation requested on system with insufficient virtual orbitals!")
         
-        if calculation.method in ["CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "QCISD[T]", "UQCISD[T]", "CCSDTQ", "CCSDT[Q]"] and self.n_electrons == 2: error("Triple excitations have been requested on a two-electron system!")
-        if calculation.method in ["CCSDT[Q]", "CCSDTQ"] and self.n_electrons in [2, 3]: error("Quadruple excitations have been requested on a two- or three-electron system!")
-        
+
         # Sets off errors for invalid use of restricted Hartree-Fock
         if calculation.reference == "RHF" or calculation.method == "RHF":
 
@@ -252,7 +258,7 @@ class Molecule:
         # Determines whether the density should be read in between steps
         calculation.MO_read = False if calculation.reference == "UHF" and self.multiplicity == 1 and not calculation.MO_read_requested and not calculation.no_rotate_guess or calculation.no_MO_read or calculation.rotate_guess else True
 
-
+        self.dipole_moment = None
 
 
     def generate_angular_momentum_list(self, basis_functions):
@@ -338,7 +344,7 @@ class Molecule:
 
 
 
-    def convert_angular_momentum_to_subshell(self, ang_mom):
+    def convert_angular_momentum_to_subshell(self, ang_mom: str) -> list:
 
         """
         
@@ -348,7 +354,7 @@ class Molecule:
             ang_mom (str): Angular momentum
         
         Returns:
-            shells[str(ang_mom)] (array): Array of triples of subshells
+            subshells[str(ang_mom)] (array): Array of triples of subshells
 
         """
 
@@ -382,12 +388,16 @@ class Molecule:
 
         """
 
+        point_group = "K"
+
         # Two same atoms -> Dinfh, two different atoms -> Cinfv, single atom -> K
-        if len(self.atomic_symbols) == 2 and "X" not in self.atomic_symbols[0] and "X" not in self.atomic_symbols[1]:
 
-            return "Dinfh" if self.atomic_symbols[0] == self.atomic_symbols[1] else "Cinfv"
+        if len(self.atomic_symbols) == 2 and not self.ghost_atom_present:
 
-        return "K"
+            point_group = "Dinfh" if self.atomic_symbols[0] == self.atomic_symbols[1] else "Cinfv"
+
+    
+        return point_group
 
 
 
@@ -405,17 +415,24 @@ class Molecule:
 
         """
 
+        first_atom = self.atomic_symbols[0].lower().capitalize()
+
+        molecular_structure = first_atom
+
         if len(self.atomic_symbols) == 2:
             
+            second_atom = self.atomic_symbols[1].lower().capitalize()
+
             # Puts a line between two atoms if two atoms are given, formats symbols nicely
-            if "X" not in self.atomic_symbols[0] and "X" not in self.atomic_symbols[1]: molecular_structure = f"{self.atomic_symbols[0].lower().capitalize()} --- {self.atomic_symbols[1].lower().capitalize()}"
 
-            elif "X" in self.atomic_symbols[0]: molecular_structure = f"{self.atomic_symbols[1].lower().capitalize()}"
-            elif "X" in self.atomic_symbols[1]: molecular_structure = f"{self.atomic_symbols[0].lower().capitalize()}"
+            if not self.ghost_atom_present: 
+                
+                molecular_structure = first_atom + " --- " + second_atom
 
-        else:
-
-            molecular_structure = self.atomic_symbols[0].lower().capitalize()
+            elif "X" in self.atomic_symbols[0]: 
+                
+                molecular_structure = second_atom
+            
 
         return molecular_structure
 

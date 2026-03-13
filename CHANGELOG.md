@@ -9,12 +9,15 @@
 - Plot vibrational wavefunctions with the `PLOTVIB` keyword
 - Control convergence of anharmonic frequencies systematically with `ANHARMCONV` keyword
 - Polarisability calculations for all methods via `POLAR` keyword
-- Calculations in electric field by `EX`, `EY`, `EZ` keywords
-- Numerical calculation of dipole moments for all electronic structure methods
+- Hyperpolarisability calculations for all methods via `HYPER` keyword
+- Calculations in applied electric field by `EX`, `EY`, `EZ` keywords
+- Numerical calculation of dipole moments for all electronic structure methods via `DIPOLE` or `POLAR`
+- Exact anharmonic intensities for all methods combining `DIPOLE` with `ANHARM`
 - Superposition of atomic densities and self-consistent minimal basis guess strategies, making SCF for heavy elements up to 50% faster
+- Took advantage of more diatomic symmetry in the molecular integrals, making calculations up to 10x faster
 - Keywords for guess strategies, `COREGUESS`, `SADGUESS` and `SCFGUESS`
 - Electronic contribution to entropy is now calculated
-- Diagonal Born-Oppenheimer correction with `DBOC` keyword
+- New basis sets: t-aug-cc-pVDZ, t-aug-cc-pVTZ, t-aug-cc-pVQZ, t-aug-cc-pV5Z, t-aug-cc-pV6Z
 - Implemented D2 dispersion parameters for DFT methods including PBE, BLYP, B3LYP, BP86, TPSS and B2PLYP
 - Basis set extrapolation extended to use triple and quadruple zeta basis sets
 - New `DEBUG` keyword, for extreme levels of printing
@@ -23,7 +26,6 @@
 
 - Default SCF guess strategy is now self-consistent minimal basis guess, via superposition of atomic densities
 - Restructured code for Hessian evaluation, reducing cost by 20% with identical results
-- Took advantage of more x/y symmetry in diatomics in the molecular integral evaluatios, making calculations up to 10x faster
 - New tuna_guess module; split tuna_optfreq into tuna_opt and tuna_freq; split tuna_kernel module away from tuna_energ
 - Density matrix idempotency is now forced after the guess density, to increase stability
 - Natural orbitals are no longer calculated by default for MP2
@@ -33,6 +35,8 @@
 - Coupled cluster maximum iterations default increased from 30 to 50
 - A coupled cluster damping parameter now must be given when `CCDAMP` is used
 - You can now request same and opposite spin scaling on double-hybrid functionals
+- The input for the `HFX`, `DFX`, `MPC` and `DFC` keywords are now given as proportions, not percentages
+- Trying to calculate a correlated method on a system with insufficient electrons no longer throws an error
 
 ### Fixed
 

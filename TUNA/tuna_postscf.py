@@ -3,6 +3,8 @@ from numpy import ndarray
 from tuna_util import *
 
 
+
+
 def calculate_reduced_mass(masses: ndarray) -> float: 
 
     """
@@ -76,9 +78,11 @@ def calculate_rotational_constant(masses, coordinates, calculation, silent=False
     reduced_mass = calculate_reduced_mass(masses)
     
     # Standard equation for linear molecule's rotational constant
+
     rotational_constant_hartree = 1 / (2 * reduced_mass * bond_length ** 2)
 
     # Various unit conversions  
+    
     rotational_constant_per_bohr = rotational_constant_hartree / (constants.h * constants.c)
     rotational_constant_per_cm = rotational_constant_per_bohr / (100 * constants.bohr_in_metres)
     rotational_constant_GHz = constants.per_cm_in_GHz * rotational_constant_per_cm
@@ -162,7 +166,7 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
 
     total_energy = electronic_energy + V_NN
     
-    # Calculates Virial ration between potential and kinetic energy
+    # Calculates Virial ratio between potential and kinetic energy
     virial_ratio = -1 * (total_energy - SCF_output.kinetic_energy) / SCF_output.kinetic_energy
            
     log_spacer(calculation, priority=2, silent=silent)
@@ -179,7 +183,10 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
 
     log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2, silent=silent)
     log(f"  Nuclear attraction energy:        {SCF_output.nuclear_electron_energy:15.10f}", calculation, 2, silent=silent)      
-    log(f"  Electric field energy:            {SCF_output.electric_field_energy:15.10f}", calculation, 2, silent=silent)
+
+    if np.linalg.norm(calculation.electric_field) > 0:
+    
+        log(f"  Electric field energy:            {SCF_output.electric_field_energy:15.10f}", calculation, 2, silent=silent)
 
     log(f"\n  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent=silent)
     log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent=silent)
@@ -255,6 +262,8 @@ def calculate_spin_contamination(P_alpha, P_beta, n_alpha, n_beta, S, calculatio
     log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, priority, silent=silent)
 
     log_spacer(calculation, silent=silent, priority=priority)
+
+
 
 
 
@@ -345,7 +354,7 @@ def calculate_population_analysis(P, S, R, AO_ranges, atoms, charges):
 
 
 
-def calculate_dipole_moment(centre_of_mass, charges, coordinates, P, D):
+def calculate_analytical_dipole_moment(centre_of_mass, charges, coordinates, P, D):
 
     """
 
@@ -364,6 +373,10 @@ def calculate_dipole_moment(centre_of_mass, charges, coordinates, P, D):
         electronic_dipole_moment (float): Electronic dipole moment in atomic units
 
     """
+
+    # Extracts the z-component of dipole moment integrals
+
+    D = D[2]
 
     nuclear_dipole_moment = calculate_nuclear_dipole_moment(centre_of_mass, charges, coordinates)        
     electronic_dipole_moment = -1 * np.einsum("ij,ij->", P, D, optimize=True)
@@ -819,7 +832,7 @@ def post_SCF_output(molecule, calculation, P, S, AO_ranges, SCF_output, P_alpha,
 
         log(f"\n Dipole moment origin is the centre of mass, {bohr_to_angstrom(centre_of_mass):.5f} angstroms from the first atom.", calculation, 2)
 
-        total_dipole, D_nuclear, D_electronic = calculate_dipole_moment(centre_of_mass, charges, coordinates, P, SCF_output.D[2])
+        total_dipole, D_nuclear, D_electronic = calculate_analytical_dipole_moment(centre_of_mass, charges, coordinates, P, SCF_output.D)
 
         log_spacer(calculation, priority=2, start="\n")
         log("                    Dipole Moment", calculation, 2, colour="white")

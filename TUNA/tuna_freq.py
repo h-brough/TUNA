@@ -1,6 +1,7 @@
-from tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer, Calculation
+from tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer, Calculation, calculate_first_derivative, Output
 import tuna_energy as energ
 import tuna_out as out
+import tuna_postscf as postscf
 import tuna_opt as opt
 import tuna_thermo as thermo
 from scipy import linalg, interpolate
@@ -27,7 +28,6 @@ The module contains:
 4. The main function for the harmonic frequency calculation, calculate_harmonic_frequency
 
 """
-
 
 
 
@@ -67,7 +67,9 @@ def calculate_transition_intensity(frequency_matrix: ndarray, dipole_matrix: nda
 
 
 
-def check_sign_of_hessian(hessian: ndarray, reduced_mass: float) -> tuple[float, float]:
+
+
+def check_sign_of_hessian(hessian: ndarray, reduced_mass: float) -> tuple:
 
     """
 
@@ -108,6 +110,8 @@ def check_sign_of_hessian(hessian: ndarray, reduced_mass: float) -> tuple[float,
 
 
 
+
+
 def calculate_anharmonicity_constant(transition_matrix: ndarray, harmonic_frequency: float) -> float:
 
     """
@@ -128,6 +132,62 @@ def calculate_anharmonicity_constant(transition_matrix: ndarray, harmonic_freque
     chi = (transition_matrix[0][1] - transition_matrix[1][2]) / (2 * harmonic_frequency)
 
     return chi
+
+
+
+
+
+
+
+
+
+
+def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_output_forward: Output, SCF_output_backward: Output, P_forward: ndarray, P_backward: ndarray):
+
+    """
+
+    Calculates the dipole derivative in normal coordinates.
+
+    This is the numerical derivative of the analytical dipole moment.
+
+    Args:   
+        coordinates (array): Atomic coordinates
+        molecule (Molecule): Molecule object
+        SCF_output_forward (Output): SCF output from prodded forward coordinates
+        P_forward (array): Density matrix from prodded forward coordinates
+        SCF_output_backward (Output): SCF output from prodded backward coordinates
+        P_backward (array): Density matrix from prodded backward coordinates
+
+    Returns:
+        dipole_derivative (float): Dipole derivative in normal coordinates
+
+    """
+
+    # Forward and backward coordinates are symmetrical by the mass weighting, to prevent influence of moving electric field origin in dipole moment calculations
+
+    prodding_coords = np.array([[0.0, 0.0, - molecule.masses[1] * constants.numerical_derivative_prod], [0.0, 0.0, molecule.masses[0] * constants.numerical_derivative_prod]]) / molecule.total_mass
+    
+    forward_coords = coordinates + prodding_coords
+    backward_coords = coordinates - prodding_coords
+    
+    # Calculates forward and backward dipole moments, using dipole integrals calculated from centre of mass
+
+    dipole_moment_forward, _, _ = postscf.calculate_analytical_dipole_moment(molecule.centre_of_mass, molecule.charges, forward_coords, P_forward, SCF_output_forward.integrals.D)
+    dipole_moment_backward, _, _ = postscf.calculate_analytical_dipole_moment(molecule.centre_of_mass, molecule.charges, backward_coords, P_backward, SCF_output_backward.integrals.D)
+
+    # Calculates dipole derivative by central differences method
+
+    dipole_derivative = calculate_first_derivative(dipole_moment_backward, dipole_moment_forward, constants.numerical_derivative_prod)
+    
+    # Converts to normal coordinates by mass weighting
+
+    dipole_derivative /= np.sqrt(molecule.reduced_mass)
+
+
+    return dipole_derivative
+
+
+
 
 
 
@@ -164,6 +224,7 @@ def calculate_dipole_matrix(vibrational_wavefunctions: ndarray, dipole_moments_i
 
 
 
+
 def calculate_transition_matrix(vibrational_energy_levels: ndarray) -> ndarray:
 
     """
@@ -191,7 +252,9 @@ def calculate_transition_matrix(vibrational_energy_levels: ndarray) -> ndarray:
 
 
 
-def interpolate_and_build_hamiltonian(x_values: ndarray, V_values: ndarray, reduced_mass: float, extent: float, extrapolation_grid_density: float, dipole_moments: ndarray) -> tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
+
+
+def interpolate_and_build_hamiltonian(x_values: ndarray, V_values: ndarray, reduced_mass: float, SCAN_EXTENT: float, EXTRAPOLATION_GRID_DENSITY: float, dipole_moments: ndarray) -> tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
 
     """
 
@@ -201,8 +264,8 @@ def interpolate_and_build_hamiltonian(x_values: ndarray, V_values: ndarray, redu
         x_values (array): Bond length values
         V_values (array): Raw potential energy values
         reduced_mass (float): Reduced mass
-        extent (float): Extent of scan progress
-        extrapolation_grid_density (int): How many extrapolation points per computed grid point
+        SCAN_EXTENT (float): Extent of scan progress
+        EXTRAPOLATION_GRID_DENSITY (int): How many extrapolation points per computed grid point
         dipole_moments (array): Dipole moments along scan coordinate
 
     Returns:
@@ -214,7 +277,7 @@ def interpolate_and_build_hamiltonian(x_values: ndarray, V_values: ndarray, redu
 
     """
 
-    n_grid_points = int(extrapolation_grid_density * extent)
+    n_grid_points = int(EXTRAPOLATION_GRID_DENSITY * SCAN_EXTENT)
 
     # Interpolates the potential energies and dipole moments using the grid density multiplied by the extent, to give a consistent number of interpolation points
 
@@ -230,6 +293,8 @@ def interpolate_and_build_hamiltonian(x_values: ndarray, V_values: ndarray, redu
     vibrational_energy_levels, vibrational_wavefunctions = diagonalise_hamiltonian_tridiagonal(main_diag, off_diag)
 
     return vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x, V
+
+
 
 
 
@@ -314,6 +379,8 @@ def interpolate_potential_energy(F_raw: ndarray, x_raw: ndarray, n_grid_points: 
 
 
 
+
+
 def diagonalise_hamiltonian_tridiagonal(main_diag: ndarray, off_diag: ndarray, n_states=6) -> tuple[ndarray, ndarray]:
 
     """
@@ -336,6 +403,7 @@ def diagonalise_hamiltonian_tridiagonal(main_diag: ndarray, off_diag: ndarray, n
     vibrational_energy_levels, vibrational_wavefunctions = linalg.eigh_tridiagonal(main_diag, off_diag, select="i", select_range=(0, n_states - 1))
 
     return vibrational_energy_levels, vibrational_wavefunctions
+
 
 
 
@@ -386,6 +454,7 @@ def print_absorption_spectrum(calculation: Calculation, transition_matrix: ndarr
 
 
 
+
 def frequency_is_converged(frequency: float, frequency_old: float, calculation: Calculation) -> bool:
 
     """
@@ -407,6 +476,7 @@ def frequency_is_converged(frequency: float, frequency_old: float, calculation: 
         return True
     
     return False
+
 
 
 
@@ -500,15 +570,16 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
     # This value is more than enough for accuracy and extrapolation is not going to be the rate limiting step
 
-    extrapolation_grid_density = 1000
+    EXTRAPOLATION_GRID_DENSITY = 1000
+
+    # The extent is the total distance (in angstroms) of the first scan around the minimum - half backwards, half forwards
+
+    SCAN_EXTENT = 0.4
 
     # Chooses a 0.05 angstrom step length if none has been chosen
 
     calculation.scan_step = 0.05 if calculation.scan_step is None else calculation.scan_step
     
-    # The extent is the total distance (in angstroms) of the first scan around the minimum - half backwards, half forwards
-
-    extent = 0.4
 
     # Initialises fundamental transition frequency for loop
 
@@ -523,14 +594,14 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
     log(" Calculating initial potential energy surface around minimum...  ", calculation, 1, end=""); sys.stdout.flush()
 
-    # Determines how many scan steps are necessary, based on extent and step length
+    # Determines how many scan steps are necessary, based on INITIAL_SCAN_EXTENT and step length
 
-    calculation.scan_number = int(extent / calculation.scan_step) + 1
+    calculation.scan_number = int(SCAN_EXTENT / calculation.scan_step) + 1
 
-    # Starts from optimised bond lengths, moves back by half the "extent"
+    # Starts from optimised bond lengths, moves back by half the "INITIAL_SCAN_EXTENT"
 
     coordinates, coordinates_right, coordinates_left = molecule.coordinates.copy(), molecule.coordinates.copy(), molecule.coordinates.copy()
-    coordinates[1][2] -= angstrom_to_bohr(extent) / 2
+    coordinates[1][2] -= angstrom_to_bohr(SCAN_EXTENT) / 2
 
     # Does the first scan over the minimum; gets the bond lengths, energies and dipole moments
 
@@ -540,7 +611,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
     # Determines how many scan steps are necessary for the extensions - the division by three is arbitrary
 
-    calculation.scan_number = int(extent / calculation.scan_step / 3) + 1
+    calculation.scan_number = int(SCAN_EXTENT / calculation.scan_step / 3) + 1
 
     log_big_spacer(calculation, 1)
     log("                                          Anharmonic Frequency", calculation, 1, colour="white")
@@ -554,7 +625,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
         # Updates the total extent based on the scanned distance so far, in bohr
 
-        extent = max(x_values) - min(x_values)
+        SCAN_EXTENT = max(x_values) - min(x_values)
 
         # Updates the left and rightmost coordinates, based on the scan endpoints so far
 
@@ -577,7 +648,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
         
         # Interpolates the energy and dipole moments, and solves the eigenvalue equation 
 
-        vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x, V = interpolate_and_build_hamiltonian(x_values, V_values, molecule.reduced_mass, extent, extrapolation_grid_density, dipole_moments)
+        vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x, V = interpolate_and_build_hamiltonian(x_values, V_values, molecule.reduced_mass, SCAN_EXTENT, EXTRAPOLATION_GRID_DENSITY, dipole_moments)
 
         transition_matrix = calculate_transition_matrix(vibrational_energy_levels)
         transition_per_cm = transition_matrix[0][1] * constants.per_cm_in_hartree
@@ -598,6 +669,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
     error("Anharmonic frequency calculation did not converge!")
     
+
 
 
 
@@ -661,7 +733,7 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
 
     # Calculates the dipole derivative, maintaining gauge invariance
 
-    dipole_derivative = opt.calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_output_backward, P_forward, P_backward)
+    dipole_derivative = calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_output_backward, P_forward, P_backward)
 
     # Adding vibrational overlap contribution to match ORCA results (frequencies cancel for harmonic oscillator)
 

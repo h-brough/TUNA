@@ -467,7 +467,7 @@ def calculate_unrestricted_electronic_energy(T, V_NE, P_alpha, P_beta, J_alpha, 
 
 
 
-def construct_restricted_Fock_matrix(integrals: Integrals, P: ndarray, HFX_prop: float, V_XC: ndarray) -> tuple[ndarray, ndarray, ndarray]:
+def construct_restricted_Fock_matrix(integrals: Integrals, P: ndarray, HFX_prop: float, V_XC: ndarray) -> tuple:
 
     """
     
@@ -647,6 +647,7 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha, P_beta, bfs_on_g
     """
 
     # Constructs the electron density on a grid
+
     alpha_density = dft.construct_density_on_grid(P_alpha, bfs_on_grid)
     beta_density = dft.construct_density_on_grid(P_beta, bfs_on_grid)
 
@@ -657,10 +658,12 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha, P_beta, bfs_on_g
     if calculation.functional.functional_class in ["GGA", "meta-GGA"]:
 
         # Calculates the density gradient for a GGA calculation
+
         sigma_aa, density_gradient_alpha = dft.calculate_density_gradient(P_alpha, bfs_on_grid, bf_gradients_on_grid) 
         sigma_bb, density_gradient_beta = dft.calculate_density_gradient(P_beta, bfs_on_grid, bf_gradients_on_grid) 
 
-        # This sigma is cleaned here as the others are cleaned in calculate_density_gradient - do NOT clean this
+        # This sigma is made here as the others are cleaned in calculate_density_gradient - do NOT clean this
+
         sigma_ab = np.einsum("akl,akl->kl", density_gradient_alpha, density_gradient_beta, optimize=True)
 
         if calculation.functional.functional_class == "meta-GGA":
@@ -670,28 +673,34 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha, P_beta, bfs_on_g
 
 
     # Accounts for the spin scaling of the exact exchange functional
+
     alpha_density_scaled, beta_density_scaled = alpha_density * 2, beta_density * 2
     sigma_aa_scaled, sigma_bb_scaled = (sigma_aa * 4, sigma_bb * 4) if sigma_aa is not None else (None, None)
     tau_alpha_scaled, tau_beta_scaled = (tau_alpha * 2, tau_beta * 2) if tau_alpha is not None else (None, None)
 
     # Calculates derivatives necessary for XC matrix
+
     df_dn_X_alpha, df_ds_X_alpha, df_dt_X_alpha, e_X_alpha = exchange_functional(alpha_density_scaled, sigma_aa_scaled, tau_alpha_scaled, calculation) if exchange_functional is not None else (None, None, None, None)
     df_dn_X_beta, df_ds_X_beta, df_dt_X_beta, e_X_beta = exchange_functional(beta_density_scaled, sigma_bb_scaled, tau_beta_scaled, calculation) if exchange_functional is not None else (None, None, None, None)
     
     df_dn_C_alpha, df_dn_C_beta, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab, df_dt_C_alpha, df_dt_C_beta, e_C = correlation_functional(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation) if correlation_functional is not None else (None, None, None, None, None, None, None, None)
 
     # This is for the spin scaling for exchange
+
     df_ds_X_alpha_scaled, df_ds_X_beta_scaled = (df_ds_X_alpha * 2, df_ds_X_beta * 2) if df_ds_X_alpha is not None else (None, None)
 
     # Builds the alpha and beta exchange matrices - factor of two accounts for spin scaling
+
     V_X_alpha = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_alpha, df_ds_X_alpha_scaled, df_dt_X_alpha, bf_gradients_on_grid, density_gradient_alpha) if df_dn_X_alpha is not None else np.zeros_like(P_alpha)
     V_X_beta = dft.calculate_V_X(weights, bfs_on_grid, df_dn_X_beta, df_ds_X_beta_scaled, df_dt_X_beta, bf_gradients_on_grid, density_gradient_beta) if df_dn_X_beta is not None else np.zeros_like(P_beta)
 
     # Builds the alpha and beta correlation matrices
+
     V_C_alpha = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_alpha, df_ds_C_aa, df_dt_C_alpha, bf_gradients_on_grid, density_gradient_alpha, density_gradient_other_spin=density_gradient_beta, df_ds_ab=df_ds_C_ab) if df_dn_C_alpha is not None else np.zeros_like(P_alpha)
     V_C_beta = dft.calculate_V_C(weights, bfs_on_grid, df_dn_C_beta, df_ds_C_bb, df_dt_C_beta, bf_gradients_on_grid, density_gradient_beta, density_gradient_other_spin=density_gradient_alpha, df_ds_ab=df_ds_C_ab) if df_dn_C_beta is not None else np.zeros_like(P_beta)
 
     # Constructs exchange-correlation matrices considering hybrid functionals
+
     V_XC_alpha = V_X_alpha * calculation.DFX_prop + V_C_alpha * calculation.DFC_prop
     V_XC_beta = V_X_beta * calculation.DFX_prop + V_C_beta * calculation.DFC_prop
 
@@ -809,7 +818,7 @@ def apply_damping(P_before_damping, P_old_damp, commutator, calculation, P_old_b
 
 
 
-def calculate_DIIS_error(F_alpha, F_beta, P_alpha, P_beta, S, X, DIIS_error_vector, Fock_vector, calculation):
+def calculate_DIIS_error(F_alpha: ndarray, F_beta: ndarray, P_alpha: ndarray, P_beta: ndarray, S: ndarray, X: ndarray, DIIS_error_vector: ndarray, Fock_vector: ndarray, calculation: Calculation) -> tuple:
 
     """
     
@@ -839,32 +848,40 @@ def calculate_DIIS_error(F_alpha, F_beta, P_alpha, P_beta, S, X, DIIS_error_vect
     def calculate_commutator(F, P):
 
         # Calculates the root mean square commutator 
+
         DIIS_error = F @ P @ S - S @ P @ F
 
         # Uses Fock transformation matrix to orthogonalise the DIIS error matrix
+
         orthogonalised_DIIS_error = X.T @ DIIS_error @ X
 
         # Root-mean-square of the orthogonalised error matrix
+
         commutator = np.mean(orthogonalised_DIIS_error * orthogonalised_DIIS_error) ** (1 / 2)
 
         return commutator, orthogonalised_DIIS_error
 
 
     # Calculates commutator for both spin channels
+
     commutator_alpha, orthogonalised_DIIS_error_alpha = calculate_commutator(F_alpha, P_alpha)
     commutator_beta, orthogonalised_DIIS_error_beta = calculate_commutator(F_beta, P_beta)
 
     # Commutator for convergence checking is largest of the two
+
     commutator = max(commutator_alpha, commutator_beta)
 
     # Updates DIIS error vector
+
     e_combined = np.concatenate((orthogonalised_DIIS_error_alpha.flatten(), orthogonalised_DIIS_error_beta.flatten()))
     DIIS_error_vector.append(e_combined)
 
     # Updates Fock vector
+
     Fock_vector.append((F_alpha, F_beta))
     
     # Clears old Fock matrices if Fock vector is too long
+
     if len(Fock_vector) > calculation.max_DIIS_matrices: 
         
         del Fock_vector[0]

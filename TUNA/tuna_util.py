@@ -129,7 +129,7 @@ class Calculation:
     
     """
 
-    def __init__(self, calculation_type, method, start_time, params, basis, atomic_symbols):
+    def __init__(self, calculation_type: str, method: str, start_time: float, params: list, basis: str, atomic_symbols: list):
         
         """
 
@@ -153,14 +153,22 @@ class Calculation:
         self.original_basis = basis
         self.atomic_symbols = atomic_symbols
         self.DFT_calculation = True if method in DFT_methods else False
+        self.reference = "Undefined"
+
+        # Timing floats
+        self.SCF_time = 0.0
+        self.integrals_time = 0.0
+        self.correlation_time = 0.0
+        self.excited_state_time = 0.0
 
         # Prevents running "params" through every function call
         keyword = partial(process_keyword, params=params)
 
+
         # Simple boolean keywords
         self.additional_print = keyword(["P"], False)
         self.terse = keyword(["T"], False)
-        self.debug = keyword("DEBUG", False)
+        self.debug = keyword(["DEBUG"], False)
         self.decontract = keyword(["DECONTRACT"], False)
         self.natural_orbitals = keyword(["NATORBS"], False)
         self.no_singles = keyword(["NOSINGLES"], False)
@@ -190,8 +198,9 @@ class Calculation:
         self.core_guess = keyword(["COREGUESS"], False)
         self.superposition_guess = keyword(["SADGUESS"], False)
         self.self_consistent_guess = keyword(["SCFGUESS"], True)
-        self.diagonal_born_oppenheimer_correction = keyword(["DBOC"], False)
-        self.polarisability = keyword(["POLAR"], False)
+        self.polarisability = keyword(["POLAR", "POLARISABILITY", "POLARIZABILITY"], False)
+        self.hyperpolarisability = keyword(["HYPER", "HYPERPOLARISABILITY", "HYPERPOLARIZABILITY"], False)
+        self.dipole = keyword(["DIPOLE"], False)
 
         # Convergence keywords with optional parameters
         self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
@@ -230,9 +239,10 @@ class Calculation:
         self.MD_number_of_steps = keyword(["NUM", "MDNUMBER"], 50, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
 
         # Thermochemistry keywords
-        self.temperature = 0 if self.calculation_type == "MD" else 298.15
+        self.temperature = 0.0 if self.calculation_type == "MD" else 298.15
         self.temperature = keyword(["TEMP", "TEMPERATURE"], self.temperature, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.pressure = keyword(["PRES", "PRESSURE"], 101325, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
+
 
         # Post-Hartree-Fock keywords
 
@@ -254,8 +264,8 @@ class Calculation:
         self.functional = DFT_methods.get(self.method)
         self.X_alpha = keyword(["XA"], 2 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
         self.integral_accuracy_requested, self.integral_accuracy = keyword(["INTACC"], False, check_next_space=True, value_type=float, associated_keyword_default=4.0)
-        self.DFX_requested, self.DFX_prop = keyword(["DFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
-        self.DFC_requested, self.DFC_prop = keyword(["DFC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+        self.DFX_requested, self.DFX_prop = keyword(["DFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
+        self.DFC_requested, self.DFC_prop = keyword(["DFC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
         self.MPC_requested, self.MPC_prop = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
 
         # Checks for Hartree theory requested
@@ -265,7 +275,7 @@ class Calculation:
 
         else: 
              
-            self.HFX_requested, self.HFX_prop = keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=100)
+            self.HFX_requested, self.HFX_prop = keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
         
         if self.DFT_calculation: 
             
@@ -279,8 +289,6 @@ class Calculation:
             if not self.SSS_requested: self.same_spin_scaling = self.functional.same_spin_scaling
             if not self.OSS_requested: self.opposite_spin_scaling = self.functional.opposite_spin_scaling
         
-        # Brings the percentage into a proportion
-        self.HFX_prop, self.DFX_prop, self.DFC_prop, self.MPC_prop = self.HFX_prop / 100, self.DFX_prop / 100, self.DFC_prop / 100, self.MPC_prop / 100
         
         self.DFX_prop = 0 if self.no_DFT_exchange else self.DFX_prop
         self.DFC_prop = 0 if self.no_DFT_correlation else self.DFC_prop
@@ -300,7 +308,7 @@ class Calculation:
         
         # Convergence keywords for SCF and optimisations
         self.SCF_conv = constants.convergence_criteria_SCF["tight"] if self.calculation_type in ["OPT", "FREQ", "OPTFREQ", "MD", "ANHARM"] else constants.convergence_criteria_SCF["medium"]
-        self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if self.calculation_type in ["FREQ", "OPTFREQ", "ANHARM"] or self.polarisability else self.SCF_conv
+        self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if self.calculation_type in ["FREQ", "OPTFREQ", "ANHARM"] or self.polarisability or self.hyperpolarisability else self.SCF_conv
         self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "CIS" in self.method and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
 
         self.SCF_conv = constants.convergence_criteria_SCF["loose"] if "LOOSE" in params or "LOOSESCF" in params else self.SCF_conv
@@ -389,7 +397,7 @@ class Constants:
     h = 2 * np.pi
 
     # System-wide consistent parameters
-    numerical_derivative_prod = 0.0001
+    numerical_derivative_prod = 0.001 # This works much better than 0.0001 for hyperpolarisability, presumably more stable
     density_floor = 1e-26
     sigma_floor = density_floor ** 2
 
@@ -448,7 +456,7 @@ class Integrals:
 
     ERI_AO: ndarray  # Two-electron integrals
 
-    Q: ndarray = None # Total electric field integrals
+    Q: ndarray | None = None # Total electric field integrals
 
     @property
     def H_core(self):
@@ -559,16 +567,16 @@ class Functional:
     c_functional: callable
 
     # Proportions of density-functional and Hartree-Fock exchange
-    DFX: float = 100
-    HFX: float = 0
+    DFX: float = 1.0
+    HFX: float = 0.0
 
     # Proportion of density-functional and perturbative correlation
-    DFC: float = 100
-    MPC: float = 0
+    DFC: float = 1.0
+    MPC: float = 0.0
 
     # Same-spin scaling and opposite-spin scaling for double-hybrid functionals
-    same_spin_scaling: float = 1
-    opposite_spin_scaling: float = 1
+    same_spin_scaling: float = 1.0
+    opposite_spin_scaling: float = 1.0
 
     # Is the functional LDA, GGA or meta-GGA - which derivatives are needed for the exchange-correlation potential
     functional_class: str = "LDA"
@@ -604,7 +612,7 @@ def process_no_singles_keyword(method: str, no_singles: bool) -> str:
 
     """"
     
-    Processes the NOSINGLES keyword.
+    Processes the "NOSINGLES" keyword.
 
     Args:
         method (str): Electronic structure method
@@ -618,12 +626,14 @@ def process_no_singles_keyword(method: str, no_singles: bool) -> str:
     prefix = ""
 
     # Makes sure U is not lost
+
     if method.startswith("U"):
 
         prefix = "U"
         method = method[1:]  
 
-    # CEPA0 defaults to LCCSD, but turns into LCCD if NOSINGLES is used
+    # CEPA0 defaults to LCCSD, but turns into LCCD if "NOSINGLES" is used
+
     method = "LCCSD" if "CEPA" in method else method
 
     if no_singles:
@@ -637,7 +647,7 @@ def process_no_singles_keyword(method: str, no_singles: bool) -> str:
             case "CCSDT[Q]": method = "CCD"
             case "CCSDTQ": method = "CCD"
 
-        method = prefix + method  
+    method = prefix + method  
 
     return method
 
@@ -647,21 +657,25 @@ def process_no_singles_keyword(method: str, no_singles: bool) -> str:
 
 
 
-def bohr_to_angstrom(length: float) -> float: 
+def bohr_to_angstrom(length_in_bohr: float | list | ndarray) -> float | ndarray: 
     
     """
 
     Converts length in bohr to length in angstroms.
 
     Args:   
-        length (float): Length in bohr
+        length_in_bohr (float | list | array): Length in bohr
 
     Returns:
-        constants.bohr_radius_in_angstrom * length (float) : Length in angstrom
+        length_in_angstrom (float | array) : Length in angstrom
 
     """
     
-    return constants.bohr_radius_in_angstrom * length
+    length_in_bohr = np.array(length_in_bohr)
+
+    length_in_angstrom = length_in_bohr * constants.bohr_radius_in_angstrom
+
+    return length_in_angstrom
 
 
 
@@ -669,21 +683,25 @@ def bohr_to_angstrom(length: float) -> float:
 
 
 
-def angstrom_to_bohr(length: float) -> float: 
+def angstrom_to_bohr(length_in_angstrom: float | list | ndarray) -> float | ndarray: 
     
     """
 
     Converts length in angstrom to length in bohr.
 
     Args:   
-        length (float): Length in angstrom
+        length (float | list | array): Length in angstrom
 
     Returns:
-        length / constants.bohr_radius_in_angstrom  (float) : Length in bohr
+        length_in_bohr  (float | array) : Length in bohr
 
     """
-    
-    return length / constants.bohr_radius_in_angstrom 
+        
+    length_in_angstrom = np.array(length_in_angstrom)
+
+    length_in_bohr = length_in_angstrom / constants.bohr_radius_in_angstrom
+
+    return length_in_bohr
 
 
 
@@ -739,29 +757,25 @@ def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray:
 
 
 
-def calculate_second_derivative(F_far_backward: float, F_backward: float, F, F_forward: float, F_far_forward: float, dx: float) -> float:
+def calculate_bond_length(coordinates: ndarray) -> float:
 
     """
     
-    Calculates the numerical second derivative of a function using the five-point stencil method.
+    Calculates the bond length of a molecule with 1D or 3D coordinates.
 
     Args:
-        F_far_backward (float): Value of the function at x - 2dx
-        F_backward (float): Value of the function at x - dx
-        F (float): Value of the function at x
-        F_forward (float): Value of the function at x + dx
-        F_far_forward (float): Value of the function at x + 2dx
-        dx (float): Step size
-
+        coordinates (array): Atomic coordinates in bohr
+    
     Returns:
-        d2F_dx2 (float): Second derivative of the function at x
-
+        bond_length (float): Bond length in bohr
+    
     """
 
+    bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
 
-    d2F_dx2 = (-F_far_backward + 16 * F_forward - 30 * F + 16 * F_backward -  F_far_forward) / (12 * dx ** 2)
+    return bond_length
 
-    return d2F_dx2
+
 
 
 
@@ -788,6 +802,91 @@ def calculate_first_derivative(F_backward: float, F_forward: float, dx: float) -
     dF_dx = (F_forward - F_backward) / (2 * dx)
 
     return dF_dx
+
+
+
+
+
+
+
+def calculate_second_derivative(F_far_backward: float, F_backward: float, F: float, F_forward: float, F_far_forward: float, dx: float) -> float:
+
+    """
+    
+    Calculates the numerical second derivative of a function using the five-point stencil method.
+
+    Args:
+        F_far_backward (float): Value of the function at x - 2dx
+        F_backward (float): Value of the function at x - dx
+        F (float): Value of the function at x
+        F_forward (float): Value of the function at x + dx
+        F_far_forward (float): Value of the function at x + 2dx
+        dx (float): Step size
+
+    Returns:
+        d2F_dx2 (float): Second derivative of the function at x
+
+    """
+
+    # Equation from Wikipedia page on numerical second derivative methods, fairly noise-resistant formula
+
+    d2F_dx2 = (-F_far_backward + 16 * F_backward - 30 * F + 16 * F_forward -  F_far_forward) / (12 * dx ** 2)
+
+    return d2F_dx2
+
+
+
+
+
+
+
+
+def calculate_third_derivative(F_very_far_backward: float, F_far_backward: float, F_backward: float, F_forward: float, F_far_forward: float, F_very_far_forward: float, dx: float) -> float:
+
+    """
+    
+    Calculates the numerical second derivative of a function using the five-point stencil method.
+
+    Args:
+        F_very_far_backward (float): Value of the function at x - 3dx
+        F_far_backward (float): Value of the function at x - 2dx
+        F_backward (float): Value of the function at x - dx
+        F_forward (float): Value of the function at x + dx
+        F_far_forward (float): Value of the function at x + 2dx
+        F_very_far_forward (float): Value of the function at x + 3dx
+        dx (float): Step size
+
+    Returns:
+        d3F_dx3 (float): Third derivative of the function at x
+
+    """
+
+    d3F_dx3 = (F_very_far_backward - 8 * F_far_backward + 13 * F_backward - 13 * F_forward + 8 * F_far_forward - F_very_far_forward) / (8 * dx ** 3)
+
+    return d3F_dx3
+
+
+
+
+
+
+
+
+def convert_boolean_to_string(boolean: bool):
+
+    """
+
+    Converts a boolean into either "Yes" or "No".
+
+    Args:
+        boolean (bool): A true of false object
+    
+    Returns
+        convert_boolean_to_string (str): Either "Yes" or "No"
+
+    """
+
+    return "Yes" if boolean else "No"
 
 
 
@@ -858,23 +957,24 @@ def finish_calculation(calculation: Calculation) -> None:
 
 
 
-def symmetrise(M: ndarray) -> ndarray:
+
+def symmetrise(matrix: ndarray) -> ndarray:
 
     """
     
     Symmetrises a square matrix.
 
     Args:
-        M (array): Square matrix
+        matrix (array): Square matrix
     
     Returns:
-        M_symmetrised (array): Symmetrised square matrix
+        matrix_symmetrised (array): Symmetrised square matrix
 
     """
 
-    M_symmetrised = (1 / 2) * (M + M.T)
+    matrix_symmetrised = (1 / 2) * (matrix + matrix.T)
 
-    return M_symmetrised
+    return matrix_symmetrised
 
 
 
@@ -929,15 +1029,61 @@ def is_molecule_aligned_on_z_axis(molecule: any) -> bool:
     if len(molecule.atoms) == 2:
 
         # Iterates over both atoms, over the x and y coordinates
+
         for i in range(len(molecule.atoms)):
+
             for j in range(2):
                 
-                # Below 1e-16 is numerical noise and is irrelevant
-                if np.abs(molecule.coordinates[i][j]) > 1e-16:
+                # Below 1e-14 is numerical noise and is irrelevant
+
+                if np.abs(molecule.coordinates[i][j]) > 1e-14:
                     
                     is_molecule_aligned = False
 
     return is_molecule_aligned
+
+
+
+
+
+
+def clean_coordinates(coordinates: ndarray) -> ndarray:
+
+    """
+    
+    Makes sure the atomic coordinates are perfectly aligned along the z-axis.
+
+    Args:
+        coordinates (array): Atomic coordinates
+
+    Returns:
+        coordinates_cleaned (array): Perfectly aligned coordinates
+
+    """
+
+    # Handles the case for 3D coordinates of a molecule
+
+    if coordinates.shape == (2, 3):
+
+        coordinates_cleaned = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, calculate_bond_length(coordinates)]])
+    
+    # Handles the case for 1D coordinates of a molecule
+
+    elif coordinates.shape == (1, 2):
+
+        coordinates_cleaned = np.array([[0.0, calculate_bond_length(coordinates)]])
+    
+    # Handles the case for coordinates of an atom
+
+    else:
+
+        coordinates_cleaned = coordinates
+
+
+    return coordinates_cleaned
+
+
+
 
 
 
@@ -955,14 +1101,12 @@ def error(message: str) -> None:
     Args:   
         message (string): Error message
 
-    Returns:
-        None : This function does not return anything
-
     """
     
     print(colored(f"\nERROR: {message}  :(\n", "light_red"))
 
     # Exits the program
+
     sys.exit()
 
     return
@@ -984,9 +1128,6 @@ def warning(message: str, space: int = 1) -> None:
         message (string): Error message
         space (int, optional): Number of indenting spaces from the left hand side
 
-    Returns:
-        None: This function does not return anything
-
     """
     
     print(colored(f"\n{" " * space}WARNING: {message}", "light_yellow"))
@@ -1000,7 +1141,7 @@ def warning(message: str, space: int = 1) -> None:
 
 
 
-def log(message, calculation, priority=1, end="\n", silent=False, colour="light_grey"):
+def log(message: str, calculation: Calculation, priority: int = 1, end: str = "\n", silent: bool = False, colour: str = "light_grey") -> None:
 
     """
 
@@ -1013,18 +1154,25 @@ def log(message, calculation, priority=1, end="\n", silent=False, colour="light_
         end (string, optional): End of message
         silent (bool, optional): Specifies whether to print anything
 
-    Returns:
-        None : This function does not return anything
-
     """
 
     if not silent:
 
-        if priority == 1: print(colored(message, colour), end=end)
-        elif priority == 2 and not calculation.terse: print(colored(message, colour, force_color = True), end=end)
-        elif priority == 3 and calculation.additional_print: print(colored(message, colour, force_color = True), end=end)
-        elif priority == 4 and calculation.debug: print(colored(message, colour, force_color = True), end=end)
-
+        if priority == 1: 
+            
+            print(colored(message, colour), end=end)
+        
+        elif priority == 2 and not calculation.terse: 
+            
+            print(colored(message, colour, force_color = True), end=end)
+        
+        elif priority == 3 and calculation.additional_print: 
+            
+            print(colored(message, colour, force_color = True), end=end)
+        
+        elif priority == 4 and calculation.debug: 
+            
+            print(colored(message, colour, force_color = True), end=end)
 
     return
 
@@ -1213,7 +1361,7 @@ method_types = {
 
 coupled_cluster_methods = [
 
-        "CCD", "UCCD", "CEPA0", "UCEPA0", "LCCD", "ULCCD",  "LCCSD", "ULCCSD", "CEPA", "UCEPA", "CEPA[0]", "UCEPA[0]", "QCISD", "UQCISD", "CCSD", "UCCSD", "QCISD[T]", "UQCISD[T]", "CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "CCSDTQ", "CCSDT[Q]"
+    "CCD", "UCCD", "CEPA0", "UCEPA0", "LCCD", "ULCCD",  "LCCSD", "ULCCSD", "CEPA", "UCEPA", "CEPA[0]", "UCEPA[0]", "QCISD", "UQCISD", "CCSD", "UCCSD", "QCISD[T]", "UQCISD[T]", "CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "CCSDTQ", "CCSDT[Q]"
 
     ]  
 
@@ -1255,92 +1403,92 @@ correlated_methods = coupled_cluster_methods + perturbative_methods
 
 DFT_methods = {
 
-    "HFS" : Functional("S", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
-    "UHFS" : Functional("S", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
-    "SVWN" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "USVWN" : Functional("S", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "LSDA" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "ULSDA" : Functional("S", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "LDA" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "ULDA" : Functional("S", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "SVWN3" : Functional("S", "VWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "USVWN3" : Functional("S", "UVWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "SVWN5" : Functional("S", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "USVWN5" : Functional("S", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "SPW" : Functional("S", "PW", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "USPW" : Functional("S", "UPW", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="LDA"),
-    "PBE" : Functional("PBE", "PBE", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA", D2_S6=0.75),
-    "UPBE" : Functional("PBE", "UPBE", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA", D2_S6=0.75),
-    "PBE0" : Functional("PBE", "PBE", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "UPBE0" : Functional("PBE", "UPBE", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "PBE0-DH" : Functional("PBE", "PBE", DFX=50, HFX=50, DFC=87.5, MPC=12.5, functional_class="GGA"),
-    "UPBE0-DH" : Functional("PBE", "UPBE", DFX=50, HFX=50, DFC=87.5, MPC=12.5, functional_class="GGA"),
-    "PBE-QIDH" : Functional("PBE", "PBE", DFX=31, HFX=69, DFC=67, MPC=33, functional_class="GGA"),
-    "UPBE-QIDH" : Functional("PBE", "UPBE", DFX=31, HFX=69, DFC=67, MPC=33, functional_class="GGA"),
-    "PBE0-2" : Functional("PBE", "PBE", DFX=100-100/np.cbrt(2), HFX=100/np.cbrt(2), DFC=50, MPC=50, functional_class="GGA"),
-    "UPBE0-2" : Functional("PBE", "UPBE", DFX=100-100/np.cbrt(2), HFX=100/np.cbrt(2), DFC=50, MPC=50, functional_class="GGA"),
-    "HFB" : Functional("B", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
-    "UHFB" : Functional("B", None, DFX=100, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
-    "BVWN" : Functional("B", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "UBVWN" : Functional("B", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "BVWN3" : Functional("B", "VWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "UBVWN3" : Functional("B", "UVWN3", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "BVWN5" : Functional("B", "VWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "UBVWN5" : Functional("B", "UVWN5", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "BLYP" : Functional("B", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.2),
-    "UBLYP" : Functional("B", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.2),
-    "BHLYP" : Functional("B", "LYP", DFX=50, HFX=50, DFC=100, MPC=0, functional_class="GGA"),
-    "UBHLYP" : Functional("B", "ULYP", DFX=50, HFX=50, DFC=100, MPC=0, functional_class="GGA"),
-    "B1LYP" : Functional("B", "LYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "UB1LYP" : Functional("B", "ULYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "PWP" : Functional("PW", "P86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "UPWP" : Functional("PW", "UP86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "SLYP" : Functional("S", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "USLYP" : Functional("S", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "B3LYP" : Functional("B3", "3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UB3LYP" : Functional("B3", "U3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B3LYP/G" : Functional("B3", "3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UB3LYP/G" : Functional("B3", "U3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B2PLYP" : Functional("B", "LYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA", D2_S6=0.55),
-    "UB2PLYP" : Functional("B", "ULYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA", D2_S6=0.55),
-    "B2-PLYP" : Functional("B", "LYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA", D2_S6=0.55),
-    "UB2-PLYP" : Functional("B", "ULYP", DFX=47, HFX=53, DFC=73, MPC=27, functional_class="GGA", D2_S6=0.55),
-    "B2K-PLYP" : Functional("B", "LYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
-    "UB2K-PLYP" : Functional("B", "ULYP", DFX=28, HFX=72, DFC=58, MPC=42, functional_class="GGA"),
-    "B2T-PLYP" : Functional("B", "LYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
-    "UB2T-PLYP" : Functional("B", "ULYP", DFX=40, HFX=60, DFC=69, MPC=31, functional_class="GGA"),
-    "B2G-PLYP" : Functional("B", "LYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
-    "UB2G-PLYP" : Functional("B", "ULYP", DFX=35, HFX=65, DFC=64, MPC=36, functional_class="GGA"),
-    "B2NC-PLYP" : Functional("B", "LYP", DFX=19, HFX=81, DFC=45, MPC=55, functional_class="GGA"),
-    "UB2NC-PLYP" : Functional("B", "ULYP", DFX=19, HFX=81, DFC=45, MPC=55, functional_class="GGA"),
-    "DSD-BLYP" : Functional("B", "LYP", DFX=25, HFX=75, DFC=53, MPC=100, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
-    "UDSD-BLYP" : Functional("B", "ULYP", DFX=25, HFX=75, DFC=53, MPC=100, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
-    "BP86" : Functional("B", "P86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UBP86" : Functional("B", "UP86", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B1P86" : Functional("B", "P86", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "UB1P86" : Functional("B", "UP86", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "TPSS" : Functional("TPSS", "TPSS", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
-    "UTPSS" : Functional("TPSS", "UTPSS", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
-    "TPSSH" : Functional("TPSS", "TPSS", DFX=90, HFX=10, DFC=100, MPC=0, functional_class="meta-GGA"),
-    "UTPSSH" : Functional("TPSS", "UTPSS", DFX=90, HFX=10, DFC=100, MPC=0, functional_class="meta-GGA"),
-    "TPSS0" : Functional("TPSS", "TPSS", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="meta-GGA"),
-    "UTPSS0" : Functional("TPSS", "UTPSS", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="meta-GGA"),
-    "MPWLYP" : Functional("MPW", "LYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "UMPWLYP" : Functional("MPW", "ULYP", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "MPW1LYP" : Functional("MPW", "LYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "UMPW1LYP" : Functional("MPW", "ULYP", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "MPW2PLYP" : Functional("MPW", "LYP", DFX=45, HFX=55, DFC=75, MPC=25, functional_class="GGA", D2_S6=0.4),
-    "UMPW2PLYP" : Functional("MPW", "ULYP", DFX=45, HFX=55, DFC=75, MPC=25, functional_class="GGA", D2_S6=0.4),
-    "MPWPW" : Functional("MPW", "PW91", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "UMPWPW" : Functional("MPW", "UPW91", DFX=100, HFX=0, DFC=100, MPC=0, functional_class="GGA"),
-    "PW1PW" : Functional("PW", "PW91", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "UPW1PW" : Functional("PW", "UPW91", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "MPW1PW" : Functional("MPW", "PW91", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "UMPW1PW" : Functional("MPW", "UPW91", DFX=75, HFX=25, DFC=100, MPC=0, functional_class="GGA"),
-    "B3PW91" : Functional("B3", "3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
-    "UB3PW91" : Functional("B3", "U3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
-    "B3P86" : Functional("B3", "3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
-    "UB3P86" : Functional("B3", "U3P", DFX=80, HFX=20, DFC=100, MPC=0, functional_class="GGA"),
+    "HFS" : Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
+    "UHFS" : Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
+    "SVWN" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USVWN" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LSDA" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "ULSDA" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LDA" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "ULDA" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN3" : Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USVWN3" : Functional("S", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN5" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USVWN5" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SPW" : Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USPW" : Functional("S", "UPW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "PBE" : Functional("PBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
+    "UPBE" : Functional("PBE", "UPBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
+    "PBE0" : Functional("PBE", "PBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UPBE0" : Functional("PBE", "UPBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "PBE0-DH" : Functional("PBE", "PBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
+    "UPBE0-DH" : Functional("PBE", "UPBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
+    "PBE-QIDH" : Functional("PBE", "PBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
+    "UPBE-QIDH" : Functional("PBE", "UPBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
+    "PBE0-2" : Functional("PBE", "PBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
+    "UPBE0-2" : Functional("PBE", "UPBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
+    "HFB" : Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
+    "UHFB" : Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
+    "BVWN" : Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UBVWN" : Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BVWN3" : Functional("B", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UBVWN3" : Functional("B", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BVWN5" : Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UBVWN5" : Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BLYP" : Functional("B", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
+    "UBLYP" : Functional("B", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
+    "BHLYP" : Functional("B", "LYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
+    "UBHLYP" : Functional("B", "ULYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
+    "B1LYP" : Functional("B", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UB1LYP" : Functional("B", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "PWP" : Functional("PW", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UPWP" : Functional("PW", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "SLYP" : Functional("S", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "USLYP" : Functional("S", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "B3LYP" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "UB3LYP" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "B3LYP/G" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "UB3LYP/G" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "B2PLYP" : Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "UB2PLYP" : Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "B2-PLYP" : Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "UB2-PLYP" : Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "B2K-PLYP" : Functional("B", "LYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
+    "UB2K-PLYP" : Functional("B", "ULYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
+    "B2T-PLYP" : Functional("B", "LYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
+    "UB2T-PLYP" : Functional("B", "ULYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
+    "B2G-PLYP" : Functional("B", "LYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
+    "UB2G-PLYP" : Functional("B", "ULYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
+    "B2NC-PLYP" : Functional("B", "LYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
+    "UB2NC-PLYP" : Functional("B", "ULYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
+    "DSD-BLYP" : Functional("B", "LYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
+    "UDSD-BLYP" : Functional("B", "ULYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
+    "BP86" : Functional("B", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "UBP86" : Functional("B", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "B1P86" : Functional("B", "P86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UB1P86" : Functional("B", "UP86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "TPSS" : Functional("TPSS", "TPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
+    "UTPSS" : Functional("TPSS", "UTPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
+    "TPSSH" : Functional("TPSS", "TPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "UTPSSH" : Functional("TPSS", "UTPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "TPSS0" : Functional("TPSS", "TPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "UTPSS0" : Functional("TPSS", "UTPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "MPWLYP" : Functional("MPW", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPWLYP" : Functional("MPW", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW1LYP" : Functional("MPW", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPW1LYP" : Functional("MPW", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW2PLYP" : Functional("MPW", "LYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
+    "UMPW2PLYP" : Functional("MPW", "ULYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
+    "MPWPW" : Functional("MPW", "PW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPWPW" : Functional("MPW", "UPW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "PW1PW" : Functional("PW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UPW1PW" : Functional("PW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW1PW" : Functional("MPW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPW1PW" : Functional("MPW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "B3PW91" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+    "UB3PW91" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+    "B3P86" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+    "UB3P86" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
 }
 
 
@@ -1439,6 +1587,11 @@ basis_types = {
     "D-AUG-CC-PVQZ" : "d-aug-cc-pVQZ",
     "D-AUG-CC-PV5Z" : "d-aug-cc-pV5Z",
     "D-AUG-CC-PV6Z" : "d-aug-cc-pV6Z",
+    "T-AUG-CC-PVDZ" : "t-aug-cc-pVDZ",
+    "T-AUG-CC-PVTZ" : "t-aug-cc-pVTZ",
+    "T-AUG-CC-PVQZ" : "t-aug-cc-pVQZ",
+    "T-AUG-CC-PV5Z" : "t-aug-cc-pV5Z",
+    "T-AUG-CC-PV6Z" : "t-aug-cc-pV6Z",
     "CC-PCVDZ" : "cc-pCVDZ",
     "CC-PCVTZ" : "cc-pCVTZ",
     "CC-PCVQZ" : "cc-pCVQZ",
