@@ -1598,7 +1598,7 @@ def calculate_UPBE_correlation(alpha_density, beta_density, density, sigma_aa, s
         e_C (array): Unrestricted PBE correlation energy density per particle
     
     """
-    
+
     # The PBE correlation functional only depends on the full sigma, not the spin channels. This is cleaned at the square of the density floor.
     sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=constants.sigma_floor)
 
@@ -1613,9 +1613,9 @@ def calculate_UPBE_correlation(alpha_density, beta_density, density, sigma_aa, s
     # Spin polarisation
     zeta = calculate_zeta(alpha_density, beta_density)
 
-    # Spin polarisation dependent quantities
-    cbrt_plus = clean(np.cbrt(1 + zeta))
-    cbrt_minus = clean(np.cbrt(1 - zeta))
+    # Spin polarisation dependent quantities - it is crucial that the cleans here are inside the square root! Otherwise PBE and TPSS break for one-electron systems
+    cbrt_plus = np.cbrt(clean(1 + zeta))
+    cbrt_minus = np.cbrt(clean(1 - zeta))
 
     phi = (1 / 2) * (cbrt_plus * cbrt_plus + cbrt_minus * cbrt_minus)
     phi_prime = (1 / cbrt_plus - 1 / cbrt_minus) / 3

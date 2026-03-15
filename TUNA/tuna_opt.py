@@ -23,6 +23,7 @@ The module contains:
 1. Functions to call tuna_energy to calculate numerical derivatives for the gradient and hessian (calculate_gradient, calculate_hessian).
 2. Useful functions for the optimisation (e.g. optimisation_is_converged, print_optimisation_convergence_information).
 3. The main function for the geometry optimisation calculation, optimise_geometry.
+4. The main function to calculate optimisations for electron affinity and ionisation energy calculations, calculate_charged_state_energies.
 
 """
 
@@ -467,3 +468,83 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
         error(F"Geometry optimisation did not converge in {max_geom_iter} iterations! Increase the maximum or give up!")
 
     return
+
+
+
+
+
+
+
+
+
+
+def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: list[str], coordinates: ndarray, charge_delta: int) -> tuple:
+
+    """
+    
+    Calculates the reference-state and charged-state energies needed for ionisation energy or electron affinity calculations.
+
+    Args:
+        calculation (Calculation): Calculation object
+        atomic_symbols (list): Atomic symbols
+        coordinates (array): Atomic coordinates
+        charge_delta (int): +1 for ionisation energy, -1 for electron affinity
+
+    Returns:
+        reference_energy (float): Energy of the original charge state
+        charged_energy (float): Energy of the final charge state
+        reference_molecule (float): Molecule of the original charge state
+        charged_molecule (Molecule): Molecule of the final charge state
+
+    """
+
+    # Optimise the molecule unless it's an atom, or "VERTICAL" is used
+
+    if calculation.vertical or calculation.monatomic:
+        
+        log_spacer(calculation, start="\n", space="")
+        log("Calculating energy of original system...", calculation)
+        log_spacer(calculation, space="")
+
+        method = calculation.method
+
+        reference_SCF_output, reference_molecule, reference_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
+
+        calculation.charge += charge_delta * calculation.n_electrons_for_ip_or_ea
+        
+        log_spacer(calculation, start="\n", space="")
+        log("Calculating energy of charged system...", calculation)
+        log_spacer(calculation, space="")
+
+        # Resets the method - it may have been overridden during the first evaluation
+
+        calculation.method = method
+
+        _, charged_molecule, charged_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, integrals=reference_SCF_output.integrals)
+
+    else:
+
+        # These functions will calculate the adiabatic electron affinity or ionisation energy
+
+        log_spacer(calculation, start="\n", space="")
+        log("Optimising energy of original molecule...", calculation)
+        log_spacer(calculation, space="")
+
+        method = calculation.method
+
+        reference_molecule, reference_energy = optimise_geometry(calculation, atomic_symbols, coordinates)
+
+        calculation.charge += charge_delta * calculation.n_electrons_for_ip_or_ea
+
+        log_spacer(calculation, start="\n", space="")
+        log("Optimising energy of charged molecule...", calculation)
+        log_spacer(calculation, space="")
+
+        # Resets the method - it may have been overridden during the first evaluation
+
+        calculation.method = method
+
+        charged_molecule, charged_energy = optimise_geometry(calculation, atomic_symbols, reference_molecule.coordinates)
+
+
+    return reference_energy, charged_energy,  reference_molecule, charged_molecule

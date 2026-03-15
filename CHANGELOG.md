@@ -5,48 +5,50 @@
 ### Added
 
 - Spin-restricted CCSDT, CCSDT(Q) and CCSDTQ energy
-- Anharmonic vibrational frequencies and intensities by solving the nuclear Schrodinger equation on the full potential energy surface via `ANHARM` calculation type
-- Plot vibrational wavefunctions with the `PLOTVIB` keyword
-- Control convergence of anharmonic frequencies systematically with `ANHARMCONV` keyword
-- Polarisability calculations for all methods via `POLAR` keyword
-- Hyperpolarisability calculations for all methods via `HYPER` keyword
-- Calculations in applied electric field by `EX`, `EY`, `EZ` keywords
-- Numerical calculation of dipole moments for all electronic structure methods via `DIPOLE` or `POLAR`
-- Exact anharmonic intensities for all methods combining `DIPOLE` with `ANHARM`
-- Superposition of atomic densities and self-consistent minimal basis guess strategies, making SCF for heavy elements up to 50% faster
-- Took advantage of more diatomic symmetry in the molecular integrals, making calculations up to 10x faster
-- Keywords for guess strategies, `COREGUESS`, `SADGUESS` and `SCFGUESS`
+- Anharmonic vibrational frequencies by solving the nuclear Schrodinger equation on the full PES via the `ANHARM` calculation type
+- Anharmonic transition intensities using either analytical or numerical dipole moment
+- Plot vibrational wavefunctions with `PLOTVIB`, control transition energy convergence with `ANHARMCONV` 
+- Numerical calculation of dipole moments for all electronic structure methods via `DIPOLE`
+- Numerical calculation of polarisability and hyperpolarisability via `POLAR` and `HYPER`
+- Calculations in applied electric field with `EX`, `EY`, and `EZ` keywords
+- Adiabatic (or `VERTICAL`) ionisation potential and electron affinity calculation types, `IP` and `EA` for ionisation with `NELEC` electrons
+- Superposition of atomic densities and self-consistent minimal basis guess strategies, making SCF up to 50% faster
+- Keywords for core Hamiltonian guess, `COREGUESS`, superposition guess, `SADGUESS` or self-consistent guess, `SCFGUESS`
 - Electronic contribution to entropy is now calculated
-- New basis sets: t-aug-cc-pVDZ, t-aug-cc-pVTZ, t-aug-cc-pVQZ, t-aug-cc-pV5Z, t-aug-cc-pV6Z
-- Implemented D2 dispersion parameters for DFT methods including PBE, BLYP, B3LYP, BP86, TPSS and B2PLYP
-- Basis set extrapolation extended to use triple and quadruple zeta basis sets
 - New `DEBUG` keyword, for extreme levels of printing
+- Took advantage of more diatomic symmetry in the molecular integrals, making calculations up to 10x faster
+- New D2 dispersion parameters for DFT methods including PBE, BLYP, B3LYP, BP86, TPSS and B2PLYP
+- Basis set extrapolation with triple/quadruple-zeta basis sets, and quadruple/quintuple-zeta basis sets
+- New triply-augmented basis sets, t-aug-cc-pVDZ, t-aug-cc-pVTZ, t-aug-cc-pVQZ, t-aug-cc-pV5Z, and t-aug-cc-pV6Z
 
 ### Changed
 
-- Default SCF guess strategy is now self-consistent minimal basis guess, via superposition of atomic densities
+- Default SCF guess strategy is now a self-consistent minimal basis guess, via superposition of atomic densities
 - Restructured code for Hessian evaluation, reducing cost by 20% with identical results
-- New tuna_guess module; split tuna_optfreq into tuna_opt and tuna_freq; split tuna_kernel module away from tuna_energ
 - Density matrix idempotency is now forced after the guess density, to increase stability
 - Natural orbitals are no longer calculated by default for MP2
 - Minimum requestable bond length decreased from 0.05 angstroms to 0.01 angstroms
 - Atomic masses can now be printed in frequency calculations with additional print, `P`
-- Major refactors to code, including new modules written with type hints, made code more object-oriented
 - Coupled cluster maximum iterations default increased from 30 to 50
 - A coupled cluster damping parameter now must be given when `CCDAMP` is used
-- You can now request same and opposite spin scaling on double-hybrid functionals
 - The input for the `HFX`, `DFX`, `MPC` and `DFC` keywords are now given as proportions, not percentages
+- The exponent for corrrelated basis extrapolation is now always the theoretical value
 - Trying to calculate a correlated method on a system with insufficient electrons no longer throws an error
+- You can now request same and opposite spin scaling on all double-hybrid functionals with `SSS` and `OSS`
+- Major refactors to code, including new modules written with type hints, made code more object-oriented
 
 ### Fixed
 
-- The `NONATORBS` keyword was causing crashes with MP2
-- Small basis sets would sometimes cause a crash for large diatomics
-- Only some molecular orbital information was printing for RHF or RKS calculations
+- Only some molecular orbital information was printing with RHF/RKS calculations
 - The unrestricted CCSDT energy was not including the disconnected doubles contribution
-- The CEPA method keywords were not working correctly
-- Natural orbitals were not being transformed back to the atomic orbital basis
+- Small basis sets would sometimes cause a crash for large diatomics
+- PBE was giving the wrong energy for the hydrogen atom due to issues with cleaning the spin density
 - Spin-component scaling keywords were not working for double-hybrid functionals
+- Natural orbitals were not being transformed back to the atomic orbital basis correctly
+- The `NONATORBS` keyword was causing crashes with MP2
+- The CEPA method keywords were not working correctly
+- The CEPA method keywords were not working correctly
+- Negative spin densities were not being plotted with `SPINDENSPLOT`
 
 <br>
 

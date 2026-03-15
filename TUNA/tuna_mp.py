@@ -840,7 +840,8 @@ def run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, E_HF
 
     # Sets up t amplitudes based on number of virtual and occupied orbitals
     t_abij = np.zeros((n_virt, n_virt, n_occ_corr, n_occ_corr))
-
+    
+    natural_orbital_occupancies, natural_orbitals = None, None
 
     for iteration in range(1, OMP2_max_iter + 1):
 
@@ -930,7 +931,7 @@ def run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, E_HF
     # Calculates natural orbitals from OMP2 density
     if calculation.natural_orbitals: 
         
-         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
+        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
 
     return E_OMP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 

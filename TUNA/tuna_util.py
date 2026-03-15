@@ -201,6 +201,7 @@ class Calculation:
         self.polarisability = keyword(["POLAR", "POLARISABILITY", "POLARIZABILITY"], False)
         self.hyperpolarisability = keyword(["HYPER", "HYPERPOLARISABILITY", "HYPERPOLARIZABILITY"], False)
         self.dipole = keyword(["DIPOLE"], False)
+        self.vertical = keyword(["VERTICAL"], False)
 
         # Convergence keywords with optional parameters
         self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
@@ -300,7 +301,7 @@ class Calculation:
 
         # External printing keywords
         self.trajectory, self.trajectory_path = keyword(["TRAJ"], False, boolean=True, check_next_space=True, mandatory_value=False, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
-        self.save_plot, self.save_plot_filepath = keyword(["SAVEPLOT"], False, check_next_space=True, associated_keyword_default="TUNA Plot.png", value_type=str, plot_path=True)
+        self.save_plot, self.save_plot_filepath = keyword(["SAVEPLOT"], False, check_next_space=True, associated_keyword_default="tuna-plot.pdf", value_type=str, plot_path=True)
         self.scan_plot_colour = next((code for name, code in color_map.items() if name in params), "b")
         self.custom_basis_file = keyword(["BASIS"], None, boolean=False, check_next_space=True, mandatory_value=True, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
         self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
@@ -333,6 +334,7 @@ class Calculation:
         # Processes the NOSINGLES keyword
         self.method = process_no_singles_keyword(self.method, self.no_singles) 
         self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital
+        self.n_electrons_for_ip_or_ea = keyword(["NELEC"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
 
         # Initial guess keywords
         self.ghost_atom_present = any("X" in symbol for symbol in atomic_symbols)
@@ -352,7 +354,6 @@ class Calculation:
         self.diatomic = not self.monatomic
         
 
-        
 
 
 class Constants:
@@ -398,7 +399,7 @@ class Constants:
 
     # System-wide consistent parameters
     numerical_derivative_prod = 0.001 # This works much better than 0.0001 for hyperpolarisability, presumably more stable
-    density_floor = 1e-26
+    density_floor = 1e-23
     sigma_floor = density_floor ** 2
 
     # Convergence criteria for self-consistent field
@@ -1091,6 +1092,32 @@ def clean_coordinates(coordinates: ndarray) -> ndarray:
 
 
 
+def format_charge(charge: int) -> str:
+    
+    """
+    
+    Formats the charge as a string.
+
+    Args:
+        charge (int): Molecular charge
+    
+    Returns:
+        formatted_charge (str): Charge stringwith prepended plus sign
+    
+    """
+
+    formatted_charge = f"+{charge}" if charge > 0 else str(charge)
+
+    return formatted_charge
+
+
+
+
+
+
+
+
+
 
 def error(message: str) -> None: 
 
@@ -1208,7 +1235,9 @@ calculation_types = {
     "SCAN": "Coordinate scan",
     "MD": "Ab initio molecular dynamics",
     "FORCE": "Force",
-    "ANHARM": "Anharmonic frequency"
+    "ANHARM": "Anharmonic frequency",
+    "IP": "Ionisation potential",
+    "EA": "Electron affinity"
     
     }
 

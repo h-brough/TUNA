@@ -219,6 +219,7 @@ def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inv
 
     """
 
+
     # Projects the input density matrix onto the larger basis set of S inverse
 
     P_target = np.einsum("ip,pq,qr,sr,sj->ij", S_target_inverse, S_cross, P_to_project, S_cross, S_target_inverse, optimize=True)
@@ -449,6 +450,12 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
 
     """
 
+    # Turn off "DECONTRACT" for the guess
+
+    decontract_requested = calculation.decontract
+
+    calculation.decontract = False
+
     # Only rotate guess MOs if there's an even number of electrons, and it hasn't been overridden by "NOROTATE"
 
     rotate_guess_mos = True if molecule.multiplicity == 1 and not calculation.no_rotate_guess and calculation.reference == "UHF" else False 
@@ -484,6 +491,6 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
 
     E_guess = calculate_energy_guess(integrals.H_core, X) if E_guess is None else E_guess
 
-
+    calculation.decontract == decontract_requested
 
     return E_guess, P_guess, P_guess_alpha, P_guess_beta

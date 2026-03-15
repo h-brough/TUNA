@@ -195,7 +195,7 @@ class Molecule:
 
         # Set the reference determinant to be used
         calculation.reference = "RHF" if self.multiplicity == 1 and "U" not in calculation.method else "UHF"
-    
+
         # Sets information about alpha and beta electrons for UHF
         self.n_unpaired_electrons = self.multiplicity - 1
         self.n_alpha = int((self.n_electrons + self.n_unpaired_electrons) / 2)
@@ -435,6 +435,3 @@ class Molecule:
             
 
         return molecular_structure
-
-
-

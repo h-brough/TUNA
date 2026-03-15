@@ -62,9 +62,9 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
     
     E_disconnected_doubles = np.einsum("abij,ia,jb->", w[v, v, o, o], t_ia, t_ia, optimize=True) if t_ia is not None else 0
 
-    # In linearised methods, the total energy does not have a disconnected contribution
+    # In linearised and QCI methods, the total energy does not have a disconnected contribution
 
-    if method not in ["CCSD", "CCSD[T]", "CCSDT", "CCSDT[Q]", "CCSDTQ", "QCISD", "QCISD[T]"]:
+    if method not in ["CCSD", "CCSD[T]", "CCSDT", "CCSDT[Q]", "CCSDTQ"]:
 
         E_disconnected_doubles = 0
 
@@ -116,9 +116,9 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
 
     E_disconnected_doubles = (1 / 2) * np.einsum("ijab,ia,jb->", g[o, o, v, v], t_ia, t_ia, optimize=True) if t_ia is not None else 0
     
-    # In linearised methods, the total energy does not have a disconnected contribution
+    # In linearised and QCI methods, the total energy does not have a disconnected contribution
 
-    if method not in ["CCSD", "CCSD[T]", "CCSDT", "UCCSD", "UCCSD[T]", "UCCSDT", "QCISD", "UQCISD", "QCISD[T]", "UQCISD[T]"]:
+    if method not in ["CCSD", "CCSD[T]", "CCSDT", "UCCSD", "UCCSD[T]", "UCCSDT"]:
 
         E_disconnected_doubles = 0
 
@@ -626,7 +626,7 @@ def calculate_coupled_cluster_linearised_density(t_ia: ndarray, t_ijab: ndarray,
     
     if calculation.reference == "RHF":
 
-        u_ijab = t_ijab * 2 - t_ijab.swapaxes(0, 1) 
+        u_ijab = t_ijab * 2 - t_ijab.swapaxes(2, 3) 
 
         P_CC[v, v] += np.einsum('ijbc,ijac->ab', t_ijab, u_ijab, optimize=True)
         P_CC[o, o] += -np.einsum('ikab,jkab->ij', t_ijab, u_ijab, optimize=True)

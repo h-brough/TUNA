@@ -49,16 +49,18 @@ def save_and_show_plot(calculation: Calculation) -> None:
     # Saves the plot if requested
     if calculation.save_plot:
 
-        log("Saving plot as \"{calculation.save_plot_filepath}\"...      ", calculation, 1, end=""); sys.stdout.flush()
+        log(f" \n Saving plot as \"{calculation.save_plot_filepath}\"...   ", calculation, 1, end=""); sys.stdout.flush()
 
-        plt.savefig(calculation.save_plot_filepath, dpi=1200)
+        plt.savefig(calculation.save_plot_filepath, dpi=1200, transparent=True)
     
-        log("  [Done]", calculation, 1)
+        log("[Done]", calculation, 1)
 
     # Shows the plot
     plt.show() 
 
     return
+
+
 
 
 
@@ -101,6 +103,8 @@ def delete_saved_plot() -> None:
 
 
 
+
+
 def suppress_plot_warnings() -> None:
 
     """
@@ -121,6 +125,8 @@ def suppress_plot_warnings() -> None:
     _ = fm.fontManager.ttflist
 
     return
+
+
 
 
 
@@ -175,6 +181,8 @@ def build_Cartesian_grid(bond_length: float, extent: float = 3, number_of_points
 
 
 
+
+
 def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energies: ndarray) -> None:
 
     """
@@ -202,7 +210,7 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
 
     # For excited state calculations, also print the root
 
-    legend_label = f"{calculation.method}/{calculation.basis}" if "CIS" not in calculation.method else f"{calculation.method}/{calculation.basis}, ROOT {calculation.root}"
+    legend_label = f"{calculation.method}/{basis_types.get(calculation.basis)}" if "CIS" not in calculation.method else f"{calculation.method}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
     linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
 
     plt.plot(bond_lengths, energies, color=calculation.scan_plot_colour,linewidth=1.75, label=legend_label, linestyle=linestyle)
@@ -222,6 +230,8 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
     save_and_show_plot(calculation)
 
     return
+
+
 
 
 
@@ -277,6 +287,8 @@ def read_temporary_plot_file(temporary_pickle_path: str) -> tuple[any, any]:
 
 
 
+
+
 def format_charge(charge: int) -> str:
 
     """
@@ -304,6 +316,9 @@ def format_charge(charge: int) -> str:
     formatted_charge = f"{abs(charge)}{sign}"
 
     return formatted_charge
+
+
+
 
 
 
@@ -381,6 +396,8 @@ def format_coordinate_scan_plot(calculation: Calculation, ax: any) -> None:
 
 
 
+
+
 def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarray, energies: ndarray, vibrational_energy_levels: ndarray, vibrational_wavefunctions: ndarray) -> None:
 
     """
@@ -424,7 +441,7 @@ def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarr
 
     # For excited state calculations, also print the root
 
-    legend_label = f"{calculation.method}/{calculation.basis}" if "CIS" not in calculation.method else f"{calculation.method}/{calculation.basis}, ROOT {calculation.root}"
+    legend_label = f"{calculation.method}/{basis_types.get(calculation.basis)}" if "CIS" not in calculation.method else f"{calculation.method}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
     linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
     
     # Plots the potential energy surface
@@ -446,7 +463,9 @@ def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarr
 
 
 
-def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, grid: ndarray, bond_length: float, P: ndarray = None, molecular_orbitals: ndarray = None, which_MO: int = None, transition: bool = False) -> None:
+
+
+def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, grid: ndarray, bond_length: float, P: ndarray = None, molecular_orbitals: ndarray = None, which_MO: int = None, transition: bool = False, spin_density: bool = False) -> None:
 
     """
     
@@ -461,7 +480,8 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
         molecular_orbitals (array): Molecular orbitals
         which_MO (int): Which molecular orbital to print
         nuclear_charges (array): Nuclear relative charges
-        transition (bool): Plot transition density or orbitals
+        transition (bool): Plot transition density
+        spin_density (bool): Plot spin density
     
     """
     
@@ -488,13 +508,15 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
     if P is not None:
 
+        density_type = "Spin density" if spin_density else "Density"
+
         if len(calculation.atomic_symbols) == 2:
 
-            plt.title(f"Density from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
+            plt.title(f"{density_type} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
 
         else:
 
-            plt.title(f"Density from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
+            plt.title(f"{density_type} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
 
         # Builds density on grid
 
@@ -504,7 +526,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         density_cut_off = 0.98
 
-        if transition:
+        if transition or spin_density:
             
             view = np.clip(density, np.quantile(density, 1 - density_cut_off), np.quantile(density, density_cut_off))
 
@@ -535,11 +557,11 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         if len(calculation.atomic_symbols) == 2:
 
-            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
 
         else:
 
-            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{calculation.basis} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
 
         # Builds molecular orbitals on grid
 
@@ -573,6 +595,8 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
     save_and_show_plot(calculation)
 
     return
+
+
 
 
 
@@ -634,7 +658,7 @@ def show_two_dimensional_plot(calculation: Calculation, molecule: Molecule, P: n
 
     if calculation.plot_spin_density or calculation.plot_difference_spin_density: 
         
-        show_cube_plot(calculation, basis_functions_on_grid, grid, molecule.bond_length, P=P_alpha-P_beta)
+        show_cube_plot(calculation, basis_functions_on_grid, grid, molecule.bond_length, P=P_alpha-P_beta, spin_density=True)
 
     # Plots molecular orbital
 
@@ -676,6 +700,8 @@ def show_two_dimensional_plot(calculation: Calculation, molecule: Molecule, P: n
 
 
     return
+
+
 
 
 

@@ -144,7 +144,7 @@ def enforce_density_matrix_idempotency(P_guess_alpha: ndarray, P_guess_beta: nda
 
 
 
-def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_large: float, E_corr_small: float, E_corr_large: float, calculation: Calculation, silent: bool) -> float:
+def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_large: float, E_corr_small: float, E_corr_large: float, calculation: Calculation, silent: bool, small_basis_zeta: str) -> float:
 
     """
     
@@ -158,44 +158,41 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
         E_corr_large (float): Correlation energy from higher-zeta basis
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
+        small_basis_zeta (str): Small basis zeta type
     
     Returns:
         E_extrapolated (float): Extrapolated energy
     
     """
 
-    double_zeta_bases = ["CC-PVDZ", "AUG-CC-PVDZ", "PC-1", "DEF2-SVP", "DEF2-SVPD", "ANO-PVDZ", "AUG-ANO-PVDZ"]
-
-    # Values from ORCA manual or Neese2010
+    # Values from ORCA manual or Neese2010 - the quadruple-quintuple extrapolation values are assumed the same as triple-quadruple
 
     alpha_values = {
 
-        "CC-PVDZ" : 4.42, "CC-PVTZ" : 5.46,
-        "AUG-CC-PVDZ" : 4.30, "AUG-CC-PVTZ" : 5.79,
-        "PC-1" : 7.02, "PC-2" : 9.78,
-        "DEF2-SVP" : 10.39, "DEF2-TZVPP" : 7.88,
-        "DEF2-SVPD" : 10.39, "DEF2-TZVPPD" : 7.88,
-        "ANO-PVDZ" : 5.41, "ANO-PVTZ" : 4.48,
-        "AUG-ANO-PVDZ" : 5.12,  "AUG-ANO-PVTZ" : 5.00
+        "CC-PVDZ" : 4.42, "CC-PVTZ" : 5.46, "CC-PVQZ" : 5.46,
+        "AUG-CC-PVDZ" : 4.30, "AUG-CC-PVTZ" : 5.79, "AUG-CC-PVQZ" : 5.79,
+        "D-AUG-CC-PVDZ" : 4.30, "D-AUG-CC-PVTZ" : 5.79, "D-AUG-CC-PVQZ" : 5.79,
+        "T-AUG-CC-PVDZ" : 4.30, "T-AUG-CC-PVTZ" : 5.79, "T-AUG-CC-PVQZ" : 5.79,
+        "PC-1" : 7.02, "PC-2" : 9.78, "PC-3" : 9.78,
+        "DEF2-SVP" : 10.39, "DEF2-TZVPP" : 7.88, "DEF2-TZVP" : 7.88,
+        "DEF2-SVPD" : 10.39, "DEF2-TZVPPD" : 7.88, "DEF2-TZVPD" : 7.88,
+        "ANO-PVDZ" : 5.41, "ANO-PVTZ" : 4.48, "ANO-PVQZ" : 4.48,
+        "AUG-ANO-PVDZ" : 5.12, "AUG-ANO-PVTZ" : 5.00, "AUG-ANO-PVQZ" : 5.00
 
     }
 
-    beta_values = {
 
-        "CC-PVDZ" : 2.46, "CC-PVTZ" : 3.05,
-        "AUG-CC-PVDZ" : 2.51, "AUG-CC-PVTZ" : 3.05,
-        "PC-1": 2.01, "PC-2": 4.09,
-        "DEF2-SVP" : 2.40, "DEF2-TZVPP" : 2.97,
-        "DEF2-SVPD" : 2.40, "DEF2-TZVPPD" : 2.97,
-        "ANO-PVDZ" : 2.43, "ANO-PVTZ" : 2.97,
-        "AUG-ANO-PVDZ" : 2.41, "AUG-ANO-PVTZ" : 2.52
-    }
+    # To match the ORCA implementation, we use the optimised alpha value but take fixed beta values
 
     alpha = alpha_values.get(small_basis)
-    beta = beta_values.get(small_basis)
+    beta = 2.4 if small_basis_zeta == "double" else 3
 
-    exponent_small = 2 if small_basis in double_zeta_bases else 3
-    exponent_large = 3 if small_basis in double_zeta_bases else 4
+    if alpha is None:
+
+        error("Your chosen basis set is not parameterised for extrapolation!")
+
+    exponent_small = 2 if small_basis_zeta == "double" else 3 if small_basis_zeta == "triple" else 4
+    exponent_large = 3 if small_basis_zeta == "double" else 4 if small_basis_zeta == "triple" else 5
 
     # Same SCF extrapolation as used in ORCA
 
@@ -208,30 +205,41 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
     E_extrapolated = E_SCF_extrapolated + E_corr_extrapolated
 
     log_spacer(calculation, silent=silent, start="\n")
-    log(f"              Basis Set Extrapolation", calculation, 1, silent=silent, colour="white")
+    log(f"                Basis Set Extrapolation", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
-    if small_basis in double_zeta_bases:
+    if small_basis_zeta == "double":
 
         log(f"  Double-zeta SCF energy:          {E_SCF_small:16.10f}", calculation, 1, silent=silent)
         log(f"  Triple-zeta SCF energy:          {E_SCF_large:16.10f}", calculation, 1, silent=silent)
-
-    else:
-
+    
+    if small_basis_zeta == "triple": 
+        
         log(f"  Triple-zeta SCF energy:          {E_SCF_small:16.10f}", calculation, 1, silent=silent)
         log(f"  Quadruple-zeta SCF energy:       {E_SCF_large:16.10f}", calculation, 1, silent=silent)
 
+    else:
+
+        log(f"  Quadruple-zeta SCF energy:       {E_SCF_small:16.10f}", calculation, 1, silent=silent)
+        log(f"  Quintuple-zeta SCF energy:       {E_SCF_large:16.10f}", calculation, 1, silent=silent)
+
+
     if calculation.method in correlated_methods:
         
-        if small_basis in double_zeta_bases:
+        if small_basis_zeta == "double":
 
             log(f"\n  Double-zeta correlation energy:  {E_corr_small:16.10f}", calculation, 1, silent=silent)
             log(f"  Triple-zeta correlation energy:  {E_corr_large:16.10f}", calculation, 1, silent=silent)
-
-        else:
+        
+        elif small_basis_zeta == "triple": 
 
             log(f"\n  Triple-zeta correlation energy:  {E_corr_small:16.10f}", calculation, 1, silent=silent)
             log(f"  Quadruple-zeta correlation energy: {E_corr_large:14.10f}", calculation, 1, silent=silent)
+
+        else:
+
+            log(f"\n  Quadruple-zeta correlation energy:{E_corr_small:15.10f}", calculation, 1, silent=silent)
+            log(f"  Quintuple-zeta correlation energy:{E_corr_large:15.10f}", calculation, 1, silent=silent)
 
     log(f"\n  Extrapolated SCF energy:         {E_SCF_extrapolated:16.10f}", calculation, 1, silent=silent)
 

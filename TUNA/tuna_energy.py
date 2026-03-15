@@ -104,16 +104,26 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     """
 
-    double_zeta_bases = ["CC-PVDZ", "AUG-CC-PVDZ", "PC-1", "DEF2-SVP", "DEF2-SVPD", "ANO-PVDZ", "AUG-ANO-PVDZ"]
+    double_zeta_bases = ["CC-PVDZ", "AUG-CC-PVDZ", "D-AUG-CC-PVDZ", "T-AUG-CC-PVDZ", "PC-1", "DEF2-SVP", "DEF2-SVPD", "ANO-PVDZ", "AUG-ANO-PVDZ"]
+    quadruple_zeta_bases = ["CC-PVQZ", "AUG-CC-PVQZ", "D-AUG-CC-PVQZ", "T-AUG-CC-PVQZ", "PC-3", "ANO-PVQZ", "AUG-ANO-PVQZ"]
 
     basis_pairs = {
 
         "CC-PVDZ" : "CC-PVTZ",
         "CC-PVTZ" : "CC-PVQZ",
+        "CC-PVQZ" : "CC-PV5Z",
         "AUG-CC-PVDZ" : "AUG-CC-PVTZ",
+        "D-AUG-CC-PVDZ" : "D-AUG-CC-PVTZ",
+        "T-AUG-CC-PVDZ" : "T-AUG-CC-PVTZ",
         "AUG-CC-PVTZ" : "AUG-CC-PVQZ",
+        "D-AUG-CC-PVTZ" : "D-AUG-CC-PVQZ",
+        "T-AUG-CC-PVTZ" : "T-AUG-CC-PVQZ",
+        "AUG-CC-PVQZ" : "AUG-CC-PV5Z",
+        "D-AUG-CC-PVQZ" : "D-AUG-CC-PV5Z",
+        "T-AUG-CC-PVQZ" : "T-AUG-CC-PV5Z",
         "PC-1": "PC-2",
         "PC-2": "PC-3",
+        "PC-3": "PC-4",
         "DEF2-SVP" : "DEF2-TZVPP",
         "DEF2-TZVP" : "DEF2-QZVP",
         "DEF2-TZVPP" : "DEF2-QZVPP",
@@ -122,8 +132,10 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
         "DEF2-TZVPPD" : "DEF2-QZVPPD",
         "ANO-PVDZ" : "ANO-PVTZ",
         "ANO-PVTZ" : "ANO-PVQZ",
+        "ANO-PVQZ" : "ANO-PV5Z",
         "AUG-ANO-PVDZ" : "AUG-ANO-PVTZ",
-        "AUG-ANO-PVTZ" : "AUG-ANO-PVQZ"
+        "AUG-ANO-PVTZ" : "AUG-ANO-PVQZ",
+        "AUG-ANO-PVQZ" : "AUG-ANO-PV5Z"
     }
 
     # Takes out original and larger basis set
@@ -131,11 +143,13 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
     small_basis = calculation.original_basis
     large_basis = basis_pairs.get(small_basis)
 
+    small_basis_zeta = "double" if small_basis in double_zeta_bases else "quadruple" if small_basis in quadruple_zeta_bases else "triple"
+
     if not large_basis: 
         
         error(f"Basis set extrapolation is not available for \"{small_basis}\". Check the manual for compatible basis sets!")
 
-    if small_basis in double_zeta_bases:
+    if small_basis_zeta == "double":
 
         log(f"\nBeginning basis set extrapolation with double- and triple-zeta basis sets...", calculation, 1, silent=silent)
         log(f"Double-zeta basis is {basis_types.get(small_basis)}, triple-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
@@ -143,14 +157,23 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
         log_spacer(calculation, silent=silent, start="\n")
         log(f"               Double-zeta Calculation", calculation, 1, silent=silent, colour="white")
         log_spacer(calculation, silent=silent)
-
-    else:
+    
+    elif small_basis_zeta == "triple":
 
         log(f"\nBeginning basis set extrapolation with triple- and quadruple-zeta basis sets...", calculation, 1, silent=silent)
         log(f"Triple-zeta basis is {basis_types.get(small_basis)}, quadruple-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
 
         log_spacer(calculation, silent=silent, start="\n")
         log(f"               Triple-zeta Calculation", calculation, 1, silent=silent, colour="white")
+        log_spacer(calculation, silent=silent)
+
+    else:
+
+        log(f"\nBeginning basis set extrapolation with quadruple- and quintuple-zeta basis sets...", calculation, 1, silent=silent)
+        log(f"Quadruple-zeta basis is {basis_types.get(small_basis)}, quintuple-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
+
+        log_spacer(calculation, silent=silent, start="\n")
+        log(f"              Quadruple-zeta Calculation", calculation, 1, silent=silent, colour="white")
         log_spacer(calculation, silent=silent)
 
 
@@ -162,10 +185,10 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     calculation.basis = large_basis
     
-    string = f"               Triple-zeta Calculation" if small_basis in double_zeta_bases else "             Quadruple-zeta Calculation"
+    header = "               Triple-zeta Calculation" if small_basis_zeta == "double" else "             Quadruple-zeta Calculation" if small_basis_zeta == "triple" else "              Quintuple-zeta Calculation" 
 
     log_spacer(calculation, silent=silent, start="\n")
-    log(string, calculation, 1, silent=silent, colour="white")
+    log(header, calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
     # Calculates the energy with the second basis
@@ -180,7 +203,7 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     # Extrapolates the energies
 
-    E_extrapolated = kern.calculate_extrapolated_energy(small_basis, E_SCF_small, E_SCF_large, E_corr_small, E_corr_large, calculation, silent)
+    E_extrapolated = kern.calculate_extrapolated_energy(small_basis, E_SCF_small, E_SCF_large, E_corr_small, E_corr_large, calculation, silent, small_basis_zeta)
     
     # Uses the extrapolated energy as the central point in a polarisability calculation
 
@@ -675,7 +698,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     # Calls a minimal SCF calculation to get a self-consistent guess density
 
-    if calculation.self_consistent_guess and do_correlation:
+    if calculation.self_consistent_guess and do_correlation and P_guess is None and P_guess_alpha is None and P_guess_beta is None:
 
         P_guess, P_guess_alpha, P_guess_beta, E_guess = calculate_self_consistent_guess(calculation, atomic_symbols, coordinates, molecule, S_inverse, silent=silent)
 
@@ -907,3 +930,80 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
 
 
     return bond_lengths, energies, dipole_moments
+
+
+
+
+
+
+
+
+
+
+def calculate_charge_change_energy(reference_energy: float, charged_energy: float, reference_molecule: Molecule, charged_molecule: Molecule, calculation: Calculation) -> float:
+ 
+    """
+    
+    Calculates and prints the vertical or adiabatic ionisation potential or electron affinity.
+
+    Args:
+        reference_energy (float): Final energy of original system
+        charged_energy (float): Final energy of charged system
+        reference_molecule (Molecule): Final molecule of original system
+        charged_molecule (Molecule): Final molecule of charged system
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        energy_change (float): Either ionisation potential or electron affinity
+    
+    """
+
+    charge_difference = charged_molecule.charge - reference_molecule.charge
+
+    # The convention for electron affinity is the other way around from ionisation potential
+
+    energy_change = charged_energy - reference_energy if charge_difference > 0 else reference_energy - charged_energy
+
+    # Is the molecule allowed to relax or not
+
+    prefix = "Vertical" if calculation.vertical or calculation.monatomic else "Adiabatic"
+
+    if charge_difference > 0:
+
+        property_name = "Ionisation Potential"
+
+        action_line = f"  Ionisation from charge {format_charge(reference_molecule.charge)} to {format_charge(charged_molecule.charge)}..."
+        
+
+    # There will always be a charge difference of some kind
+
+    else:
+
+        property_name = "Electron Affinity"
+
+        action_line = f"  Electron attachment from charge {format_charge(reference_molecule.charge)} to {format_charge(charged_molecule.charge)}..."
+        
+
+    log_spacer(calculation, start="\n")
+
+    log(f"{property_name:^55}", calculation)
+
+    log_spacer(calculation)
+
+    log(action_line, calculation)
+
+    log(f"\n  Energy of reference system:      {reference_energy:16.10f}", calculation)
+    log(f"  Energy of charged system:        {charged_energy:16.10f}", calculation, end="\n\n")
+
+    if not calculation.monatomic and not calculation.vertical:
+
+        log(f"  Bond length of reference system:     {bohr_to_angstrom(reference_molecule.bond_length):12.5f}", calculation)
+        log(f"  Bond length of charged system:       {bohr_to_angstrom(charged_molecule.bond_length):12.5f}", calculation, end="\n\n") 
+
+    label = f"  {prefix} {property_name.lower()}:"
+    log(f"{label:<35}{energy_change:16.10f}", calculation)
+
+    log_spacer(calculation)
+
+
+    return energy_change

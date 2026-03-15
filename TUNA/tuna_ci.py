@@ -711,7 +711,7 @@ def calculate_transition_dipoles(D, weights, excitations, C_spin_block):
 
     """
     
-    D_spin_block = np.kron(np.eye(2), D)
+    D_spin_block = np.kron(np.eye(2), D[2])
     D_SO = transform_matrix_AO_to_SO(D_spin_block, C_spin_block)
 
     # Left column is occupied, right column is virtual

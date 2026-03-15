@@ -38,7 +38,7 @@ print(colored("Importing required libraries...  ", "light_grey", force_color=Tru
 import numpy as np
 from numpy import ndarray
 import time
-from tuna_util import error, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, method_types, basis_types, Calculation, finish_calculation
+from tuna_util import error, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, method_types, basis_types, Calculation, finish_calculation, log, log_spacer
 import tuna_energy as energ
 import tuna_opt as opt
 import tuna_md as md
@@ -150,6 +150,7 @@ def parse_input() -> tuple[str, str, str, list[str], ndarray, list[str]]:
 
 
 
+
 def run_calculation(calculation_type: str, calculation: Calculation, atomic_symbols: list, coordinates: ndarray) -> None:
 
     """
@@ -179,6 +180,21 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
             
             energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
 
+        # Ionisation energy
+
+        case "IP": 
+            
+            reference_energy, charged_energy, reference_molecule, charged_molecule = opt.calculate_charged_state_energies(calculation, atomic_symbols, coordinates, charge_delta=+1)
+
+            energ.calculate_charge_change_energy(reference_energy, charged_energy, reference_molecule, charged_molecule, calculation)
+
+        # Electron affinity
+
+        case "EA": 
+            
+            reference_energy, charged_energy, reference_molecule, charged_molecule = opt.calculate_charged_state_energies(calculation, atomic_symbols, coordinates, charge_delta=-1)
+
+            energ.calculate_charge_change_energy(reference_energy, charged_energy, reference_molecule, charged_molecule, calculation)
 
         # Coordinate scan
 
@@ -233,7 +249,7 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
         case "MD": 
 
-            # Turns on printing the trajectory only if NOTRAJ parameter has not been used
+            # Turns on printing the trajectory only if "NOTRAJ" parameter has not been used
 
             if not calculation.no_trajectory: 
                 
@@ -243,6 +259,8 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
             
             
             
+
+
 
 
 
