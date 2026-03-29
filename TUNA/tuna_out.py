@@ -8,7 +8,7 @@ from matplotlib import font_manager as fm
 import warnings, logging, os
 from numpy import ndarray
 from tuna_molecule import Molecule
-
+from tuna_calc import Calculation
 
 
 """
@@ -44,9 +44,11 @@ def save_and_show_plot(calculation: Calculation) -> None:
     """
 
     # Gives plot a consistent look
+
     plt.tight_layout()
 
     # Saves the plot if requested
+
     if calculation.save_plot:
 
         log(f" \n Saving plot as \"{calculation.save_plot_filepath}\"...   ", calculation, 1, end=""); sys.stdout.flush()
@@ -56,11 +58,10 @@ def save_and_show_plot(calculation: Calculation) -> None:
         log("[Done]", calculation, 1)
 
     # Shows the plot
+
     plt.show() 
 
     return
-
-
 
 
 
@@ -80,6 +81,7 @@ def delete_saved_plot() -> None:
     """
 
     # This file path doesn't need to be changed by the user
+
     file_path = "TUNA-plot-temp.pkl"
 
     if os.path.exists(file_path):
@@ -93,8 +95,6 @@ def delete_saved_plot() -> None:
         warning(f"Plot deletion requested but {file_path} could not be found!\n",space=0)
 
     return
-
-
 
 
 
@@ -135,9 +135,7 @@ def suppress_plot_warnings() -> None:
 
 
 
-
-
-def build_Cartesian_grid(bond_length: float, extent: float = 3, number_of_points: int = 500) -> ndarray:
+def build_Cartesian_grid(bond_length: float, extent: float = 3, number_of_points: int = 800) -> ndarray:
 
     """
     
@@ -181,8 +179,6 @@ def build_Cartesian_grid(bond_length: float, extent: float = 3, number_of_points
 
 
 
-
-
 def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energies: ndarray) -> None:
 
     """
@@ -210,7 +206,7 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
 
     # For excited state calculations, also print the root
 
-    legend_label = f"{calculation.method}/{basis_types.get(calculation.basis)}" if "CIS" not in calculation.method else f"{calculation.method}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
+    legend_label = f"{calculation.method.name}/{basis_types.get(calculation.basis)}" if not calculation.method.excited_state_method else f"{calculation.method.name}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
     linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
 
     plt.plot(bond_lengths, energies, color=calculation.scan_plot_colour,linewidth=1.75, label=legend_label, linestyle=linestyle)
@@ -230,8 +226,6 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
     save_and_show_plot(calculation)
 
     return
-
-
 
 
 
@@ -287,8 +281,6 @@ def read_temporary_plot_file(temporary_pickle_path: str) -> tuple[any, any]:
 
 
 
-
-
 def format_charge(charge: int) -> str:
 
     """
@@ -316,7 +308,6 @@ def format_charge(charge: int) -> str:
     formatted_charge = f"{abs(charge)}{sign}"
 
     return formatted_charge
-
 
 
 
@@ -396,8 +387,6 @@ def format_coordinate_scan_plot(calculation: Calculation, ax: any) -> None:
 
 
 
-
-
 def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarray, energies: ndarray, vibrational_energy_levels: ndarray, vibrational_wavefunctions: ndarray) -> None:
 
     """
@@ -441,7 +430,7 @@ def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarr
 
     # For excited state calculations, also print the root
 
-    legend_label = f"{calculation.method}/{basis_types.get(calculation.basis)}" if "CIS" not in calculation.method else f"{calculation.method}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
+    legend_label = f"{calculation.method.name}/{basis_types.get(calculation.basis)}" if not calculation.method.excited_state_method else f"{calculation.method.name}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
     linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
     
     # Plots the potential energy surface
@@ -453,8 +442,6 @@ def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarr
     save_and_show_plot(calculation)
 
     return
-
-
 
 
 
@@ -487,7 +474,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
     
     X, Z = grid 
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6)) if calculation.monatomic else plt.subplots(figsize=(10, 6))
     ax.axis("off")
 
     # If bond length is not a float, set it to zero for atoms
@@ -512,11 +499,11 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         if len(calculation.atomic_symbols) == 2:
 
-            plt.title(f"{density_type} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
+            plt.title(f"{density_type} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
 
         else:
 
-            plt.title(f"{density_type} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
+            plt.title(f"{density_type} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
 
         # Builds density on grid
 
@@ -532,7 +519,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
             # Difference densities have both positive and negative parts
 
-            cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (247/255,)*3, (1,0,0)], 257)
+            cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (255/255,)*3, (1,0,0)], 257)
             
             max_abs = np.max(np.abs(view))
 
@@ -544,7 +531,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
             # Electron density is only positive
 
-            cmap = LinearSegmentedColormap.from_list("wp", [(247/255, 247/255, 247/255), (1, 0, 1)]) 
+            cmap = LinearSegmentedColormap.from_list("wp", [(255/255, 255/255, 255/255), (1, 0, 1)]) 
 
             vmin, vmax = 0, np.max(view)
 
@@ -557,11 +544,11 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         if len(calculation.atomic_symbols) == 2:
 
-            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
 
         else:
 
-            plt.title(f"Orbital {which_MO + 1} from {calculation.method}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
 
         # Builds molecular orbitals on grid
 
@@ -578,7 +565,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
         # Molecular orbitals can be positive or negative in sign
 
         cmap = "bwr"
-        cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (247/255,)*3, (1,0,0)], 257)
+        cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (255/255,) * 3, (1,0,0)], 257)
 
         max_abs = np.max(np.abs(view))
         vmin, vmax = -max_abs, max_abs
@@ -595,8 +582,6 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
     save_and_show_plot(calculation)
 
     return
-
-
 
 
 
@@ -627,7 +612,7 @@ def show_two_dimensional_plot(calculation: Calculation, molecule: Molecule, P: n
     
     """
 
-    if calculation.method in excited_state_methods:
+    if calculation.method.excited_state_method:
 
         # Sets the density matrices to the difference density
 
@@ -700,8 +685,6 @@ def show_two_dimensional_plot(calculation: Calculation, molecule: Molecule, P: n
 
 
     return
-
-
 
 
 

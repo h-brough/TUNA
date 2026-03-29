@@ -4,9 +4,11 @@ from numpy import ndarray
 import tuna_energy as energ
 import sys
 from termcolor import colored
-import tuna_postscf as postscf
+import tuna_props as props
 import tuna_out as out
-
+import tuna_freq as freq
+import tuna_kernel as kern
+from tuna_calc import Calculation
 
 
 """
@@ -17,6 +19,8 @@ For a one-dimensional system, there is an exact "best" way to converge the geome
 module implements this optimisation method with numerical derivatives of the total molecular energy to find the force. Several options are available, including
 calculating an "exact" Hessian instead of the approximate one - which becomes more worthwhile further from the optimisation endpoint. The optimisation can 
 optionally be printed to an ".xyz" output file with the "TRAJ" keyword.
+
+Updated in version 0.10.1 to include the bond dissociation energy calculation type.
 
 The module contains:
 
@@ -47,7 +51,7 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
 
     """
 
-    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.numerical_derivative_prod]])  
+    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.FIRST_GEOM_DERIVATIVE_PROD]])  
 
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
@@ -66,7 +70,7 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
 
     # Calculates numerical first derivative
 
-    gradient = calculate_first_derivative(energy_backward, energy_forward, constants.numerical_derivative_prod)
+    gradient = calculate_first_derivative(energy_backward, energy_forward, constants.FIRST_GEOM_DERIVATIVE_PROD)
 
 
     return gradient
@@ -103,7 +107,7 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
 
     """
 
-    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.numerical_derivative_prod]])  
+    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.SECOND_GEOM_DERIVATIVE_PROD]])  
 
     far_forward_coords = coordinates + 2 * prodding_coords
     forward_coords = coordinates + prodding_coords
@@ -136,9 +140,11 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
 
     # Calculates numerical second derivative
 
-    hessian = calculate_second_derivative(energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, constants.numerical_derivative_prod)
+    hessian = calculate_second_derivative(energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, constants.SECOND_GEOM_DERIVATIVE_PROD)
     
-    return hessian, SCF_output_forward, P_forward, SCF_output_backward, P_backward
+    displaced_energies = energy_far_backward, energy_backward, energy_forward, energy_far_forward
+
+    return hessian, SCF_output_forward, P_forward, SCF_output_backward, P_backward, displaced_energies
 
 
 
@@ -247,7 +253,7 @@ def update_hessian(calculation: Calculation, coordinates: ndarray, atomic_symbol
 
         log("\n Beginning calculation of exact hessian...    ", calculation, 1)
 
-        candidate_hessian, _, _, _, _ = calculate_hessian(coordinates, calculation, atomic_symbols, energy, silent=False)
+        candidate_hessian, _, _, _, _, _ = calculate_hessian(coordinates, calculation, atomic_symbols, energy, silent=False)
 
     else: 
 
@@ -378,7 +384,7 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
         bond_length = calculate_bond_length(coordinates)
 
         log_big_spacer(calculation, start="\n",space="")
-        log(f"Beginning energy and gradient iteration {iteration} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1)
+        log(f"Beginning energy and gradient iteration {iteration} with bond length of {bohr_to_angstrom(bond_length):5f} angstroms...", calculation, 1)
         log_big_spacer(calculation, space="")
 
         # Prevents running the post-SCF calculations on an energy evaluation
@@ -431,7 +437,7 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
         if optimisation_is_converged(iteration, gradient, step, calculation): 
 
-            postscf.post_SCF_output(molecule, calculation, P, SCF_output.S, molecule.partition_ranges, SCF_output, SCF_output.P_alpha, SCF_output.P_beta)
+            props.calculate_molecular_properties(molecule, calculation, P, SCF_output.S, SCF_output, SCF_output.P_alpha, SCF_output.P_beta)
 
             log(f"\n Optimisation converged in {iteration} iterations to bond length of {bohr_to_angstrom(bond_length):.5f} angstroms!", calculation, 1)
             log(f"\n Final single point energy: {energy:.10f}", calculation, 1)
@@ -548,3 +554,85 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
 
 
     return reference_energy, charged_energy,  reference_molecule, charged_molecule
+
+
+
+
+
+
+
+
+
+
+def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols: list, coordinates: ndarray) -> None:
+
+    """
+    
+    Calculates the counterpoise corrected, optionally zero-point energy corrected, bond dissociation energy.
+
+    Args:
+        calculation (Calculation): Calculation object
+        atomic_symbols (list): List of atomic symbols
+        coordinates (array): Atomic coordinates in bohr
+    
+    """
+
+    # First, optimise the molecular geometry
+
+    optimised_molecule, optimised_energy = optimise_geometry(calculation, atomic_symbols, coordinates)
+
+    zero_point_energy = 0.0
+
+    # If the "ZPE" keyword is used, also calculate the harmonic zero-point energy
+
+    if calculation.do_ZPE_correction:
+
+        _, _, _, zero_point_energy = freq.calculate_harmonic_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
+
+    log_spacer(calculation, start="\n", space="", end="~~~")
+    log("Calculating energy on atoms", calculation) if calculation.no_counterpoise_correction else log("Calculating counterpoise-corrected atomic energies...", calculation)
+    log_spacer(calculation, space="", end="~~~")
+
+    # Define the new coordinates, with a ghost atom in the equilibrium geometry position by default for counterpoise correction
+
+    if calculation.no_counterpoise_correction:
+        
+        atomic_coordinates = np.array([[0.0, 0.0, 0.0]]) 
+
+    else:
+        
+        atomic_coordinates = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, optimised_molecule.bond_length]])
+    
+    # Update the calculation object, turning on core Hamiltonian guess rather than SCF/SAD guess which doesn't work with ghost atoms
+
+    calculation.monatomic, calculation.diatomic, calculation.core_guess = True, False, True
+
+    # Cache the original set of atomic symbols
+
+    original_symbols = atomic_symbols
+
+    # Build new atomic symbols, which may be counterpoise corrected with ghost atoms
+
+    atomic_symbols = [original_symbols[0]] if calculation.no_counterpoise_correction else [original_symbols[0], "X" + original_symbols[1]]
+
+    # Evaluate the energy on the isolated atom (with or without ghost basis functions)
+
+    _, _, first_atom_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, atomic_coordinates)
+
+    # If it's a heteronuclear molecule, evaluate the energy on the second isolated atom
+
+    if optimised_molecule.heteronuclear:
+
+        atomic_symbols = [original_symbols[1]] if calculation.no_counterpoise_correction else [original_symbols[1], "X" + original_symbols[0]]
+        
+        _, _, second_atom_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, atomic_coordinates)
+
+    else:
+
+        second_atom_energy = first_atom_energy
+
+    # Prints out the bond dissociation energy information
+
+    kern.print_bond_dissociation_energy_information(first_atom_energy, second_atom_energy, optimised_energy, zero_point_energy, optimised_molecule, calculation)
+
+    return

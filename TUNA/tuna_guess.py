@@ -1,6 +1,7 @@
 
-from tuna_util import log, error, Calculation, Integrals
+from tuna_util import log, error, Integrals
 import tuna_scf as scf
+from tuna_calc import Calculation
 from scipy.linalg import block_diag
 from tuna_integrals import tuna_integral as ints
 from tuna_molecule import Molecule, Atom
@@ -491,6 +492,6 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
 
     E_guess = calculate_energy_guess(integrals.H_core, X) if E_guess is None else E_guess
 
-    calculation.decontract == decontract_requested
+    calculation.decontract = decontract_requested
 
     return E_guess, P_guess, P_guess_alpha, P_guess_beta

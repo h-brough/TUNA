@@ -5,6 +5,7 @@ from numpy import ndarray
 from tuna_util import *
 import tuna_out as out
 from tuna_molecule import Molecule
+from tuna_calc import Calculation
 
 
 """
@@ -332,11 +333,11 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
     # Convert to atomic units from femtoseconds for integration
 
-    timestep_fs = calculation.timestep
+    timestep_fs = calculation.step if calculation.step is not None else 0.1
 
     timestep_au = timestep_fs / constants.atomic_time_in_femtoseconds
 
-    log(f"\nBeginning TUNA molecular dynamics calculation with {calculation.MD_number_of_steps} steps in the NVE ensemble...\n", calculation, 1)
+    log(f"\nBeginning TUNA molecular dynamics calculation with {calculation.number_of_steps} steps in the NVE ensemble...\n", calculation, 1)
     log(f"Using timestep of {timestep_fs:.3f} femtoseconds and initial temperature of {calculation.temperature:.2f} K.", calculation, 1)
 
     # Prints trajectory to XYZ file by default, unless "NOTRAJ" keyword used
@@ -382,7 +383,7 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
     # Iterates over MD steps, up to the number of steps specified, in MD simulation
 
-    for iteration in range(1, calculation.MD_number_of_steps):
+    for iteration in range(1, calculation.number_of_steps):
 
         # Velocity Verlet algorithm with finite timestep, accelerations are recalculated halfway through to allow simultaneous calculation of velocities
 

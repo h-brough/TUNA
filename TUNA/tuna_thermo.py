@@ -1,6 +1,7 @@
 import numpy as np
 from tuna_util import *
 from tuna_molecule import Molecule
+from tuna_calc import Calculation
 
 
 """
@@ -25,7 +26,6 @@ The module contains:
 k = constants.k
 c = constants.c
 h = constants.h
-
 
 
 
@@ -438,7 +438,7 @@ def calculate_thermochemical_corrections(molecule: Molecule, calculation: Calcul
     # Prints thermochemical information unless terse keyword is used 
     
     log(f"\n Temperature used is {temperature:.2f} K, pressure used is {pressure:.0f} Pa.", calculation, 2)
-    log(" Entropies multiplied by temperature to give units of energy.", calculation, 2)
+    log("\n Entropies multiplied by temperature to give units of energy.", calculation, 2)
     log(f" Using symmetry number derived from {point_group} point group for rotational entropy.", calculation, 2)
 
     internal_energy, translational_internal_energy, rotational_internal_energy, vibrational_internal_energy = calculate_internal_energy(energy, zero_point_energy, temperature, vibrational_frequency)

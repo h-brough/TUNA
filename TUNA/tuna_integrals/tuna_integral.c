@@ -1610,7 +1610,7 @@ typedef struct {
 
 /* #### Code section: numeric_typedefs ### */
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":743
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":744
  * # in Cython to enable them only on the right systems.
  * 
  * ctypedef npy_int8       int8_t             # <<<<<<<<<<<<<<
@@ -1619,7 +1619,7 @@ typedef struct {
 */
 typedef npy_int8 __pyx_t_5numpy_int8_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":744
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":745
  * 
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t             # <<<<<<<<<<<<<<
@@ -1628,7 +1628,7 @@ typedef npy_int8 __pyx_t_5numpy_int8_t;
 */
 typedef npy_int16 __pyx_t_5numpy_int16_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":745
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":746
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t             # <<<<<<<<<<<<<<
@@ -1637,7 +1637,7 @@ typedef npy_int16 __pyx_t_5numpy_int16_t;
 */
 typedef npy_int32 __pyx_t_5numpy_int32_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":746
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":747
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t
  * ctypedef npy_int64      int64_t             # <<<<<<<<<<<<<<
@@ -1646,7 +1646,7 @@ typedef npy_int32 __pyx_t_5numpy_int32_t;
 */
 typedef npy_int64 __pyx_t_5numpy_int64_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":748
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":749
  * ctypedef npy_int64      int64_t
  * 
  * ctypedef npy_uint8      uint8_t             # <<<<<<<<<<<<<<
@@ -1655,7 +1655,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
 */
 typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":749
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":750
  * 
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t             # <<<<<<<<<<<<<<
@@ -1664,7 +1664,7 @@ typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 */
 typedef npy_uint16 __pyx_t_5numpy_uint16_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":750
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":751
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t             # <<<<<<<<<<<<<<
@@ -1673,7 +1673,7 @@ typedef npy_uint16 __pyx_t_5numpy_uint16_t;
 */
 typedef npy_uint32 __pyx_t_5numpy_uint32_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":751
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":752
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t
  * ctypedef npy_uint64     uint64_t             # <<<<<<<<<<<<<<
@@ -1682,7 +1682,7 @@ typedef npy_uint32 __pyx_t_5numpy_uint32_t;
 */
 typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":753
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":754
  * ctypedef npy_uint64     uint64_t
  * 
  * ctypedef npy_float32    float32_t             # <<<<<<<<<<<<<<
@@ -1691,7 +1691,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 */
 typedef npy_float32 __pyx_t_5numpy_float32_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":754
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":755
  * 
  * ctypedef npy_float32    float32_t
  * ctypedef npy_float64    float64_t             # <<<<<<<<<<<<<<
@@ -1700,7 +1700,7 @@ typedef npy_float32 __pyx_t_5numpy_float32_t;
 */
 typedef npy_float64 __pyx_t_5numpy_float64_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":761
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":762
  * ctypedef double complex complex128_t
  * 
  * ctypedef npy_longlong   longlong_t             # <<<<<<<<<<<<<<
@@ -1709,7 +1709,7 @@ typedef npy_float64 __pyx_t_5numpy_float64_t;
 */
 typedef npy_longlong __pyx_t_5numpy_longlong_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":762
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":763
  * 
  * ctypedef npy_longlong   longlong_t
  * ctypedef npy_ulonglong  ulonglong_t             # <<<<<<<<<<<<<<
@@ -1718,7 +1718,7 @@ typedef npy_longlong __pyx_t_5numpy_longlong_t;
 */
 typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":764
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":765
  * ctypedef npy_ulonglong  ulonglong_t
  * 
  * ctypedef npy_intp       intp_t             # <<<<<<<<<<<<<<
@@ -1727,7 +1727,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 */
 typedef npy_intp __pyx_t_5numpy_intp_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":765
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":766
  * 
  * ctypedef npy_intp       intp_t
  * ctypedef npy_uintp      uintp_t             # <<<<<<<<<<<<<<
@@ -1736,7 +1736,7 @@ typedef npy_intp __pyx_t_5numpy_intp_t;
 */
 typedef npy_uintp __pyx_t_5numpy_uintp_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":767
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":768
  * ctypedef npy_uintp      uintp_t
  * 
  * ctypedef npy_double     float_t             # <<<<<<<<<<<<<<
@@ -1745,7 +1745,7 @@ typedef npy_uintp __pyx_t_5numpy_uintp_t;
 */
 typedef npy_double __pyx_t_5numpy_float_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":768
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":769
  * 
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t             # <<<<<<<<<<<<<<
@@ -1754,7 +1754,7 @@ typedef npy_double __pyx_t_5numpy_float_t;
 */
 typedef npy_double __pyx_t_5numpy_double_t;
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":769
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":770
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t             # <<<<<<<<<<<<<<
@@ -3389,6 +3389,7 @@ static int __pyx_memoryview_thread_locks_used;
 static PyThread_type_lock __pyx_memoryview_thread_locks[8];
 static CYTHON_INLINE double __pyx_f_13tuna_integral_double_fact(int); /*proto*/
 static double __pyx_f_13tuna_integral_calculate_dipole_integral(PyObject *, PyObject *, PyObject *, PyObject *, int __pyx_skip_dispatch); /*proto*/
+static double __pyx_f_13tuna_integral_calculate_quadrupole_integral(PyObject *, PyObject *, PyObject *, PyObject *, int __pyx_skip_dispatch); /*proto*/
 static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObject *, PyObject *, __Pyx_memviewslice, int __pyx_skip_dispatch); /*proto*/
 static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *, PyObject *, int __pyx_skip_dispatch); /*proto*/
 static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *, PyObject *, int __pyx_skip_dispatch); /*proto*/
@@ -3487,6 +3488,8 @@ static const char __pyx_k_Dz[] = "Dz";
 static const char __pyx_k_Ex[] = "Ex";
 static const char __pyx_k_Ey[] = "Ey";
 static const char __pyx_k_Ez[] = "Ez";
+static const char __pyx_k_Qx[] = "Qx";
+static const char __pyx_k_Qz[] = "Qz";
 static const char __pyx_k_Rz[] = "Rz";
 static const char __pyx_k_Sx[] = "Sx";
 static const char __pyx_k_Sy[] = "Sy";
@@ -3505,6 +3508,12 @@ static const char __pyx_k__9[] = "}";
 static const char __pyx_k_gc[] = "gc";
 static const char __pyx_k_id[] = "id";
 static const char __pyx_k_np[] = "np";
+static const char __pyx_k_xx[] = "xx";
+static const char __pyx_k_zz[] = "zz";
+static const char __pyx_k_Ex1[] = "Ex1";
+static const char __pyx_k_Ex2[] = "Ex2";
+static const char __pyx_k_Ez1[] = "Ez1";
+static const char __pyx_k_Ez2[] = "Ez2";
 static const char __pyx_k_PCz[] = "PCz";
 static const char __pyx_k__10[] = "(";
 static const char __pyx_k__11[] = ",";
@@ -3622,6 +3631,7 @@ static const char __pyx_k_ValueError[] = "ValueError";
 static const char __pyx_k_exponent_1[] = "exponent_1";
 static const char __pyx_k_exponent_2[] = "exponent_2";
 static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
+static const char __pyx_k_quadrupole[] = "quadrupole";
 static const char __pyx_k_ImportError[] = "ImportError";
 static const char __pyx_k_MemoryError[] = "MemoryError";
 static const char __pyx_k_PickleError[] = "PickleError";
@@ -3643,6 +3653,7 @@ static const char __pyx_k_collections_abc[] = "collections.abc";
 static const char __pyx_k_dtype_is_object[] = "dtype_is_object";
 static const char __pyx_k_setstate_cython[] = "__setstate_cython__";
 static const char __pyx_k_pyx_unpickle_Enum[] = "__pyx_unpickle_Enum";
+static const char __pyx_k_quadrupole_origin[] = "quadrupole_origin";
 static const char __pyx_k_tuna_integral_pyx[] = "tuna_integral.pyx";
 static const char __pyx_k_asyncio_coroutines[] = "asyncio.coroutines";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
@@ -3662,15 +3673,18 @@ static const char __pyx_k_calculate_kinetic_integral[] = "calculate_kinetic_inte
 static const char __pyx_k_calculate_overlap_integral[] = "calculate_overlap_integral";
 static const char __pyx_k_Step_may_not_be_zero_axis_d[] = "Step may not be zero (axis %d)";
 static const char __pyx_k_itemsize_0_for_cython_array[] = "itemsize <= 0 for cython.array";
+static const char __pyx_k_calculate_quadrupole_integral[] = "calculate_quadrupole_integral";
 static const char __pyx_k_unable_to_allocate_array_data[] = "unable to allocate array data.";
 static const char __pyx_k_2_1_U_4q_E_at1_U_4q_E_at1_D_Qc[] = "\320\0002\260!\360\"\000\005\034\2301\360\n\000\005\t\210\005\210U\220!\2204\220q\340\010\014\210E\220\025\220a\220t\2301\340\014\020\220\005\220U\230!\2304\230q\340\020\024\220E\230\025\230a\230t\2401\360\010\000\025-\250D\260\005\260Q\260c\270\022\2704\270u\300A\300S\310\002\310$\310e\320ST\320TW\320WY\320Y]\320]b\320bc\320cf\320fh\320hl\320lr\320rs\320sv\320vx\320x|\360\000\000}\001C\002\360\000\000C\002D\002\360\000\000D\002G\002\360\000\000G\002I\002\360\000\000I\002M\002\360\000\000M\002S\002\360\000\000S\002T\002\360\000\000T\002W\002\360\000\000W\002Y\002\360\000\000Y\002]\002\360\000\000]\002c\002\360\000\000c\002d\002\360\000\000d\002e\002\340\024&\320&8\270\001\270\024\270U\300!\3004\300t\3108\320SW\320W`\320`d\320di\320ij\320jn\320nr\320rz\320z~\360\000\000\177\001H\002\360\000\000H\002L\002\360\000\000L\002Q\002\360\000\000Q\002R\002\360\000\000R\002V\002\360\000\000V\002Z\002\360\000\000Z\002b\002\360\000\000b\002f\002\360\000\000f\002o\002\360\000\000o\002s\002\360\000\000s\002x\002\360\000\000x\002y\002\360\000\000y\002}\002\360\000\000}\002A\003\360\000\000A\003I\003\360\000\000I\003M\003\360\000\000M\003N\003\340\024 \320 6\260b\270\001\360\006\000\005\014\2101";
 static const char __pyx_k_QQbbu_v_B_B_C_fA_fA_9Ba_2Yb_2Q[] = "\320\000\030\320\030)\320)<\320<Q\320Qb\320bu\360\000\000v\001B\002\360\000\000B\002C\002\360&\000\005\n\210\025\210f\220A\330\004\t\210\025\210f\220A\340\004\013\2109\220B\220a\340\004\t\210\022\2102\210Y\220b\230\003\2302\230Q\330\004\t\210\022\2102\210[\230\002\230!\330\004\010\210\005\210R\210y\230\003\2309\240B\240a\360\010\000\005\n\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\330\004\t\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\330\004\t\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\360\010\000\005\n\210\021\210!\2103\210b\220\003\2202\220R\220r\230\035\240a\240u\250D\260\002\260#\260S\270\004\270A\270T\300\034\310\\\320Y[\320[\\\320\\]\320]`\320`b\320bo\320op\320pu\320uy\320y{\320{~\360\000\000\177\001B\002\360\000\000B\002F\002\360\000\000F\002G\002\360\000\000G\002K\002\360\000\000K\002W\002\360\000\000W\002X\002\330\004\t\210\021\210!\2103\210b\220\003\2202\220R\220r\230\035\240a\240u\250D\260\002\260#\260S\270\004\270A\270T\300\034\310\\\320Y[\320[\\\320\\]\320]`\320`b\320bo\320op\320pu\320uy\320y{\320{~\360\000\000\177\001B\002\360\000\000B\002F\002\360\000\000F\002G\002\360\000\000G\002K\002\360\000\000K\002W\002\360\000\000W\002X\002\330\004\t\210\021\210!\2103\210b\220\003\2202\220R\220r\230\035\240a\240u\250D\260\002\260#\260S\270\004\270A\270T\300\034\310\\\320Y[\320[\\\320\\]\320]`\320`b\320bo\320op\320pu\320uy\320y{\320{~\360\000\000\177\001B\002\360\000\000B\002F\002\360\000\000F\002G\002\360\000\000G\002K\002\360\000\000K\002W\002\360\000\000W\002X\002\360\010\000\005\021\220\003\2202\220S\230\002\230#\230R\230s\240\"\240C\240r\250\023\250B\250c\260\022\2603\260b\270\004\270B\270c\300\021\300#\300S\310\013\320SU\320Ub\320bc\340\004\013\2101";
 static const char __pyx_k_U_1_wc_E_ar_1_7_Qa_U_2Rq_wc_2U[] = "\200\001\360*\000\005\t\210\005\210U\220!\2201\340\010\017\210w\220c\230\021\230!\340\010\014\210E\220\025\220a\220r\230\022\2301\340\014\023\2207\230#\230Q\230a\340\014\020\220\005\220U\230!\2302\230R\230q\340\020\027\220w\230c\240\021\240!\360\010\000\021\032\230\022\2302\230U\240\"\240C\240w\250b\260\002\260!\340\020\024\220E\230\025\230a\230q\340\024\033\2307\240#\240Q\240a\360\010\000\025\026\330\032\036\230f\240A\240S\250\002\250$\250f\260A\260S\270\002\270$\270f\300A\300S\310\002\310$\310f\320TU\320UY\320Y[\320[^\320^_\330\032\036\230f\240A\240S\250\002\250$\250f\260A\260S\270\002\270$\270f\300A\300S\310\002\310$\310f\320TU\320UY\320Y[\320[\\\360\006\000\031$\2401\360\010\000\031$\320#H\310\001\310\026\310v\320U[\320[\\\360\010\000\025\033\230!\2303\230c\240\023\240E\250\021\330\024\032\230!\2303\230c\240\023\240E\250\021\330\024\032\230!\2303\230c\240\023\240E\250\021\330\024\032\230!\2303\230c\240\023\240E\250\021\330\024\032\230!\2303\230c\240\023\240E\250\021\330\024\032\230!\2303\230c\240\023\240E\250\021\330\024\032\230!\2303\230c\240\023\240E\250\021\330\024\032\230!\2303\230c\240\023\240E\250\021\360\006\000\005\014\2101";
 static const char __pyx_k_strided_and_direct_or_indirect[] = "<strided and direct or indirect>";
 static const char __pyx_k_0_1_F_1D_D_iq_A_E_b_E_b_2S_BTTU[] = "\320\0000\260\001\360 \000\005\034\2301\340\004\010\210\004\210F\220)\2301\230D\240\001\340\010\014\210D\220\006\220i\230q\240\004\240A\360\010\000\r\031\230\004\230E\240\021\240$\240b\250\004\250E\260\021\260$\260b\270\003\2702\270S\300\002\320BT\320TU\320UY\320Y^\320^_\320_d\320dh\320hp\320pt\320t}\360\000\000~\001B\002\360\000\000B\002G\002\360\000\000G\002H\002\360\000\000H\002M\002\360\000\000M\002Q\002\360\000\000Q\002Y\002\360\000\000Y\002]\002\360\000\000]\002f\002\360\000\000f\002g\002\360\006\000\005\014\2101";
+static const char __pyx_k_1_F_1D_D_iq_A_U_4r_U_4r_Bc_QdRW[] = "\320\000*\250!\360\"\000\005\034\2301\340\004\010\210\004\210F\220)\2301\230D\240\001\340\010\014\210D\220\006\220i\230q\240\004\240A\360\010\000\r\032\230\024\230U\240!\2404\240r\250\024\250U\260!\2604\260r\270\023\270B\270c\300\022\300:\310Q\310d\320RW\320WX\320X]\320]a\320ai\320im\320mv\320vz\320z\177\360\000\000@\002A\002\360\000\000A\002F\002\360\000\000F\002J\002\360\000\000J\002R\002\360\000\000R\002V\002\360\000\000V\002_\002\360\000\000_\002r\002\360\000\000r\002s\002\340\004\013\2101";
 static const char __pyx_k_44GG_m_n_A_A_S_S_____fA_fA_A_HA[] = "\320\000#\320#4\3204G\320G\\\320\\m\360\000\000n\001A\002\360\000\000A\002S\002\360\000\000S\002_\002\360\000\000_\002`\002\360(\000\005\n\210\025\210f\220A\330\004\t\210\025\210f\220A\340\004\037\230{\250\"\250A\330\004\027\220{\240\"\240H\250A\250S\260\002\260+\270R\270x\300q\310\004\310B\310m\320[]\320]d\320de\320ef\330\004\030\230\010\240\001\240\023\240B\240h\250a\250q\340\004\024\220D\230\002\230!\330\004\024\220D\230\002\230$\230b\240\004\240B\240d\250\"\250D\260\002\260!\330\004\026\220e\2302\230Q\340\004\034\230I\240V\2502\250U\260\"\260C\260r\270\021\330\004\033\2309\240F\250\"\250E\260\022\2603\260b\270\001\330\004\026\220i\230v\240R\240u\250B\250c\260\023\260E\270\022\2703\270b\300\001\340\004\033\2301\360\010\000\005\024\2201\220F\230-\240r\250\024\250R\250u\260A\330\004\022\220!\2206\230\036\240q\330\004\030\230\001\230\026\230v\240U\250*\260I\270Q\360\006\000\005\t\210\005\210U\220!\2203\220d\230\"\230D\240\002\240#\240Q\340\010\r\210]\230!\2305\240\005\240S\250\005\250\\\270\034\300R\320Gg\320gh\320hi\340\010\014\210E\220\025\220a\220s\230$\230b\240\004\240B\240c\250\021\340\014\021\220\035\230a\230u\240E\250\023\250E\260\034\270\\\310\022\320Kk\320kl\320lm\340\014\020\220\005\220U\230!\2304\230r\240\024\240R\240q\340\020\025\220]\240!\2405\250\005\250S\260\007\260|\3001\340\020\034\230C\230r\240\023\240B\240c\250\022\2502\250Q\250b\260\002\260'\270\023\270B\270b\300\003\3003\300a\360\006\000\005\t\210\001\210\021\330\004\010\210\001\210\021\330\004\010\210\001\210\021\340\004\020\220\004\220B\220c\230\022\2301\340\004\013\2101";
 static const char __pyx_k_PPaat_u_M_M_a_a_i_i_j_fA_fA_9Ba[] = "\320\000\027\320\027(\320(;\320;P\320Pa\320at\360\000\000u\001M\002\360\000\000M\002a\002\360\000\000a\002i\002\360\000\000i\002j\002\360*\000\005\n\210\025\210f\220A\330\004\t\210\025\210f\220A\340\004\013\2109\220B\220a\340\004\023\220;\230b\240\001\330\004\020\220\003\2201\220C\220r\230\036\240q\340\004\t\210\033\220B\220i\230r\240\033\250B\250j\270\002\270-\300r\310\021\360\010\000\005\n\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\330\004\t\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\330\004\t\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\360\010\000\005\010\200y\220\006\220c\230\023\230A\340\010\r\210]\230!\2305\240\005\240S\250\004\250A\250T\260\034\270\\\310\022\3101\310A\310S\320PR\320RS\340\010\023\220:\230R\230s\240\"\240C\240r\250\021\340\t\022\220&\230\003\2303\230a\340\010\r\210]\230!\2305\240\005\240S\250\004\250A\250T\260\034\270\\\310\022\3101\310A\310S\320PR\320RS\340\010\023\220:\230R\230s\240\"\240C\240r\250\021\340\t\022\220&\230\003\2303\230a\340\010\r\210]\230!\2305\240\005\240S\250\004\250A\250T\260\034\270\\\310\022\3101\310A\310S\320PR\320RS\340\010\023\220:\230R\230s\240\"\240C\240r\250\021\360\006\000\005\014\2101";
 static const char __pyx_k_QQbbu_v_B_B_C_fA_fA_auE_HAS_4_1[] = "\320\000\030\320\030)\320)<\320<Q\320Qb\320bu\360\000\000v\001B\002\360\000\000B\002C\002\360&\000\005\n\210\025\210f\220A\330\004\t\210\025\210f\220A\360\010\000\005\n\210\035\220a\220u\230E\240\023\240H\250A\250S\260\002\260(\270!\2704\270|\3101\330\004\t\210\035\220a\220u\230E\240\023\240H\250A\250S\260\002\260(\270!\2704\270|\3101\330\004\t\210\035\220a\220u\230E\240\023\240H\250A\250S\260\002\260(\270!\2704\270|\3101\340\004\017\210s\220\"\220C\220r\230\023\230B\230c\240\021\240#\240S\250\013\2602\260]\300!\340\004\013\2101";
+static const char __pyx_k_TTeex_y_U_U_i_i_q_q_r_fA_fA_9Ba[] = "\320\000\033\320\033,\320,?\320?T\320Te\320ex\360\000\000y\001U\002\360\000\000U\002i\002\360\000\000i\002q\002\360\000\000q\002r\002\360*\000\005\n\210\025\210f\220A\330\004\t\210\025\210f\220A\340\004\013\2109\220B\220a\340\004\023\220;\230b\240\001\330\004\020\220\003\2201\220C\220r\230\036\240q\340\004\t\210\033\220B\220i\230r\240\033\250B\250j\270\002\270-\300r\310\021\360\010\000\005\n\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\330\004\t\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\330\004\t\210\035\220a\220u\230E\240\023\240D\250\001\250\024\250\\\270\021\360\010\000\005\010\200y\220\006\220c\230\023\230A\340\010\016\210m\2301\230E\240\025\240c\250\024\250Q\250d\260,\270a\330\010\016\210m\2301\230E\240\025\240c\250\024\250Q\250d\260,\270a\340\010\r\210T\220\022\2204\220r\230\024\230R\230q\240\001\240\023\240B\240d\250#\250Q\250a\250s\260\"\260A\260Q\260c\270\022\2704\270s\300$\300b\310\017\320WY\320YZ\340\010\023\220:\230R\230s\240\"\240C\240r\250\021\340\t\022\220&\230\003\2303\230a\340\010\016\210m\2301\230E\240\025\240c\250\024\250Q\250d\260,\270a\330\010\016\210m\2301\230E\240\025\240c\250\024\250Q\250d\260,\270a\340\010\r\210T\220\022\2204\220r\230\024\230R\230q\240\001\240\023\240B\240d\250#\250Q\250a\250s\260\"\260A\260Q\260c\270\022\2704\270s\300$\300b\310\017\320WY\320YZ\340\010\023\220:\230R\230s\240\"\240C\240r\250\021\360\006\000\005\014\2101";
 static const char __pyx_k_a_1_F_1D_D_iq_A_E_b_E_b_2S_URSS[] = "\320\000&\240a\360\"\000\005\034\2301\340\004\010\210\004\210F\220)\2301\230D\240\001\340\010\014\210D\220\006\220i\230q\240\004\240A\360\010\000\r\031\230\004\230E\240\021\240$\240b\250\004\250E\260\021\260$\260b\270\003\2702\270S\300\002\300&\310\001\310\024\310U\320RS\320SX\320X\\\320\\d\320dh\320hq\320qu\320uz\320z{\360\000\000|\001A\002\360\000\000A\002E\002\360\000\000E\002M\002\360\000\000M\002Q\002\360\000\000Q\002Z\002\360\000\000Z\002i\002\360\000\000i\002j\002\360\006\000\005\014\2101";
 static const char __pyx_k_q_1_F_1D_D_iq_A_E_b_E_b_2S_eSTT[] = "\320\000'\240q\360\036\000\005\034\2301\340\004\010\210\004\210F\220)\2301\230D\240\001\340\010\014\210D\220\006\220i\230q\240\004\240A\360\010\000\r\031\230\004\230E\240\021\240$\240b\250\004\250E\260\021\260$\260b\270\003\2702\270S\300\002\300'\310\021\310$\310e\320ST\320TY\320Y]\320]e\320ei\320ir\320rv\320v{\320{|\360\000\000}\001B\002\360\000\000B\002F\002\360\000\000F\002N\002\360\000\000N\002R\002\360\000\000R\002S\002\360\006\000\005\014\2101";
 static const char __pyx_k_A_D_aq_D_aq_D_aq_Bb_A_E_at1_Qe4q[] = "\200A\360\016\000\t\r\210D\220\006\220a\220q\330\010\014\210D\220\006\220a\220q\330\010\014\210D\220\006\220a\220q\340\010\014\210B\210b\220\002\220\"\220A\340\010\014\210E\220\025\220a\220t\2301\340\014\020\220\005\220Q\220e\2304\230q\240\003\2401\240C\240r\250\022\2502\250R\250u\260B\260c\270\021\270$\270e\3001\300D\310\002\310\"\310E\320QS\320S^\320^_\320_a\320ac\320ce\320eg\320gj\320jl\320lw\320wx\320xz\320z|\320|~\360\000\000\177\001A\002\360\000\000A\002D\002\360\000\000D\002F\002\360\000\000F\002Q\002\360\000\000Q\002R\002\360\000\000R\002T\002\360\000\000T\002V\002\360\000\000V\002X\002\360\000\000X\002Z\002\360\000\000Z\002]\002\360\000\000]\002_\002\360\000\000_\002b\002\360\000\000b\002c\002\360\000\000c\002g\002\360\000\000g\002h\002\360\010\000\t\025\220C\220q\230\004\230E\240\022\240;\250a\250r\260\022\2602\260R\260s\270\"\270K\300q\310\002\310\"\310B\310b\320PS\320SU\320U`\320`a\320ac\320ce\320eg\320gi\320il\320ln\320nq\320qr\320rw\320wx\340\010\014\210A\340\010\014\210E\220\025\220a\220t\2301\340\014\020\220\005\220U\230!\2304\230q\340\020\025\220T\230\025\230a\230s\240\"\240D\250\005\250Q\250c\260\022\2604\260v\270Q\270c\300\022\3004\300v\310Q\310c\320QS\320SV\320VW\320W[\320[`\320`a\320ad\320df\320fj\320jo\320op\320pt\320tv\320vx\320xy\360\010\000\t\r\210B\210b\220\004\220A\220Z\230r\240\021\340\010\014\210E\220\025\220a\220t\2301\340\014\020\220\006\220a\220v\230Q";
@@ -3750,14 +3764,16 @@ static PyObject *__pyx_pf_13tuna_integral_5Basis_6__reduce_cython__(CYTHON_UNUSE
 static PyObject *__pyx_pf_13tuna_integral_5Basis_8__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_13tuna_integral_Basis *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_13tuna_integral_calculate_dipole_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, PyObject *__pyx_v_dipole_origin, PyObject *__pyx_v_direction); /* proto */
 static PyObject *__pyx_pf_13tuna_integral_2dipole(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2, PyObject *__pyx_v_dipole_origin, PyObject *__pyx_v_direction); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_4calculate_nuclear_electron_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, __Pyx_memviewslice __pyx_v_nucleus); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2, PyObject *__pyx_v_nucleus); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_8calculate_kinetic_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_12calculate_overlap_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_16calculate_electron_repulsion_integrals(CYTHON_UNUSED PyObject *__pyx_self, long __pyx_v_n_basis, __Pyx_memviewslice __pyx_v_ERI_AO, PyObject *__pyx_v_bfs); /* proto */
-static PyObject *__pyx_pf_13tuna_integral_18calculate_electron_repulsion_integral(CYTHON_UNUSED PyObject *__pyx_self, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_1, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_2, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_3, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_4); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_4calculate_quadrupole_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, PyObject *__pyx_v_quadrupole_origin, PyObject *__pyx_v_direction); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_6quadrupole(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2, PyObject *__pyx_v_quadrupole_origin, PyObject *__pyx_v_direction); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_8calculate_nuclear_electron_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, __Pyx_memviewslice __pyx_v_nucleus); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_10nuclear_attraction(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2, PyObject *__pyx_v_nucleus); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_12calculate_kinetic_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_14kinetic(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_16calculate_overlap_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_18overlap(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_20calculate_electron_repulsion_integrals(CYTHON_UNUSED PyObject *__pyx_self, long __pyx_v_n_basis, __Pyx_memviewslice __pyx_v_ERI_AO, PyObject *__pyx_v_bfs); /* proto */
+static PyObject *__pyx_pf_13tuna_integral_22calculate_electron_repulsion_integral(CYTHON_UNUSED PyObject *__pyx_self, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_1, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_2, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_3, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_4); /* proto */
 static PyObject *__pyx_tp_new_13tuna_integral_Basis(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_array(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_Enum(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -3831,9 +3847,10 @@ typedef struct {
   __Pyx_CachedCFunction __pyx_umethod_PyUnicode_Type__lower;
   PyObject *__pyx_slice[1];
   PyObject *__pyx_tuple[2];
-  PyObject *__pyx_codeobj_tab[13];
-  PyObject *__pyx_string_tab[225];
+  PyObject *__pyx_codeobj_tab[15];
+  PyObject *__pyx_string_tab[236];
   PyObject *__pyx_float_1_5;
+  PyObject *__pyx_float_2_0;
   PyObject *__pyx_float_neg_0_5;
   PyObject *__pyx_int_0;
   PyObject *__pyx_int_1;
@@ -3904,206 +3921,217 @@ static __pyx_mstatetype * const __pyx_mstate_global = &__pyx_mstate_global_stati
 #define __pyx_n_u_Ellipsis __pyx_string_tab[22]
 #define __pyx_kp_u_Empty_shape_tuple_for_cython_arr __pyx_string_tab[23]
 #define __pyx_n_u_Ex __pyx_string_tab[24]
-#define __pyx_n_u_Ey __pyx_string_tab[25]
-#define __pyx_n_u_Ez __pyx_string_tab[26]
-#define __pyx_n_u_ImportError __pyx_string_tab[27]
-#define __pyx_kp_u_Incompatible_checksums_0x_x_vs_0 __pyx_string_tab[28]
-#define __pyx_n_u_IndexError __pyx_string_tab[29]
-#define __pyx_kp_u_Index_out_of_bounds_axis_d __pyx_string_tab[30]
-#define __pyx_kp_u_Indirect_dimensions_not_supporte __pyx_string_tab[31]
-#define __pyx_kp_u_Invalid_mode_expected_c_or_fortr __pyx_string_tab[32]
-#define __pyx_kp_u_Invalid_shape_in_axis __pyx_string_tab[33]
-#define __pyx_n_u_L __pyx_string_tab[34]
-#define __pyx_n_u_MemoryError __pyx_string_tab[35]
-#define __pyx_kp_u_MemoryView_of __pyx_string_tab[36]
-#define __pyx_n_u_N __pyx_string_tab[37]
-#define __pyx_n_u_Nmax __pyx_string_tab[38]
-#define __pyx_kp_u_Note_that_Cython_is_deliberately __pyx_string_tab[39]
-#define __pyx_n_b_O __pyx_string_tab[40]
-#define __pyx_kp_u_Out_of_bounds_on_buffer_access_a __pyx_string_tab[41]
-#define __pyx_n_u_P __pyx_string_tab[42]
-#define __pyx_n_u_PCz __pyx_string_tab[43]
-#define __pyx_n_u_PickleError __pyx_string_tab[44]
-#define __pyx_n_u_R_12 __pyx_string_tab[45]
-#define __pyx_n_u_Rz __pyx_string_tab[46]
-#define __pyx_n_u_Rz_12 __pyx_string_tab[47]
-#define __pyx_n_u_Sequence __pyx_string_tab[48]
-#define __pyx_kp_u_Step_may_not_be_zero_axis_d __pyx_string_tab[49]
-#define __pyx_n_u_Sx __pyx_string_tab[50]
-#define __pyx_n_u_Sy __pyx_string_tab[51]
-#define __pyx_n_u_Sz __pyx_string_tab[52]
-#define __pyx_kp_b_T __pyx_string_tab[53]
-#define __pyx_n_u_Tx __pyx_string_tab[54]
-#define __pyx_n_u_Ty __pyx_string_tab[55]
-#define __pyx_n_u_TypeError __pyx_string_tab[56]
-#define __pyx_n_u_Tz __pyx_string_tab[57]
-#define __pyx_kp_u_Unable_to_convert_item_to_object __pyx_string_tab[58]
-#define __pyx_n_u_ValueError __pyx_string_tab[59]
-#define __pyx_n_u_View_MemoryView __pyx_string_tab[60]
-#define __pyx_n_u_Vmax __pyx_string_tab[61]
-#define __pyx_kp_u__10 __pyx_string_tab[62]
-#define __pyx_kp_u__11 __pyx_string_tab[63]
-#define __pyx_kp_u__12 __pyx_string_tab[64]
-#define __pyx_kp_u__2 __pyx_string_tab[65]
-#define __pyx_kp_u__3 __pyx_string_tab[66]
-#define __pyx_kp_u__4 __pyx_string_tab[67]
-#define __pyx_kp_u__5 __pyx_string_tab[68]
-#define __pyx_kp_b__6 __pyx_string_tab[69]
-#define __pyx_kp_b__7 __pyx_string_tab[70]
-#define __pyx_kp_b__8 __pyx_string_tab[71]
-#define __pyx_kp_b__9 __pyx_string_tab[72]
-#define __pyx_n_u_abc __pyx_string_tab[73]
-#define __pyx_kp_u_add_note __pyx_string_tab[74]
-#define __pyx_n_u_allocate_buffer __pyx_string_tab[75]
-#define __pyx_kp_u_and __pyx_string_tab[76]
-#define __pyx_n_u_angmom_1 __pyx_string_tab[77]
-#define __pyx_n_u_angmom_2 __pyx_string_tab[78]
-#define __pyx_n_u_asarray __pyx_string_tab[79]
-#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[80]
-#define __pyx_kp_u_at_0x __pyx_string_tab[81]
-#define __pyx_n_u_base __pyx_string_tab[82]
-#define __pyx_n_u_bf_1 __pyx_string_tab[83]
-#define __pyx_n_u_bf_2 __pyx_string_tab[84]
-#define __pyx_n_u_bf_3 __pyx_string_tab[85]
-#define __pyx_n_u_bf_4 __pyx_string_tab[86]
-#define __pyx_n_u_bfs __pyx_string_tab[87]
-#define __pyx_n_u_boys_tab __pyx_string_tab[88]
-#define __pyx_n_u_c __pyx_string_tab[89]
-#define __pyx_n_u_calculate_dipole_integral __pyx_string_tab[90]
-#define __pyx_n_u_calculate_electron_repulsion_int __pyx_string_tab[91]
-#define __pyx_n_u_calculate_electron_repulsion_int_2 __pyx_string_tab[92]
-#define __pyx_n_u_calculate_kinetic_integral __pyx_string_tab[93]
-#define __pyx_n_u_calculate_nuclear_electron_integ __pyx_string_tab[94]
-#define __pyx_n_u_calculate_overlap_integral __pyx_string_tab[95]
-#define __pyx_n_u_centre_1 __pyx_string_tab[96]
-#define __pyx_n_u_centre_2 __pyx_string_tab[97]
-#define __pyx_n_u_class __pyx_string_tab[98]
-#define __pyx_n_u_class_getitem __pyx_string_tab[99]
-#define __pyx_n_u_cline_in_traceback __pyx_string_tab[100]
-#define __pyx_n_u_coefs __pyx_string_tab[101]
-#define __pyx_kp_u_collections_abc __pyx_string_tab[102]
-#define __pyx_kp_u_contiguous_and_direct __pyx_string_tab[103]
-#define __pyx_kp_u_contiguous_and_indirect __pyx_string_tab[104]
-#define __pyx_n_u_count __pyx_string_tab[105]
-#define __pyx_n_u_dict __pyx_string_tab[106]
-#define __pyx_n_u_dipole __pyx_string_tab[107]
-#define __pyx_n_u_dipole_origin __pyx_string_tab[108]
-#define __pyx_n_u_direction __pyx_string_tab[109]
-#define __pyx_kp_u_disable __pyx_string_tab[110]
-#define __pyx_n_u_dtype_is_object __pyx_string_tab[111]
-#define __pyx_kp_u_enable __pyx_string_tab[112]
-#define __pyx_n_u_encode __pyx_string_tab[113]
-#define __pyx_n_u_enumerate __pyx_string_tab[114]
-#define __pyx_n_u_error __pyx_string_tab[115]
-#define __pyx_n_u_exponent_1 __pyx_string_tab[116]
-#define __pyx_n_u_exponent_2 __pyx_string_tab[117]
-#define __pyx_n_u_exponent_sum __pyx_string_tab[118]
-#define __pyx_n_u_exps __pyx_string_tab[119]
-#define __pyx_n_u_flags __pyx_string_tab[120]
-#define __pyx_n_u_float __pyx_string_tab[121]
-#define __pyx_n_u_format __pyx_string_tab[122]
-#define __pyx_n_u_fortran __pyx_string_tab[123]
-#define __pyx_n_u_func __pyx_string_tab[124]
-#define __pyx_kp_u_gc __pyx_string_tab[125]
-#define __pyx_n_u_getstate __pyx_string_tab[126]
-#define __pyx_kp_u_got __pyx_string_tab[127]
-#define __pyx_kp_u_got_differing_extents_in_dimensi __pyx_string_tab[128]
-#define __pyx_n_u_i __pyx_string_tab[129]
-#define __pyx_n_u_id __pyx_string_tab[130]
-#define __pyx_n_u_import __pyx_string_tab[131]
-#define __pyx_n_u_index __pyx_string_tab[132]
-#define __pyx_n_u_initializing __pyx_string_tab[133]
-#define __pyx_n_u_integral __pyx_string_tab[134]
-#define __pyx_n_u_is_coroutine __pyx_string_tab[135]
-#define __pyx_kp_u_isenabled __pyx_string_tab[136]
-#define __pyx_n_u_itemsize __pyx_string_tab[137]
-#define __pyx_kp_u_itemsize_0_for_cython_array __pyx_string_tab[138]
-#define __pyx_n_u_j __pyx_string_tab[139]
-#define __pyx_n_u_join __pyx_string_tab[140]
-#define __pyx_n_u_kinetic __pyx_string_tab[141]
-#define __pyx_n_u_l __pyx_string_tab[142]
-#define __pyx_n_u_l_1 __pyx_string_tab[143]
-#define __pyx_n_u_l_2 __pyx_string_tab[144]
-#define __pyx_n_u_lower __pyx_string_tab[145]
-#define __pyx_n_u_m __pyx_string_tab[146]
-#define __pyx_n_u_m_1 __pyx_string_tab[147]
-#define __pyx_n_u_m_2 __pyx_string_tab[148]
-#define __pyx_n_u_main __pyx_string_tab[149]
-#define __pyx_n_u_memview __pyx_string_tab[150]
-#define __pyx_n_u_mode __pyx_string_tab[151]
-#define __pyx_n_u_module __pyx_string_tab[152]
-#define __pyx_n_u_n __pyx_string_tab[153]
-#define __pyx_n_u_n_1 __pyx_string_tab[154]
-#define __pyx_n_u_n_2 __pyx_string_tab[155]
-#define __pyx_n_u_n_basis __pyx_string_tab[156]
-#define __pyx_n_u_name __pyx_string_tab[157]
-#define __pyx_n_u_name_2 __pyx_string_tab[158]
-#define __pyx_n_u_ndarray __pyx_string_tab[159]
-#define __pyx_n_u_ndim __pyx_string_tab[160]
-#define __pyx_n_u_new __pyx_string_tab[161]
-#define __pyx_kp_u_no_default___reduce___due_to_non __pyx_string_tab[162]
-#define __pyx_n_u_norm __pyx_string_tab[163]
-#define __pyx_n_u_normalize __pyx_string_tab[164]
-#define __pyx_n_u_np __pyx_string_tab[165]
-#define __pyx_n_u_nuclear_attraction __pyx_string_tab[166]
-#define __pyx_n_u_nucleus __pyx_string_tab[167]
-#define __pyx_n_u_num_exps __pyx_string_tab[168]
-#define __pyx_n_u_numpy __pyx_string_tab[169]
-#define __pyx_kp_u_numpy__core_multiarray_failed_to __pyx_string_tab[170]
-#define __pyx_kp_u_numpy__core_umath_failed_to_impo __pyx_string_tab[171]
-#define __pyx_n_u_nxy __pyx_string_tab[172]
-#define __pyx_n_u_obj __pyx_string_tab[173]
-#define __pyx_kp_u_object __pyx_string_tab[174]
-#define __pyx_n_u_origin __pyx_string_tab[175]
-#define __pyx_n_u_overlap __pyx_string_tab[176]
-#define __pyx_n_u_pack __pyx_string_tab[177]
-#define __pyx_n_u_pickle __pyx_string_tab[178]
-#define __pyx_n_u_pop __pyx_string_tab[179]
-#define __pyx_n_u_pow_tab __pyx_string_tab[180]
-#define __pyx_n_u_prefactor __pyx_string_tab[181]
-#define __pyx_n_u_pyx_checksum __pyx_string_tab[182]
-#define __pyx_n_u_pyx_state __pyx_string_tab[183]
-#define __pyx_n_u_pyx_type __pyx_string_tab[184]
-#define __pyx_n_u_pyx_unpickle_Enum __pyx_string_tab[185]
-#define __pyx_n_u_pyx_vtable __pyx_string_tab[186]
-#define __pyx_n_u_qualname __pyx_string_tab[187]
-#define __pyx_n_u_range __pyx_string_tab[188]
-#define __pyx_n_u_reduce __pyx_string_tab[189]
-#define __pyx_n_u_reduce_cython __pyx_string_tab[190]
-#define __pyx_n_u_reduce_ex __pyx_string_tab[191]
-#define __pyx_n_u_register __pyx_string_tab[192]
-#define __pyx_n_u_return __pyx_string_tab[193]
-#define __pyx_n_u_self __pyx_string_tab[194]
-#define __pyx_n_u_set_name __pyx_string_tab[195]
-#define __pyx_n_u_setstate __pyx_string_tab[196]
-#define __pyx_n_u_setstate_cython __pyx_string_tab[197]
-#define __pyx_n_u_shape __pyx_string_tab[198]
-#define __pyx_n_u_shell __pyx_string_tab[199]
-#define __pyx_n_u_size __pyx_string_tab[200]
-#define __pyx_n_u_spec __pyx_string_tab[201]
-#define __pyx_n_u_start __pyx_string_tab[202]
-#define __pyx_n_u_step __pyx_string_tab[203]
-#define __pyx_n_u_stop __pyx_string_tab[204]
-#define __pyx_n_u_str __pyx_string_tab[205]
-#define __pyx_n_u_stride __pyx_string_tab[206]
-#define __pyx_kp_u_strided_and_direct __pyx_string_tab[207]
-#define __pyx_kp_u_strided_and_direct_or_indirect __pyx_string_tab[208]
-#define __pyx_kp_u_strided_and_indirect __pyx_string_tab[209]
-#define __pyx_kp_u_stringsource __pyx_string_tab[210]
-#define __pyx_n_u_struct __pyx_string_tab[211]
-#define __pyx_n_u_t __pyx_string_tab[212]
-#define __pyx_n_u_test __pyx_string_tab[213]
-#define __pyx_n_u_tuna_integral __pyx_string_tab[214]
-#define __pyx_kp_u_tuna_integral_pyx __pyx_string_tab[215]
-#define __pyx_n_u_u __pyx_string_tab[216]
-#define __pyx_kp_u_unable_to_allocate_array_data __pyx_string_tab[217]
-#define __pyx_kp_u_unable_to_allocate_shape_and_str __pyx_string_tab[218]
-#define __pyx_n_u_unpack __pyx_string_tab[219]
-#define __pyx_n_u_update __pyx_string_tab[220]
-#define __pyx_n_u_v __pyx_string_tab[221]
-#define __pyx_n_u_x __pyx_string_tab[222]
-#define __pyx_n_u_y __pyx_string_tab[223]
-#define __pyx_n_u_z __pyx_string_tab[224]
+#define __pyx_n_u_Ex1 __pyx_string_tab[25]
+#define __pyx_n_u_Ex2 __pyx_string_tab[26]
+#define __pyx_n_u_Ey __pyx_string_tab[27]
+#define __pyx_n_u_Ez __pyx_string_tab[28]
+#define __pyx_n_u_Ez1 __pyx_string_tab[29]
+#define __pyx_n_u_Ez2 __pyx_string_tab[30]
+#define __pyx_n_u_ImportError __pyx_string_tab[31]
+#define __pyx_kp_u_Incompatible_checksums_0x_x_vs_0 __pyx_string_tab[32]
+#define __pyx_n_u_IndexError __pyx_string_tab[33]
+#define __pyx_kp_u_Index_out_of_bounds_axis_d __pyx_string_tab[34]
+#define __pyx_kp_u_Indirect_dimensions_not_supporte __pyx_string_tab[35]
+#define __pyx_kp_u_Invalid_mode_expected_c_or_fortr __pyx_string_tab[36]
+#define __pyx_kp_u_Invalid_shape_in_axis __pyx_string_tab[37]
+#define __pyx_n_u_L __pyx_string_tab[38]
+#define __pyx_n_u_MemoryError __pyx_string_tab[39]
+#define __pyx_kp_u_MemoryView_of __pyx_string_tab[40]
+#define __pyx_n_u_N __pyx_string_tab[41]
+#define __pyx_n_u_Nmax __pyx_string_tab[42]
+#define __pyx_kp_u_Note_that_Cython_is_deliberately __pyx_string_tab[43]
+#define __pyx_n_b_O __pyx_string_tab[44]
+#define __pyx_kp_u_Out_of_bounds_on_buffer_access_a __pyx_string_tab[45]
+#define __pyx_n_u_P __pyx_string_tab[46]
+#define __pyx_n_u_PCz __pyx_string_tab[47]
+#define __pyx_n_u_PickleError __pyx_string_tab[48]
+#define __pyx_n_u_Qx __pyx_string_tab[49]
+#define __pyx_n_u_Qz __pyx_string_tab[50]
+#define __pyx_n_u_R_12 __pyx_string_tab[51]
+#define __pyx_n_u_Rz __pyx_string_tab[52]
+#define __pyx_n_u_Rz_12 __pyx_string_tab[53]
+#define __pyx_n_u_Sequence __pyx_string_tab[54]
+#define __pyx_kp_u_Step_may_not_be_zero_axis_d __pyx_string_tab[55]
+#define __pyx_n_u_Sx __pyx_string_tab[56]
+#define __pyx_n_u_Sy __pyx_string_tab[57]
+#define __pyx_n_u_Sz __pyx_string_tab[58]
+#define __pyx_kp_b_T __pyx_string_tab[59]
+#define __pyx_n_u_Tx __pyx_string_tab[60]
+#define __pyx_n_u_Ty __pyx_string_tab[61]
+#define __pyx_n_u_TypeError __pyx_string_tab[62]
+#define __pyx_n_u_Tz __pyx_string_tab[63]
+#define __pyx_kp_u_Unable_to_convert_item_to_object __pyx_string_tab[64]
+#define __pyx_n_u_ValueError __pyx_string_tab[65]
+#define __pyx_n_u_View_MemoryView __pyx_string_tab[66]
+#define __pyx_n_u_Vmax __pyx_string_tab[67]
+#define __pyx_kp_u__10 __pyx_string_tab[68]
+#define __pyx_kp_u__11 __pyx_string_tab[69]
+#define __pyx_kp_u__12 __pyx_string_tab[70]
+#define __pyx_kp_u__2 __pyx_string_tab[71]
+#define __pyx_kp_u__3 __pyx_string_tab[72]
+#define __pyx_kp_u__4 __pyx_string_tab[73]
+#define __pyx_kp_u__5 __pyx_string_tab[74]
+#define __pyx_kp_b__6 __pyx_string_tab[75]
+#define __pyx_kp_b__7 __pyx_string_tab[76]
+#define __pyx_kp_b__8 __pyx_string_tab[77]
+#define __pyx_kp_b__9 __pyx_string_tab[78]
+#define __pyx_n_u_abc __pyx_string_tab[79]
+#define __pyx_kp_u_add_note __pyx_string_tab[80]
+#define __pyx_n_u_allocate_buffer __pyx_string_tab[81]
+#define __pyx_kp_u_and __pyx_string_tab[82]
+#define __pyx_n_u_angmom_1 __pyx_string_tab[83]
+#define __pyx_n_u_angmom_2 __pyx_string_tab[84]
+#define __pyx_n_u_asarray __pyx_string_tab[85]
+#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[86]
+#define __pyx_kp_u_at_0x __pyx_string_tab[87]
+#define __pyx_n_u_base __pyx_string_tab[88]
+#define __pyx_n_u_bf_1 __pyx_string_tab[89]
+#define __pyx_n_u_bf_2 __pyx_string_tab[90]
+#define __pyx_n_u_bf_3 __pyx_string_tab[91]
+#define __pyx_n_u_bf_4 __pyx_string_tab[92]
+#define __pyx_n_u_bfs __pyx_string_tab[93]
+#define __pyx_n_u_boys_tab __pyx_string_tab[94]
+#define __pyx_n_u_c __pyx_string_tab[95]
+#define __pyx_n_u_calculate_dipole_integral __pyx_string_tab[96]
+#define __pyx_n_u_calculate_electron_repulsion_int __pyx_string_tab[97]
+#define __pyx_n_u_calculate_electron_repulsion_int_2 __pyx_string_tab[98]
+#define __pyx_n_u_calculate_kinetic_integral __pyx_string_tab[99]
+#define __pyx_n_u_calculate_nuclear_electron_integ __pyx_string_tab[100]
+#define __pyx_n_u_calculate_overlap_integral __pyx_string_tab[101]
+#define __pyx_n_u_calculate_quadrupole_integral __pyx_string_tab[102]
+#define __pyx_n_u_centre_1 __pyx_string_tab[103]
+#define __pyx_n_u_centre_2 __pyx_string_tab[104]
+#define __pyx_n_u_class __pyx_string_tab[105]
+#define __pyx_n_u_class_getitem __pyx_string_tab[106]
+#define __pyx_n_u_cline_in_traceback __pyx_string_tab[107]
+#define __pyx_n_u_coefs __pyx_string_tab[108]
+#define __pyx_kp_u_collections_abc __pyx_string_tab[109]
+#define __pyx_kp_u_contiguous_and_direct __pyx_string_tab[110]
+#define __pyx_kp_u_contiguous_and_indirect __pyx_string_tab[111]
+#define __pyx_n_u_count __pyx_string_tab[112]
+#define __pyx_n_u_dict __pyx_string_tab[113]
+#define __pyx_n_u_dipole __pyx_string_tab[114]
+#define __pyx_n_u_dipole_origin __pyx_string_tab[115]
+#define __pyx_n_u_direction __pyx_string_tab[116]
+#define __pyx_kp_u_disable __pyx_string_tab[117]
+#define __pyx_n_u_dtype_is_object __pyx_string_tab[118]
+#define __pyx_kp_u_enable __pyx_string_tab[119]
+#define __pyx_n_u_encode __pyx_string_tab[120]
+#define __pyx_n_u_enumerate __pyx_string_tab[121]
+#define __pyx_n_u_error __pyx_string_tab[122]
+#define __pyx_n_u_exponent_1 __pyx_string_tab[123]
+#define __pyx_n_u_exponent_2 __pyx_string_tab[124]
+#define __pyx_n_u_exponent_sum __pyx_string_tab[125]
+#define __pyx_n_u_exps __pyx_string_tab[126]
+#define __pyx_n_u_flags __pyx_string_tab[127]
+#define __pyx_n_u_float __pyx_string_tab[128]
+#define __pyx_n_u_format __pyx_string_tab[129]
+#define __pyx_n_u_fortran __pyx_string_tab[130]
+#define __pyx_n_u_func __pyx_string_tab[131]
+#define __pyx_kp_u_gc __pyx_string_tab[132]
+#define __pyx_n_u_getstate __pyx_string_tab[133]
+#define __pyx_kp_u_got __pyx_string_tab[134]
+#define __pyx_kp_u_got_differing_extents_in_dimensi __pyx_string_tab[135]
+#define __pyx_n_u_i __pyx_string_tab[136]
+#define __pyx_n_u_id __pyx_string_tab[137]
+#define __pyx_n_u_import __pyx_string_tab[138]
+#define __pyx_n_u_index __pyx_string_tab[139]
+#define __pyx_n_u_initializing __pyx_string_tab[140]
+#define __pyx_n_u_integral __pyx_string_tab[141]
+#define __pyx_n_u_is_coroutine __pyx_string_tab[142]
+#define __pyx_kp_u_isenabled __pyx_string_tab[143]
+#define __pyx_n_u_itemsize __pyx_string_tab[144]
+#define __pyx_kp_u_itemsize_0_for_cython_array __pyx_string_tab[145]
+#define __pyx_n_u_j __pyx_string_tab[146]
+#define __pyx_n_u_join __pyx_string_tab[147]
+#define __pyx_n_u_kinetic __pyx_string_tab[148]
+#define __pyx_n_u_l __pyx_string_tab[149]
+#define __pyx_n_u_l_1 __pyx_string_tab[150]
+#define __pyx_n_u_l_2 __pyx_string_tab[151]
+#define __pyx_n_u_lower __pyx_string_tab[152]
+#define __pyx_n_u_m __pyx_string_tab[153]
+#define __pyx_n_u_m_1 __pyx_string_tab[154]
+#define __pyx_n_u_m_2 __pyx_string_tab[155]
+#define __pyx_n_u_main __pyx_string_tab[156]
+#define __pyx_n_u_memview __pyx_string_tab[157]
+#define __pyx_n_u_mode __pyx_string_tab[158]
+#define __pyx_n_u_module __pyx_string_tab[159]
+#define __pyx_n_u_n __pyx_string_tab[160]
+#define __pyx_n_u_n_1 __pyx_string_tab[161]
+#define __pyx_n_u_n_2 __pyx_string_tab[162]
+#define __pyx_n_u_n_basis __pyx_string_tab[163]
+#define __pyx_n_u_name __pyx_string_tab[164]
+#define __pyx_n_u_name_2 __pyx_string_tab[165]
+#define __pyx_n_u_ndarray __pyx_string_tab[166]
+#define __pyx_n_u_ndim __pyx_string_tab[167]
+#define __pyx_n_u_new __pyx_string_tab[168]
+#define __pyx_kp_u_no_default___reduce___due_to_non __pyx_string_tab[169]
+#define __pyx_n_u_norm __pyx_string_tab[170]
+#define __pyx_n_u_normalize __pyx_string_tab[171]
+#define __pyx_n_u_np __pyx_string_tab[172]
+#define __pyx_n_u_nuclear_attraction __pyx_string_tab[173]
+#define __pyx_n_u_nucleus __pyx_string_tab[174]
+#define __pyx_n_u_num_exps __pyx_string_tab[175]
+#define __pyx_n_u_numpy __pyx_string_tab[176]
+#define __pyx_kp_u_numpy__core_multiarray_failed_to __pyx_string_tab[177]
+#define __pyx_kp_u_numpy__core_umath_failed_to_impo __pyx_string_tab[178]
+#define __pyx_n_u_nxy __pyx_string_tab[179]
+#define __pyx_n_u_obj __pyx_string_tab[180]
+#define __pyx_kp_u_object __pyx_string_tab[181]
+#define __pyx_n_u_origin __pyx_string_tab[182]
+#define __pyx_n_u_overlap __pyx_string_tab[183]
+#define __pyx_n_u_pack __pyx_string_tab[184]
+#define __pyx_n_u_pickle __pyx_string_tab[185]
+#define __pyx_n_u_pop __pyx_string_tab[186]
+#define __pyx_n_u_pow_tab __pyx_string_tab[187]
+#define __pyx_n_u_prefactor __pyx_string_tab[188]
+#define __pyx_n_u_pyx_checksum __pyx_string_tab[189]
+#define __pyx_n_u_pyx_state __pyx_string_tab[190]
+#define __pyx_n_u_pyx_type __pyx_string_tab[191]
+#define __pyx_n_u_pyx_unpickle_Enum __pyx_string_tab[192]
+#define __pyx_n_u_pyx_vtable __pyx_string_tab[193]
+#define __pyx_n_u_quadrupole __pyx_string_tab[194]
+#define __pyx_n_u_quadrupole_origin __pyx_string_tab[195]
+#define __pyx_n_u_qualname __pyx_string_tab[196]
+#define __pyx_n_u_range __pyx_string_tab[197]
+#define __pyx_n_u_reduce __pyx_string_tab[198]
+#define __pyx_n_u_reduce_cython __pyx_string_tab[199]
+#define __pyx_n_u_reduce_ex __pyx_string_tab[200]
+#define __pyx_n_u_register __pyx_string_tab[201]
+#define __pyx_n_u_return __pyx_string_tab[202]
+#define __pyx_n_u_self __pyx_string_tab[203]
+#define __pyx_n_u_set_name __pyx_string_tab[204]
+#define __pyx_n_u_setstate __pyx_string_tab[205]
+#define __pyx_n_u_setstate_cython __pyx_string_tab[206]
+#define __pyx_n_u_shape __pyx_string_tab[207]
+#define __pyx_n_u_shell __pyx_string_tab[208]
+#define __pyx_n_u_size __pyx_string_tab[209]
+#define __pyx_n_u_spec __pyx_string_tab[210]
+#define __pyx_n_u_start __pyx_string_tab[211]
+#define __pyx_n_u_step __pyx_string_tab[212]
+#define __pyx_n_u_stop __pyx_string_tab[213]
+#define __pyx_n_u_str __pyx_string_tab[214]
+#define __pyx_n_u_stride __pyx_string_tab[215]
+#define __pyx_kp_u_strided_and_direct __pyx_string_tab[216]
+#define __pyx_kp_u_strided_and_direct_or_indirect __pyx_string_tab[217]
+#define __pyx_kp_u_strided_and_indirect __pyx_string_tab[218]
+#define __pyx_kp_u_stringsource __pyx_string_tab[219]
+#define __pyx_n_u_struct __pyx_string_tab[220]
+#define __pyx_n_u_t __pyx_string_tab[221]
+#define __pyx_n_u_test __pyx_string_tab[222]
+#define __pyx_n_u_tuna_integral __pyx_string_tab[223]
+#define __pyx_kp_u_tuna_integral_pyx __pyx_string_tab[224]
+#define __pyx_n_u_u __pyx_string_tab[225]
+#define __pyx_kp_u_unable_to_allocate_array_data __pyx_string_tab[226]
+#define __pyx_kp_u_unable_to_allocate_shape_and_str __pyx_string_tab[227]
+#define __pyx_n_u_unpack __pyx_string_tab[228]
+#define __pyx_n_u_update __pyx_string_tab[229]
+#define __pyx_n_u_v __pyx_string_tab[230]
+#define __pyx_n_u_x __pyx_string_tab[231]
+#define __pyx_n_u_xx __pyx_string_tab[232]
+#define __pyx_n_u_y __pyx_string_tab[233]
+#define __pyx_n_u_z __pyx_string_tab[234]
+#define __pyx_n_u_zz __pyx_string_tab[235]
 /* #### Code section: module_state_clear ### */
 #if CYTHON_USE_MODULE_STATE
 static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
@@ -4152,9 +4180,10 @@ static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_type___pyx_memoryviewslice);
   for (int i=0; i<1; ++i) { Py_CLEAR(clear_module_state->__pyx_slice[i]); }
   for (int i=0; i<2; ++i) { Py_CLEAR(clear_module_state->__pyx_tuple[i]); }
-  for (int i=0; i<13; ++i) { Py_CLEAR(clear_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<225; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
+  for (int i=0; i<15; ++i) { Py_CLEAR(clear_module_state->__pyx_codeobj_tab[i]); }
+  for (int i=0; i<236; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
   Py_CLEAR(clear_module_state->__pyx_float_1_5);
+  Py_CLEAR(clear_module_state->__pyx_float_2_0);
   Py_CLEAR(clear_module_state->__pyx_float_neg_0_5);
   Py_CLEAR(clear_module_state->__pyx_int_0);
   Py_CLEAR(clear_module_state->__pyx_int_1);
@@ -4211,9 +4240,10 @@ static CYTHON_SMALL_CODE int __pyx_m_traverse(PyObject *m, visitproc visit, void
   Py_VISIT(traverse_module_state->__pyx_type___pyx_memoryviewslice);
   for (int i=0; i<1; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_slice[i]); }
   for (int i=0; i<2; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_tuple[i]); }
-  for (int i=0; i<13; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<225; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
+  for (int i=0; i<15; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_codeobj_tab[i]); }
+  for (int i=0; i<236; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_float_1_5);
+  __Pyx_VISIT_CONST(traverse_module_state->__pyx_float_2_0);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_float_neg_0_5);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_0);
   __Pyx_VISIT_CONST(traverse_module_state->__pyx_int_1);
@@ -17946,7 +17976,7 @@ static PyObject *__pyx_format_from_typeinfo(__Pyx_TypeInfo const *__pyx_v_type) 
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":242
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":243
  *         cdef int type_num
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -17957,7 +17987,7 @@ static PyObject *__pyx_format_from_typeinfo(__Pyx_TypeInfo const *__pyx_v_type) 
 static CYTHON_INLINE npy_intp __pyx_f_5numpy_5dtype_8itemsize_itemsize(PyArray_Descr *__pyx_v_self) {
   npy_intp __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":244
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":245
  *         @property
  *         cdef inline npy_intp itemsize(self) noexcept nogil:
  *             return PyDataType_ELSIZE(self)             # <<<<<<<<<<<<<<
@@ -17967,7 +17997,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_5dtype_8itemsize_itemsize(PyArray_D
   __pyx_r = PyDataType_ELSIZE(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":242
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":243
  *         cdef int type_num
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -17980,7 +18010,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_5dtype_8itemsize_itemsize(PyArray_D
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":246
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":247
  *             return PyDataType_ELSIZE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -17991,7 +18021,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_5dtype_8itemsize_itemsize(PyArray_D
 static CYTHON_INLINE npy_intp __pyx_f_5numpy_5dtype_9alignment_alignment(PyArray_Descr *__pyx_v_self) {
   npy_intp __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":248
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":249
  *         @property
  *         cdef inline npy_intp alignment(self) noexcept nogil:
  *             return PyDataType_ALIGNMENT(self)             # <<<<<<<<<<<<<<
@@ -18001,7 +18031,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_5dtype_9alignment_alignment(PyArray
   __pyx_r = PyDataType_ALIGNMENT(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":246
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":247
  *             return PyDataType_ELSIZE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18014,7 +18044,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_5dtype_9alignment_alignment(PyArray
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":252
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":253
  *         # Use fields/names with care as they may be NULL.  You must check
  *         # for this using PyDataType_HASFIELDS.
  *         @property             # <<<<<<<<<<<<<<
@@ -18028,7 +18058,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_5dtype_6fields_fields(PyArray_Desc
   PyObject *__pyx_t_1;
   __Pyx_RefNannySetupContext("fields", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":254
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":255
  *         @property
  *         cdef inline object fields(self):
  *             return <object>PyDataType_FIELDS(self)             # <<<<<<<<<<<<<<
@@ -18041,7 +18071,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_5dtype_6fields_fields(PyArray_Desc
   __pyx_r = ((PyObject *)__pyx_t_1);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":252
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":253
  *         # Use fields/names with care as they may be NULL.  You must check
  *         # for this using PyDataType_HASFIELDS.
  *         @property             # <<<<<<<<<<<<<<
@@ -18056,7 +18086,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_5dtype_6fields_fields(PyArray_Desc
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":256
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":257
  *             return <object>PyDataType_FIELDS(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18070,7 +18100,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_5dtype_5names_names(PyArray_Descr 
   PyObject *__pyx_t_1;
   __Pyx_RefNannySetupContext("names", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":258
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":259
  *         @property
  *         cdef inline tuple names(self):
  *             return <tuple>PyDataType_NAMES(self)             # <<<<<<<<<<<<<<
@@ -18083,7 +18113,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_5dtype_5names_names(PyArray_Descr 
   __pyx_r = ((PyObject*)__pyx_t_1);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":256
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":257
  *             return <object>PyDataType_FIELDS(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18098,7 +18128,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_5dtype_5names_names(PyArray_Descr 
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":263
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":264
  *         # valid (the pointer can be NULL). Most users should access
  *         # this field via the inline helper method PyDataType_SHAPE.
  *         @property             # <<<<<<<<<<<<<<
@@ -18109,7 +18139,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_5dtype_5names_names(PyArray_Descr 
 static CYTHON_INLINE PyArray_ArrayDescr *__pyx_f_5numpy_5dtype_8subarray_subarray(PyArray_Descr *__pyx_v_self) {
   PyArray_ArrayDescr *__pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":265
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":266
  *         @property
  *         cdef inline PyArray_ArrayDescr* subarray(self) noexcept nogil:
  *             return PyDataType_SUBARRAY(self)             # <<<<<<<<<<<<<<
@@ -18119,7 +18149,7 @@ static CYTHON_INLINE PyArray_ArrayDescr *__pyx_f_5numpy_5dtype_8subarray_subarra
   __pyx_r = PyDataType_SUBARRAY(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":263
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":264
  *         # valid (the pointer can be NULL). Most users should access
  *         # this field via the inline helper method PyDataType_SHAPE.
  *         @property             # <<<<<<<<<<<<<<
@@ -18132,7 +18162,7 @@ static CYTHON_INLINE PyArray_ArrayDescr *__pyx_f_5numpy_5dtype_8subarray_subarra
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":267
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":268
  *             return PyDataType_SUBARRAY(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18143,7 +18173,7 @@ static CYTHON_INLINE PyArray_ArrayDescr *__pyx_f_5numpy_5dtype_8subarray_subarra
 static CYTHON_INLINE npy_uint64 __pyx_f_5numpy_5dtype_5flags_flags(PyArray_Descr *__pyx_v_self) {
   npy_uint64 __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":270
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":271
  *         cdef inline npy_uint64 flags(self) noexcept nogil:
  *             """The data types flags."""
  *             return PyDataType_FLAGS(self)             # <<<<<<<<<<<<<<
@@ -18153,7 +18183,7 @@ static CYTHON_INLINE npy_uint64 __pyx_f_5numpy_5dtype_5flags_flags(PyArray_Descr
   __pyx_r = PyDataType_FLAGS(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":267
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":268
  *             return PyDataType_SUBARRAY(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18166,7 +18196,7 @@ static CYTHON_INLINE npy_uint64 __pyx_f_5numpy_5dtype_5flags_flags(PyArray_Descr
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":279
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":280
  *     ctypedef class numpy.broadcast [object PyArrayMultiIterObject, check_size ignore]:
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18177,7 +18207,7 @@ static CYTHON_INLINE npy_uint64 __pyx_f_5numpy_5dtype_5flags_flags(PyArray_Descr
 static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_7numiter_numiter(PyArrayMultiIterObject *__pyx_v_self) {
   int __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":282
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":283
  *         cdef inline int numiter(self) noexcept nogil:
  *             """The number of arrays that need to be broadcast to the same shape."""
  *             return PyArray_MultiIter_NUMITER(self)             # <<<<<<<<<<<<<<
@@ -18187,7 +18217,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_7numiter_numiter(PyArrayMulti
   __pyx_r = PyArray_MultiIter_NUMITER(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":279
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":280
  *     ctypedef class numpy.broadcast [object PyArrayMultiIterObject, check_size ignore]:
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18200,7 +18230,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_7numiter_numiter(PyArrayMulti
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":284
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":285
  *             return PyArray_MultiIter_NUMITER(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18211,7 +18241,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_7numiter_numiter(PyArrayMulti
 static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_4size_size(PyArrayMultiIterObject *__pyx_v_self) {
   npy_intp __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":287
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":288
  *         cdef inline npy_intp size(self) noexcept nogil:
  *             """The total broadcasted size."""
  *             return PyArray_MultiIter_SIZE(self)             # <<<<<<<<<<<<<<
@@ -18221,7 +18251,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_4size_size(PyArrayMultiI
   __pyx_r = PyArray_MultiIter_SIZE(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":284
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":285
  *             return PyArray_MultiIter_NUMITER(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18234,7 +18264,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_4size_size(PyArrayMultiI
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":289
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":290
  *             return PyArray_MultiIter_SIZE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18245,7 +18275,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_4size_size(PyArrayMultiI
 static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_5index_index(PyArrayMultiIterObject *__pyx_v_self) {
   npy_intp __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":292
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":293
  *         cdef inline npy_intp index(self) noexcept nogil:
  *             """The current (1-d) index into the broadcasted result."""
  *             return PyArray_MultiIter_INDEX(self)             # <<<<<<<<<<<<<<
@@ -18255,7 +18285,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_5index_index(PyArrayMult
   __pyx_r = PyArray_MultiIter_INDEX(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":289
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":290
  *             return PyArray_MultiIter_SIZE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18268,7 +18298,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_5index_index(PyArrayMult
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":294
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":295
  *             return PyArray_MultiIter_INDEX(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18279,7 +18309,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_9broadcast_5index_index(PyArrayMult
 static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_2nd_nd(PyArrayMultiIterObject *__pyx_v_self) {
   int __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":297
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":298
  *         cdef inline int nd(self) noexcept nogil:
  *             """The number of dimensions in the broadcasted result."""
  *             return PyArray_MultiIter_NDIM(self)             # <<<<<<<<<<<<<<
@@ -18289,7 +18319,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_2nd_nd(PyArrayMultiIterObject
   __pyx_r = PyArray_MultiIter_NDIM(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":294
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":295
  *             return PyArray_MultiIter_INDEX(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18302,7 +18332,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_2nd_nd(PyArrayMultiIterObject
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":299
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":300
  *             return PyArray_MultiIter_NDIM(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18313,7 +18343,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_9broadcast_2nd_nd(PyArrayMultiIterObject
 static CYTHON_INLINE npy_intp *__pyx_f_5numpy_9broadcast_10dimensions_dimensions(PyArrayMultiIterObject *__pyx_v_self) {
   npy_intp *__pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":302
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":303
  *         cdef inline npy_intp* dimensions(self) noexcept nogil:
  *             """The shape of the broadcasted result."""
  *             return PyArray_MultiIter_DIMS(self)             # <<<<<<<<<<<<<<
@@ -18323,7 +18353,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_9broadcast_10dimensions_dimensions
   __pyx_r = PyArray_MultiIter_DIMS(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":299
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":300
  *             return PyArray_MultiIter_NDIM(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18336,7 +18366,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_9broadcast_10dimensions_dimensions
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":304
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":305
  *             return PyArray_MultiIter_DIMS(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18347,7 +18377,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_9broadcast_10dimensions_dimensions
 static CYTHON_INLINE void **__pyx_f_5numpy_9broadcast_5iters_iters(PyArrayMultiIterObject *__pyx_v_self) {
   void **__pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":308
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":309
  *             """An array of iterator objects that holds the iterators for the arrays to be broadcast together.
  *             On return, the iterators are adjusted for broadcasting."""
  *             return PyArray_MultiIter_ITERS(self)             # <<<<<<<<<<<<<<
@@ -18357,7 +18387,7 @@ static CYTHON_INLINE void **__pyx_f_5numpy_9broadcast_5iters_iters(PyArrayMultiI
   __pyx_r = PyArray_MultiIter_ITERS(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":304
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":305
  *             return PyArray_MultiIter_DIMS(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18370,7 +18400,7 @@ static CYTHON_INLINE void **__pyx_f_5numpy_9broadcast_5iters_iters(PyArrayMultiI
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":322
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":323
  *         # Instead, we use properties that map to the corresponding C-API functions.
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18381,7 +18411,7 @@ static CYTHON_INLINE void **__pyx_f_5numpy_9broadcast_5iters_iters(PyArrayMultiI
 static CYTHON_INLINE PyObject *__pyx_f_5numpy_7ndarray_4base_base(PyArrayObject *__pyx_v_self) {
   PyObject *__pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":326
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":327
  *             """Returns a borrowed reference to the object owning the data/memory.
  *             """
  *             return PyArray_BASE(self)             # <<<<<<<<<<<<<<
@@ -18391,7 +18421,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_7ndarray_4base_base(PyArrayObject 
   __pyx_r = PyArray_BASE(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":322
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":323
  *         # Instead, we use properties that map to the corresponding C-API functions.
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18404,7 +18434,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_7ndarray_4base_base(PyArrayObject 
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":328
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":329
  *             return PyArray_BASE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18418,7 +18448,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
   PyArray_Descr *__pyx_t_1;
   __Pyx_RefNannySetupContext("descr", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":332
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":333
  *             """Returns an owned reference to the dtype of the array.
  *             """
  *             return <dtype>PyArray_DESCR(self)             # <<<<<<<<<<<<<<
@@ -18431,7 +18461,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
   __pyx_r = ((PyArray_Descr *)__pyx_t_1);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":328
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":329
  *             return PyArray_BASE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18446,7 +18476,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":334
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":335
  *             return <dtype>PyArray_DESCR(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18457,7 +18487,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
 static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx_v_self) {
   int __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":338
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":339
  *             """Returns the number of dimensions in the array.
  *             """
  *             return PyArray_NDIM(self)             # <<<<<<<<<<<<<<
@@ -18467,7 +18497,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx
   __pyx_r = PyArray_NDIM(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":334
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":335
  *             return <dtype>PyArray_DESCR(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18480,7 +18510,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":340
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":341
  *             return PyArray_NDIM(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18491,7 +18521,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx
 static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObject *__pyx_v_self) {
   npy_intp *__pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":346
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":347
  *             Can return NULL for 0-dimensional arrays.
  *             """
  *             return PyArray_DIMS(self)             # <<<<<<<<<<<<<<
@@ -18501,7 +18531,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObjec
   __pyx_r = PyArray_DIMS(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":340
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":341
  *             return PyArray_NDIM(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18514,7 +18544,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObjec
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":348
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":349
  *             return PyArray_DIMS(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18525,7 +18555,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObjec
 static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayObject *__pyx_v_self) {
   npy_intp *__pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":353
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":354
  *             The number of elements matches the number of dimensions of the array (ndim).
  *             """
  *             return PyArray_STRIDES(self)             # <<<<<<<<<<<<<<
@@ -18535,7 +18565,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayO
   __pyx_r = PyArray_STRIDES(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":348
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":349
  *             return PyArray_DIMS(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18548,7 +18578,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayO
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":355
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":356
  *             return PyArray_STRIDES(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18559,7 +18589,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayO
 static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *__pyx_v_self) {
   npy_intp __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":359
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":360
  *             """Returns the total size (in number of elements) of the array.
  *             """
  *             return PyArray_SIZE(self)             # <<<<<<<<<<<<<<
@@ -18569,7 +18599,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *
   __pyx_r = PyArray_SIZE(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":355
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":356
  *             return PyArray_STRIDES(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18582,7 +18612,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":361
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":362
  *             return PyArray_SIZE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18593,7 +18623,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *
 static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__pyx_v_self) {
   char *__pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":368
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":369
  *             of `PyArray_DATA()` instead, which returns a 'void*'.
  *             """
  *             return PyArray_BYTES(self)             # <<<<<<<<<<<<<<
@@ -18603,7 +18633,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__p
   __pyx_r = PyArray_BYTES(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":361
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":362
  *             return PyArray_SIZE(self)
  * 
  *         @property             # <<<<<<<<<<<<<<
@@ -18616,7 +18646,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__p
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":776
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":777
  * ctypedef long double complex clongdouble_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -18633,7 +18663,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew1", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":777
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":778
  * 
  * cdef inline object PyArray_MultiIterNew1(a):
  *     return PyArray_MultiIterNew(1, <void*>a)             # <<<<<<<<<<<<<<
@@ -18641,13 +18671,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
  * cdef inline object PyArray_MultiIterNew2(a, b):
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(1, ((void *)__pyx_v_a)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 777, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(1, ((void *)__pyx_v_a)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 778, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":776
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":777
  * ctypedef long double complex clongdouble_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -18666,7 +18696,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":779
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":780
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -18683,7 +18713,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew2", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":780
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":781
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)             # <<<<<<<<<<<<<<
@@ -18691,13 +18721,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(2, ((void *)__pyx_v_a), ((void *)__pyx_v_b)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 780, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(2, ((void *)__pyx_v_a), ((void *)__pyx_v_b)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 781, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":779
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":780
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -18716,7 +18746,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":782
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":783
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -18733,7 +18763,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew3", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":783
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":784
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)             # <<<<<<<<<<<<<<
@@ -18741,13 +18771,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(3, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 783, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(3, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 784, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":782
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":783
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -18766,7 +18796,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":785
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":786
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -18783,7 +18813,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew4", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":786
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":787
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)             # <<<<<<<<<<<<<<
@@ -18791,13 +18821,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(4, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 786, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(4, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 787, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":785
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":786
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -18816,7 +18846,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":788
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":789
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -18833,7 +18863,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew5", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":789
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":790
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)             # <<<<<<<<<<<<<<
@@ -18841,13 +18871,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
  * cdef inline tuple PyDataType_SHAPE(dtype d):
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(5, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d), ((void *)__pyx_v_e)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 789, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(5, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d), ((void *)__pyx_v_e)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 790, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":788
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":789
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -18866,7 +18896,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":791
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":792
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -18881,7 +18911,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   PyObject *__pyx_t_2;
   __Pyx_RefNannySetupContext("PyDataType_SHAPE", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":792
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":793
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -18891,7 +18921,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   __pyx_t_1 = PyDataType_HASSUBARRAY(__pyx_v_d);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":793
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":794
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):
  *         return <tuple>d.subarray.shape             # <<<<<<<<<<<<<<
@@ -18904,7 +18934,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     __pyx_r = ((PyObject*)__pyx_t_2);
     goto __pyx_L0;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":792
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":793
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -18913,7 +18943,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
 */
   }
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":795
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":796
  *         return <tuple>d.subarray.shape
  *     else:
  *         return ()             # <<<<<<<<<<<<<<
@@ -18927,7 +18957,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     goto __pyx_L0;
   }
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":791
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":792
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -18942,7 +18972,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":994
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":995
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base) except *:             # <<<<<<<<<<<<<<
@@ -18956,7 +18986,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":995
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":996
  * 
  * cdef inline void set_array_base(ndarray arr, object base) except *:
  *     Py_INCREF(base) # important to do this before stealing the reference below!             # <<<<<<<<<<<<<<
@@ -18965,16 +18995,16 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
 */
   Py_INCREF(__pyx_v_base);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":996
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":997
  * cdef inline void set_array_base(ndarray arr, object base) except *:
  *     Py_INCREF(base) # important to do this before stealing the reference below!
  *     PyArray_SetBaseObject(arr, base)             # <<<<<<<<<<<<<<
  * 
  * cdef inline object get_array_base(ndarray arr):
 */
-  __pyx_t_1 = PyArray_SetBaseObject(__pyx_v_arr, __pyx_v_base); if (unlikely(__pyx_t_1 == ((int)-1))) __PYX_ERR(2, 996, __pyx_L1_error)
+  __pyx_t_1 = PyArray_SetBaseObject(__pyx_v_arr, __pyx_v_base); if (unlikely(__pyx_t_1 == ((int)-1))) __PYX_ERR(2, 997, __pyx_L1_error)
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":994
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":995
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base) except *:             # <<<<<<<<<<<<<<
@@ -18989,7 +19019,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __pyx_L0:;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":998
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":999
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -19004,7 +19034,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("get_array_base", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":999
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1000
  * 
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)             # <<<<<<<<<<<<<<
@@ -19013,7 +19043,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
 */
   __pyx_v_base = PyArray_BASE(__pyx_v_arr);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1000
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1001
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -19023,7 +19053,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_t_1 = (__pyx_v_base == NULL);
   if (__pyx_t_1) {
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1001
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1002
  *     base = PyArray_BASE(arr)
  *     if base is NULL:
  *         return None             # <<<<<<<<<<<<<<
@@ -19034,7 +19064,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     __pyx_r = Py_None; __Pyx_INCREF(Py_None);
     goto __pyx_L0;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1000
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1001
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -19043,7 +19073,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
 */
   }
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1002
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1003
  *     if base is NULL:
  *         return None
  *     return <object>base             # <<<<<<<<<<<<<<
@@ -19055,7 +19085,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_r = ((PyObject *)__pyx_v_base);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":998
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":999
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -19070,7 +19100,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1006
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1007
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -19097,7 +19127,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_array", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1007
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1008
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19113,16 +19143,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1008
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1009
  * cdef inline int import_array() except -1:
  *     try:
  *         __pyx_import_array()             # <<<<<<<<<<<<<<
  *     except Exception:
  *         raise ImportError("numpy._core.multiarray failed to import")
 */
-      __pyx_t_4 = _import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 1008, __pyx_L3_error)
+      __pyx_t_4 = _import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 1009, __pyx_L3_error)
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1007
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1008
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19136,7 +19166,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1009
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1010
  *     try:
  *         __pyx_import_array()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -19146,12 +19176,12 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __pyx_t_4 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
     if (__pyx_t_4) {
       __Pyx_AddTraceback("numpy.import_array", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(2, 1009, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(2, 1010, __pyx_L5_except_error)
       __Pyx_XGOTREF(__pyx_t_5);
       __Pyx_XGOTREF(__pyx_t_6);
       __Pyx_XGOTREF(__pyx_t_7);
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1010
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1011
  *         __pyx_import_array()
  *     except Exception:
  *         raise ImportError("numpy._core.multiarray failed to import")             # <<<<<<<<<<<<<<
@@ -19167,16 +19197,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
         __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+__pyx_t_11, (2-__pyx_t_11) | (__pyx_t_11*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
         __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-        if (unlikely(!__pyx_t_8)) __PYX_ERR(2, 1010, __pyx_L5_except_error)
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(2, 1011, __pyx_L5_except_error)
         __Pyx_GOTREF(__pyx_t_8);
       }
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __PYX_ERR(2, 1010, __pyx_L5_except_error)
+      __PYX_ERR(2, 1011, __pyx_L5_except_error)
     }
     goto __pyx_L5_except_error;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1007
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1008
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19192,7 +19222,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1006
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1007
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -19217,7 +19247,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1012
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1013
  *         raise ImportError("numpy._core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -19244,7 +19274,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_umath", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1013
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1014
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19260,16 +19290,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1014
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1015
  * cdef inline int import_umath() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
  *     except Exception:
  *         raise ImportError("numpy._core.umath failed to import")
 */
-      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 1014, __pyx_L3_error)
+      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 1015, __pyx_L3_error)
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1013
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1014
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19283,7 +19313,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1015
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1016
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -19293,12 +19323,12 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __pyx_t_4 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
     if (__pyx_t_4) {
       __Pyx_AddTraceback("numpy.import_umath", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(2, 1015, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(2, 1016, __pyx_L5_except_error)
       __Pyx_XGOTREF(__pyx_t_5);
       __Pyx_XGOTREF(__pyx_t_6);
       __Pyx_XGOTREF(__pyx_t_7);
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1016
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1017
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy._core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -19314,16 +19344,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
         __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+__pyx_t_11, (2-__pyx_t_11) | (__pyx_t_11*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
         __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-        if (unlikely(!__pyx_t_8)) __PYX_ERR(2, 1016, __pyx_L5_except_error)
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(2, 1017, __pyx_L5_except_error)
         __Pyx_GOTREF(__pyx_t_8);
       }
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __PYX_ERR(2, 1016, __pyx_L5_except_error)
+      __PYX_ERR(2, 1017, __pyx_L5_except_error)
     }
     goto __pyx_L5_except_error;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1013
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1014
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19339,7 +19369,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1012
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1013
  *         raise ImportError("numpy._core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -19364,7 +19394,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1018
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1019
  *         raise ImportError("numpy._core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -19391,7 +19421,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_ufunc", 0);
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1019
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1020
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19407,16 +19437,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1020
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1021
  * cdef inline int import_ufunc() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
  *     except Exception:
  *         raise ImportError("numpy._core.umath failed to import")
 */
-      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 1020, __pyx_L3_error)
+      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 1021, __pyx_L3_error)
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1019
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1020
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19430,7 +19460,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1021
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1022
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -19440,12 +19470,12 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __pyx_t_4 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
     if (__pyx_t_4) {
       __Pyx_AddTraceback("numpy.import_ufunc", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(2, 1021, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(2, 1022, __pyx_L5_except_error)
       __Pyx_XGOTREF(__pyx_t_5);
       __Pyx_XGOTREF(__pyx_t_6);
       __Pyx_XGOTREF(__pyx_t_7);
 
-      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1022
+      /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1023
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy._core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -19461,16 +19491,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
         __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+__pyx_t_11, (2-__pyx_t_11) | (__pyx_t_11*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
         __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-        if (unlikely(!__pyx_t_8)) __PYX_ERR(2, 1022, __pyx_L5_except_error)
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(2, 1023, __pyx_L5_except_error)
         __Pyx_GOTREF(__pyx_t_8);
       }
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __PYX_ERR(2, 1022, __pyx_L5_except_error)
+      __PYX_ERR(2, 1023, __pyx_L5_except_error)
     }
     goto __pyx_L5_except_error;
 
-    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1019
+    /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1020
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19486,7 +19516,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1018
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1019
  *         raise ImportError("numpy._core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -19511,7 +19541,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1025
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1026
  * 
  * 
  * cdef inline bint is_timedelta64_object(object obj) noexcept:             # <<<<<<<<<<<<<<
@@ -19522,7 +19552,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
 static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_obj) {
   int __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1037
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1038
  *     bool
  *     """
  *     return PyObject_TypeCheck(obj, &PyTimedeltaArrType_Type)             # <<<<<<<<<<<<<<
@@ -19532,7 +19562,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
   __pyx_r = PyObject_TypeCheck(__pyx_v_obj, (&PyTimedeltaArrType_Type));
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1025
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1026
  * 
  * 
  * cdef inline bint is_timedelta64_object(object obj) noexcept:             # <<<<<<<<<<<<<<
@@ -19545,7 +19575,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1040
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1041
  * 
  * 
  * cdef inline bint is_datetime64_object(object obj) noexcept:             # <<<<<<<<<<<<<<
@@ -19556,7 +19586,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
 static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_obj) {
   int __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1052
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1053
  *     bool
  *     """
  *     return PyObject_TypeCheck(obj, &PyDatetimeArrType_Type)             # <<<<<<<<<<<<<<
@@ -19566,7 +19596,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
   __pyx_r = PyObject_TypeCheck(__pyx_v_obj, (&PyDatetimeArrType_Type));
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1040
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1041
  * 
  * 
  * cdef inline bint is_datetime64_object(object obj) noexcept:             # <<<<<<<<<<<<<<
@@ -19579,7 +19609,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1055
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1056
  * 
  * 
  * cdef inline npy_datetime get_datetime64_value(object obj) noexcept nogil:             # <<<<<<<<<<<<<<
@@ -19590,7 +19620,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
 static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *__pyx_v_obj) {
   npy_datetime __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1062
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1063
  *     also needed.  That can be found using `get_datetime64_unit`.
  *     """
  *     return (<PyDatetimeScalarObject*>obj).obval             # <<<<<<<<<<<<<<
@@ -19600,7 +19630,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
   __pyx_r = ((PyDatetimeScalarObject *)__pyx_v_obj)->obval;
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1055
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1056
  * 
  * 
  * cdef inline npy_datetime get_datetime64_value(object obj) noexcept nogil:             # <<<<<<<<<<<<<<
@@ -19613,7 +19643,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1065
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1066
  * 
  * 
  * cdef inline npy_timedelta get_timedelta64_value(object obj) noexcept nogil:             # <<<<<<<<<<<<<<
@@ -19624,7 +19654,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
 static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject *__pyx_v_obj) {
   npy_timedelta __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1069
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1070
  *     returns the int64 value underlying scalar numpy timedelta64 object
  *     """
  *     return (<PyTimedeltaScalarObject*>obj).obval             # <<<<<<<<<<<<<<
@@ -19634,7 +19664,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
   __pyx_r = ((PyTimedeltaScalarObject *)__pyx_v_obj)->obval;
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1065
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1066
  * 
  * 
  * cdef inline npy_timedelta get_timedelta64_value(object obj) noexcept nogil:             # <<<<<<<<<<<<<<
@@ -19647,7 +19677,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
   return __pyx_r;
 }
 
-/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1072
+/* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1073
  * 
  * 
  * cdef inline NPY_DATETIMEUNIT get_datetime64_unit(object obj) noexcept nogil:             # <<<<<<<<<<<<<<
@@ -19658,7 +19688,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
 static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObject *__pyx_v_obj) {
   NPY_DATETIMEUNIT __pyx_r;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1076
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1077
  *     returns the unit part of the dtype for a numpy datetime64 object.
  *     """
  *     return <NPY_DATETIMEUNIT>(<PyDatetimeScalarObject*>obj).obmeta.base             # <<<<<<<<<<<<<<
@@ -19668,7 +19698,7 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
   __pyx_r = ((NPY_DATETIMEUNIT)((PyDatetimeScalarObject *)__pyx_v_obj)->obmeta.base);
   goto __pyx_L0;
 
-  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1072
+  /* "../../../../../../../../../Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/numpy/__init__.cython-30.pxd":1073
  * 
  * 
  * cdef inline NPY_DATETIMEUNIT get_datetime64_unit(object obj) noexcept nogil:             # <<<<<<<<<<<<<<
@@ -22808,7 +22838,1262 @@ static PyObject *__pyx_pf_13tuna_integral_2dipole(CYTHON_UNUSED PyObject *__pyx_
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":306
+/* "tuna_integral.pyx":307
+ * 
+ * 
+ * cpdef double calculate_quadrupole_integral(object bf_1, object bf_2, quadrupole_origin, str direction):             # <<<<<<<<<<<<<<
+ * 
+ *     """
+*/
+
+static PyObject *__pyx_pw_13tuna_integral_5calculate_quadrupole_integral(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static double __pyx_f_13tuna_integral_calculate_quadrupole_integral(PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, PyObject *__pyx_v_quadrupole_origin, PyObject *__pyx_v_direction, CYTHON_UNUSED int __pyx_skip_dispatch) {
+  double __pyx_v_integral;
+  PyObject *__pyx_v_ia = NULL;
+  PyObject *__pyx_v_ca = NULL;
+  PyObject *__pyx_v_ib = NULL;
+  PyObject *__pyx_v_cb = NULL;
+  double __pyx_r;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  Py_ssize_t __pyx_t_4;
+  PyObject *(*__pyx_t_5)(PyObject *);
+  PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
+  Py_ssize_t __pyx_t_8;
+  PyObject *(*__pyx_t_9)(PyObject *);
+  PyObject *__pyx_t_10 = NULL;
+  PyObject *__pyx_t_11 = NULL;
+  PyObject *__pyx_t_12 = NULL;
+  PyObject *__pyx_t_13 = NULL;
+  PyObject *__pyx_t_14 = NULL;
+  PyObject *__pyx_t_15 = NULL;
+  PyObject *__pyx_t_16 = NULL;
+  PyObject *__pyx_t_17 = NULL;
+  PyObject *__pyx_t_18 = NULL;
+  PyObject *__pyx_t_19 = NULL;
+  size_t __pyx_t_20;
+  double __pyx_t_21;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("calculate_quadrupole_integral", 0);
+
+  /* "tuna_integral.pyx":324
+ *     """
+ * 
+ *     cdef double integral = 0.0             # <<<<<<<<<<<<<<
+ * 
+ *     for ia, ca in enumerate(bf_1.coefs):
+*/
+  __pyx_v_integral = 0.0;
+
+  /* "tuna_integral.pyx":326
+ *     cdef double integral = 0.0
+ * 
+ *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
+ * 
+ *         for ib, cb in enumerate(bf_2.coefs):
+*/
+  __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
+  __pyx_t_1 = __pyx_mstate_global->__pyx_int_0;
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 326, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
+    __pyx_t_3 = __pyx_t_2; __Pyx_INCREF(__pyx_t_3);
+    __pyx_t_4 = 0;
+    __pyx_t_5 = NULL;
+  } else {
+    __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 326, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 326, __pyx_L1_error)
+  }
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  for (;;) {
+    if (likely(!__pyx_t_5)) {
+      if (likely(PyList_CheckExact(__pyx_t_3))) {
+        {
+          Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_3);
+          #if !CYTHON_ASSUME_SAFE_SIZE
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 326, __pyx_L1_error)
+          #endif
+          if (__pyx_t_4 >= __pyx_temp) break;
+        }
+        __pyx_t_2 = __Pyx_PyList_GetItemRef(__pyx_t_3, __pyx_t_4);
+        ++__pyx_t_4;
+      } else {
+        {
+          Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_3);
+          #if !CYTHON_ASSUME_SAFE_SIZE
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 326, __pyx_L1_error)
+          #endif
+          if (__pyx_t_4 >= __pyx_temp) break;
+        }
+        #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+        __pyx_t_2 = __Pyx_NewRef(PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_4));
+        #else
+        __pyx_t_2 = __Pyx_PySequence_ITEM(__pyx_t_3, __pyx_t_4);
+        #endif
+        ++__pyx_t_4;
+      }
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 326, __pyx_L1_error)
+    } else {
+      __pyx_t_2 = __pyx_t_5(__pyx_t_3);
+      if (unlikely(!__pyx_t_2)) {
+        PyObject* exc_type = PyErr_Occurred();
+        if (exc_type) {
+          if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 326, __pyx_L1_error)
+          PyErr_Clear();
+        }
+        break;
+      }
+    }
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_XDECREF_SET(__pyx_v_ca, __pyx_t_2);
+    __pyx_t_2 = 0;
+    __Pyx_INCREF(__pyx_t_1);
+    __Pyx_XDECREF_SET(__pyx_v_ia, __pyx_t_1);
+    __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 326, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1);
+    __pyx_t_1 = __pyx_t_2;
+    __pyx_t_2 = 0;
+
+    /* "tuna_integral.pyx":328
+ *     for ia, ca in enumerate(bf_1.coefs):
+ * 
+ *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
+ * 
+ *             # Applies coefficients and norms to integrals between primitive Gaussians
+*/
+    __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
+    __pyx_t_2 = __pyx_mstate_global->__pyx_int_0;
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 328, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    if (likely(PyList_CheckExact(__pyx_t_6)) || PyTuple_CheckExact(__pyx_t_6)) {
+      __pyx_t_7 = __pyx_t_6; __Pyx_INCREF(__pyx_t_7);
+      __pyx_t_8 = 0;
+      __pyx_t_9 = NULL;
+    } else {
+      __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 328, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_7);
+      __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 328, __pyx_L1_error)
+    }
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    for (;;) {
+      if (likely(!__pyx_t_9)) {
+        if (likely(PyList_CheckExact(__pyx_t_7))) {
+          {
+            Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
+            #if !CYTHON_ASSUME_SAFE_SIZE
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 328, __pyx_L1_error)
+            #endif
+            if (__pyx_t_8 >= __pyx_temp) break;
+          }
+          __pyx_t_6 = __Pyx_PyList_GetItemRef(__pyx_t_7, __pyx_t_8);
+          ++__pyx_t_8;
+        } else {
+          {
+            Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_7);
+            #if !CYTHON_ASSUME_SAFE_SIZE
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 328, __pyx_L1_error)
+            #endif
+            if (__pyx_t_8 >= __pyx_temp) break;
+          }
+          #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+          __pyx_t_6 = __Pyx_NewRef(PyTuple_GET_ITEM(__pyx_t_7, __pyx_t_8));
+          #else
+          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_7, __pyx_t_8);
+          #endif
+          ++__pyx_t_8;
+        }
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 328, __pyx_L1_error)
+      } else {
+        __pyx_t_6 = __pyx_t_9(__pyx_t_7);
+        if (unlikely(!__pyx_t_6)) {
+          PyObject* exc_type = PyErr_Occurred();
+          if (exc_type) {
+            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 328, __pyx_L1_error)
+            PyErr_Clear();
+          }
+          break;
+        }
+      }
+      __Pyx_GOTREF(__pyx_t_6);
+      __Pyx_XDECREF_SET(__pyx_v_cb, __pyx_t_6);
+      __pyx_t_6 = 0;
+      __Pyx_INCREF(__pyx_t_2);
+      __Pyx_XDECREF_SET(__pyx_v_ib, __pyx_t_2);
+      __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 328, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __Pyx_DECREF(__pyx_t_2);
+      __pyx_t_2 = __pyx_t_6;
+      __pyx_t_6 = 0;
+
+      /* "tuna_integral.pyx":332
+ *             # Applies coefficients and norms to integrals between primitive Gaussians
+ * 
+ *             integral += (bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * quadrupole(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, quadrupole_origin, direction))             # <<<<<<<<<<<<<<
+ * 
+ *     return integral
+*/
+      __pyx_t_6 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ia); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ib); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_12);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_12); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+      __pyx_t_12 = PyNumber_Multiply(__pyx_t_10, __pyx_v_ca); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_12);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_12, __pyx_v_cb); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+      __pyx_t_11 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_quadrupole); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_13);
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __pyx_t_15 = __Pyx_PyObject_GetItem(__pyx_t_14, __pyx_v_ia); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_15);
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_16);
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_17);
+      __pyx_t_18 = __Pyx_PyObject_GetItem(__pyx_t_17, __pyx_v_ib); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_18);
+      __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_17);
+      __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_19);
+      __pyx_t_20 = 1;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_13))) {
+        __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_13);
+        assert(__pyx_t_11);
+        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_13);
+        __Pyx_INCREF(__pyx_t_11);
+        __Pyx_INCREF(__pyx__function);
+        __Pyx_DECREF_SET(__pyx_t_13, __pyx__function);
+        __pyx_t_20 = 0;
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[9] = {__pyx_t_11, __pyx_t_15, __pyx_t_14, __pyx_t_16, __pyx_t_18, __pyx_t_17, __pyx_t_19, __pyx_v_quadrupole_origin, __pyx_v_direction};
+        __pyx_t_12 = __Pyx_PyObject_FastCall(__pyx_t_13, __pyx_callargs+__pyx_t_20, (9-__pyx_t_20) | (__pyx_t_20*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
+        __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
+        __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+        __Pyx_DECREF(__pyx_t_16); __pyx_t_16 = 0;
+        __Pyx_DECREF(__pyx_t_18); __pyx_t_18 = 0;
+        __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
+        __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
+        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+        if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 332, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_12);
+      }
+      __pyx_t_13 = PyNumber_Multiply(__pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_13);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+      __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_t_6, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_12);
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+      __pyx_t_21 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_21 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 332, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
+      __pyx_v_integral = __pyx_t_21;
+
+      /* "tuna_integral.pyx":328
+ *     for ia, ca in enumerate(bf_1.coefs):
+ * 
+ *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
+ * 
+ *             # Applies coefficients and norms to integrals between primitive Gaussians
+*/
+    }
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+    /* "tuna_integral.pyx":326
+ *     cdef double integral = 0.0
+ * 
+ *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
+ * 
+ *         for ib, cb in enumerate(bf_2.coefs):
+*/
+  }
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "tuna_integral.pyx":334
+ *             integral += (bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * quadrupole(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, quadrupole_origin, direction))
+ * 
+ *     return integral             # <<<<<<<<<<<<<<
+ * 
+ * 
+*/
+  __pyx_r = __pyx_v_integral;
+  goto __pyx_L0;
+
+  /* "tuna_integral.pyx":307
+ * 
+ * 
+ * cpdef double calculate_quadrupole_integral(object bf_1, object bf_2, quadrupole_origin, str direction):             # <<<<<<<<<<<<<<
+ * 
+ *     """
+*/
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_XDECREF(__pyx_t_10);
+  __Pyx_XDECREF(__pyx_t_11);
+  __Pyx_XDECREF(__pyx_t_12);
+  __Pyx_XDECREF(__pyx_t_13);
+  __Pyx_XDECREF(__pyx_t_14);
+  __Pyx_XDECREF(__pyx_t_15);
+  __Pyx_XDECREF(__pyx_t_16);
+  __Pyx_XDECREF(__pyx_t_17);
+  __Pyx_XDECREF(__pyx_t_18);
+  __Pyx_XDECREF(__pyx_t_19);
+  __Pyx_AddTraceback("tuna_integral.calculate_quadrupole_integral", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = -1;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_ia);
+  __Pyx_XDECREF(__pyx_v_ca);
+  __Pyx_XDECREF(__pyx_v_ib);
+  __Pyx_XDECREF(__pyx_v_cb);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_13tuna_integral_5calculate_quadrupole_integral(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_4calculate_quadrupole_integral, "\n    \n    Calculates a raw quadrupole second-moment integral between basis functions, <1| (r - quadrupole_origin)^2 |2>, for a direction.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n        quadrupole_origin (array): Coordinates of quadrupole origin\n        direction (str): Either \"xx\" or \"zz\"\n\n    Returns:\n        integral (float): Quadrupole integral between contracted Gaussians\n        \n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_5calculate_quadrupole_integral = {"calculate_quadrupole_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_5calculate_quadrupole_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_4calculate_quadrupole_integral};
+static PyObject *__pyx_pw_13tuna_integral_5calculate_quadrupole_integral(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  PyObject *__pyx_v_bf_1 = 0;
+  PyObject *__pyx_v_bf_2 = 0;
+  PyObject *__pyx_v_quadrupole_origin = 0;
+  PyObject *__pyx_v_direction = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[4] = {0,0,0,0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("calculate_quadrupole_integral (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_SIZE
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_bf_1,&__pyx_mstate_global->__pyx_n_u_bf_2,&__pyx_mstate_global->__pyx_n_u_quadrupole_origin,&__pyx_mstate_global->__pyx_n_u_direction,0};
+    const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 307, __pyx_L3_error)
+    if (__pyx_kwds_len > 0) {
+      switch (__pyx_nargs) {
+        case  4:
+        values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 307, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  3:
+        values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 307, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  2:
+        values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 307, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  1:
+        values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 307, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      const Py_ssize_t kwd_pos_args = __pyx_nargs;
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_quadrupole_integral", 0) < 0) __PYX_ERR(0, 307, __pyx_L3_error)
+      for (Py_ssize_t i = __pyx_nargs; i < 4; i++) {
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_quadrupole_integral", 1, 4, 4, i); __PYX_ERR(0, 307, __pyx_L3_error) }
+      }
+    } else if (unlikely(__pyx_nargs != 4)) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 307, __pyx_L3_error)
+      values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 307, __pyx_L3_error)
+      values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 307, __pyx_L3_error)
+      values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 307, __pyx_L3_error)
+    }
+    __pyx_v_bf_1 = values[0];
+    __pyx_v_bf_2 = values[1];
+    __pyx_v_quadrupole_origin = values[2];
+    __pyx_v_direction = ((PyObject*)values[3]);
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("calculate_quadrupole_integral", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 307, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+    Py_XDECREF(values[__pyx_temp]);
+  }
+  __Pyx_AddTraceback("tuna_integral.calculate_quadrupole_integral", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_direction), (&PyUnicode_Type), 1, "direction", 1))) __PYX_ERR(0, 307, __pyx_L1_error)
+  __pyx_r = __pyx_pf_13tuna_integral_4calculate_quadrupole_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_quadrupole_origin, __pyx_v_direction);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+    Py_XDECREF(values[__pyx_temp]);
+  }
+  goto __pyx_L7_cleaned_up;
+  __pyx_L0:;
+  for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+    Py_XDECREF(values[__pyx_temp]);
+  }
+  __pyx_L7_cleaned_up:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_13tuna_integral_4calculate_quadrupole_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, PyObject *__pyx_v_quadrupole_origin, PyObject *__pyx_v_direction) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  double __pyx_t_1;
+  PyObject *__pyx_t_2 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("calculate_quadrupole_integral", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_quadrupole_integral(__pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_quadrupole_origin, __pyx_v_direction, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 307, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 307, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_r = __pyx_t_2;
+  __pyx_t_2 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_AddTraceback("tuna_integral.calculate_quadrupole_integral", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "tuna_integral.pyx":345
+ * 
+ * 
+ * def quadrupole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, quadrupole_origin: ndarray, direction: str) -> float:             # <<<<<<<<<<<<<<
+ * 
+ *     """
+*/
+
+/* Python wrapper */
+static PyObject *__pyx_pw_13tuna_integral_7quadrupole(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_6quadrupole, "\n    \n    Calculates a Cartesian raw quadrupole second-moment integral between primitive Gaussians, <1| (r - quadrupole_origin)^2 |2>.\n    \n    Args:\n        exponent_1 (float): Gaussian exponent on first centre\n        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre\n        centre_1 (array): Coordinates of first centre\n        exponent_2 (float): Gaussian exponent on second centre\n        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre\n        centre_2 (array): Coordinates of second centre\n        quadrupole_origin (array): Quadrupole origin\n        direction (str): Either \"xx\" or \"zz\"\n    \n    Returns:\n        integral (float): Quadrupole integral between primitive Gaussians\n\n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_7quadrupole = {"quadrupole", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_7quadrupole, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_6quadrupole};
+static PyObject *__pyx_pw_13tuna_integral_7quadrupole(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  double __pyx_v_exponent_1;
+  PyObject *__pyx_v_angmom_1 = 0;
+  PyObject *__pyx_v_centre_1 = 0;
+  double __pyx_v_exponent_2;
+  PyObject *__pyx_v_angmom_2 = 0;
+  PyObject *__pyx_v_centre_2 = 0;
+  PyObject *__pyx_v_quadrupole_origin = 0;
+  PyObject *__pyx_v_direction = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[8] = {0,0,0,0,0,0,0,0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("quadrupole (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_SIZE
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_exponent_1,&__pyx_mstate_global->__pyx_n_u_angmom_1,&__pyx_mstate_global->__pyx_n_u_centre_1,&__pyx_mstate_global->__pyx_n_u_exponent_2,&__pyx_mstate_global->__pyx_n_u_angmom_2,&__pyx_mstate_global->__pyx_n_u_centre_2,&__pyx_mstate_global->__pyx_n_u_quadrupole_origin,&__pyx_mstate_global->__pyx_n_u_direction,0};
+    const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 345, __pyx_L3_error)
+    if (__pyx_kwds_len > 0) {
+      switch (__pyx_nargs) {
+        case  8:
+        values[7] = __Pyx_ArgRef_FASTCALL(__pyx_args, 7);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[7])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  7:
+        values[6] = __Pyx_ArgRef_FASTCALL(__pyx_args, 6);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  6:
+        values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  5:
+        values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  4:
+        values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  3:
+        values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  2:
+        values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  1:
+        values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 345, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      const Py_ssize_t kwd_pos_args = __pyx_nargs;
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "quadrupole", 0) < 0) __PYX_ERR(0, 345, __pyx_L3_error)
+      for (Py_ssize_t i = __pyx_nargs; i < 8; i++) {
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("quadrupole", 1, 8, 8, i); __PYX_ERR(0, 345, __pyx_L3_error) }
+      }
+    } else if (unlikely(__pyx_nargs != 8)) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 345, __pyx_L3_error)
+      values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 345, __pyx_L3_error)
+      values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 345, __pyx_L3_error)
+      values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 345, __pyx_L3_error)
+      values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 345, __pyx_L3_error)
+      values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 345, __pyx_L3_error)
+      values[6] = __Pyx_ArgRef_FASTCALL(__pyx_args, 6);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 345, __pyx_L3_error)
+      values[7] = __Pyx_ArgRef_FASTCALL(__pyx_args, 7);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[7])) __PYX_ERR(0, 345, __pyx_L3_error)
+    }
+    __pyx_v_exponent_1 = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_exponent_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 345, __pyx_L3_error)
+    __pyx_v_angmom_1 = values[1];
+    __pyx_v_centre_1 = values[2];
+    __pyx_v_exponent_2 = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_exponent_2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 345, __pyx_L3_error)
+    __pyx_v_angmom_2 = values[4];
+    __pyx_v_centre_2 = values[5];
+    __pyx_v_quadrupole_origin = values[6];
+    __pyx_v_direction = ((PyObject*)values[7]);
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("quadrupole", 1, 8, 8, __pyx_nargs); __PYX_ERR(0, 345, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+    Py_XDECREF(values[__pyx_temp]);
+  }
+  __Pyx_AddTraceback("tuna_integral.quadrupole", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_direction), (&PyUnicode_Type), 0, "direction", 2))) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_r = __pyx_pf_13tuna_integral_6quadrupole(__pyx_self, __pyx_v_exponent_1, __pyx_v_angmom_1, __pyx_v_centre_1, __pyx_v_exponent_2, __pyx_v_angmom_2, __pyx_v_centre_2, __pyx_v_quadrupole_origin, __pyx_v_direction);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+    Py_XDECREF(values[__pyx_temp]);
+  }
+  goto __pyx_L7_cleaned_up;
+  __pyx_L0:;
+  for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+    Py_XDECREF(values[__pyx_temp]);
+  }
+  __pyx_L7_cleaned_up:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_13tuna_integral_6quadrupole(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2, PyObject *__pyx_v_quadrupole_origin, PyObject *__pyx_v_direction) {
+  PyObject *__pyx_v_l_1 = NULL;
+  PyObject *__pyx_v_m_1 = NULL;
+  PyObject *__pyx_v_n_1 = NULL;
+  PyObject *__pyx_v_l_2 = NULL;
+  PyObject *__pyx_v_m_2 = NULL;
+  PyObject *__pyx_v_n_2 = NULL;
+  PyObject *__pyx_v_R_12 = NULL;
+  double __pyx_v_exponent_sum;
+  double __pyx_v_prefactor;
+  PyObject *__pyx_v_P = NULL;
+  double __pyx_v_Sx;
+  double __pyx_v_Sy;
+  double __pyx_v_Sz;
+  double __pyx_v_Ex1;
+  double __pyx_v_Ex2;
+  PyObject *__pyx_v_Qx = NULL;
+  PyObject *__pyx_v_integral = NULL;
+  double __pyx_v_Ez1;
+  double __pyx_v_Ez2;
+  PyObject *__pyx_v_Qz = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *(*__pyx_t_5)(PyObject *);
+  int __pyx_t_6;
+  int __pyx_t_7;
+  double __pyx_t_8;
+  double __pyx_t_9;
+  int __pyx_t_10;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("quadrupole", 0);
+
+  /* "tuna_integral.pyx":366
+ *     """
+ * 
+ *     l_1, m_1, n_1 = angmom_1             # <<<<<<<<<<<<<<
+ *     l_2, m_2, n_2 = angmom_2
+ * 
+*/
+  if ((likely(PyTuple_CheckExact(__pyx_v_angmom_1))) || (PyList_CheckExact(__pyx_v_angmom_1))) {
+    PyObject* sequence = __pyx_v_angmom_1;
+    Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+    if (unlikely(size != 3)) {
+      if (size > 3) __Pyx_RaiseTooManyValuesError(3);
+      else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+      __PYX_ERR(0, 366, __pyx_L1_error)
+    }
+    #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    if (likely(PyTuple_CheckExact(sequence))) {
+      __pyx_t_1 = PyTuple_GET_ITEM(sequence, 0);
+      __Pyx_INCREF(__pyx_t_1);
+      __pyx_t_2 = PyTuple_GET_ITEM(sequence, 1);
+      __Pyx_INCREF(__pyx_t_2);
+      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 2);
+      __Pyx_INCREF(__pyx_t_3);
+    } else {
+      __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 0);
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 366, __pyx_L1_error)
+      __Pyx_XGOTREF(__pyx_t_1);
+      __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 366, __pyx_L1_error)
+      __Pyx_XGOTREF(__pyx_t_2);
+      __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 2);
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 366, __pyx_L1_error)
+      __Pyx_XGOTREF(__pyx_t_3);
+    }
+    #else
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 366, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 366, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 366, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    #endif
+  } else {
+    Py_ssize_t index = -1;
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 366, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
+    index = 0; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_1);
+    index = 1; __pyx_t_2 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_2)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_2);
+    index = 2; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_3);
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 366, __pyx_L1_error)
+    __pyx_t_5 = NULL;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    goto __pyx_L4_unpacking_done;
+    __pyx_L3_unpacking_failed:;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_5 = NULL;
+    if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+    __PYX_ERR(0, 366, __pyx_L1_error)
+    __pyx_L4_unpacking_done:;
+  }
+  __pyx_v_l_1 = __pyx_t_1;
+  __pyx_t_1 = 0;
+  __pyx_v_m_1 = __pyx_t_2;
+  __pyx_t_2 = 0;
+  __pyx_v_n_1 = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "tuna_integral.pyx":367
+ * 
+ *     l_1, m_1, n_1 = angmom_1
+ *     l_2, m_2, n_2 = angmom_2             # <<<<<<<<<<<<<<
+ * 
+ *     R_12 = centre_1 - centre_2
+*/
+  if ((likely(PyTuple_CheckExact(__pyx_v_angmom_2))) || (PyList_CheckExact(__pyx_v_angmom_2))) {
+    PyObject* sequence = __pyx_v_angmom_2;
+    Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+    if (unlikely(size != 3)) {
+      if (size > 3) __Pyx_RaiseTooManyValuesError(3);
+      else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+      __PYX_ERR(0, 367, __pyx_L1_error)
+    }
+    #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    if (likely(PyTuple_CheckExact(sequence))) {
+      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 0);
+      __Pyx_INCREF(__pyx_t_3);
+      __pyx_t_2 = PyTuple_GET_ITEM(sequence, 1);
+      __Pyx_INCREF(__pyx_t_2);
+      __pyx_t_1 = PyTuple_GET_ITEM(sequence, 2);
+      __Pyx_INCREF(__pyx_t_1);
+    } else {
+      __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 0);
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 367, __pyx_L1_error)
+      __Pyx_XGOTREF(__pyx_t_3);
+      __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 367, __pyx_L1_error)
+      __Pyx_XGOTREF(__pyx_t_2);
+      __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 2);
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 367, __pyx_L1_error)
+      __Pyx_XGOTREF(__pyx_t_1);
+    }
+    #else
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 367, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 367, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 367, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    #endif
+  } else {
+    Py_ssize_t index = -1;
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 367, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
+    index = 0; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_3);
+    index = 1; __pyx_t_2 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_2)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_2);
+    index = 2; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_1);
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 367, __pyx_L1_error)
+    __pyx_t_5 = NULL;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    goto __pyx_L6_unpacking_done;
+    __pyx_L5_unpacking_failed:;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_5 = NULL;
+    if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+    __PYX_ERR(0, 367, __pyx_L1_error)
+    __pyx_L6_unpacking_done:;
+  }
+  __pyx_v_l_2 = __pyx_t_3;
+  __pyx_t_3 = 0;
+  __pyx_v_m_2 = __pyx_t_2;
+  __pyx_t_2 = 0;
+  __pyx_v_n_2 = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "tuna_integral.pyx":369
+ *     l_2, m_2, n_2 = angmom_2
+ * 
+ *     R_12 = centre_1 - centre_2             # <<<<<<<<<<<<<<
+ * 
+ *     exponent_sum = exponent_1 + exponent_2
+*/
+  __pyx_t_1 = PyNumber_Subtract(__pyx_v_centre_1, __pyx_v_centre_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 369, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_R_12 = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "tuna_integral.pyx":371
+ *     R_12 = centre_1 - centre_2
+ * 
+ *     exponent_sum = exponent_1 + exponent_2             # <<<<<<<<<<<<<<
+ *     prefactor = pow(PI / exponent_sum, 1.5)
+ * 
+*/
+  __pyx_v_exponent_sum = (__pyx_v_exponent_1 + __pyx_v_exponent_2);
+
+  /* "tuna_integral.pyx":372
+ * 
+ *     exponent_sum = exponent_1 + exponent_2
+ *     prefactor = pow(PI / exponent_sum, 1.5)             # <<<<<<<<<<<<<<
+ * 
+ *     P = (exponent_1 * centre_1 + exponent_2 * centre_2) / exponent_sum - quadrupole_origin
+*/
+  __pyx_v_prefactor = pow((__pyx_v_13tuna_integral_PI / __pyx_v_exponent_sum), 1.5);
+
+  /* "tuna_integral.pyx":374
+ *     prefactor = pow(PI / exponent_sum, 1.5)
+ * 
+ *     P = (exponent_1 * centre_1 + exponent_2 * centre_2) / exponent_sum - quadrupole_origin             # <<<<<<<<<<<<<<
+ * 
+ *     # Calculates the overlap integrals between primitive Gaussians
+*/
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_exponent_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = PyNumber_Multiply(__pyx_t_1, __pyx_v_centre_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_exponent_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_1, __pyx_v_centre_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = PyNumber_Add(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_exponent_sum); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = __Pyx_PyNumber_Divide(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = PyNumber_Subtract(__pyx_t_2, __pyx_v_quadrupole_origin); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_P = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "tuna_integral.pyx":378
+ *     # Calculates the overlap integrals between primitive Gaussians
+ * 
+ *     Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
+ *     Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
+ *     Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
+*/
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 378, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 378, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 378, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 378, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 378, __pyx_L1_error)
+  __pyx_v_Sx = __pyx_t_9;
+
+  /* "tuna_integral.pyx":379
+ * 
+ *     Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
+ *     Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
+ *     Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
+ * 
+*/
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 379, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_m_2); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 379, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 379, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 379, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 379, __pyx_L1_error)
+  __pyx_v_Sy = __pyx_t_8;
+
+  /* "tuna_integral.pyx":380
+ *     Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
+ *     Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
+ *     Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
+ * 
+ *     # Only calculates one component of the quadrupole integrals
+*/
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 380, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 380, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 380, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 380, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 380, __pyx_L1_error)
+  __pyx_v_Sz = __pyx_t_9;
+
+  /* "tuna_integral.pyx":384
+ *     # Only calculates one component of the quadrupole integrals
+ * 
+ *     if direction.lower() == "xx":             # <<<<<<<<<<<<<<
+ * 
+ *         Ex1 = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2)
+*/
+  __pyx_t_3 = __Pyx_CallUnboundCMethod0(&__pyx_mstate_global->__pyx_umethod_PyUnicode_Type__lower, __pyx_v_direction); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 384, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_10 = (__Pyx_PyUnicode_Equals(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_xx, Py_EQ)); if (unlikely((__pyx_t_10 < 0))) __PYX_ERR(0, 384, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (__pyx_t_10) {
+
+    /* "tuna_integral.pyx":386
+ *     if direction.lower() == "xx":
+ * 
+ *         Ex1 = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
+ *         Ex2 = hermite_coeff(l_1, l_2, 2, R_12[0], exponent_1, exponent_2)
+ * 
+*/
+    __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 386, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 386, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 1, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_v_Ex1 = __pyx_t_8;
+
+    /* "tuna_integral.pyx":387
+ * 
+ *         Ex1 = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2)
+ *         Ex2 = hermite_coeff(l_1, l_2, 2, R_12[0], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
+ * 
+ *         Qx = 2.0 * Ex2 + 2.0 * P[0] * Ex1 + (P[0] * P[0] + 1.0 / (2.0 * exponent_sum)) * Sx
+*/
+    __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 387, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 387, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 387, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 387, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 2, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 387, __pyx_L1_error)
+    __pyx_v_Ex2 = __pyx_t_9;
+
+    /* "tuna_integral.pyx":389
+ *         Ex2 = hermite_coeff(l_1, l_2, 2, R_12[0], exponent_1, exponent_2)
+ * 
+ *         Qx = 2.0 * Ex2 + 2.0 * P[0] * Ex1 + (P[0] * P[0] + 1.0 / (2.0 * exponent_sum)) * Sx             # <<<<<<<<<<<<<<
+ * 
+ *         integral = prefactor * Qx * Sy * Sz
+*/
+    __pyx_t_3 = PyFloat_FromDouble((2.0 * __pyx_v_Ex2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_P, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_1 = PyNumber_Multiply(__pyx_mstate_global->__pyx_float_2_0, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = PyFloat_FromDouble(__pyx_v_Ex1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_4 = PyNumber_Multiply(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_P, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_P, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_1 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyFloat_FromDouble((1.0 / (2.0 * __pyx_v_exponent_sum))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = PyNumber_Add(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sx); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_1 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 389, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_v_Qx = __pyx_t_3;
+    __pyx_t_3 = 0;
+
+    /* "tuna_integral.pyx":391
+ *         Qx = 2.0 * Ex2 + 2.0 * P[0] * Ex1 + (P[0] * P[0] + 1.0 / (2.0 * exponent_sum)) * Sx
+ * 
+ *         integral = prefactor * Qx * Sy * Sz             # <<<<<<<<<<<<<<
+ * 
+ *     elif direction.lower() == "zz":
+*/
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_prefactor); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 391, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_1 = PyNumber_Multiply(__pyx_t_3, __pyx_v_Qx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 391, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sy); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 391, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_2 = PyNumber_Multiply(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 391, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 391, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_1 = PyNumber_Multiply(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 391, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_v_integral = __pyx_t_1;
+    __pyx_t_1 = 0;
+
+    /* "tuna_integral.pyx":384
+ *     # Only calculates one component of the quadrupole integrals
+ * 
+ *     if direction.lower() == "xx":             # <<<<<<<<<<<<<<
+ * 
+ *         Ex1 = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2)
+*/
+    goto __pyx_L7;
+  }
+
+  /* "tuna_integral.pyx":393
+ *         integral = prefactor * Qx * Sy * Sz
+ * 
+ *     elif direction.lower() == "zz":             # <<<<<<<<<<<<<<
+ * 
+ *         Ez1 = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2)
+*/
+  __pyx_t_1 = __Pyx_CallUnboundCMethod0(&__pyx_mstate_global->__pyx_umethod_PyUnicode_Type__lower, __pyx_v_direction); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 393, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_10 = (__Pyx_PyUnicode_Equals(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_zz, Py_EQ)); if (unlikely((__pyx_t_10 < 0))) __PYX_ERR(0, 393, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (__pyx_t_10) {
+
+    /* "tuna_integral.pyx":395
+ *     elif direction.lower() == "zz":
+ * 
+ *         Ez1 = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
+ *         Ez2 = hermite_coeff(n_1, n_2, 2, R_12[2], exponent_1, exponent_2)
+ * 
+*/
+    __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 395, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 395, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 395, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 395, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 1, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 395, __pyx_L1_error)
+    __pyx_v_Ez1 = __pyx_t_8;
+
+    /* "tuna_integral.pyx":396
+ * 
+ *         Ez1 = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2)
+ *         Ez2 = hermite_coeff(n_1, n_2, 2, R_12[2], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
+ * 
+ *         Qz = 2.0 * Ez2 + 2.0 * P[2] * Ez1 + (P[2] * P[2] + 1.0 / (2.0 * exponent_sum)) * Sz
+*/
+    __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 396, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 396, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 396, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 396, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 2, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 396, __pyx_L1_error)
+    __pyx_v_Ez2 = __pyx_t_9;
+
+    /* "tuna_integral.pyx":398
+ *         Ez2 = hermite_coeff(n_1, n_2, 2, R_12[2], exponent_1, exponent_2)
+ * 
+ *         Qz = 2.0 * Ez2 + 2.0 * P[2] * Ez1 + (P[2] * P[2] + 1.0 / (2.0 * exponent_sum)) * Sz             # <<<<<<<<<<<<<<
+ * 
+ *         integral = prefactor * Sx * Sy * Qz
+*/
+    __pyx_t_1 = PyFloat_FromDouble((2.0 * __pyx_v_Ez2)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_P, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_2 = PyNumber_Multiply(__pyx_mstate_global->__pyx_float_2_0, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Ez1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = PyNumber_Multiply(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_P, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_P, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = PyNumber_Multiply(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyFloat_FromDouble((1.0 / (2.0 * __pyx_v_exponent_sum))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_4 = PyNumber_Add(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = PyNumber_Multiply(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_v_Qz = __pyx_t_1;
+    __pyx_t_1 = 0;
+
+    /* "tuna_integral.pyx":400
+ *         Qz = 2.0 * Ez2 + 2.0 * P[2] * Ez1 + (P[2] * P[2] + 1.0 / (2.0 * exponent_sum)) * Sz
+ * 
+ *         integral = prefactor * Sx * Sy * Qz             # <<<<<<<<<<<<<<
+ * 
+ * 
+*/
+    __pyx_t_1 = PyFloat_FromDouble(((__pyx_v_prefactor * __pyx_v_Sx) * __pyx_v_Sy)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 400, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = PyNumber_Multiply(__pyx_t_1, __pyx_v_Qz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 400, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_v_integral = __pyx_t_2;
+    __pyx_t_2 = 0;
+
+    /* "tuna_integral.pyx":393
+ *         integral = prefactor * Qx * Sy * Sz
+ * 
+ *     elif direction.lower() == "zz":             # <<<<<<<<<<<<<<
+ * 
+ *         Ez1 = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2)
+*/
+  }
+  __pyx_L7:;
+
+  /* "tuna_integral.pyx":403
+ * 
+ * 
+ *     return integral             # <<<<<<<<<<<<<<
+ * 
+ * 
+*/
+  __Pyx_XDECREF(__pyx_r);
+  if (unlikely(!__pyx_v_integral)) { __Pyx_RaiseUnboundLocalError("integral"); __PYX_ERR(0, 403, __pyx_L1_error) }
+  __Pyx_INCREF(__pyx_v_integral);
+  __pyx_r = __pyx_v_integral;
+  goto __pyx_L0;
+
+  /* "tuna_integral.pyx":345
+ * 
+ * 
+ * def quadrupole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, quadrupole_origin: ndarray, direction: str) -> float:             # <<<<<<<<<<<<<<
+ * 
+ *     """
+*/
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_AddTraceback("tuna_integral.quadrupole", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_l_1);
+  __Pyx_XDECREF(__pyx_v_m_1);
+  __Pyx_XDECREF(__pyx_v_n_1);
+  __Pyx_XDECREF(__pyx_v_l_2);
+  __Pyx_XDECREF(__pyx_v_m_2);
+  __Pyx_XDECREF(__pyx_v_n_2);
+  __Pyx_XDECREF(__pyx_v_R_12);
+  __Pyx_XDECREF(__pyx_v_P);
+  __Pyx_XDECREF(__pyx_v_Qx);
+  __Pyx_XDECREF(__pyx_v_integral);
+  __Pyx_XDECREF(__pyx_v_Qz);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "tuna_integral.pyx":410
  * 
  * 
  * cpdef double calculate_nuclear_electron_integral(object bf_1, object bf_2, double[:] nucleus):             # <<<<<<<<<<<<<<
@@ -22816,7 +24101,7 @@ static PyObject *__pyx_pf_13tuna_integral_2dipole(CYTHON_UNUSED PyObject *__pyx_
  *     """
 */
 
-static PyObject *__pyx_pw_13tuna_integral_5calculate_nuclear_electron_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_9calculate_nuclear_electron_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -22858,7 +24143,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_nuclear_electron_integral", 0);
 
-  /* "tuna_integral.pyx":322
+  /* "tuna_integral.pyx":426
  *     """
  * 
  *     cdef double integral = 0.0             # <<<<<<<<<<<<<<
@@ -22867,7 +24152,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
 */
   __pyx_v_integral = 0.0;
 
-  /* "tuna_integral.pyx":324
+  /* "tuna_integral.pyx":428
  *     cdef double integral = 0.0
  * 
  *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
@@ -22876,16 +24161,16 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
 */
   __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
   __pyx_t_1 = __pyx_mstate_global->__pyx_int_0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 324, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 428, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
     __pyx_t_3 = __pyx_t_2; __Pyx_INCREF(__pyx_t_3);
     __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
   } else {
-    __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 324, __pyx_L1_error)
+    __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 428, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 324, __pyx_L1_error)
+    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 428, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   for (;;) {
@@ -22894,7 +24179,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
         {
           Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_3);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 324, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 428, __pyx_L1_error)
           #endif
           if (__pyx_t_4 >= __pyx_temp) break;
         }
@@ -22904,7 +24189,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
         {
           Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_3);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 324, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 428, __pyx_L1_error)
           #endif
           if (__pyx_t_4 >= __pyx_temp) break;
         }
@@ -22915,13 +24200,13 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
         #endif
         ++__pyx_t_4;
       }
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 324, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 428, __pyx_L1_error)
     } else {
       __pyx_t_2 = __pyx_t_5(__pyx_t_3);
       if (unlikely(!__pyx_t_2)) {
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
-          if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 324, __pyx_L1_error)
+          if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 428, __pyx_L1_error)
           PyErr_Clear();
         }
         break;
@@ -22932,13 +24217,13 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
     __pyx_t_2 = 0;
     __Pyx_INCREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_ia, __pyx_t_1);
-    __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 324, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 428, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1);
     __pyx_t_1 = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "tuna_integral.pyx":326
+    /* "tuna_integral.pyx":430
  *     for ia, ca in enumerate(bf_1.coefs):
  * 
  *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
@@ -22947,16 +24232,16 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
 */
     __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
     __pyx_t_2 = __pyx_mstate_global->__pyx_int_0;
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 326, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 430, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (likely(PyList_CheckExact(__pyx_t_6)) || PyTuple_CheckExact(__pyx_t_6)) {
       __pyx_t_7 = __pyx_t_6; __Pyx_INCREF(__pyx_t_7);
       __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 326, __pyx_L1_error)
+      __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 430, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 326, __pyx_L1_error)
+      __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 430, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     for (;;) {
@@ -22965,7 +24250,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 326, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 430, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
@@ -22975,7 +24260,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_7);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 326, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 430, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
@@ -22986,13 +24271,13 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
           #endif
           ++__pyx_t_8;
         }
-        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 326, __pyx_L1_error)
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 430, __pyx_L1_error)
       } else {
         __pyx_t_6 = __pyx_t_9(__pyx_t_7);
         if (unlikely(!__pyx_t_6)) {
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
-            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 326, __pyx_L1_error)
+            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 430, __pyx_L1_error)
             PyErr_Clear();
           }
           break;
@@ -23003,63 +24288,63 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
       __pyx_t_6 = 0;
       __Pyx_INCREF(__pyx_t_2);
       __Pyx_XDECREF_SET(__pyx_v_ib, __pyx_t_2);
-      __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 326, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 430, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_2);
       __pyx_t_2 = __pyx_t_6;
       __pyx_t_6 = 0;
 
-      /* "tuna_integral.pyx":330
+      /* "tuna_integral.pyx":434
  *             # Applies coefficients and norms to integrals between primitive Gaussians
  * 
  *             integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * nuclear_attraction(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, nucleus)             # <<<<<<<<<<<<<<
  * 
  * 
 */
-      __pyx_t_6 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_6 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ia); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ia); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ib); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ib); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_12); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_12); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = PyNumber_Multiply(__pyx_t_10, __pyx_v_ca); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_12 = PyNumber_Multiply(__pyx_t_10, __pyx_v_ca); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyNumber_Multiply(__pyx_t_12, __pyx_v_cb); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_12, __pyx_v_cb); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_t_11 = NULL;
-      __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_nuclear_attraction); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_nuclear_attraction); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_15 = __Pyx_PyObject_GetItem(__pyx_t_14, __pyx_v_ia); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_15 = __Pyx_PyObject_GetItem(__pyx_t_14, __pyx_v_ia); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_15);
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_16);
-      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
-      __pyx_t_18 = __Pyx_PyObject_GetItem(__pyx_t_17, __pyx_v_ib); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_18 = __Pyx_PyObject_GetItem(__pyx_t_17, __pyx_v_ib); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_18);
       __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
-      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
-      __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_19);
-      __pyx_t_20 = __pyx_memoryview_fromslice(__pyx_v_nucleus, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_20)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_20 = __pyx_memoryview_fromslice(__pyx_v_nucleus, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_20)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_20);
       __pyx_t_21 = 1;
       #if CYTHON_UNPACK_METHODS
@@ -23085,22 +24370,22 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
         __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
         __Pyx_DECREF(__pyx_t_20); __pyx_t_20 = 0;
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 330, __pyx_L1_error)
+        if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 434, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
       }
-      __pyx_t_13 = PyNumber_Multiply(__pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_13 = PyNumber_Multiply(__pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_t_6, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_t_6, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __pyx_t_22 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_22 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 330, __pyx_L1_error)
+      __pyx_t_22 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_22 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 434, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_v_integral = __pyx_t_22;
 
-      /* "tuna_integral.pyx":326
+      /* "tuna_integral.pyx":430
  *     for ia, ca in enumerate(bf_1.coefs):
  * 
  *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
@@ -23111,7 +24396,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "tuna_integral.pyx":324
+    /* "tuna_integral.pyx":428
  *     cdef double integral = 0.0
  * 
  *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
@@ -23122,7 +24407,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "tuna_integral.pyx":333
+  /* "tuna_integral.pyx":437
  * 
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -23132,7 +24417,7 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
   __pyx_r = __pyx_v_integral;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":306
+  /* "tuna_integral.pyx":410
  * 
  * 
  * cpdef double calculate_nuclear_electron_integral(object bf_1, object bf_2, double[:] nucleus):             # <<<<<<<<<<<<<<
@@ -23170,16 +24455,16 @@ static double __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(PyObje
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_5calculate_nuclear_electron_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_9calculate_nuclear_electron_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_4calculate_nuclear_electron_integral, "\n    \n    Calculates a nuclear-electron integral between basis functions, <1| 1/(r-R_N) |2>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n        nucleus (array): Coordinates of nucleus\n\n    Returns:\n        integral (float): Nuclear-electron integral between contracted Gaussians\n        \n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_5calculate_nuclear_electron_integral = {"calculate_nuclear_electron_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_5calculate_nuclear_electron_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_4calculate_nuclear_electron_integral};
-static PyObject *__pyx_pw_13tuna_integral_5calculate_nuclear_electron_integral(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_8calculate_nuclear_electron_integral, "\n    \n    Calculates a nuclear-electron integral between basis functions, <1| 1/(r-R_N) |2>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n        nucleus (array): Coordinates of nucleus\n\n    Returns:\n        integral (float): Nuclear-electron integral between contracted Gaussians\n        \n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_9calculate_nuclear_electron_integral = {"calculate_nuclear_electron_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_9calculate_nuclear_electron_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_8calculate_nuclear_electron_integral};
+static PyObject *__pyx_pw_13tuna_integral_9calculate_nuclear_electron_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -23211,46 +24496,46 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_bf_1,&__pyx_mstate_global->__pyx_n_u_bf_2,&__pyx_mstate_global->__pyx_n_u_nucleus,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 306, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 410, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 306, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 410, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 306, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 410, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 306, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 410, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_nuclear_electron_integral", 0) < 0) __PYX_ERR(0, 306, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_nuclear_electron_integral", 0) < 0) __PYX_ERR(0, 410, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 3; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_nuclear_electron_integral", 1, 3, 3, i); __PYX_ERR(0, 306, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_nuclear_electron_integral", 1, 3, 3, i); __PYX_ERR(0, 410, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 3)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 306, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 410, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 306, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 410, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 306, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 410, __pyx_L3_error)
     }
     __pyx_v_bf_1 = values[0];
     __pyx_v_bf_2 = values[1];
-    __pyx_v_nucleus = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_nucleus.memview)) __PYX_ERR(0, 306, __pyx_L3_error)
+    __pyx_v_nucleus = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_nucleus.memview)) __PYX_ERR(0, 410, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("calculate_nuclear_electron_integral", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 306, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("calculate_nuclear_electron_integral", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 410, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -23262,7 +24547,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_13tuna_integral_4calculate_nuclear_electron_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_nucleus);
+  __pyx_r = __pyx_pf_13tuna_integral_8calculate_nuclear_electron_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_nucleus);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -23273,7 +24558,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_4calculate_nuclear_electron_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, __Pyx_memviewslice __pyx_v_nucleus) {
+static PyObject *__pyx_pf_13tuna_integral_8calculate_nuclear_electron_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2, __Pyx_memviewslice __pyx_v_nucleus) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -23283,9 +24568,9 @@ static PyObject *__pyx_pf_13tuna_integral_4calculate_nuclear_electron_integral(C
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_nuclear_electron_integral", 0);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_nucleus.memview)) { __Pyx_RaiseUnboundLocalError("nucleus"); __PYX_ERR(0, 306, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(__pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_nucleus, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 306, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 306, __pyx_L1_error)
+  if (unlikely(!__pyx_v_nucleus.memview)) { __Pyx_RaiseUnboundLocalError("nucleus"); __PYX_ERR(0, 410, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_nuclear_electron_integral(__pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_nucleus, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 410, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 410, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -23302,7 +24587,7 @@ static PyObject *__pyx_pf_13tuna_integral_4calculate_nuclear_electron_integral(C
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":344
+/* "tuna_integral.pyx":448
  * 
  * 
  * def nuclear_attraction(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, nucleus: ndarray) -> float:             # <<<<<<<<<<<<<<
@@ -23311,16 +24596,16 @@ static PyObject *__pyx_pf_13tuna_integral_4calculate_nuclear_electron_integral(C
 */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_7nuclear_attraction(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_11nuclear_attraction(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_6nuclear_attraction, "\n    \n    Calculates a nuclear-electron integral between primitive Gaussians, <1| 1/(r-R_N) |2>.\n    \n    Args:\n        exponent_1 (float): Gaussian exponent on first centre\n        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre\n        centre_1 (array): Coordinates of first centre\n        exponent_2 (float): Gaussian exponent on second centre\n        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre\n        centre_2 (array): Coordinates of second centre\n        nucleus (array): Coordinates of nucleus\n    \n    Returns:\n        integral (float): Nuclear-electron integral between primitive Gaussian\n\n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_7nuclear_attraction = {"nuclear_attraction", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_7nuclear_attraction, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_6nuclear_attraction};
-static PyObject *__pyx_pw_13tuna_integral_7nuclear_attraction(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_10nuclear_attraction, "\n    \n    Calculates a nuclear-electron integral between primitive Gaussians, <1| 1/(r-R_N) |2>.\n    \n    Args:\n        exponent_1 (float): Gaussian exponent on first centre\n        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre\n        centre_1 (array): Coordinates of first centre\n        exponent_2 (float): Gaussian exponent on second centre\n        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre\n        centre_2 (array): Coordinates of second centre\n        nucleus (array): Coordinates of nucleus\n    \n    Returns:\n        integral (float): Nuclear-electron integral between primitive Gaussian\n\n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_11nuclear_attraction = {"nuclear_attraction", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_11nuclear_attraction, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_10nuclear_attraction};
+static PyObject *__pyx_pw_13tuna_integral_11nuclear_attraction(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -23356,74 +24641,74 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_exponent_1,&__pyx_mstate_global->__pyx_n_u_angmom_1,&__pyx_mstate_global->__pyx_n_u_centre_1,&__pyx_mstate_global->__pyx_n_u_exponent_2,&__pyx_mstate_global->__pyx_n_u_angmom_2,&__pyx_mstate_global->__pyx_n_u_centre_2,&__pyx_mstate_global->__pyx_n_u_nucleus,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 344, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 448, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  7:
         values[6] = __Pyx_ArgRef_FASTCALL(__pyx_args, 6);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 344, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 448, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  6:
         values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 344, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 448, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  5:
         values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 344, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 448, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 344, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 448, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 344, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 448, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 344, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 448, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 344, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 448, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "nuclear_attraction", 0) < 0) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "nuclear_attraction", 0) < 0) __PYX_ERR(0, 448, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 7; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("nuclear_attraction", 1, 7, 7, i); __PYX_ERR(0, 344, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("nuclear_attraction", 1, 7, 7, i); __PYX_ERR(0, 448, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 7)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 448, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 448, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 448, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 448, __pyx_L3_error)
       values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 448, __pyx_L3_error)
       values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 448, __pyx_L3_error)
       values[6] = __Pyx_ArgRef_FASTCALL(__pyx_args, 6);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 344, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[6])) __PYX_ERR(0, 448, __pyx_L3_error)
     }
-    __pyx_v_exponent_1 = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_exponent_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 344, __pyx_L3_error)
+    __pyx_v_exponent_1 = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_exponent_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 448, __pyx_L3_error)
     __pyx_v_angmom_1 = values[1];
     __pyx_v_centre_1 = values[2];
-    __pyx_v_exponent_2 = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_exponent_2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 344, __pyx_L3_error)
+    __pyx_v_exponent_2 = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_exponent_2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 448, __pyx_L3_error)
     __pyx_v_angmom_2 = values[4];
     __pyx_v_centre_2 = values[5];
     __pyx_v_nucleus = values[6];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("nuclear_attraction", 1, 7, 7, __pyx_nargs); __PYX_ERR(0, 344, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("nuclear_attraction", 1, 7, 7, __pyx_nargs); __PYX_ERR(0, 448, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -23434,7 +24719,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_13tuna_integral_6nuclear_attraction(__pyx_self, __pyx_v_exponent_1, __pyx_v_angmom_1, __pyx_v_centre_1, __pyx_v_exponent_2, __pyx_v_angmom_2, __pyx_v_centre_2, __pyx_v_nucleus);
+  __pyx_r = __pyx_pf_13tuna_integral_10nuclear_attraction(__pyx_self, __pyx_v_exponent_1, __pyx_v_angmom_1, __pyx_v_centre_1, __pyx_v_exponent_2, __pyx_v_angmom_2, __pyx_v_centre_2, __pyx_v_nucleus);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -23444,7 +24729,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2, PyObject *__pyx_v_nucleus) {
+static PyObject *__pyx_pf_13tuna_integral_10nuclear_attraction(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2, PyObject *__pyx_v_nucleus) {
   PyObject *__pyx_v_l_1 = NULL;
   PyObject *__pyx_v_m_1 = NULL;
   PyObject *__pyx_v_n_1 = NULL;
@@ -23492,7 +24777,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("nuclear_attraction", 0);
 
-  /* "tuna_integral.pyx":364
+  /* "tuna_integral.pyx":468
  *     """
  * 
  *     l_1, m_1, n_1 = angmom_1             # <<<<<<<<<<<<<<
@@ -23505,7 +24790,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 364, __pyx_L1_error)
+      __PYX_ERR(0, 468, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -23517,26 +24802,26 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
       __Pyx_INCREF(__pyx_t_3);
     } else {
       __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 0);
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 364, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 468, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_1);
       __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 364, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 468, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_2);
       __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 2);
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 364, __pyx_L1_error)
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 468, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_3);
     }
     #else
-    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 468, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 468, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 468, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     #endif
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 468, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
     index = 0; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L3_unpacking_failed;
@@ -23545,7 +24830,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
     __Pyx_GOTREF(__pyx_t_2);
     index = 2; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L3_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_3);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 364, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 468, __pyx_L1_error)
     __pyx_t_5 = NULL;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     goto __pyx_L4_unpacking_done;
@@ -23553,7 +24838,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 364, __pyx_L1_error)
+    __PYX_ERR(0, 468, __pyx_L1_error)
     __pyx_L4_unpacking_done:;
   }
   __pyx_v_l_1 = __pyx_t_1;
@@ -23563,7 +24848,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
   __pyx_v_n_1 = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "tuna_integral.pyx":365
+  /* "tuna_integral.pyx":469
  * 
  *     l_1, m_1, n_1 = angmom_1
  *     l_2, m_2, n_2 = angmom_2             # <<<<<<<<<<<<<<
@@ -23576,7 +24861,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 365, __pyx_L1_error)
+      __PYX_ERR(0, 469, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -23588,26 +24873,26 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
       __Pyx_INCREF(__pyx_t_1);
     } else {
       __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 0);
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 365, __pyx_L1_error)
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 469, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_3);
       __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 365, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 469, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_2);
       __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 2);
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 365, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 469, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_1);
     }
     #else
-    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 365, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 365, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 365, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     #endif
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 365, __pyx_L1_error)
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
     index = 0; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
@@ -23616,7 +24901,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
     __Pyx_GOTREF(__pyx_t_2);
     index = 2; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L5_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_1);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 365, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 469, __pyx_L1_error)
     __pyx_t_5 = NULL;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     goto __pyx_L6_unpacking_done;
@@ -23624,7 +24909,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 365, __pyx_L1_error)
+    __PYX_ERR(0, 469, __pyx_L1_error)
     __pyx_L6_unpacking_done:;
   }
   __pyx_v_l_2 = __pyx_t_3;
@@ -23634,7 +24919,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
   __pyx_v_n_2 = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "tuna_integral.pyx":367
+  /* "tuna_integral.pyx":471
  *     l_2, m_2, n_2 = angmom_2
  * 
  *     cdef double exponent_sum = exponent_1 + exponent_2             # <<<<<<<<<<<<<<
@@ -23643,107 +24928,107 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   __pyx_v_exponent_sum = (__pyx_v_exponent_1 + __pyx_v_exponent_2);
 
-  /* "tuna_integral.pyx":368
+  /* "tuna_integral.pyx":472
  * 
  *     cdef double exponent_sum = exponent_1 + exponent_2
  *     cdef double PCz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum - nucleus[2]             # <<<<<<<<<<<<<<
  *     cdef double Rz_12 = centre_1[2] - centre_2[2]
  * 
 */
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_exponent_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_exponent_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_1, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_1, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Multiply(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_v_exponent_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_v_exponent_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_2, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_2, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_exponent_sum); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_exponent_sum); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = __Pyx_PyNumber_Divide(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyNumber_Divide(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_nucleus, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_nucleus, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = PyNumber_Subtract(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Subtract(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 472, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_PCz = __pyx_t_6;
 
-  /* "tuna_integral.pyx":369
+  /* "tuna_integral.pyx":473
  *     cdef double exponent_sum = exponent_1 + exponent_2
  *     cdef double PCz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum - nucleus[2]
  *     cdef double Rz_12 = centre_1[2] - centre_2[2]             # <<<<<<<<<<<<<<
  * 
  *     cdef int Vmax = n_1 + n_2
 */
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_1, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 369, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_1, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 473, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_centre_2, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 369, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_centre_2, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 473, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 369, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 473, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 369, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 473, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_Rz_12 = __pyx_t_6;
 
-  /* "tuna_integral.pyx":371
+  /* "tuna_integral.pyx":475
  *     cdef double Rz_12 = centre_1[2] - centre_2[2]
  * 
  *     cdef int Vmax = n_1 + n_2             # <<<<<<<<<<<<<<
  *     cdef int Nmax = l_1 + l_2 + m_1 + m_2 + n_1 + n_2
  *     cdef int stride = Nmax + 1
 */
-  __pyx_t_3 = PyNumber_Add(__pyx_v_n_1, __pyx_v_n_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 371, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_v_n_1, __pyx_v_n_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 475, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 371, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 475, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_Vmax = __pyx_t_7;
 
-  /* "tuna_integral.pyx":372
+  /* "tuna_integral.pyx":476
  * 
  *     cdef int Vmax = n_1 + n_2
  *     cdef int Nmax = l_1 + l_2 + m_1 + m_2 + n_1 + n_2             # <<<<<<<<<<<<<<
  *     cdef int stride = Nmax + 1
  * 
 */
-  __pyx_t_3 = PyNumber_Add(__pyx_v_l_1, __pyx_v_l_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_v_l_1, __pyx_v_l_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 476, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyNumber_Add(__pyx_t_3, __pyx_v_m_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Add(__pyx_t_3, __pyx_v_m_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 476, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Add(__pyx_t_4, __pyx_v_m_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_t_4, __pyx_v_m_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 476, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyNumber_Add(__pyx_t_3, __pyx_v_n_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Add(__pyx_t_3, __pyx_v_n_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 476, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Add(__pyx_t_4, __pyx_v_n_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_t_4, __pyx_v_n_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 476, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 476, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_Nmax = __pyx_t_7;
 
-  /* "tuna_integral.pyx":373
+  /* "tuna_integral.pyx":477
  *     cdef int Vmax = n_1 + n_2
  *     cdef int Nmax = l_1 + l_2 + m_1 + m_2 + n_1 + n_2
  *     cdef int stride = Nmax + 1             # <<<<<<<<<<<<<<
@@ -23752,7 +25037,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   __pyx_v_stride = (__pyx_v_Nmax + 1);
 
-  /* "tuna_integral.pyx":375
+  /* "tuna_integral.pyx":479
  *     cdef int stride = Nmax + 1
  * 
  *     cdef double *boys_tab = <double*>malloc((Nmax + 1) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -23761,7 +25046,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   __pyx_v_boys_tab = ((double *)malloc(((__pyx_v_Nmax + 1) * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":376
+  /* "tuna_integral.pyx":480
  * 
  *     cdef double *boys_tab = <double*>malloc((Nmax + 1) * sizeof(double))
  *     cdef double *pow_tab = <double*>malloc((Nmax + 1) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -23770,7 +25055,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   __pyx_v_pow_tab = ((double *)malloc(((__pyx_v_Nmax + 1) * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":377
+  /* "tuna_integral.pyx":481
  *     cdef double *boys_tab = <double*>malloc((Nmax + 1) * sizeof(double))
  *     cdef double *pow_tab = <double*>malloc((Nmax + 1) * sizeof(double))
  *     cdef double *Rz = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -23779,7 +25064,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   __pyx_v_Rz = ((double *)malloc((((__pyx_v_Vmax + 1) * (__pyx_v_Nmax + 1)) * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":379
+  /* "tuna_integral.pyx":483
  *     cdef double *Rz = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
  * 
  *     cdef double integral = 0.0             # <<<<<<<<<<<<<<
@@ -23788,126 +25073,126 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   __pyx_v_integral = 0.0;
 
-  /* "tuna_integral.pyx":383
+  /* "tuna_integral.pyx":487
  *     cdef int t, u, v, nxy
  * 
  *     fill_boys_table(Nmax, exponent_sum * PCz * PCz, boys_tab)             # <<<<<<<<<<<<<<
  *     fill_pow_table(Nmax, exponent_sum, pow_tab)
  *     fill_Rz_linear_table(Vmax, Nmax, PCz, boys_tab, pow_tab, Rz)
 */
-  __pyx_f_13tuna_integral_fill_boys_table(__pyx_v_Nmax, ((__pyx_v_exponent_sum * __pyx_v_PCz) * __pyx_v_PCz), __pyx_v_boys_tab); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 383, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_boys_table(__pyx_v_Nmax, ((__pyx_v_exponent_sum * __pyx_v_PCz) * __pyx_v_PCz), __pyx_v_boys_tab); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 487, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":384
+  /* "tuna_integral.pyx":488
  * 
  *     fill_boys_table(Nmax, exponent_sum * PCz * PCz, boys_tab)
  *     fill_pow_table(Nmax, exponent_sum, pow_tab)             # <<<<<<<<<<<<<<
  *     fill_Rz_linear_table(Vmax, Nmax, PCz, boys_tab, pow_tab, Rz)
  * 
 */
-  __pyx_f_13tuna_integral_fill_pow_table(__pyx_v_Nmax, __pyx_v_exponent_sum, __pyx_v_pow_tab); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 384, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_pow_table(__pyx_v_Nmax, __pyx_v_exponent_sum, __pyx_v_pow_tab); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 488, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":385
+  /* "tuna_integral.pyx":489
  *     fill_boys_table(Nmax, exponent_sum * PCz * PCz, boys_tab)
  *     fill_pow_table(Nmax, exponent_sum, pow_tab)
  *     fill_Rz_linear_table(Vmax, Nmax, PCz, boys_tab, pow_tab, Rz)             # <<<<<<<<<<<<<<
  * 
  * 
 */
-  __pyx_f_13tuna_integral_fill_Rz_linear_table(__pyx_v_Vmax, __pyx_v_Nmax, __pyx_v_PCz, __pyx_v_boys_tab, __pyx_v_pow_tab, __pyx_v_Rz); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 385, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_Rz_linear_table(__pyx_v_Vmax, __pyx_v_Nmax, __pyx_v_PCz, __pyx_v_boys_tab, __pyx_v_pow_tab, __pyx_v_Rz); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 489, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":388
+  /* "tuna_integral.pyx":492
  * 
  * 
  *     for t in range(0, l_1 + l_2 + 1, 2):             # <<<<<<<<<<<<<<
  * 
  *         Ex = hermite_coeff(l_1, l_2, t, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(t)
 */
-  __pyx_t_3 = PyNumber_Add(__pyx_v_l_1, __pyx_v_l_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 388, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_v_l_1, __pyx_v_l_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 492, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyLong_AddObjC(__pyx_t_3, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 388, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyLong_AddObjC(__pyx_t_3, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 492, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_8 = __Pyx_PyIndex_AsSsize_t(__pyx_t_4); if (unlikely((__pyx_t_8 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 388, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyIndex_AsSsize_t(__pyx_t_4); if (unlikely((__pyx_t_8 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_9 = __pyx_t_8;
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_9; __pyx_t_7+=2) {
     __pyx_v_t = __pyx_t_7;
 
-    /* "tuna_integral.pyx":390
+    /* "tuna_integral.pyx":494
  *     for t in range(0, l_1 + l_2 + 1, 2):
  * 
  *         Ex = hermite_coeff(l_1, l_2, t, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(t)             # <<<<<<<<<<<<<<
  * 
  *         for u in range(0, m_1 + m_2 + 1, 2):
 */
-    __pyx_t_10 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 390, __pyx_L1_error)
-    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 390, __pyx_L1_error)
-    __pyx_t_6 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_10, __pyx_t_11, __pyx_v_t, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 390, __pyx_L1_error)
-    __pyx_t_12 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even(__pyx_v_t); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 390, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 494, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_11 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 494, __pyx_L1_error)
+    __pyx_t_6 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_10, __pyx_t_11, __pyx_v_t, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 494, __pyx_L1_error)
+    __pyx_t_12 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even(__pyx_v_t); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 494, __pyx_L1_error)
     __pyx_v_Ex = (__pyx_t_6 * __pyx_t_12);
 
-    /* "tuna_integral.pyx":392
+    /* "tuna_integral.pyx":496
  *         Ex = hermite_coeff(l_1, l_2, t, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(t)
  * 
  *         for u in range(0, m_1 + m_2 + 1, 2):             # <<<<<<<<<<<<<<
  * 
  *             Ey = hermite_coeff(m_1, m_2, u, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(u)
 */
-    __pyx_t_4 = PyNumber_Add(__pyx_v_m_1, __pyx_v_m_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 392, __pyx_L1_error)
+    __pyx_t_4 = PyNumber_Add(__pyx_v_m_1, __pyx_v_m_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 496, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = __Pyx_PyLong_AddObjC(__pyx_t_4, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 392, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyLong_AddObjC(__pyx_t_4, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 496, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_13 = __Pyx_PyIndex_AsSsize_t(__pyx_t_3); if (unlikely((__pyx_t_13 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 392, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyIndex_AsSsize_t(__pyx_t_3); if (unlikely((__pyx_t_13 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 496, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_14 = __pyx_t_13;
     for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_14; __pyx_t_11+=2) {
       __pyx_v_u = __pyx_t_11;
 
-      /* "tuna_integral.pyx":394
+      /* "tuna_integral.pyx":498
  *         for u in range(0, m_1 + m_2 + 1, 2):
  * 
  *             Ey = hermite_coeff(m_1, m_2, u, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(u)             # <<<<<<<<<<<<<<
  * 
  *             for v in range(n_1 + n_2 + 1):
 */
-      __pyx_t_10 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 394, __pyx_L1_error)
-      __pyx_t_15 = __Pyx_PyLong_As_int(__pyx_v_m_2); if (unlikely((__pyx_t_15 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 394, __pyx_L1_error)
-      __pyx_t_12 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_10, __pyx_t_15, __pyx_v_u, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 394, __pyx_L1_error)
-      __pyx_t_6 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even(__pyx_v_u); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 394, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 498, __pyx_L1_error)
+      __pyx_t_15 = __Pyx_PyLong_As_int(__pyx_v_m_2); if (unlikely((__pyx_t_15 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 498, __pyx_L1_error)
+      __pyx_t_12 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_10, __pyx_t_15, __pyx_v_u, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 498, __pyx_L1_error)
+      __pyx_t_6 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even(__pyx_v_u); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 498, __pyx_L1_error)
       __pyx_v_Ey = (__pyx_t_12 * __pyx_t_6);
 
-      /* "tuna_integral.pyx":396
+      /* "tuna_integral.pyx":500
  *             Ey = hermite_coeff(m_1, m_2, u, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(u)
  * 
  *             for v in range(n_1 + n_2 + 1):             # <<<<<<<<<<<<<<
  * 
  *                 Ez = hermite_coeff(n_1, n_2, v, Rz_12, exponent_1, exponent_2)
 */
-      __pyx_t_3 = PyNumber_Add(__pyx_v_n_1, __pyx_v_n_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 396, __pyx_L1_error)
+      __pyx_t_3 = PyNumber_Add(__pyx_v_n_1, __pyx_v_n_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 500, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_4 = __Pyx_PyLong_AddObjC(__pyx_t_3, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 396, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyLong_AddObjC(__pyx_t_3, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 500, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-      __pyx_t_16 = __Pyx_PyIndex_AsSsize_t(__pyx_t_4); if (unlikely((__pyx_t_16 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 396, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyIndex_AsSsize_t(__pyx_t_4); if (unlikely((__pyx_t_16 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 500, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __pyx_t_17 = __pyx_t_16;
       for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_17; __pyx_t_15+=1) {
         __pyx_v_v = __pyx_t_15;
 
-        /* "tuna_integral.pyx":398
+        /* "tuna_integral.pyx":502
  *             for v in range(n_1 + n_2 + 1):
  * 
  *                 Ez = hermite_coeff(n_1, n_2, v, Rz_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  *                 integral += Ex * Ey * Ez * Rz[v * stride + (t + u) // 2]
 */
-        __pyx_t_10 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 398, __pyx_L1_error)
-        __pyx_t_18 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_18 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 398, __pyx_L1_error)
-        __pyx_t_6 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_10, __pyx_t_18, __pyx_v_v, __pyx_v_Rz_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 398, __pyx_L1_error)
+        __pyx_t_10 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 502, __pyx_L1_error)
+        __pyx_t_18 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_18 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 502, __pyx_L1_error)
+        __pyx_t_6 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_10, __pyx_t_18, __pyx_v_v, __pyx_v_Rz_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_6 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 502, __pyx_L1_error)
         __pyx_v_Ez = __pyx_t_6;
 
-        /* "tuna_integral.pyx":400
+        /* "tuna_integral.pyx":504
  *                 Ez = hermite_coeff(n_1, n_2, v, Rz_12, exponent_1, exponent_2)
  * 
  *                 integral += Ex * Ey * Ez * Rz[v * stride + (t + u) // 2]             # <<<<<<<<<<<<<<
@@ -23919,7 +25204,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
     }
   }
 
-  /* "tuna_integral.pyx":403
+  /* "tuna_integral.pyx":507
  * 
  * 
  *     free(boys_tab)             # <<<<<<<<<<<<<<
@@ -23928,7 +25213,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   free(__pyx_v_boys_tab);
 
-  /* "tuna_integral.pyx":404
+  /* "tuna_integral.pyx":508
  * 
  *     free(boys_tab)
  *     free(pow_tab)             # <<<<<<<<<<<<<<
@@ -23937,7 +25222,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   free(__pyx_v_pow_tab);
 
-  /* "tuna_integral.pyx":405
+  /* "tuna_integral.pyx":509
  *     free(boys_tab)
  *     free(pow_tab)
  *     free(Rz)             # <<<<<<<<<<<<<<
@@ -23946,7 +25231,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   free(__pyx_v_Rz);
 
-  /* "tuna_integral.pyx":407
+  /* "tuna_integral.pyx":511
  *     free(Rz)
  * 
  *     integral *= 2.0 * PI / exponent_sum             # <<<<<<<<<<<<<<
@@ -23955,7 +25240,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
 */
   __pyx_v_integral = (__pyx_v_integral * ((2.0 * __pyx_v_13tuna_integral_PI) / __pyx_v_exponent_sum));
 
-  /* "tuna_integral.pyx":409
+  /* "tuna_integral.pyx":513
  *     integral *= 2.0 * PI / exponent_sum
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -23963,13 +25248,13 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
  * 
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 409, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 513, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_r = __pyx_t_4;
   __pyx_t_4 = 0;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":344
+  /* "tuna_integral.pyx":448
  * 
  * 
  * def nuclear_attraction(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, nucleus: ndarray) -> float:             # <<<<<<<<<<<<<<
@@ -23997,7 +25282,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":419
+/* "tuna_integral.pyx":523
  * 
  * 
  * cpdef double calculate_kinetic_integral(object bf_1, object bf_2):             # <<<<<<<<<<<<<<
@@ -24005,7 +25290,7 @@ static PyObject *__pyx_pf_13tuna_integral_6nuclear_attraction(CYTHON_UNUSED PyOb
  *     """
 */
 
-static PyObject *__pyx_pw_13tuna_integral_9calculate_kinetic_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_13calculate_kinetic_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -24046,7 +25331,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_kinetic_integral", 0);
 
-  /* "tuna_integral.pyx":434
+  /* "tuna_integral.pyx":538
  *     """
  * 
  *     cdef double integral = 0.0             # <<<<<<<<<<<<<<
@@ -24055,7 +25340,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
 */
   __pyx_v_integral = 0.0;
 
-  /* "tuna_integral.pyx":436
+  /* "tuna_integral.pyx":540
  *     cdef double integral = 0.0
  * 
  *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
@@ -24064,16 +25349,16 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
 */
   __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
   __pyx_t_1 = __pyx_mstate_global->__pyx_int_0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 436, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 540, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
     __pyx_t_3 = __pyx_t_2; __Pyx_INCREF(__pyx_t_3);
     __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
   } else {
-    __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 436, __pyx_L1_error)
+    __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 540, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 436, __pyx_L1_error)
+    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 540, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   for (;;) {
@@ -24082,7 +25367,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
         {
           Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_3);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 436, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 540, __pyx_L1_error)
           #endif
           if (__pyx_t_4 >= __pyx_temp) break;
         }
@@ -24092,7 +25377,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
         {
           Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_3);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 436, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 540, __pyx_L1_error)
           #endif
           if (__pyx_t_4 >= __pyx_temp) break;
         }
@@ -24103,13 +25388,13 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
         #endif
         ++__pyx_t_4;
       }
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 436, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 540, __pyx_L1_error)
     } else {
       __pyx_t_2 = __pyx_t_5(__pyx_t_3);
       if (unlikely(!__pyx_t_2)) {
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
-          if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 436, __pyx_L1_error)
+          if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 540, __pyx_L1_error)
           PyErr_Clear();
         }
         break;
@@ -24120,13 +25405,13 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
     __pyx_t_2 = 0;
     __Pyx_INCREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_ia, __pyx_t_1);
-    __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 436, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 540, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1);
     __pyx_t_1 = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "tuna_integral.pyx":438
+    /* "tuna_integral.pyx":542
  *     for ia, ca in enumerate(bf_1.coefs):
  * 
  *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
@@ -24135,16 +25420,16 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
 */
     __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
     __pyx_t_2 = __pyx_mstate_global->__pyx_int_0;
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 438, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 542, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (likely(PyList_CheckExact(__pyx_t_6)) || PyTuple_CheckExact(__pyx_t_6)) {
       __pyx_t_7 = __pyx_t_6; __Pyx_INCREF(__pyx_t_7);
       __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 438, __pyx_L1_error)
+      __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 542, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 438, __pyx_L1_error)
+      __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 542, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     for (;;) {
@@ -24153,7 +25438,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 438, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 542, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
@@ -24163,7 +25448,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_7);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 438, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 542, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
@@ -24174,13 +25459,13 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
           #endif
           ++__pyx_t_8;
         }
-        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 438, __pyx_L1_error)
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 542, __pyx_L1_error)
       } else {
         __pyx_t_6 = __pyx_t_9(__pyx_t_7);
         if (unlikely(!__pyx_t_6)) {
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
-            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 438, __pyx_L1_error)
+            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 542, __pyx_L1_error)
             PyErr_Clear();
           }
           break;
@@ -24191,61 +25476,61 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
       __pyx_t_6 = 0;
       __Pyx_INCREF(__pyx_t_2);
       __Pyx_XDECREF_SET(__pyx_v_ib, __pyx_t_2);
-      __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 438, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 542, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_2);
       __pyx_t_2 = __pyx_t_6;
       __pyx_t_6 = 0;
 
-      /* "tuna_integral.pyx":442
+      /* "tuna_integral.pyx":546
  *             # Applies coefficients and norms to integrals between primitive Gaussians
  * 
  *             integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * kinetic(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin)             # <<<<<<<<<<<<<<
  * 
  * 
 */
-      __pyx_t_6 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_6 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ia); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ia); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ib); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ib); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_12); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_12); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = PyNumber_Multiply(__pyx_t_10, __pyx_v_ca); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_12 = PyNumber_Multiply(__pyx_t_10, __pyx_v_ca); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyNumber_Multiply(__pyx_t_12, __pyx_v_cb); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_12, __pyx_v_cb); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_t_11 = NULL;
-      __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_kinetic); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_kinetic); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_15 = __Pyx_PyObject_GetItem(__pyx_t_14, __pyx_v_ia); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_15 = __Pyx_PyObject_GetItem(__pyx_t_14, __pyx_v_ia); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_15);
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_16);
-      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
-      __pyx_t_18 = __Pyx_PyObject_GetItem(__pyx_t_17, __pyx_v_ib); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_18 = __Pyx_PyObject_GetItem(__pyx_t_17, __pyx_v_ib); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_18);
       __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
-      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
-      __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_19);
       __pyx_t_20 = 1;
       #if CYTHON_UNPACK_METHODS
@@ -24270,22 +25555,22 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
         __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
         __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 442, __pyx_L1_error)
+        if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 546, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
       }
-      __pyx_t_13 = PyNumber_Multiply(__pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_13 = PyNumber_Multiply(__pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_t_6, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_t_6, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __pyx_t_21 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_21 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 442, __pyx_L1_error)
+      __pyx_t_21 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_21 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 546, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_v_integral = __pyx_t_21;
 
-      /* "tuna_integral.pyx":438
+      /* "tuna_integral.pyx":542
  *     for ia, ca in enumerate(bf_1.coefs):
  * 
  *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
@@ -24296,7 +25581,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "tuna_integral.pyx":436
+    /* "tuna_integral.pyx":540
  *     cdef double integral = 0.0
  * 
  *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
@@ -24307,7 +25592,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "tuna_integral.pyx":445
+  /* "tuna_integral.pyx":549
  * 
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -24317,7 +25602,7 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
   __pyx_r = __pyx_v_integral;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":419
+  /* "tuna_integral.pyx":523
  * 
  * 
  * cpdef double calculate_kinetic_integral(object bf_1, object bf_2):             # <<<<<<<<<<<<<<
@@ -24354,16 +25639,16 @@ static double __pyx_f_13tuna_integral_calculate_kinetic_integral(PyObject *__pyx
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_9calculate_kinetic_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_13calculate_kinetic_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_8calculate_kinetic_integral, "\n    \n    Calculates a kinetic integral between basis functions, <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n\n    Returns:\n        integral (float): Kinetic integral between contracted Gaussians\n        \n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_9calculate_kinetic_integral = {"calculate_kinetic_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_9calculate_kinetic_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_8calculate_kinetic_integral};
-static PyObject *__pyx_pw_13tuna_integral_9calculate_kinetic_integral(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_12calculate_kinetic_integral, "\n    \n    Calculates a kinetic integral between basis functions, <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n\n    Returns:\n        integral (float): Kinetic integral between contracted Gaussians\n        \n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_13calculate_kinetic_integral = {"calculate_kinetic_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_13calculate_kinetic_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_12calculate_kinetic_integral};
+static PyObject *__pyx_pw_13tuna_integral_13calculate_kinetic_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -24394,39 +25679,39 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_bf_1,&__pyx_mstate_global->__pyx_n_u_bf_2,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 419, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 523, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 419, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 523, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 419, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 523, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_kinetic_integral", 0) < 0) __PYX_ERR(0, 419, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_kinetic_integral", 0) < 0) __PYX_ERR(0, 523, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 2; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_kinetic_integral", 1, 2, 2, i); __PYX_ERR(0, 419, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_kinetic_integral", 1, 2, 2, i); __PYX_ERR(0, 523, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 2)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 419, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 523, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 419, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 523, __pyx_L3_error)
     }
     __pyx_v_bf_1 = values[0];
     __pyx_v_bf_2 = values[1];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("calculate_kinetic_integral", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 419, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("calculate_kinetic_integral", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 523, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -24437,7 +25722,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_13tuna_integral_8calculate_kinetic_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2);
+  __pyx_r = __pyx_pf_13tuna_integral_12calculate_kinetic_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -24447,7 +25732,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_8calculate_kinetic_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2) {
+static PyObject *__pyx_pf_13tuna_integral_12calculate_kinetic_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -24457,8 +25742,8 @@ static PyObject *__pyx_pf_13tuna_integral_8calculate_kinetic_integral(CYTHON_UNU
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_kinetic_integral", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_kinetic_integral(__pyx_v_bf_1, __pyx_v_bf_2, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 419, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 419, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_kinetic_integral(__pyx_v_bf_1, __pyx_v_bf_2, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 523, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 523, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -24475,7 +25760,7 @@ static PyObject *__pyx_pf_13tuna_integral_8calculate_kinetic_integral(CYTHON_UNU
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":455
+/* "tuna_integral.pyx":559
  * 
  * 
  * def kinetic(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:             # <<<<<<<<<<<<<<
@@ -24484,16 +25769,16 @@ static PyObject *__pyx_pf_13tuna_integral_8calculate_kinetic_integral(CYTHON_UNU
 */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_11kinetic(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_15kinetic(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_10kinetic, "\n    \n    Calculates a kinetic integral between primitive Gaussians, -1/2 * <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.\n    \n    Args:\n        exponent_1 (float): Gaussian exponent on first centre\n        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre\n        centre_1 (array): Coordinates of first centre\n        exponent_2 (float): Gaussian exponent on second centre\n        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre\n        centre_2 (array): Coordinates of second centre\n    \n    Returns:\n        integral (float): Kinetic integral between primitive Gaussian\n\n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_11kinetic = {"kinetic", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_11kinetic, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_10kinetic};
-static PyObject *__pyx_pw_13tuna_integral_11kinetic(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_14kinetic, "\n    \n    Calculates a kinetic integral between primitive Gaussians, -1/2 * <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.\n    \n    Args:\n        exponent_1 (float): Gaussian exponent on first centre\n        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre\n        centre_1 (array): Coordinates of first centre\n        exponent_2 (float): Gaussian exponent on second centre\n        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre\n        centre_2 (array): Coordinates of second centre\n    \n    Returns:\n        integral (float): Kinetic integral between primitive Gaussian\n\n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_15kinetic = {"kinetic", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_15kinetic, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_14kinetic};
+static PyObject *__pyx_pw_13tuna_integral_15kinetic(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -24528,67 +25813,67 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_exponent_1,&__pyx_mstate_global->__pyx_n_u_angmom_1,&__pyx_mstate_global->__pyx_n_u_centre_1,&__pyx_mstate_global->__pyx_n_u_exponent_2,&__pyx_mstate_global->__pyx_n_u_angmom_2,&__pyx_mstate_global->__pyx_n_u_centre_2,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 455, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 559, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  6:
         values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 455, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 559, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  5:
         values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 455, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 559, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 455, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 559, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 455, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 559, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 455, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 559, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 455, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 559, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "kinetic", 0) < 0) __PYX_ERR(0, 455, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "kinetic", 0) < 0) __PYX_ERR(0, 559, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 6; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("kinetic", 1, 6, 6, i); __PYX_ERR(0, 455, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("kinetic", 1, 6, 6, i); __PYX_ERR(0, 559, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 6)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 455, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 559, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 455, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 559, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 455, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 559, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 455, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 559, __pyx_L3_error)
       values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 455, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 559, __pyx_L3_error)
       values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 455, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 559, __pyx_L3_error)
     }
-    __pyx_v_exponent_1 = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_exponent_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 455, __pyx_L3_error)
+    __pyx_v_exponent_1 = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_exponent_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 559, __pyx_L3_error)
     __pyx_v_angmom_1 = values[1];
     __pyx_v_centre_1 = values[2];
-    __pyx_v_exponent_2 = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_exponent_2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 455, __pyx_L3_error)
+    __pyx_v_exponent_2 = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_exponent_2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 559, __pyx_L3_error)
     __pyx_v_angmom_2 = values[4];
     __pyx_v_centre_2 = values[5];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("kinetic", 1, 6, 6, __pyx_nargs); __PYX_ERR(0, 455, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("kinetic", 1, 6, 6, __pyx_nargs); __PYX_ERR(0, 559, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -24599,7 +25884,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_13tuna_integral_10kinetic(__pyx_self, __pyx_v_exponent_1, __pyx_v_angmom_1, __pyx_v_centre_1, __pyx_v_exponent_2, __pyx_v_angmom_2, __pyx_v_centre_2);
+  __pyx_r = __pyx_pf_13tuna_integral_14kinetic(__pyx_self, __pyx_v_exponent_1, __pyx_v_angmom_1, __pyx_v_centre_1, __pyx_v_exponent_2, __pyx_v_angmom_2, __pyx_v_centre_2);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -24609,7 +25894,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2) {
+static PyObject *__pyx_pf_13tuna_integral_14kinetic(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2) {
   PyObject *__pyx_v_l_1 = NULL;
   PyObject *__pyx_v_m_1 = NULL;
   PyObject *__pyx_v_n_1 = NULL;
@@ -24643,7 +25928,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("kinetic", 0);
 
-  /* "tuna_integral.pyx":474
+  /* "tuna_integral.pyx":578
  *     """
  * 
  *     l_1, m_1, n_1 = angmom_1             # <<<<<<<<<<<<<<
@@ -24656,7 +25941,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 474, __pyx_L1_error)
+      __PYX_ERR(0, 578, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -24668,26 +25953,26 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
       __Pyx_INCREF(__pyx_t_3);
     } else {
       __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 0);
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 474, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 578, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_1);
       __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 474, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 578, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_2);
       __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 2);
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 474, __pyx_L1_error)
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 578, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_3);
     }
     #else
-    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 474, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 578, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 474, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 578, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 474, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 578, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     #endif
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 474, __pyx_L1_error)
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 578, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
     index = 0; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L3_unpacking_failed;
@@ -24696,7 +25981,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
     __Pyx_GOTREF(__pyx_t_2);
     index = 2; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L3_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_3);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 474, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 578, __pyx_L1_error)
     __pyx_t_5 = NULL;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     goto __pyx_L4_unpacking_done;
@@ -24704,7 +25989,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 474, __pyx_L1_error)
+    __PYX_ERR(0, 578, __pyx_L1_error)
     __pyx_L4_unpacking_done:;
   }
   __pyx_v_l_1 = __pyx_t_1;
@@ -24714,7 +25999,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
   __pyx_v_n_1 = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "tuna_integral.pyx":475
+  /* "tuna_integral.pyx":579
  * 
  *     l_1, m_1, n_1 = angmom_1
  *     l_2, m_2, n_2 = angmom_2             # <<<<<<<<<<<<<<
@@ -24727,7 +26012,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 475, __pyx_L1_error)
+      __PYX_ERR(0, 579, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -24739,26 +26024,26 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
       __Pyx_INCREF(__pyx_t_1);
     } else {
       __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 0);
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 475, __pyx_L1_error)
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 579, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_3);
       __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 475, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 579, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_2);
       __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 2);
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 475, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 579, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_1);
     }
     #else
-    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 475, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 579, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 475, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 579, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 475, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 579, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     #endif
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 475, __pyx_L1_error)
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 579, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
     index = 0; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
@@ -24767,7 +26052,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
     __Pyx_GOTREF(__pyx_t_2);
     index = 2; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L5_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_1);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 475, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 579, __pyx_L1_error)
     __pyx_t_5 = NULL;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     goto __pyx_L6_unpacking_done;
@@ -24775,7 +26060,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 475, __pyx_L1_error)
+    __PYX_ERR(0, 579, __pyx_L1_error)
     __pyx_L6_unpacking_done:;
   }
   __pyx_v_l_2 = __pyx_t_3;
@@ -24785,40 +26070,40 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
   __pyx_v_n_2 = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "tuna_integral.pyx":477
+  /* "tuna_integral.pyx":581
  *     l_2, m_2, n_2 = angmom_2
  * 
  *     R_12 = centre_1 - centre_2             # <<<<<<<<<<<<<<
  * 
  *     A = (2 * angmom_2 + 1) * exponent_2
 */
-  __pyx_t_1 = PyNumber_Subtract(__pyx_v_centre_1, __pyx_v_centre_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 477, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Subtract(__pyx_v_centre_1, __pyx_v_centre_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 581, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_R_12 = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "tuna_integral.pyx":479
+  /* "tuna_integral.pyx":583
  *     R_12 = centre_1 - centre_2
  * 
  *     A = (2 * angmom_2 + 1) * exponent_2             # <<<<<<<<<<<<<<
  *     B = -2 * exponent_2 * exponent_2
  *     C = -0.5 * angmom_2 * (angmom_2 - 1)
 */
-  __pyx_t_1 = __Pyx_PyLong_MultiplyCObj(__pyx_mstate_global->__pyx_int_2, __pyx_v_angmom_2, 2, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 479, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_MultiplyCObj(__pyx_mstate_global->__pyx_int_2, __pyx_v_angmom_2, 2, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 583, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 479, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 583, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_exponent_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 479, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_exponent_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 583, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 479, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 583, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_A = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "tuna_integral.pyx":480
+  /* "tuna_integral.pyx":584
  * 
  *     A = (2 * angmom_2 + 1) * exponent_2
  *     B = -2 * exponent_2 * exponent_2             # <<<<<<<<<<<<<<
@@ -24827,292 +26112,292 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
 */
   __pyx_v_B = ((-2.0 * __pyx_v_exponent_2) * __pyx_v_exponent_2);
 
-  /* "tuna_integral.pyx":481
+  /* "tuna_integral.pyx":585
  *     A = (2 * angmom_2 + 1) * exponent_2
  *     B = -2 * exponent_2 * exponent_2
  *     C = -0.5 * angmom_2 * (angmom_2 - 1)             # <<<<<<<<<<<<<<
  * 
  *     # Overlap integrals for each Cartesian component
 */
-  __pyx_t_3 = PyNumber_Multiply(__pyx_mstate_global->__pyx_float_neg_0_5, __pyx_v_angmom_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 481, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_mstate_global->__pyx_float_neg_0_5, __pyx_v_angmom_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 585, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyLong_SubtractObjC(__pyx_v_angmom_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 481, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_SubtractObjC(__pyx_v_angmom_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 585, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyNumber_Multiply(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 481, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Multiply(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 585, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_C = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "tuna_integral.pyx":485
+  /* "tuna_integral.pyx":589
  *     # Overlap integrals for each Cartesian component
  * 
  *     Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *     Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
  *     Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
 */
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 485, __pyx_L1_error)
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 485, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 485, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 589, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 589, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 589, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 485, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 589, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 485, __pyx_L1_error)
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 589, __pyx_L1_error)
   __pyx_v_Sx = __pyx_t_9;
 
-  /* "tuna_integral.pyx":486
+  /* "tuna_integral.pyx":590
  * 
  *     Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
  *     Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *     Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
  * 
 */
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 486, __pyx_L1_error)
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_m_2); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 486, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 486, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 590, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_m_2); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 590, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 590, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 486, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 590, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 486, __pyx_L1_error)
+  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 590, __pyx_L1_error)
   __pyx_v_Sy = __pyx_t_8;
 
-  /* "tuna_integral.pyx":487
+  /* "tuna_integral.pyx":591
  *     Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
  *     Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
  *     Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  *     # For each Cartesian component, calculate the second derivative then multiply by overlaps of other two components
 */
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 487, __pyx_L1_error)
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 487, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 487, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 591, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 591, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 591, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 487, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 591, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 487, __pyx_L1_error)
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 591, __pyx_L1_error)
   __pyx_v_Sz = __pyx_t_9;
 
-  /* "tuna_integral.pyx":491
+  /* "tuna_integral.pyx":595
  *     # For each Cartesian component, calculate the second derivative then multiply by overlaps of other two components
  * 
  *     Tx = A[0] * Sx + B * hermite_coeff(l_1, l_2 + 2, 0, R_12[0], exponent_1, exponent_2) + C[0] * hermite_coeff(l_1, l_2 - 2, 0, R_12[0], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *     Ty = A[1] * Sy + B * hermite_coeff(m_1, m_2 + 2, 0, R_12[1], exponent_1, exponent_2) + C[1] * hermite_coeff(m_1, m_2 - 2, 0, R_12[1], exponent_1, exponent_2)
  *     Tz = A[2] * Sz + B * hermite_coeff(n_1, n_2 + 2, 0, R_12[2], exponent_1, exponent_2) + C[2] * hermite_coeff(n_1, n_2 - 2, 0, R_12[2], exponent_1, exponent_2)
 */
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_A, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_A, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_Sx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_Sx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyLong_AddObjC(__pyx_v_l_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_AddObjC(__pyx_v_l_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
-  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_B * __pyx_t_8)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_B * __pyx_t_8)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_C, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_C, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_PyLong_SubtractObjC(__pyx_v_l_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyLong_SubtractObjC(__pyx_v_l_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 491, __pyx_L1_error)
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 595, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyNumber_Multiply(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Multiply(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 491, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_Tx = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "tuna_integral.pyx":492
+  /* "tuna_integral.pyx":596
  * 
  *     Tx = A[0] * Sx + B * hermite_coeff(l_1, l_2 + 2, 0, R_12[0], exponent_1, exponent_2) + C[0] * hermite_coeff(l_1, l_2 - 2, 0, R_12[0], exponent_1, exponent_2)
  *     Ty = A[1] * Sy + B * hermite_coeff(m_1, m_2 + 2, 0, R_12[1], exponent_1, exponent_2) + C[1] * hermite_coeff(m_1, m_2 - 2, 0, R_12[1], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *     Tz = A[2] * Sz + B * hermite_coeff(n_1, n_2 + 2, 0, R_12[2], exponent_1, exponent_2) + C[2] * hermite_coeff(n_1, n_2 - 2, 0, R_12[2], exponent_1, exponent_2)
  * 
 */
-  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_A, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_A, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_Sy); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_Sy); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = PyNumber_Multiply(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Multiply(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyLong_AddObjC(__pyx_v_m_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyLong_AddObjC(__pyx_v_m_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_t_4); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_t_4); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_R_12, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_R_12, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
-  __pyx_t_4 = PyFloat_FromDouble((__pyx_v_B * __pyx_t_8)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble((__pyx_v_B * __pyx_t_8)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_C, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_C, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyLong_SubtractObjC(__pyx_v_m_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyLong_SubtractObjC(__pyx_v_m_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_R_12, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 492, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_9); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 596, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_9); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyNumber_Multiply(__pyx_t_4, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Multiply(__pyx_t_4, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 492, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 596, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_Ty = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "tuna_integral.pyx":493
+  /* "tuna_integral.pyx":597
  *     Tx = A[0] * Sx + B * hermite_coeff(l_1, l_2 + 2, 0, R_12[0], exponent_1, exponent_2) + C[0] * hermite_coeff(l_1, l_2 - 2, 0, R_12[0], exponent_1, exponent_2)
  *     Ty = A[1] * Sy + B * hermite_coeff(m_1, m_2 + 2, 0, R_12[1], exponent_1, exponent_2) + C[1] * hermite_coeff(m_1, m_2 - 2, 0, R_12[1], exponent_1, exponent_2)
  *     Tz = A[2] * Sz + B * hermite_coeff(n_1, n_2 + 2, 0, R_12[2], exponent_1, exponent_2) + C[2] * hermite_coeff(n_1, n_2 - 2, 0, R_12[2], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  *     # Combines the three Cartesian components into the integral
 */
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_A, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_A, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyLong_AddObjC(__pyx_v_n_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyLong_AddObjC(__pyx_v_n_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
-  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_B * __pyx_t_8)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_B * __pyx_t_8)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_C, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_C, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_PyLong_SubtractObjC(__pyx_v_n_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyLong_SubtractObjC(__pyx_v_n_2, __pyx_mstate_global->__pyx_int_2, 2, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_t_3); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_R_12, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 493, __pyx_L1_error)
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 597, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyNumber_Multiply(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Multiply(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_Tz = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "tuna_integral.pyx":497
+  /* "tuna_integral.pyx":601
  *     # Combines the three Cartesian components into the integral
  * 
  *     integral = (Tx * Sy * Sz + Sx * Ty * Sz + Sx * Sy * Tz) * pow(PI / (exponent_1 + exponent_2), 1.5)             # <<<<<<<<<<<<<<
  * 
  *     return integral
 */
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sy); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sy); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyNumber_Multiply(__pyx_v_Tx, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Multiply(__pyx_v_Tx, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sx); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sx); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyNumber_Multiply(__pyx_t_3, __pyx_v_Ty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Multiply(__pyx_t_3, __pyx_v_Ty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_Sz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Multiply(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_Sx * __pyx_v_Sy)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_Sx * __pyx_v_Sy)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyNumber_Multiply(__pyx_t_1, __pyx_v_Tz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Multiply(__pyx_t_1, __pyx_v_Tz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyFloat_FromDouble(pow((__pyx_v_13tuna_integral_PI / (__pyx_v_exponent_1 + __pyx_v_exponent_2)), 1.5)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(pow((__pyx_v_13tuna_integral_PI / (__pyx_v_exponent_1 + __pyx_v_exponent_2)), 1.5)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Multiply(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 497, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_integral = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "tuna_integral.pyx":499
+  /* "tuna_integral.pyx":603
  *     integral = (Tx * Sy * Sz + Sx * Ty * Sz + Sx * Sy * Tz) * pow(PI / (exponent_1 + exponent_2), 1.5)
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -25124,7 +26409,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
   __pyx_r = __pyx_v_integral;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":455
+  /* "tuna_integral.pyx":559
  * 
  * 
  * def kinetic(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:             # <<<<<<<<<<<<<<
@@ -25159,7 +26444,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":508
+/* "tuna_integral.pyx":612
  * 
  * 
  * cpdef double calculate_overlap_integral(object bf_1, object bf_2):             # <<<<<<<<<<<<<<
@@ -25167,7 +26452,7 @@ static PyObject *__pyx_pf_13tuna_integral_10kinetic(CYTHON_UNUSED PyObject *__py
  *     """
 */
 
-static PyObject *__pyx_pw_13tuna_integral_13calculate_overlap_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_17calculate_overlap_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -25208,7 +26493,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_overlap_integral", 0);
 
-  /* "tuna_integral.pyx":523
+  /* "tuna_integral.pyx":627
  *     """
  * 
  *     cdef double integral = 0.0             # <<<<<<<<<<<<<<
@@ -25217,7 +26502,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
 */
   __pyx_v_integral = 0.0;
 
-  /* "tuna_integral.pyx":525
+  /* "tuna_integral.pyx":629
  *     cdef double integral = 0.0
  * 
  *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
@@ -25226,16 +26511,16 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
 */
   __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
   __pyx_t_1 = __pyx_mstate_global->__pyx_int_0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 525, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 629, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
     __pyx_t_3 = __pyx_t_2; __Pyx_INCREF(__pyx_t_3);
     __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
   } else {
-    __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 525, __pyx_L1_error)
+    __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 629, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 525, __pyx_L1_error)
+    __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 629, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   for (;;) {
@@ -25244,7 +26529,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
         {
           Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_3);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 525, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 629, __pyx_L1_error)
           #endif
           if (__pyx_t_4 >= __pyx_temp) break;
         }
@@ -25254,7 +26539,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
         {
           Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_3);
           #if !CYTHON_ASSUME_SAFE_SIZE
-          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 525, __pyx_L1_error)
+          if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 629, __pyx_L1_error)
           #endif
           if (__pyx_t_4 >= __pyx_temp) break;
         }
@@ -25265,13 +26550,13 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
         #endif
         ++__pyx_t_4;
       }
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 525, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 629, __pyx_L1_error)
     } else {
       __pyx_t_2 = __pyx_t_5(__pyx_t_3);
       if (unlikely(!__pyx_t_2)) {
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
-          if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 525, __pyx_L1_error)
+          if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 629, __pyx_L1_error)
           PyErr_Clear();
         }
         break;
@@ -25282,13 +26567,13 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
     __pyx_t_2 = 0;
     __Pyx_INCREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_ia, __pyx_t_1);
-    __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 525, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyLong_AddObjC(__pyx_t_1, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 629, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1);
     __pyx_t_1 = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "tuna_integral.pyx":527
+    /* "tuna_integral.pyx":631
  *     for ia, ca in enumerate(bf_1.coefs):
  * 
  *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
@@ -25297,16 +26582,16 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
 */
     __Pyx_INCREF(__pyx_mstate_global->__pyx_int_0);
     __pyx_t_2 = __pyx_mstate_global->__pyx_int_0;
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 527, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_coefs); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 631, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (likely(PyList_CheckExact(__pyx_t_6)) || PyTuple_CheckExact(__pyx_t_6)) {
       __pyx_t_7 = __pyx_t_6; __Pyx_INCREF(__pyx_t_7);
       __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 527, __pyx_L1_error)
+      __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 631, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 527, __pyx_L1_error)
+      __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 631, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     for (;;) {
@@ -25315,7 +26600,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 527, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 631, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
@@ -25325,7 +26610,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_7);
             #if !CYTHON_ASSUME_SAFE_SIZE
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 527, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 631, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
@@ -25336,13 +26621,13 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
           #endif
           ++__pyx_t_8;
         }
-        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 527, __pyx_L1_error)
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 631, __pyx_L1_error)
       } else {
         __pyx_t_6 = __pyx_t_9(__pyx_t_7);
         if (unlikely(!__pyx_t_6)) {
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
-            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 527, __pyx_L1_error)
+            if (unlikely(!__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) __PYX_ERR(0, 631, __pyx_L1_error)
             PyErr_Clear();
           }
           break;
@@ -25353,61 +26638,61 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
       __pyx_t_6 = 0;
       __Pyx_INCREF(__pyx_t_2);
       __Pyx_XDECREF_SET(__pyx_v_ib, __pyx_t_2);
-      __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 527, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_2, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 631, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_2);
       __pyx_t_2 = __pyx_t_6;
       __pyx_t_6 = 0;
 
-      /* "tuna_integral.pyx":531
+      /* "tuna_integral.pyx":635
  *             # Applies coefficients and norms to integrals between primitive Gaussians
  * 
  *             integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * overlap(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin)             # <<<<<<<<<<<<<<
  * 
  * 
 */
-      __pyx_t_6 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_6 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ia); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ia); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_norm); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ib); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_12 = __Pyx_PyObject_GetItem(__pyx_t_10, __pyx_v_ib); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_12); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_12); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = PyNumber_Multiply(__pyx_t_10, __pyx_v_ca); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_12 = PyNumber_Multiply(__pyx_t_10, __pyx_v_ca); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyNumber_Multiply(__pyx_t_12, __pyx_v_cb); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_10 = PyNumber_Multiply(__pyx_t_12, __pyx_v_cb); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_t_11 = NULL;
-      __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_overlap); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_13, __pyx_mstate_global->__pyx_n_u_overlap); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_15 = __Pyx_PyObject_GetItem(__pyx_t_14, __pyx_v_ia); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_15 = __Pyx_PyObject_GetItem(__pyx_t_14, __pyx_v_ia); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_15);
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_1, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_16);
-      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_exps); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
-      __pyx_t_18 = __Pyx_PyObject_GetItem(__pyx_t_17, __pyx_v_ib); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_18 = __Pyx_PyObject_GetItem(__pyx_t_17, __pyx_v_ib); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_18);
       __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
-      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_17 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_shell); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
-      __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_19 = __Pyx_PyObject_GetAttrStr(__pyx_v_bf_2, __pyx_mstate_global->__pyx_n_u_origin); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_19);
       __pyx_t_20 = 1;
       #if CYTHON_UNPACK_METHODS
@@ -25432,22 +26717,22 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
         __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
         __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 531, __pyx_L1_error)
+        if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 635, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
       }
-      __pyx_t_13 = PyNumber_Multiply(__pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_13 = PyNumber_Multiply(__pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_t_6, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_12 = PyNumber_InPlaceAdd(__pyx_t_6, __pyx_t_13); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __pyx_t_21 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_21 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 531, __pyx_L1_error)
+      __pyx_t_21 = __Pyx_PyFloat_AsDouble(__pyx_t_12); if (unlikely((__pyx_t_21 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 635, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_v_integral = __pyx_t_21;
 
-      /* "tuna_integral.pyx":527
+      /* "tuna_integral.pyx":631
  *     for ia, ca in enumerate(bf_1.coefs):
  * 
  *         for ib, cb in enumerate(bf_2.coefs):             # <<<<<<<<<<<<<<
@@ -25458,7 +26743,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "tuna_integral.pyx":525
+    /* "tuna_integral.pyx":629
  *     cdef double integral = 0.0
  * 
  *     for ia, ca in enumerate(bf_1.coefs):             # <<<<<<<<<<<<<<
@@ -25469,7 +26754,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "tuna_integral.pyx":534
+  /* "tuna_integral.pyx":638
  * 
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -25479,7 +26764,7 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
   __pyx_r = __pyx_v_integral;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":508
+  /* "tuna_integral.pyx":612
  * 
  * 
  * cpdef double calculate_overlap_integral(object bf_1, object bf_2):             # <<<<<<<<<<<<<<
@@ -25516,16 +26801,16 @@ static double __pyx_f_13tuna_integral_calculate_overlap_integral(PyObject *__pyx
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_13calculate_overlap_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_17calculate_overlap_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_12calculate_overlap_integral, "\n    \n    Calculates an overlap integral between basis functions, <1|2>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n\n    Returns:\n        integral (float): Overlap integral between contracted Gaussians\n        \n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_13calculate_overlap_integral = {"calculate_overlap_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_13calculate_overlap_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_12calculate_overlap_integral};
-static PyObject *__pyx_pw_13tuna_integral_13calculate_overlap_integral(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_16calculate_overlap_integral, "\n    \n    Calculates an overlap integral between basis functions, <1|2>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n\n    Returns:\n        integral (float): Overlap integral between contracted Gaussians\n        \n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_17calculate_overlap_integral = {"calculate_overlap_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_17calculate_overlap_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_16calculate_overlap_integral};
+static PyObject *__pyx_pw_13tuna_integral_17calculate_overlap_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -25556,39 +26841,39 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_bf_1,&__pyx_mstate_global->__pyx_n_u_bf_2,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 508, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 612, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 508, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 612, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 508, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 612, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_overlap_integral", 0) < 0) __PYX_ERR(0, 508, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_overlap_integral", 0) < 0) __PYX_ERR(0, 612, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 2; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_overlap_integral", 1, 2, 2, i); __PYX_ERR(0, 508, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_overlap_integral", 1, 2, 2, i); __PYX_ERR(0, 612, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 2)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 508, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 612, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 508, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 612, __pyx_L3_error)
     }
     __pyx_v_bf_1 = values[0];
     __pyx_v_bf_2 = values[1];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("calculate_overlap_integral", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 508, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("calculate_overlap_integral", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 612, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -25599,7 +26884,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_13tuna_integral_12calculate_overlap_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2);
+  __pyx_r = __pyx_pf_13tuna_integral_16calculate_overlap_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -25609,7 +26894,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_12calculate_overlap_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2) {
+static PyObject *__pyx_pf_13tuna_integral_16calculate_overlap_integral(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bf_1, PyObject *__pyx_v_bf_2) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -25619,8 +26904,8 @@ static PyObject *__pyx_pf_13tuna_integral_12calculate_overlap_integral(CYTHON_UN
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_overlap_integral", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_overlap_integral(__pyx_v_bf_1, __pyx_v_bf_2, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 508, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 508, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_overlap_integral(__pyx_v_bf_1, __pyx_v_bf_2, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 612, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 612, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -25637,7 +26922,7 @@ static PyObject *__pyx_pf_13tuna_integral_12calculate_overlap_integral(CYTHON_UN
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":543
+/* "tuna_integral.pyx":649
  * 
  * 
  * def overlap(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:             # <<<<<<<<<<<<<<
@@ -25646,16 +26931,16 @@ static PyObject *__pyx_pf_13tuna_integral_12calculate_overlap_integral(CYTHON_UN
 */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_15overlap(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_19overlap(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_14overlap, "\n    \n    Calculates an overlap integral between primitive Gaussians, <1|2>.\n    \n    Args:\n        exponent_1 (float): Gaussian exponent on first centre\n        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre\n        centre_1 (array): Coordinates of first centre\n        exponent_2 (float): Gaussian exponent on second centre\n        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre\n        centre_2 (array): Coordinates of second centre\n    \n    Returns:\n        integral (float): Overlap integral between primitive Gaussian\n\n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_15overlap = {"overlap", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_15overlap, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_14overlap};
-static PyObject *__pyx_pw_13tuna_integral_15overlap(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_18overlap, "\n    \n    Calculates an overlap integral between primitive Gaussians, <1|2>.\n    \n    Args:\n        exponent_1 (float): Gaussian exponent on first centre\n        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre\n        centre_1 (array): Coordinates of first centre\n        exponent_2 (float): Gaussian exponent on second centre\n        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre\n        centre_2 (array): Coordinates of second centre\n    \n    Returns:\n        integral (float): Overlap integral between primitive Gaussian\n\n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_19overlap = {"overlap", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_19overlap, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_18overlap};
+static PyObject *__pyx_pw_13tuna_integral_19overlap(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -25690,67 +26975,67 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_exponent_1,&__pyx_mstate_global->__pyx_n_u_angmom_1,&__pyx_mstate_global->__pyx_n_u_centre_1,&__pyx_mstate_global->__pyx_n_u_exponent_2,&__pyx_mstate_global->__pyx_n_u_angmom_2,&__pyx_mstate_global->__pyx_n_u_centre_2,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 543, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 649, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  6:
         values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 543, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 649, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  5:
         values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 543, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 649, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 543, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 649, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 543, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 649, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 543, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 649, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 543, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 649, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "overlap", 0) < 0) __PYX_ERR(0, 543, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "overlap", 0) < 0) __PYX_ERR(0, 649, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 6; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("overlap", 1, 6, 6, i); __PYX_ERR(0, 543, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("overlap", 1, 6, 6, i); __PYX_ERR(0, 649, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 6)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 543, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 649, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 543, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 649, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 543, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 649, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 543, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 649, __pyx_L3_error)
       values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 543, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 649, __pyx_L3_error)
       values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 543, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 649, __pyx_L3_error)
     }
-    __pyx_v_exponent_1 = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_exponent_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 543, __pyx_L3_error)
+    __pyx_v_exponent_1 = __Pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_exponent_1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 649, __pyx_L3_error)
     __pyx_v_angmom_1 = values[1];
     __pyx_v_centre_1 = values[2];
-    __pyx_v_exponent_2 = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_exponent_2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 543, __pyx_L3_error)
+    __pyx_v_exponent_2 = __Pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_exponent_2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 649, __pyx_L3_error)
     __pyx_v_angmom_2 = values[4];
     __pyx_v_centre_2 = values[5];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("overlap", 1, 6, 6, __pyx_nargs); __PYX_ERR(0, 543, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("overlap", 1, 6, 6, __pyx_nargs); __PYX_ERR(0, 649, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -25761,7 +27046,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_13tuna_integral_14overlap(__pyx_self, __pyx_v_exponent_1, __pyx_v_angmom_1, __pyx_v_centre_1, __pyx_v_exponent_2, __pyx_v_angmom_2, __pyx_v_centre_2);
+  __pyx_r = __pyx_pf_13tuna_integral_18overlap(__pyx_self, __pyx_v_exponent_1, __pyx_v_angmom_1, __pyx_v_centre_1, __pyx_v_exponent_2, __pyx_v_angmom_2, __pyx_v_centre_2);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -25771,7 +27056,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2) {
+static PyObject *__pyx_pf_13tuna_integral_18overlap(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_exponent_1, PyObject *__pyx_v_angmom_1, PyObject *__pyx_v_centre_1, double __pyx_v_exponent_2, PyObject *__pyx_v_angmom_2, PyObject *__pyx_v_centre_2) {
   PyObject *__pyx_v_l_1 = NULL;
   PyObject *__pyx_v_m_1 = NULL;
   PyObject *__pyx_v_n_1 = NULL;
@@ -25798,7 +27083,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("overlap", 0);
 
-  /* "tuna_integral.pyx":562
+  /* "tuna_integral.pyx":668
  *     """
  * 
  *     l_1, m_1, n_1 = angmom_1             # <<<<<<<<<<<<<<
@@ -25811,7 +27096,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 562, __pyx_L1_error)
+      __PYX_ERR(0, 668, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -25823,26 +27108,26 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
       __Pyx_INCREF(__pyx_t_3);
     } else {
       __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 0);
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 562, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 668, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_1);
       __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 562, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 668, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_2);
       __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 2);
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 562, __pyx_L1_error)
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 668, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_3);
     }
     #else
-    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 562, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 668, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 562, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 668, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 562, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 668, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     #endif
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 562, __pyx_L1_error)
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 668, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
     index = 0; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L3_unpacking_failed;
@@ -25851,7 +27136,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
     __Pyx_GOTREF(__pyx_t_2);
     index = 2; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L3_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_3);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 562, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 668, __pyx_L1_error)
     __pyx_t_5 = NULL;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     goto __pyx_L4_unpacking_done;
@@ -25859,7 +27144,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 562, __pyx_L1_error)
+    __PYX_ERR(0, 668, __pyx_L1_error)
     __pyx_L4_unpacking_done:;
   }
   __pyx_v_l_1 = __pyx_t_1;
@@ -25869,7 +27154,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
   __pyx_v_n_1 = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "tuna_integral.pyx":563
+  /* "tuna_integral.pyx":669
  * 
  *     l_1, m_1, n_1 = angmom_1
  *     l_2, m_2, n_2 = angmom_2             # <<<<<<<<<<<<<<
@@ -25882,7 +27167,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 563, __pyx_L1_error)
+      __PYX_ERR(0, 669, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -25894,26 +27179,26 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
       __Pyx_INCREF(__pyx_t_1);
     } else {
       __pyx_t_3 = __Pyx_PyList_GetItemRef(sequence, 0);
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 563, __pyx_L1_error)
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 669, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_3);
       __pyx_t_2 = __Pyx_PyList_GetItemRef(sequence, 1);
-      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 563, __pyx_L1_error)
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 669, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_2);
       __pyx_t_1 = __Pyx_PyList_GetItemRef(sequence, 2);
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 563, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 669, __pyx_L1_error)
       __Pyx_XGOTREF(__pyx_t_1);
     }
     #else
-    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 563, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 669, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 563, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 669, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 563, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 669, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     #endif
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 563, __pyx_L1_error)
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_angmom_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 669, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_4);
     index = 0; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
@@ -25922,7 +27207,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
     __Pyx_GOTREF(__pyx_t_2);
     index = 2; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L5_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_1);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 563, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 669, __pyx_L1_error)
     __pyx_t_5 = NULL;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     goto __pyx_L6_unpacking_done;
@@ -25930,7 +27215,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 563, __pyx_L1_error)
+    __PYX_ERR(0, 669, __pyx_L1_error)
     __pyx_L6_unpacking_done:;
   }
   __pyx_v_l_2 = __pyx_t_3;
@@ -25940,73 +27225,73 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
   __pyx_v_n_2 = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "tuna_integral.pyx":567
+  /* "tuna_integral.pyx":673
  *     # Calculates the Cartesian components of the overlap integral
  * 
  *     Sx = hermite_coeff(l_1, l_2, 0, centre_1[0] - centre_2[0], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *     Sy = hermite_coeff(m_1, m_2, 0, centre_1[1] - centre_2[1], exponent_1, exponent_2)
  *     Sz = hermite_coeff(n_1, n_2, 0, centre_1[2] - centre_2[2], exponent_1, exponent_2)
 */
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 567, __pyx_L1_error)
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 567, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_1, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 567, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_l_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 673, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_l_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 673, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_1, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 673, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_2, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 567, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_2, 0, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 673, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 567, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 673, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 567, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 673, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 567, __pyx_L1_error)
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 673, __pyx_L1_error)
   __pyx_v_Sx = __pyx_t_9;
 
-  /* "tuna_integral.pyx":568
+  /* "tuna_integral.pyx":674
  * 
  *     Sx = hermite_coeff(l_1, l_2, 0, centre_1[0] - centre_2[0], exponent_1, exponent_2)
  *     Sy = hermite_coeff(m_1, m_2, 0, centre_1[1] - centre_2[1], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *     Sz = hermite_coeff(n_1, n_2, 0, centre_1[2] - centre_2[2], exponent_1, exponent_2)
  * 
 */
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 568, __pyx_L1_error)
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_m_2); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 568, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_centre_1, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 568, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_m_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 674, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_m_2); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 674, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_centre_1, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 674, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_2, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 568, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_2, 1, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 674, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyNumber_Subtract(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 568, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Subtract(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 674, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 568, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 674, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 568, __pyx_L1_error)
+  __pyx_t_8 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_7, __pyx_t_6, 0, __pyx_t_9, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_8 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 674, __pyx_L1_error)
   __pyx_v_Sy = __pyx_t_8;
 
-  /* "tuna_integral.pyx":569
+  /* "tuna_integral.pyx":675
  *     Sx = hermite_coeff(l_1, l_2, 0, centre_1[0] - centre_2[0], exponent_1, exponent_2)
  *     Sy = hermite_coeff(m_1, m_2, 0, centre_1[1] - centre_2[1], exponent_1, exponent_2)
  *     Sz = hermite_coeff(n_1, n_2, 0, centre_1[2] - centre_2[2], exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  *     integral = Sx * Sy * Sz * pow(PI / (exponent_1 + exponent_2), 1.5)
 */
-  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 569, __pyx_L1_error)
-  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 569, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_1, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 569, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_As_int(__pyx_v_n_1); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 675, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_As_int(__pyx_v_n_2); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 675, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_centre_1, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 675, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_2, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 569, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_centre_2, 2, long, 1, __Pyx_PyLong_From_long, 0, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 675, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 569, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 675, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 569, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 675, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 569, __pyx_L1_error)
+  __pyx_t_9 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_t_6, __pyx_t_7, 0, __pyx_t_8, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 675, __pyx_L1_error)
   __pyx_v_Sz = __pyx_t_9;
 
-  /* "tuna_integral.pyx":571
+  /* "tuna_integral.pyx":677
  *     Sz = hermite_coeff(n_1, n_2, 0, centre_1[2] - centre_2[2], exponent_1, exponent_2)
  * 
  *     integral = Sx * Sy * Sz * pow(PI / (exponent_1 + exponent_2), 1.5)             # <<<<<<<<<<<<<<
@@ -26015,7 +27300,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
 */
   __pyx_v_integral = (((__pyx_v_Sx * __pyx_v_Sy) * __pyx_v_Sz) * pow((__pyx_v_13tuna_integral_PI / (__pyx_v_exponent_1 + __pyx_v_exponent_2)), 1.5));
 
-  /* "tuna_integral.pyx":573
+  /* "tuna_integral.pyx":679
  *     integral = Sx * Sy * Sz * pow(PI / (exponent_1 + exponent_2), 1.5)
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -26023,13 +27308,13 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
  * 
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 573, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_integral); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 679, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":543
+  /* "tuna_integral.pyx":649
  * 
  * 
  * def overlap(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:             # <<<<<<<<<<<<<<
@@ -26057,7 +27342,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":583
+/* "tuna_integral.pyx":689
  * 
  * 
  * cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, double[:, :, :, :] ERI_AO, list bfs):             # <<<<<<<<<<<<<<
@@ -26065,7 +27350,7 @@ static PyObject *__pyx_pf_13tuna_integral_14overlap(CYTHON_UNUSED PyObject *__py
  *     """
 */
 
-static PyObject *__pyx_pw_13tuna_integral_17calculate_electron_repulsion_integrals(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_21calculate_electron_repulsion_integrals(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -26110,7 +27395,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_electron_repulsion_integrals", 0);
 
-  /* "tuna_integral.pyx":604
+  /* "tuna_integral.pyx":710
  *         Basis bf_1, bf_2, bf_3, bf_4
  * 
  *     for i in range(n_basis):             # <<<<<<<<<<<<<<
@@ -26122,7 +27407,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "tuna_integral.pyx":606
+    /* "tuna_integral.pyx":712
  *     for i in range(n_basis):
  * 
  *         bf_1 = <Basis>bfs[i]             # <<<<<<<<<<<<<<
@@ -26131,14 +27416,14 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
 */
     if (unlikely(__pyx_v_bfs == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 606, __pyx_L1_error)
+      __PYX_ERR(0, 712, __pyx_L1_error)
     }
     __pyx_t_4 = __Pyx_PyList_GET_ITEM(__pyx_v_bfs, __pyx_v_i);
     __Pyx_INCREF(__pyx_t_4);
     __Pyx_XDECREF_SET(__pyx_v_bf_1, ((struct __pyx_obj_13tuna_integral_Basis *)__pyx_t_4));
     __pyx_t_4 = 0;
 
-    /* "tuna_integral.pyx":608
+    /* "tuna_integral.pyx":714
  *         bf_1 = <Basis>bfs[i]
  * 
  *         for j in range(i + 1):             # <<<<<<<<<<<<<<
@@ -26150,7 +27435,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
     for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
       __pyx_v_j = __pyx_t_7;
 
-      /* "tuna_integral.pyx":610
+      /* "tuna_integral.pyx":716
  *         for j in range(i + 1):
  * 
  *             bf_2 = <Basis>bfs[j]             # <<<<<<<<<<<<<<
@@ -26159,14 +27444,14 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
 */
       if (unlikely(__pyx_v_bfs == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 610, __pyx_L1_error)
+        __PYX_ERR(0, 716, __pyx_L1_error)
       }
       __pyx_t_4 = __Pyx_PyList_GET_ITEM(__pyx_v_bfs, __pyx_v_j);
       __Pyx_INCREF(__pyx_t_4);
       __Pyx_XDECREF_SET(__pyx_v_bf_2, ((struct __pyx_obj_13tuna_integral_Basis *)__pyx_t_4));
       __pyx_t_4 = 0;
 
-      /* "tuna_integral.pyx":612
+      /* "tuna_integral.pyx":718
  *             bf_2 = <Basis>bfs[j]
  * 
  *             for k in range(i + 1):             # <<<<<<<<<<<<<<
@@ -26178,7 +27463,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
       for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
         __pyx_v_k = __pyx_t_10;
 
-        /* "tuna_integral.pyx":614
+        /* "tuna_integral.pyx":720
  *             for k in range(i + 1):
  * 
  *                 bf_3 = <Basis>bfs[k]             # <<<<<<<<<<<<<<
@@ -26187,14 +27472,14 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
 */
         if (unlikely(__pyx_v_bfs == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-          __PYX_ERR(0, 614, __pyx_L1_error)
+          __PYX_ERR(0, 720, __pyx_L1_error)
         }
         __pyx_t_4 = __Pyx_PyList_GET_ITEM(__pyx_v_bfs, __pyx_v_k);
         __Pyx_INCREF(__pyx_t_4);
         __Pyx_XDECREF_SET(__pyx_v_bf_3, ((struct __pyx_obj_13tuna_integral_Basis *)__pyx_t_4));
         __pyx_t_4 = 0;
 
-        /* "tuna_integral.pyx":618
+        /* "tuna_integral.pyx":724
  *                 # Enforces (k,l) <= (i,j) in pair-index ordering
  * 
  *                 l_stop = j + 1 if k == i else k + 1             # <<<<<<<<<<<<<<
@@ -26209,7 +27494,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
         }
         __pyx_v_l_stop = __pyx_t_11;
 
-        /* "tuna_integral.pyx":620
+        /* "tuna_integral.pyx":726
  *                 l_stop = j + 1 if k == i else k + 1
  * 
  *                 for l in range(l_stop):             # <<<<<<<<<<<<<<
@@ -26221,7 +27506,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
         for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_13; __pyx_t_14+=1) {
           __pyx_v_l = __pyx_t_14;
 
-          /* "tuna_integral.pyx":622
+          /* "tuna_integral.pyx":728
  *                 for l in range(l_stop):
  * 
  *                     bf_4 = <Basis>bfs[l]             # <<<<<<<<<<<<<<
@@ -26230,14 +27515,14 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
 */
           if (unlikely(__pyx_v_bfs == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-            __PYX_ERR(0, 622, __pyx_L1_error)
+            __PYX_ERR(0, 728, __pyx_L1_error)
           }
           __pyx_t_4 = __Pyx_PyList_GET_ITEM(__pyx_v_bfs, __pyx_v_l);
           __Pyx_INCREF(__pyx_t_4);
           __Pyx_XDECREF_SET(__pyx_v_bf_4, ((struct __pyx_obj_13tuna_integral_Basis *)__pyx_t_4));
           __pyx_t_4 = 0;
 
-          /* "tuna_integral.pyx":627
+          /* "tuna_integral.pyx":733
  * 
  *                     if (
  *                         ((bf_1.shell[0] + bf_2.shell[0] + bf_3.shell[0] + bf_4.shell[0]) & 1) or             # <<<<<<<<<<<<<<
@@ -26251,7 +27536,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
             goto __pyx_L12_bool_binop_done;
           }
 
-          /* "tuna_integral.pyx":628
+          /* "tuna_integral.pyx":734
  *                     if (
  *                         ((bf_1.shell[0] + bf_2.shell[0] + bf_3.shell[0] + bf_4.shell[0]) & 1) or
  *                         ((bf_1.shell[1] + bf_2.shell[1] + bf_3.shell[1] + bf_4.shell[1]) & 1)             # <<<<<<<<<<<<<<
@@ -26262,7 +27547,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_12 = __pyx_t_15;
           __pyx_L12_bool_binop_done:;
 
-          /* "tuna_integral.pyx":626
+          /* "tuna_integral.pyx":732
  *                     # Checks if the sum of angular momenta is odd, in which case, for a diatomic, the integral is zero
  * 
  *                     if (             # <<<<<<<<<<<<<<
@@ -26271,7 +27556,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
 */
           if (__pyx_t_12) {
 
-            /* "tuna_integral.pyx":631
+            /* "tuna_integral.pyx":737
  *                     ):
  * 
  *                         integral = 0.0             # <<<<<<<<<<<<<<
@@ -26280,7 +27565,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
 */
             __pyx_v_integral = 0.0;
 
-            /* "tuna_integral.pyx":626
+            /* "tuna_integral.pyx":732
  *                     # Checks if the sum of angular momenta is odd, in which case, for a diatomic, the integral is zero
  * 
  *                     if (             # <<<<<<<<<<<<<<
@@ -26290,7 +27575,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
             goto __pyx_L11;
           }
 
-          /* "tuna_integral.pyx":635
+          /* "tuna_integral.pyx":741
  *                     else:
  * 
  *                         integral = calculate_electron_repulsion_integral(bf_1, bf_2, bf_3, bf_4)             # <<<<<<<<<<<<<<
@@ -26298,12 +27583,12 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
  *                     # Enforces the eightfold symmetry of two-electron integrals, saving lots of time
 */
           /*else*/ {
-            __pyx_t_16 = __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(__pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_bf_3, __pyx_v_bf_4, 0); if (unlikely(__pyx_t_16 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 635, __pyx_L1_error)
+            __pyx_t_16 = __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(__pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_bf_3, __pyx_v_bf_4, 0); if (unlikely(__pyx_t_16 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 741, __pyx_L1_error)
             __pyx_v_integral = __pyx_t_16;
           }
           __pyx_L11:;
 
-          /* "tuna_integral.pyx":639
+          /* "tuna_integral.pyx":745
  *                     # Enforces the eightfold symmetry of two-electron integrals, saving lots of time
  * 
  *                     ERI_AO[i, j, k, l] = integral             # <<<<<<<<<<<<<<
@@ -26316,7 +27601,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_20 = __pyx_v_l;
           *((double *) ( /* dim=3 */ (( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ERI_AO.data + __pyx_t_17 * __pyx_v_ERI_AO.strides[0]) ) + __pyx_t_18 * __pyx_v_ERI_AO.strides[1]) ) + __pyx_t_19 * __pyx_v_ERI_AO.strides[2]) ) + __pyx_t_20 * __pyx_v_ERI_AO.strides[3]) )) = __pyx_v_integral;
 
-          /* "tuna_integral.pyx":640
+          /* "tuna_integral.pyx":746
  * 
  *                     ERI_AO[i, j, k, l] = integral
  *                     ERI_AO[k, l, i, j] = integral             # <<<<<<<<<<<<<<
@@ -26329,7 +27614,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_17 = __pyx_v_j;
           *((double *) ( /* dim=3 */ (( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ERI_AO.data + __pyx_t_20 * __pyx_v_ERI_AO.strides[0]) ) + __pyx_t_19 * __pyx_v_ERI_AO.strides[1]) ) + __pyx_t_18 * __pyx_v_ERI_AO.strides[2]) ) + __pyx_t_17 * __pyx_v_ERI_AO.strides[3]) )) = __pyx_v_integral;
 
-          /* "tuna_integral.pyx":641
+          /* "tuna_integral.pyx":747
  *                     ERI_AO[i, j, k, l] = integral
  *                     ERI_AO[k, l, i, j] = integral
  *                     ERI_AO[j, i, l, k] = integral             # <<<<<<<<<<<<<<
@@ -26342,7 +27627,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_20 = __pyx_v_k;
           *((double *) ( /* dim=3 */ (( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ERI_AO.data + __pyx_t_17 * __pyx_v_ERI_AO.strides[0]) ) + __pyx_t_18 * __pyx_v_ERI_AO.strides[1]) ) + __pyx_t_19 * __pyx_v_ERI_AO.strides[2]) ) + __pyx_t_20 * __pyx_v_ERI_AO.strides[3]) )) = __pyx_v_integral;
 
-          /* "tuna_integral.pyx":642
+          /* "tuna_integral.pyx":748
  *                     ERI_AO[k, l, i, j] = integral
  *                     ERI_AO[j, i, l, k] = integral
  *                     ERI_AO[l, k, j, i] = integral             # <<<<<<<<<<<<<<
@@ -26355,7 +27640,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_17 = __pyx_v_i;
           *((double *) ( /* dim=3 */ (( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ERI_AO.data + __pyx_t_20 * __pyx_v_ERI_AO.strides[0]) ) + __pyx_t_19 * __pyx_v_ERI_AO.strides[1]) ) + __pyx_t_18 * __pyx_v_ERI_AO.strides[2]) ) + __pyx_t_17 * __pyx_v_ERI_AO.strides[3]) )) = __pyx_v_integral;
 
-          /* "tuna_integral.pyx":643
+          /* "tuna_integral.pyx":749
  *                     ERI_AO[j, i, l, k] = integral
  *                     ERI_AO[l, k, j, i] = integral
  *                     ERI_AO[j, i, k, l] = integral             # <<<<<<<<<<<<<<
@@ -26368,7 +27653,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_20 = __pyx_v_l;
           *((double *) ( /* dim=3 */ (( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ERI_AO.data + __pyx_t_17 * __pyx_v_ERI_AO.strides[0]) ) + __pyx_t_18 * __pyx_v_ERI_AO.strides[1]) ) + __pyx_t_19 * __pyx_v_ERI_AO.strides[2]) ) + __pyx_t_20 * __pyx_v_ERI_AO.strides[3]) )) = __pyx_v_integral;
 
-          /* "tuna_integral.pyx":644
+          /* "tuna_integral.pyx":750
  *                     ERI_AO[l, k, j, i] = integral
  *                     ERI_AO[j, i, k, l] = integral
  *                     ERI_AO[l, k, i, j] = integral             # <<<<<<<<<<<<<<
@@ -26381,7 +27666,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_17 = __pyx_v_j;
           *((double *) ( /* dim=3 */ (( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ERI_AO.data + __pyx_t_20 * __pyx_v_ERI_AO.strides[0]) ) + __pyx_t_19 * __pyx_v_ERI_AO.strides[1]) ) + __pyx_t_18 * __pyx_v_ERI_AO.strides[2]) ) + __pyx_t_17 * __pyx_v_ERI_AO.strides[3]) )) = __pyx_v_integral;
 
-          /* "tuna_integral.pyx":645
+          /* "tuna_integral.pyx":751
  *                     ERI_AO[j, i, k, l] = integral
  *                     ERI_AO[l, k, i, j] = integral
  *                     ERI_AO[i, j, l, k] = integral             # <<<<<<<<<<<<<<
@@ -26394,7 +27679,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
           __pyx_t_20 = __pyx_v_k;
           *((double *) ( /* dim=3 */ (( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ERI_AO.data + __pyx_t_17 * __pyx_v_ERI_AO.strides[0]) ) + __pyx_t_18 * __pyx_v_ERI_AO.strides[1]) ) + __pyx_t_19 * __pyx_v_ERI_AO.strides[2]) ) + __pyx_t_20 * __pyx_v_ERI_AO.strides[3]) )) = __pyx_v_integral;
 
-          /* "tuna_integral.pyx":646
+          /* "tuna_integral.pyx":752
  *                     ERI_AO[l, k, i, j] = integral
  *                     ERI_AO[i, j, l, k] = integral
  *                     ERI_AO[k, l, j, i] = integral             # <<<<<<<<<<<<<<
@@ -26411,7 +27696,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
     }
   }
 
-  /* "tuna_integral.pyx":649
+  /* "tuna_integral.pyx":755
  * 
  * 
  *     return ERI_AO             # <<<<<<<<<<<<<<
@@ -26422,7 +27707,7 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
   __pyx_r = __pyx_v_ERI_AO;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":583
+  /* "tuna_integral.pyx":689
  * 
  * 
  * cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, double[:, :, :, :] ERI_AO, list bfs):             # <<<<<<<<<<<<<<
@@ -26451,16 +27736,16 @@ static __Pyx_memviewslice __pyx_f_13tuna_integral_calculate_electron_repulsion_i
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_17calculate_electron_repulsion_integrals(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_21calculate_electron_repulsion_integrals(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_16calculate_electron_repulsion_integrals, "\n    \n    Calculates the electron repulsion integrals array between basis functions, <12(r)| 1/(r-r') |34(r')>.\n    \n    Args:\n        n_basis (int): Number of basis functions\n        ERI_AO (array): Electron repulsion integrals zeroed array\n        bfs (list): List of basis functions\n\n    Returns:\n        ERI_AO (array): Electron repulsion integrals\n        \n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_17calculate_electron_repulsion_integrals = {"calculate_electron_repulsion_integrals", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_17calculate_electron_repulsion_integrals, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_16calculate_electron_repulsion_integrals};
-static PyObject *__pyx_pw_13tuna_integral_17calculate_electron_repulsion_integrals(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_20calculate_electron_repulsion_integrals, "\n    \n    Calculates the electron repulsion integrals array between basis functions, <12(r)| 1/(r-r') |34(r')>.\n    \n    Args:\n        n_basis (int): Number of basis functions\n        ERI_AO (array): Electron repulsion integrals zeroed array\n        bfs (list): List of basis functions\n\n    Returns:\n        ERI_AO (array): Electron repulsion integrals\n        \n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_21calculate_electron_repulsion_integrals = {"calculate_electron_repulsion_integrals", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_21calculate_electron_repulsion_integrals, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_20calculate_electron_repulsion_integrals};
+static PyObject *__pyx_pw_13tuna_integral_21calculate_electron_repulsion_integrals(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -26492,46 +27777,46 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_n_basis,&__pyx_mstate_global->__pyx_n_u_ERI_AO,&__pyx_mstate_global->__pyx_n_u_bfs,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 583, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 689, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 583, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 689, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 583, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 689, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 583, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 689, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_electron_repulsion_integrals", 0) < 0) __PYX_ERR(0, 583, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_electron_repulsion_integrals", 0) < 0) __PYX_ERR(0, 689, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 3; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integrals", 1, 3, 3, i); __PYX_ERR(0, 583, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integrals", 1, 3, 3, i); __PYX_ERR(0, 689, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 3)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 583, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 689, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 583, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 689, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 583, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 689, __pyx_L3_error)
     }
-    __pyx_v_n_basis = __Pyx_PyLong_As_long(values[0]); if (unlikely((__pyx_v_n_basis == (long)-1) && PyErr_Occurred())) __PYX_ERR(0, 583, __pyx_L3_error)
-    __pyx_v_ERI_AO = __Pyx_PyObject_to_MemoryviewSlice_dsdsdsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_ERI_AO.memview)) __PYX_ERR(0, 583, __pyx_L3_error)
+    __pyx_v_n_basis = __Pyx_PyLong_As_long(values[0]); if (unlikely((__pyx_v_n_basis == (long)-1) && PyErr_Occurred())) __PYX_ERR(0, 689, __pyx_L3_error)
+    __pyx_v_ERI_AO = __Pyx_PyObject_to_MemoryviewSlice_dsdsdsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_ERI_AO.memview)) __PYX_ERR(0, 689, __pyx_L3_error)
     __pyx_v_bfs = ((PyObject*)values[2]);
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integrals", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 583, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integrals", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 689, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -26543,8 +27828,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bfs), (&PyList_Type), 1, "bfs", 1))) __PYX_ERR(0, 583, __pyx_L1_error)
-  __pyx_r = __pyx_pf_13tuna_integral_16calculate_electron_repulsion_integrals(__pyx_self, __pyx_v_n_basis, __pyx_v_ERI_AO, __pyx_v_bfs);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bfs), (&PyList_Type), 1, "bfs", 1))) __PYX_ERR(0, 689, __pyx_L1_error)
+  __pyx_r = __pyx_pf_13tuna_integral_20calculate_electron_repulsion_integrals(__pyx_self, __pyx_v_n_basis, __pyx_v_ERI_AO, __pyx_v_bfs);
 
   /* function exit code */
   goto __pyx_L0;
@@ -26564,7 +27849,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_16calculate_electron_repulsion_integrals(CYTHON_UNUSED PyObject *__pyx_self, long __pyx_v_n_basis, __Pyx_memviewslice __pyx_v_ERI_AO, PyObject *__pyx_v_bfs) {
+static PyObject *__pyx_pf_13tuna_integral_20calculate_electron_repulsion_integrals(CYTHON_UNUSED PyObject *__pyx_self, long __pyx_v_n_basis, __Pyx_memviewslice __pyx_v_ERI_AO, PyObject *__pyx_v_bfs) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_memviewslice __pyx_t_1 = { 0, 0, { 0 }, { 0 }, { 0 } };
@@ -26574,9 +27859,9 @@ static PyObject *__pyx_pf_13tuna_integral_16calculate_electron_repulsion_integra
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_electron_repulsion_integrals", 0);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_ERI_AO.memview)) { __Pyx_RaiseUnboundLocalError("ERI_AO"); __PYX_ERR(0, 583, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_electron_repulsion_integrals(__pyx_v_n_basis, __pyx_v_ERI_AO, __pyx_v_bfs, 1); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 583, __pyx_L1_error)
-  __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_t_1, 4, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 583, __pyx_L1_error)
+  if (unlikely(!__pyx_v_ERI_AO.memview)) { __Pyx_RaiseUnboundLocalError("ERI_AO"); __PYX_ERR(0, 689, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_electron_repulsion_integrals(__pyx_v_n_basis, __pyx_v_ERI_AO, __pyx_v_bfs, 1); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 689, __pyx_L1_error)
+  __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_t_1, 4, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 689, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __PYX_XCLEAR_MEMVIEW(&__pyx_t_1, 1);
   __pyx_t_1.memview = NULL; __pyx_t_1.data = NULL;
@@ -26596,7 +27881,7 @@ static PyObject *__pyx_pf_13tuna_integral_16calculate_electron_repulsion_integra
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":659
+/* "tuna_integral.pyx":765
  * 
  * 
  * cpdef double calculate_electron_repulsion_integral(Basis bf_1, Basis bf_2, Basis bf_3, Basis bf_4):             # <<<<<<<<<<<<<<
@@ -26604,7 +27889,7 @@ static PyObject *__pyx_pf_13tuna_integral_16calculate_electron_repulsion_integra
  *     """
 */
 
-static PyObject *__pyx_pw_13tuna_integral_19calculate_electron_repulsion_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_23calculate_electron_repulsion_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -26637,7 +27922,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "tuna_integral.pyx":676
+  /* "tuna_integral.pyx":782
  *     """
  * 
  *     cdef double integral = 0.0             # <<<<<<<<<<<<<<
@@ -26646,7 +27931,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
 */
   __pyx_v_integral = 0.0;
 
-  /* "tuna_integral.pyx":681
+  /* "tuna_integral.pyx":787
  *     cdef double contraction_prefactor
  * 
  *     for i in range(bf_1.num_exps):             # <<<<<<<<<<<<<<
@@ -26658,7 +27943,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "tuna_integral.pyx":683
+    /* "tuna_integral.pyx":789
  *     for i in range(bf_1.num_exps):
  * 
  *         for j in range(bf_2.num_exps):             # <<<<<<<<<<<<<<
@@ -26670,7 +27955,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
     for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
       __pyx_v_j = __pyx_t_6;
 
-      /* "tuna_integral.pyx":685
+      /* "tuna_integral.pyx":791
  *         for j in range(bf_2.num_exps):
  * 
  *             for k in range(bf_3.num_exps):             # <<<<<<<<<<<<<<
@@ -26682,7 +27967,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
       for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
         __pyx_v_k = __pyx_t_9;
 
-        /* "tuna_integral.pyx":687
+        /* "tuna_integral.pyx":793
  *             for k in range(bf_3.num_exps):
  * 
  *                 for l in range(bf_4.num_exps):             # <<<<<<<<<<<<<<
@@ -26694,7 +27979,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
         for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
           __pyx_v_l = __pyx_t_12;
 
-          /* "tuna_integral.pyx":691
+          /* "tuna_integral.pyx":797
  *                     # Applies coefficients and norms to integrals between primitive Gaussians
  * 
  *                     contraction_prefactor = bf_1.norm[i] * bf_2.norm[j] * bf_3.norm[k] * bf_4.norm[l] * bf_1.coefs[i] * bf_2.coefs[j] * bf_3.coefs[k] * bf_4.coefs[l]             # <<<<<<<<<<<<<<
@@ -26703,17 +27988,17 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
 */
           __pyx_v_contraction_prefactor = ((((((((__pyx_v_bf_1->norm[__pyx_v_i]) * (__pyx_v_bf_2->norm[__pyx_v_j])) * (__pyx_v_bf_3->norm[__pyx_v_k])) * (__pyx_v_bf_4->norm[__pyx_v_l])) * (__pyx_v_bf_1->coefs[__pyx_v_i])) * (__pyx_v_bf_2->coefs[__pyx_v_j])) * (__pyx_v_bf_3->coefs[__pyx_v_k])) * (__pyx_v_bf_4->coefs[__pyx_v_l]));
 
-          /* "tuna_integral.pyx":693
+          /* "tuna_integral.pyx":799
  *                     contraction_prefactor = bf_1.norm[i] * bf_2.norm[j] * bf_3.norm[k] * bf_4.norm[l] * bf_1.coefs[i] * bf_2.coefs[j] * bf_3.coefs[k] * bf_4.coefs[l]
  * 
  *                     primitive_value = electron_repulsion(bf_1.exps[i], bf_1.shell, bf_1.origin, bf_2.exps[j], bf_2.shell, bf_2.origin, bf_3.exps[k], bf_3.shell, bf_3.origin, bf_4.exps[l], bf_4.shell, bf_4.origin)             # <<<<<<<<<<<<<<
  * 
  *                     integral += contraction_prefactor * primitive_value
 */
-          __pyx_t_13 = __pyx_f_13tuna_integral_electron_repulsion((__pyx_v_bf_1->exps[__pyx_v_i]), __pyx_v_bf_1->shell, __pyx_v_bf_1->origin, (__pyx_v_bf_2->exps[__pyx_v_j]), __pyx_v_bf_2->shell, __pyx_v_bf_2->origin, (__pyx_v_bf_3->exps[__pyx_v_k]), __pyx_v_bf_3->shell, __pyx_v_bf_3->origin, (__pyx_v_bf_4->exps[__pyx_v_l]), __pyx_v_bf_4->shell, __pyx_v_bf_4->origin); if (unlikely(__pyx_t_13 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 693, __pyx_L1_error)
+          __pyx_t_13 = __pyx_f_13tuna_integral_electron_repulsion((__pyx_v_bf_1->exps[__pyx_v_i]), __pyx_v_bf_1->shell, __pyx_v_bf_1->origin, (__pyx_v_bf_2->exps[__pyx_v_j]), __pyx_v_bf_2->shell, __pyx_v_bf_2->origin, (__pyx_v_bf_3->exps[__pyx_v_k]), __pyx_v_bf_3->shell, __pyx_v_bf_3->origin, (__pyx_v_bf_4->exps[__pyx_v_l]), __pyx_v_bf_4->shell, __pyx_v_bf_4->origin); if (unlikely(__pyx_t_13 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 799, __pyx_L1_error)
           __pyx_v_primitive_value = __pyx_t_13;
 
-          /* "tuna_integral.pyx":695
+          /* "tuna_integral.pyx":801
  *                     primitive_value = electron_repulsion(bf_1.exps[i], bf_1.shell, bf_1.origin, bf_2.exps[j], bf_2.shell, bf_2.origin, bf_3.exps[k], bf_3.shell, bf_3.origin, bf_4.exps[l], bf_4.shell, bf_4.origin)
  * 
  *                     integral += contraction_prefactor * primitive_value             # <<<<<<<<<<<<<<
@@ -26726,7 +28011,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
     }
   }
 
-  /* "tuna_integral.pyx":698
+  /* "tuna_integral.pyx":804
  * 
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -26736,7 +28021,7 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
   __pyx_r = __pyx_v_integral;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":659
+  /* "tuna_integral.pyx":765
  * 
  * 
  * cpdef double calculate_electron_repulsion_integral(Basis bf_1, Basis bf_2, Basis bf_3, Basis bf_4):             # <<<<<<<<<<<<<<
@@ -26753,16 +28038,16 @@ static double __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(stru
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13tuna_integral_19calculate_electron_repulsion_integral(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_13tuna_integral_23calculate_electron_repulsion_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_13tuna_integral_18calculate_electron_repulsion_integral, "\n    \n    Calculates an electron repulsion integral between basis functions, <12(r)| 1/(r-r') |34(r')>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n        bf_3 (Basis): Third basis function\n        bf_4 (Basis): Fourth basis function\n\n    Returns:\n        integral (float): Electron repulsion integral between contracted Gaussians\n        \n    ");
-static PyMethodDef __pyx_mdef_13tuna_integral_19calculate_electron_repulsion_integral = {"calculate_electron_repulsion_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_19calculate_electron_repulsion_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_18calculate_electron_repulsion_integral};
-static PyObject *__pyx_pw_13tuna_integral_19calculate_electron_repulsion_integral(PyObject *__pyx_self, 
+PyDoc_STRVAR(__pyx_doc_13tuna_integral_22calculate_electron_repulsion_integral, "\n    \n    Calculates an electron repulsion integral between basis functions, <12(r)| 1/(r-r') |34(r')>.\n    \n    Args:\n        bf_1 (Basis): First basis function\n        bf_2 (Basis): Second basis function\n        bf_3 (Basis): Third basis function\n        bf_4 (Basis): Fourth basis function\n\n    Returns:\n        integral (float): Electron repulsion integral between contracted Gaussians\n        \n    ");
+static PyMethodDef __pyx_mdef_13tuna_integral_23calculate_electron_repulsion_integral = {"calculate_electron_repulsion_integral", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_13tuna_integral_23calculate_electron_repulsion_integral, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_13tuna_integral_22calculate_electron_repulsion_integral};
+static PyObject *__pyx_pw_13tuna_integral_23calculate_electron_repulsion_integral(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -26795,44 +28080,44 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_bf_1,&__pyx_mstate_global->__pyx_n_u_bf_2,&__pyx_mstate_global->__pyx_n_u_bf_3,&__pyx_mstate_global->__pyx_n_u_bf_4,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 659, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 765, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 659, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 765, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 659, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 765, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 659, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 765, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 659, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 765, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_electron_repulsion_integral", 0) < 0) __PYX_ERR(0, 659, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "calculate_electron_repulsion_integral", 0) < 0) __PYX_ERR(0, 765, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 4; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integral", 1, 4, 4, i); __PYX_ERR(0, 659, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integral", 1, 4, 4, i); __PYX_ERR(0, 765, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 4)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 659, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 765, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 659, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 765, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 659, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 765, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 659, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 765, __pyx_L3_error)
     }
     __pyx_v_bf_1 = ((struct __pyx_obj_13tuna_integral_Basis *)values[0]);
     __pyx_v_bf_2 = ((struct __pyx_obj_13tuna_integral_Basis *)values[1]);
@@ -26841,7 +28126,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integral", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 659, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("calculate_electron_repulsion_integral", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 765, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -26852,11 +28137,11 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_1), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_1", 0))) __PYX_ERR(0, 659, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_2), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_2", 0))) __PYX_ERR(0, 659, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_3), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_3", 0))) __PYX_ERR(0, 659, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_4), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_4", 0))) __PYX_ERR(0, 659, __pyx_L1_error)
-  __pyx_r = __pyx_pf_13tuna_integral_18calculate_electron_repulsion_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_bf_3, __pyx_v_bf_4);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_1), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_1", 0))) __PYX_ERR(0, 765, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_2), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_2", 0))) __PYX_ERR(0, 765, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_3), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_3", 0))) __PYX_ERR(0, 765, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bf_4), __pyx_mstate_global->__pyx_ptype_13tuna_integral_Basis, 1, "bf_4", 0))) __PYX_ERR(0, 765, __pyx_L1_error)
+  __pyx_r = __pyx_pf_13tuna_integral_22calculate_electron_repulsion_integral(__pyx_self, __pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_bf_3, __pyx_v_bf_4);
 
   /* function exit code */
   goto __pyx_L0;
@@ -26875,7 +28160,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13tuna_integral_18calculate_electron_repulsion_integral(CYTHON_UNUSED PyObject *__pyx_self, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_1, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_2, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_3, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_4) {
+static PyObject *__pyx_pf_13tuna_integral_22calculate_electron_repulsion_integral(CYTHON_UNUSED PyObject *__pyx_self, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_1, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_2, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_3, struct __pyx_obj_13tuna_integral_Basis *__pyx_v_bf_4) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -26885,8 +28170,8 @@ static PyObject *__pyx_pf_13tuna_integral_18calculate_electron_repulsion_integra
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_electron_repulsion_integral", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(__pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_bf_3, __pyx_v_bf_4, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 659, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 659, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_13tuna_integral_calculate_electron_repulsion_integral(__pyx_v_bf_1, __pyx_v_bf_2, __pyx_v_bf_3, __pyx_v_bf_4, 1); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 765, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 765, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -26903,7 +28188,7 @@ static PyObject *__pyx_pf_13tuna_integral_18calculate_electron_repulsion_integra
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":709
+/* "tuna_integral.pyx":815
  * 
  * 
  * cdef inline double hermite_coeff(int l_1, int l_2, int t, double R_12, double exponent_1, double exponent_2):             # <<<<<<<<<<<<<<
@@ -26924,7 +28209,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "tuna_integral.pyx":728
+  /* "tuna_integral.pyx":834
  *     """
  * 
  *     cdef double exponent_sum = exponent_1 + exponent_2             # <<<<<<<<<<<<<<
@@ -26933,7 +28218,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
 */
   __pyx_v_exponent_sum = (__pyx_v_exponent_1 + __pyx_v_exponent_2);
 
-  /* "tuna_integral.pyx":729
+  /* "tuna_integral.pyx":835
  * 
  *     cdef double exponent_sum = exponent_1 + exponent_2
  *     cdef double u = exponent_1 * exponent_2 / exponent_sum             # <<<<<<<<<<<<<<
@@ -26942,7 +28227,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
 */
   __pyx_v_u = ((__pyx_v_exponent_1 * __pyx_v_exponent_2) / __pyx_v_exponent_sum);
 
-  /* "tuna_integral.pyx":730
+  /* "tuna_integral.pyx":836
  *     cdef double exponent_sum = exponent_1 + exponent_2
  *     cdef double u = exponent_1 * exponent_2 / exponent_sum
  *     cdef double prefactor = 1.0 / (2.0 * exponent_sum)             # <<<<<<<<<<<<<<
@@ -26951,7 +28236,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
 */
   __pyx_v_prefactor = (1.0 / (2.0 * __pyx_v_exponent_sum));
 
-  /* "tuna_integral.pyx":731
+  /* "tuna_integral.pyx":837
  *     cdef double u = exponent_1 * exponent_2 / exponent_sum
  *     cdef double prefactor = 1.0 / (2.0 * exponent_sum)
  *     cdef double result = 0.0             # <<<<<<<<<<<<<<
@@ -26960,7 +28245,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
 */
   __pyx_v_result = 0.0;
 
-  /* "tuna_integral.pyx":735
+  /* "tuna_integral.pyx":841
  *     # Checks for an invalid Hermite coefficient
  * 
  *     if t < 0 or t > (l_1 + l_2):             # <<<<<<<<<<<<<<
@@ -26978,7 +28263,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "tuna_integral.pyx":737
+    /* "tuna_integral.pyx":843
  *     if t < 0 or t > (l_1 + l_2):
  * 
  *         return 0.0             # <<<<<<<<<<<<<<
@@ -26988,7 +28273,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
     __pyx_r = 0.0;
     goto __pyx_L0;
 
-    /* "tuna_integral.pyx":735
+    /* "tuna_integral.pyx":841
  *     # Checks for an invalid Hermite coefficient
  * 
  *     if t < 0 or t > (l_1 + l_2):             # <<<<<<<<<<<<<<
@@ -26997,7 +28282,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
 */
   }
 
-  /* "tuna_integral.pyx":741
+  /* "tuna_integral.pyx":847
  *     # Calculates the Hermite coefficient for (s|s) integrals
  * 
  *     elif l_1 == 0 and l_2 == 0 and t == 0:             # <<<<<<<<<<<<<<
@@ -27021,7 +28306,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
   __pyx_L6_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "tuna_integral.pyx":743
+    /* "tuna_integral.pyx":849
  *     elif l_1 == 0 and l_2 == 0 and t == 0:
  * 
  *         return exp(-u * R_12 * R_12)             # <<<<<<<<<<<<<<
@@ -27031,7 +28316,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
     __pyx_r = exp((((-__pyx_v_u) * __pyx_v_R_12) * __pyx_v_R_12));
     goto __pyx_L0;
 
-    /* "tuna_integral.pyx":741
+    /* "tuna_integral.pyx":847
  *     # Calculates the Hermite coefficient for (s|s) integrals
  * 
  *     elif l_1 == 0 and l_2 == 0 and t == 0:             # <<<<<<<<<<<<<<
@@ -27040,7 +28325,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
 */
   }
 
-  /* "tuna_integral.pyx":747
+  /* "tuna_integral.pyx":853
  *     # Build up angular momentum on Gaussian 1, for (X|s)
  * 
  *     elif l_2 == 0:             # <<<<<<<<<<<<<<
@@ -27050,37 +28335,37 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
   __pyx_t_1 = (__pyx_v_l_2 == 0);
   if (__pyx_t_1) {
 
-    /* "tuna_integral.pyx":749
+    /* "tuna_integral.pyx":855
  *     elif l_2 == 0:
  * 
  *         result = prefactor * hermite_coeff(l_1 - 1, l_2, t - 1, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *         result += - (u * R_12 / exponent_1) * hermite_coeff(l_1 - 1, l_2, t, R_12, exponent_1, exponent_2)
  *         result += (t + 1) * hermite_coeff(l_1 - 1, l_2, t + 1, R_12, exponent_1, exponent_2)
 */
-    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff((__pyx_v_l_1 - 1), __pyx_v_l_2, (__pyx_v_t - 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 749, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff((__pyx_v_l_1 - 1), __pyx_v_l_2, (__pyx_v_t - 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 855, __pyx_L1_error)
     __pyx_v_result = (__pyx_v_prefactor * __pyx_t_3);
 
-    /* "tuna_integral.pyx":750
+    /* "tuna_integral.pyx":856
  * 
  *         result = prefactor * hermite_coeff(l_1 - 1, l_2, t - 1, R_12, exponent_1, exponent_2)
  *         result += - (u * R_12 / exponent_1) * hermite_coeff(l_1 - 1, l_2, t, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *         result += (t + 1) * hermite_coeff(l_1 - 1, l_2, t + 1, R_12, exponent_1, exponent_2)
  * 
 */
-    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff((__pyx_v_l_1 - 1), __pyx_v_l_2, __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 750, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff((__pyx_v_l_1 - 1), __pyx_v_l_2, __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 856, __pyx_L1_error)
     __pyx_v_result = (__pyx_v_result + ((-((__pyx_v_u * __pyx_v_R_12) / __pyx_v_exponent_1)) * __pyx_t_3));
 
-    /* "tuna_integral.pyx":751
+    /* "tuna_integral.pyx":857
  *         result = prefactor * hermite_coeff(l_1 - 1, l_2, t - 1, R_12, exponent_1, exponent_2)
  *         result += - (u * R_12 / exponent_1) * hermite_coeff(l_1 - 1, l_2, t, R_12, exponent_1, exponent_2)
  *         result += (t + 1) * hermite_coeff(l_1 - 1, l_2, t + 1, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  *     # Build up angular momentum on Gaussian 2
 */
-    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff((__pyx_v_l_1 - 1), __pyx_v_l_2, (__pyx_v_t + 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 751, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff((__pyx_v_l_1 - 1), __pyx_v_l_2, (__pyx_v_t + 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 857, __pyx_L1_error)
     __pyx_v_result = (__pyx_v_result + ((__pyx_v_t + 1) * __pyx_t_3));
 
-    /* "tuna_integral.pyx":747
+    /* "tuna_integral.pyx":853
  *     # Build up angular momentum on Gaussian 1, for (X|s)
  * 
  *     elif l_2 == 0:             # <<<<<<<<<<<<<<
@@ -27090,7 +28375,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
     goto __pyx_L3;
   }
 
-  /* "tuna_integral.pyx":757
+  /* "tuna_integral.pyx":863
  *     else:
  * 
  *         result = prefactor * hermite_coeff(l_1, l_2 - 1, t - 1, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
@@ -27098,32 +28383,32 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
  *         result += (t + 1) * hermite_coeff(l_1, l_2 - 1, t + 1, R_12, exponent_1, exponent_2)
 */
   /*else*/ {
-    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, (__pyx_v_l_2 - 1), (__pyx_v_t - 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 757, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, (__pyx_v_l_2 - 1), (__pyx_v_t - 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 863, __pyx_L1_error)
     __pyx_v_result = (__pyx_v_prefactor * __pyx_t_3);
 
-    /* "tuna_integral.pyx":758
+    /* "tuna_integral.pyx":864
  * 
  *         result = prefactor * hermite_coeff(l_1, l_2 - 1, t - 1, R_12, exponent_1, exponent_2)
  *         result += (u * R_12 / exponent_2) * hermite_coeff(l_1, l_2 - 1, t, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  *         result += (t + 1) * hermite_coeff(l_1, l_2 - 1, t + 1, R_12, exponent_1, exponent_2)
  * 
 */
-    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, (__pyx_v_l_2 - 1), __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 758, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, (__pyx_v_l_2 - 1), __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 864, __pyx_L1_error)
     __pyx_v_result = (__pyx_v_result + (((__pyx_v_u * __pyx_v_R_12) / __pyx_v_exponent_2) * __pyx_t_3));
 
-    /* "tuna_integral.pyx":759
+    /* "tuna_integral.pyx":865
  *         result = prefactor * hermite_coeff(l_1, l_2 - 1, t - 1, R_12, exponent_1, exponent_2)
  *         result += (u * R_12 / exponent_2) * hermite_coeff(l_1, l_2 - 1, t, R_12, exponent_1, exponent_2)
  *         result += (t + 1) * hermite_coeff(l_1, l_2 - 1, t + 1, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  * 
 */
-    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, (__pyx_v_l_2 - 1), (__pyx_v_t + 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 759, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, (__pyx_v_l_2 - 1), (__pyx_v_t + 1), __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 865, __pyx_L1_error)
     __pyx_v_result = (__pyx_v_result + ((__pyx_v_t + 1) * __pyx_t_3));
   }
   __pyx_L3:;
 
-  /* "tuna_integral.pyx":762
+  /* "tuna_integral.pyx":868
  * 
  * 
  *     return result             # <<<<<<<<<<<<<<
@@ -27133,7 +28418,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
   __pyx_r = __pyx_v_result;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":709
+  /* "tuna_integral.pyx":815
  * 
  * 
  * cdef inline double hermite_coeff(int l_1, int l_2, int t, double R_12, double exponent_1, double exponent_2):             # <<<<<<<<<<<<<<
@@ -27149,7 +28434,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":771
+/* "tuna_integral.pyx":877
  * 
  * 
  * cdef inline double boys(int m, double T):             # <<<<<<<<<<<<<<
@@ -27160,7 +28445,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_hermite_coeff(int __pyx_v_l_
 static CYTHON_INLINE double __pyx_f_13tuna_integral_boys(int __pyx_v_m, double __pyx_v_T) {
   double __pyx_r;
 
-  /* "tuna_integral.pyx":786
+  /* "tuna_integral.pyx":892
  *     """
  * 
  *     return hyp1f1(m + 0.5, m + 1.5, -T) / (2.0 * m + 1.0)             # <<<<<<<<<<<<<<
@@ -27170,7 +28455,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_boys(int __pyx_v_m, double _
   __pyx_r = (__pyx_fuse_1__pyx_f_5scipy_7special_14cython_special_hyp1f1((__pyx_v_m + 0.5), (__pyx_v_m + 1.5), (-__pyx_v_T), 0) / ((2.0 * __pyx_v_m) + 1.0));
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":771
+  /* "tuna_integral.pyx":877
  * 
  * 
  * cdef inline double boys(int m, double T):             # <<<<<<<<<<<<<<
@@ -27183,7 +28468,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_boys(int __pyx_v_m, double _
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":796
+/* "tuna_integral.pyx":902
  * 
  * 
  * cdef inline double odd_double_double_fact_from_even(int n_even):             # <<<<<<<<<<<<<<
@@ -27198,18 +28483,18 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_odd_double_double_fact_from_
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "tuna_integral.pyx":810
+  /* "tuna_integral.pyx":916
  *     """
  * 
  *     return double_fact(n_even - 1)             # <<<<<<<<<<<<<<
  * 
  * 
 */
-  __pyx_t_1 = __pyx_f_13tuna_integral_double_fact((__pyx_v_n_even - 1)); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 810, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_13tuna_integral_double_fact((__pyx_v_n_even - 1)); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 916, __pyx_L1_error)
   __pyx_r = __pyx_t_1;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":796
+  /* "tuna_integral.pyx":902
  * 
  * 
  * cdef inline double odd_double_double_fact_from_even(int n_even):             # <<<<<<<<<<<<<<
@@ -27225,7 +28510,7 @@ static CYTHON_INLINE double __pyx_f_13tuna_integral_odd_double_double_fact_from_
   return __pyx_r;
 }
 
-/* "tuna_integral.pyx":821
+/* "tuna_integral.pyx":927
  * 
  * 
  * cdef inline void fill_boys_table(int M, double T, double* boys_table):             # <<<<<<<<<<<<<<
@@ -27246,7 +28531,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "tuna_integral.pyx":838
+  /* "tuna_integral.pyx":944
  *     cdef double two_T
  * 
  *     if T == 0.0:             # <<<<<<<<<<<<<<
@@ -27256,7 +28541,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
   __pyx_t_1 = (__pyx_v_T == 0.0);
   if (__pyx_t_1) {
 
-    /* "tuna_integral.pyx":840
+    /* "tuna_integral.pyx":946
  *     if T == 0.0:
  * 
  *         for m in range(M + 1):             # <<<<<<<<<<<<<<
@@ -27268,7 +28553,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_m = __pyx_t_4;
 
-      /* "tuna_integral.pyx":842
+      /* "tuna_integral.pyx":948
  *         for m in range(M + 1):
  * 
  *             boys_table[m] = 1.0 / (2.0 * m + 1.0)             # <<<<<<<<<<<<<<
@@ -27278,7 +28563,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
       (__pyx_v_boys_table[__pyx_v_m]) = (1.0 / ((2.0 * __pyx_v_m) + 1.0));
     }
 
-    /* "tuna_integral.pyx":844
+    /* "tuna_integral.pyx":950
  *             boys_table[m] = 1.0 / (2.0 * m + 1.0)
  * 
  *         return             # <<<<<<<<<<<<<<
@@ -27287,7 +28572,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
 */
     goto __pyx_L0;
 
-    /* "tuna_integral.pyx":838
+    /* "tuna_integral.pyx":944
  *     cdef double two_T
  * 
  *     if T == 0.0:             # <<<<<<<<<<<<<<
@@ -27296,17 +28581,17 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
 */
   }
 
-  /* "tuna_integral.pyx":846
+  /* "tuna_integral.pyx":952
  *         return
  * 
  *     boys_table[M] = boys(M, T)             # <<<<<<<<<<<<<<
  * 
  *     exponential_term = exp(-T)
 */
-  __pyx_t_5 = __pyx_f_13tuna_integral_boys(__pyx_v_M, __pyx_v_T); if (unlikely(__pyx_t_5 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 846, __pyx_L1_error)
+  __pyx_t_5 = __pyx_f_13tuna_integral_boys(__pyx_v_M, __pyx_v_T); if (unlikely(__pyx_t_5 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 952, __pyx_L1_error)
   (__pyx_v_boys_table[__pyx_v_M]) = __pyx_t_5;
 
-  /* "tuna_integral.pyx":848
+  /* "tuna_integral.pyx":954
  *     boys_table[M] = boys(M, T)
  * 
  *     exponential_term = exp(-T)             # <<<<<<<<<<<<<<
@@ -27315,7 +28600,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
 */
   __pyx_v_exponential_term = exp((-__pyx_v_T));
 
-  /* "tuna_integral.pyx":849
+  /* "tuna_integral.pyx":955
  * 
  *     exponential_term = exp(-T)
  *     two_T = 2.0 * T             # <<<<<<<<<<<<<<
@@ -27324,7 +28609,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
 */
   __pyx_v_two_T = (2.0 * __pyx_v_T);
 
-  /* "tuna_integral.pyx":851
+  /* "tuna_integral.pyx":957
  *     two_T = 2.0 * T
  * 
  *     for m in range(M, 0, -1):             # <<<<<<<<<<<<<<
@@ -27334,7 +28619,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
   for (__pyx_t_4 = __pyx_v_M; __pyx_t_4 > 0; __pyx_t_4-=1) {
     __pyx_v_m = __pyx_t_4;
 
-    /* "tuna_integral.pyx":853
+    /* "tuna_integral.pyx":959
  *     for m in range(M, 0, -1):
  * 
  *         boys_table[m - 1] = (two_T * boys_table[m] + exponential_term) / (2.0 * m - 1.0)             # <<<<<<<<<<<<<<
@@ -27344,7 +28629,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
     (__pyx_v_boys_table[(__pyx_v_m - 1)]) = (((__pyx_v_two_T * (__pyx_v_boys_table[__pyx_v_m])) + __pyx_v_exponential_term) / ((2.0 * __pyx_v_m) - 1.0));
   }
 
-  /* "tuna_integral.pyx":821
+  /* "tuna_integral.pyx":927
  * 
  * 
  * cdef inline void fill_boys_table(int M, double T, double* boys_table):             # <<<<<<<<<<<<<<
@@ -27359,7 +28644,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_boys_table(int __pyx_v_M,
   __pyx_L0:;
 }
 
-/* "tuna_integral.pyx":863
+/* "tuna_integral.pyx":969
  * 
  * 
  * cdef inline void fill_pow_table(int M, double scale, double* pow_table):             # <<<<<<<<<<<<<<
@@ -27374,7 +28659,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_pow_table(int __pyx_v_M, 
   long __pyx_t_2;
   int __pyx_t_3;
 
-  /* "tuna_integral.pyx":877
+  /* "tuna_integral.pyx":983
  * 
  *     cdef int n
  *     cdef double factor = -2.0 * scale             # <<<<<<<<<<<<<<
@@ -27383,7 +28668,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_pow_table(int __pyx_v_M, 
 */
   __pyx_v_factor = (-2.0 * __pyx_v_scale);
 
-  /* "tuna_integral.pyx":879
+  /* "tuna_integral.pyx":985
  *     cdef double factor = -2.0 * scale
  * 
  *     pow_table[0] = 1.0             # <<<<<<<<<<<<<<
@@ -27392,7 +28677,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_pow_table(int __pyx_v_M, 
 */
   (__pyx_v_pow_table[0]) = 1.0;
 
-  /* "tuna_integral.pyx":881
+  /* "tuna_integral.pyx":987
  *     pow_table[0] = 1.0
  * 
  *     for n in range(1, M + 1):             # <<<<<<<<<<<<<<
@@ -27404,7 +28689,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_pow_table(int __pyx_v_M, 
   for (__pyx_t_3 = 1; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_n = __pyx_t_3;
 
-    /* "tuna_integral.pyx":883
+    /* "tuna_integral.pyx":989
  *     for n in range(1, M + 1):
  * 
  *         pow_table[n] = pow_table[n - 1] * factor             # <<<<<<<<<<<<<<
@@ -27414,7 +28699,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_pow_table(int __pyx_v_M, 
     (__pyx_v_pow_table[__pyx_v_n]) = ((__pyx_v_pow_table[(__pyx_v_n - 1)]) * __pyx_v_factor);
   }
 
-  /* "tuna_integral.pyx":863
+  /* "tuna_integral.pyx":969
  * 
  * 
  * cdef inline void fill_pow_table(int M, double scale, double* pow_table):             # <<<<<<<<<<<<<<
@@ -27425,7 +28710,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_pow_table(int __pyx_v_M, 
   /* function exit code */
 }
 
-/* "tuna_integral.pyx":893
+/* "tuna_integral.pyx":999
  * 
  * 
  * cdef inline void fill_Rz_linear_table(int Vmax, int Nmax, double PCz, double* boys_table, double* pow_table, double* Rz_table):             # <<<<<<<<<<<<<<
@@ -27447,7 +28732,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
   int __pyx_t_5;
   int __pyx_t_6;
 
-  /* "tuna_integral.pyx":911
+  /* "tuna_integral.pyx":1017
  * 
  *     cdef int v, n
  *     cdef int stride = Nmax + 1             # <<<<<<<<<<<<<<
@@ -27456,7 +28741,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
 */
   __pyx_v_stride = (__pyx_v_Nmax + 1);
 
-  /* "tuna_integral.pyx":916
+  /* "tuna_integral.pyx":1022
  *     cdef int prev_row_2_offset
  * 
  *     for n in range(Nmax + 1):             # <<<<<<<<<<<<<<
@@ -27468,7 +28753,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_n = __pyx_t_3;
 
-    /* "tuna_integral.pyx":918
+    /* "tuna_integral.pyx":1024
  *     for n in range(Nmax + 1):
  * 
  *         Rz_table[n] = pow_table[n] * boys_table[n]             # <<<<<<<<<<<<<<
@@ -27478,7 +28763,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
     (__pyx_v_Rz_table[__pyx_v_n]) = ((__pyx_v_pow_table[__pyx_v_n]) * (__pyx_v_boys_table[__pyx_v_n]));
   }
 
-  /* "tuna_integral.pyx":920
+  /* "tuna_integral.pyx":1026
  *         Rz_table[n] = pow_table[n] * boys_table[n]
  * 
  *     for v in range(1, Vmax + 1):             # <<<<<<<<<<<<<<
@@ -27490,7 +28775,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
   for (__pyx_t_3 = 1; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_v = __pyx_t_3;
 
-    /* "tuna_integral.pyx":922
+    /* "tuna_integral.pyx":1028
  *     for v in range(1, Vmax + 1):
  * 
  *         row_offset = v * stride             # <<<<<<<<<<<<<<
@@ -27499,7 +28784,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
 */
     __pyx_v_row_offset = (__pyx_v_v * __pyx_v_stride);
 
-    /* "tuna_integral.pyx":923
+    /* "tuna_integral.pyx":1029
  * 
  *         row_offset = v * stride
  *         prev_row_1_offset = (v - 1) * stride             # <<<<<<<<<<<<<<
@@ -27508,7 +28793,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
 */
     __pyx_v_prev_row_1_offset = ((__pyx_v_v - 1) * __pyx_v_stride);
 
-    /* "tuna_integral.pyx":924
+    /* "tuna_integral.pyx":1030
  *         row_offset = v * stride
  *         prev_row_1_offset = (v - 1) * stride
  *         prev_row_2_offset = (v - 2) * stride             # <<<<<<<<<<<<<<
@@ -27517,7 +28802,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
 */
     __pyx_v_prev_row_2_offset = ((__pyx_v_v - 2) * __pyx_v_stride);
 
-    /* "tuna_integral.pyx":926
+    /* "tuna_integral.pyx":1032
  *         prev_row_2_offset = (v - 2) * stride
  * 
  *         for n in range(Nmax - v, -1, -1):             # <<<<<<<<<<<<<<
@@ -27527,7 +28812,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
     for (__pyx_t_4 = (__pyx_v_Nmax - __pyx_v_v); __pyx_t_4 > -1; __pyx_t_4-=1) {
       __pyx_v_n = __pyx_t_4;
 
-      /* "tuna_integral.pyx":928
+      /* "tuna_integral.pyx":1034
  *         for n in range(Nmax - v, -1, -1):
  * 
  *             Rz_table[row_offset + n] = PCz * Rz_table[prev_row_1_offset + n + 1]             # <<<<<<<<<<<<<<
@@ -27536,7 +28821,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
 */
       (__pyx_v_Rz_table[(__pyx_v_row_offset + __pyx_v_n)]) = (__pyx_v_PCz * (__pyx_v_Rz_table[((__pyx_v_prev_row_1_offset + __pyx_v_n) + 1)]));
 
-      /* "tuna_integral.pyx":930
+      /* "tuna_integral.pyx":1036
  *             Rz_table[row_offset + n] = PCz * Rz_table[prev_row_1_offset + n + 1]
  * 
  *             if v > 1:             # <<<<<<<<<<<<<<
@@ -27546,7 +28831,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
       __pyx_t_5 = (__pyx_v_v > 1);
       if (__pyx_t_5) {
 
-        /* "tuna_integral.pyx":932
+        /* "tuna_integral.pyx":1038
  *             if v > 1:
  * 
  *                 Rz_table[row_offset + n] += (v - 1) * Rz_table[prev_row_2_offset + n + 1]             # <<<<<<<<<<<<<<
@@ -27556,7 +28841,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
         __pyx_t_6 = (__pyx_v_row_offset + __pyx_v_n);
         (__pyx_v_Rz_table[__pyx_t_6]) = ((__pyx_v_Rz_table[__pyx_t_6]) + ((__pyx_v_v - 1) * (__pyx_v_Rz_table[((__pyx_v_prev_row_2_offset + __pyx_v_n) + 1)])));
 
-        /* "tuna_integral.pyx":930
+        /* "tuna_integral.pyx":1036
  *             Rz_table[row_offset + n] = PCz * Rz_table[prev_row_1_offset + n + 1]
  * 
  *             if v > 1:             # <<<<<<<<<<<<<<
@@ -27567,7 +28852,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
     }
   }
 
-  /* "tuna_integral.pyx":893
+  /* "tuna_integral.pyx":999
  * 
  * 
  * cdef inline void fill_Rz_linear_table(int Vmax, int Nmax, double PCz, double* boys_table, double* pow_table, double* Rz_table):             # <<<<<<<<<<<<<<
@@ -27578,7 +28863,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_Rz_linear_table(int __pyx
   /* function exit code */
 }
 
-/* "tuna_integral.pyx":942
+/* "tuna_integral.pyx":1048
  * 
  * 
  * cdef inline void fill_hermite_table(int l_1, int l_2, double R_12, double exponent_1, double exponent_2, double* hermite_table, bint use_parity):             # <<<<<<<<<<<<<<
@@ -27598,7 +28883,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "tuna_integral.pyx":960
+  /* "tuna_integral.pyx":1066
  * 
  *     cdef int t
  *     cdef int n_terms = l_1 + l_2 + 1             # <<<<<<<<<<<<<<
@@ -27607,7 +28892,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
 */
   __pyx_v_n_terms = ((__pyx_v_l_1 + __pyx_v_l_2) + 1);
 
-  /* "tuna_integral.pyx":963
+  /* "tuna_integral.pyx":1069
  *     cdef int t_start
  * 
  *     if use_parity:             # <<<<<<<<<<<<<<
@@ -27616,7 +28901,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
 */
   if (__pyx_v_use_parity) {
 
-    /* "tuna_integral.pyx":965
+    /* "tuna_integral.pyx":1071
  *     if use_parity:
  * 
  *         t_start = (l_1 + l_2) & 1             # <<<<<<<<<<<<<<
@@ -27625,7 +28910,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
 */
     __pyx_v_t_start = ((__pyx_v_l_1 + __pyx_v_l_2) & 1);
 
-    /* "tuna_integral.pyx":967
+    /* "tuna_integral.pyx":1073
  *         t_start = (l_1 + l_2) & 1
  * 
  *         for t in range(n_terms):             # <<<<<<<<<<<<<<
@@ -27637,7 +28922,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
     for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
       __pyx_v_t = __pyx_t_3;
 
-      /* "tuna_integral.pyx":969
+      /* "tuna_integral.pyx":1075
  *         for t in range(n_terms):
  * 
  *             hermite_table[t] = 0.0             # <<<<<<<<<<<<<<
@@ -27647,7 +28932,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
       (__pyx_v_hermite_table[__pyx_v_t]) = 0.0;
     }
 
-    /* "tuna_integral.pyx":971
+    /* "tuna_integral.pyx":1077
  *             hermite_table[t] = 0.0
  * 
  *         for t in range(t_start, n_terms, 2):             # <<<<<<<<<<<<<<
@@ -27659,18 +28944,18 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
     for (__pyx_t_3 = __pyx_v_t_start; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=2) {
       __pyx_v_t = __pyx_t_3;
 
-      /* "tuna_integral.pyx":973
+      /* "tuna_integral.pyx":1079
  *         for t in range(t_start, n_terms, 2):
  * 
  *             hermite_table[t] = hermite_coeff(l_1, l_2, t, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  *     else:
 */
-      __pyx_t_4 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, __pyx_v_l_2, __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_4 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 973, __pyx_L1_error)
+      __pyx_t_4 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, __pyx_v_l_2, __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_4 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 1079, __pyx_L1_error)
       (__pyx_v_hermite_table[__pyx_v_t]) = __pyx_t_4;
     }
 
-    /* "tuna_integral.pyx":963
+    /* "tuna_integral.pyx":1069
  *     cdef int t_start
  * 
  *     if use_parity:             # <<<<<<<<<<<<<<
@@ -27680,7 +28965,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
     goto __pyx_L3;
   }
 
-  /* "tuna_integral.pyx":977
+  /* "tuna_integral.pyx":1083
  *     else:
  * 
  *         for t in range(n_terms):             # <<<<<<<<<<<<<<
@@ -27693,20 +28978,20 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
     for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
       __pyx_v_t = __pyx_t_3;
 
-      /* "tuna_integral.pyx":979
+      /* "tuna_integral.pyx":1085
  *         for t in range(n_terms):
  * 
  *             hermite_table[t] = hermite_coeff(l_1, l_2, t, R_12, exponent_1, exponent_2)             # <<<<<<<<<<<<<<
  * 
  * 
 */
-      __pyx_t_4 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, __pyx_v_l_2, __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_4 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 979, __pyx_L1_error)
+      __pyx_t_4 = __pyx_f_13tuna_integral_hermite_coeff(__pyx_v_l_1, __pyx_v_l_2, __pyx_v_t, __pyx_v_R_12, __pyx_v_exponent_1, __pyx_v_exponent_2); if (unlikely(__pyx_t_4 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 1085, __pyx_L1_error)
       (__pyx_v_hermite_table[__pyx_v_t]) = __pyx_t_4;
     }
   }
   __pyx_L3:;
 
-  /* "tuna_integral.pyx":942
+  /* "tuna_integral.pyx":1048
  * 
  * 
  * cdef inline void fill_hermite_table(int l_1, int l_2, double R_12, double exponent_1, double exponent_2, double* hermite_table, bint use_parity):             # <<<<<<<<<<<<<<
@@ -27721,7 +29006,7 @@ static CYTHON_INLINE void __pyx_f_13tuna_integral_fill_hermite_table(int __pyx_v
   __pyx_L0:;
 }
 
-/* "tuna_integral.pyx":990
+/* "tuna_integral.pyx":1096
  * 
  * 
  * cdef double electron_repulsion(double exponent_1, long *angmom_1, double *centre_1, double exponent_2, long *angmom_2, double *centre_2,             # <<<<<<<<<<<<<<
@@ -27816,7 +29101,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "tuna_integral.pyx":1017
+  /* "tuna_integral.pyx":1123
  * 
  *     cdef:
  *         long l_1 = angmom_1[0]             # <<<<<<<<<<<<<<
@@ -27825,7 +29110,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_l_1 = (__pyx_v_angmom_1[0]);
 
-  /* "tuna_integral.pyx":1018
+  /* "tuna_integral.pyx":1124
  *     cdef:
  *         long l_1 = angmom_1[0]
  *         long m_1 = angmom_1[1]             # <<<<<<<<<<<<<<
@@ -27834,7 +29119,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_m_1 = (__pyx_v_angmom_1[1]);
 
-  /* "tuna_integral.pyx":1019
+  /* "tuna_integral.pyx":1125
  *         long l_1 = angmom_1[0]
  *         long m_1 = angmom_1[1]
  *         long n_1 = angmom_1[2]             # <<<<<<<<<<<<<<
@@ -27843,7 +29128,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_1 = (__pyx_v_angmom_1[2]);
 
-  /* "tuna_integral.pyx":1020
+  /* "tuna_integral.pyx":1126
  *         long m_1 = angmom_1[1]
  *         long n_1 = angmom_1[2]
  *         long l_2 = angmom_2[0]             # <<<<<<<<<<<<<<
@@ -27852,7 +29137,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_l_2 = (__pyx_v_angmom_2[0]);
 
-  /* "tuna_integral.pyx":1021
+  /* "tuna_integral.pyx":1127
  *         long n_1 = angmom_1[2]
  *         long l_2 = angmom_2[0]
  *         long m_2 = angmom_2[1]             # <<<<<<<<<<<<<<
@@ -27861,7 +29146,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_m_2 = (__pyx_v_angmom_2[1]);
 
-  /* "tuna_integral.pyx":1022
+  /* "tuna_integral.pyx":1128
  *         long l_2 = angmom_2[0]
  *         long m_2 = angmom_2[1]
  *         long n_2 = angmom_2[2]             # <<<<<<<<<<<<<<
@@ -27870,7 +29155,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_2 = (__pyx_v_angmom_2[2]);
 
-  /* "tuna_integral.pyx":1023
+  /* "tuna_integral.pyx":1129
  *         long m_2 = angmom_2[1]
  *         long n_2 = angmom_2[2]
  *         long l_3 = angmom_3[0]             # <<<<<<<<<<<<<<
@@ -27879,7 +29164,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_l_3 = (__pyx_v_angmom_3[0]);
 
-  /* "tuna_integral.pyx":1024
+  /* "tuna_integral.pyx":1130
  *         long n_2 = angmom_2[2]
  *         long l_3 = angmom_3[0]
  *         long m_3 = angmom_3[1]             # <<<<<<<<<<<<<<
@@ -27888,7 +29173,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_m_3 = (__pyx_v_angmom_3[1]);
 
-  /* "tuna_integral.pyx":1025
+  /* "tuna_integral.pyx":1131
  *         long l_3 = angmom_3[0]
  *         long m_3 = angmom_3[1]
  *         long n_3 = angmom_3[2]             # <<<<<<<<<<<<<<
@@ -27897,7 +29182,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_3 = (__pyx_v_angmom_3[2]);
 
-  /* "tuna_integral.pyx":1026
+  /* "tuna_integral.pyx":1132
  *         long m_3 = angmom_3[1]
  *         long n_3 = angmom_3[2]
  *         long l_4 = angmom_4[0]             # <<<<<<<<<<<<<<
@@ -27906,7 +29191,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_l_4 = (__pyx_v_angmom_4[0]);
 
-  /* "tuna_integral.pyx":1027
+  /* "tuna_integral.pyx":1133
  *         long n_3 = angmom_3[2]
  *         long l_4 = angmom_4[0]
  *         long m_4 = angmom_4[1]             # <<<<<<<<<<<<<<
@@ -27915,7 +29200,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_m_4 = (__pyx_v_angmom_4[1]);
 
-  /* "tuna_integral.pyx":1028
+  /* "tuna_integral.pyx":1134
  *         long l_4 = angmom_4[0]
  *         long m_4 = angmom_4[1]
  *         long n_4 = angmom_4[2]             # <<<<<<<<<<<<<<
@@ -27924,7 +29209,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_4 = (__pyx_v_angmom_4[2]);
 
-  /* "tuna_integral.pyx":1030
+  /* "tuna_integral.pyx":1136
  *         long n_4 = angmom_4[2]
  * 
  *         double exponent_sum_12 = exponent_1 + exponent_2             # <<<<<<<<<<<<<<
@@ -27933,7 +29218,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_exponent_sum_12 = (__pyx_v_exponent_1 + __pyx_v_exponent_2);
 
-  /* "tuna_integral.pyx":1031
+  /* "tuna_integral.pyx":1137
  * 
  *         double exponent_sum_12 = exponent_1 + exponent_2
  *         double exponent_sum_34 = exponent_3 + exponent_4             # <<<<<<<<<<<<<<
@@ -27942,7 +29227,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_exponent_sum_34 = (__pyx_v_exponent_3 + __pyx_v_exponent_4);
 
-  /* "tuna_integral.pyx":1032
+  /* "tuna_integral.pyx":1138
  *         double exponent_sum_12 = exponent_1 + exponent_2
  *         double exponent_sum_34 = exponent_3 + exponent_4
  *         double reduced_exponent = exponent_sum_12 * exponent_sum_34 / (exponent_sum_12 + exponent_sum_34)             # <<<<<<<<<<<<<<
@@ -27951,7 +29236,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_reduced_exponent = ((__pyx_v_exponent_sum_12 * __pyx_v_exponent_sum_34) / (__pyx_v_exponent_sum_12 + __pyx_v_exponent_sum_34));
 
-  /* "tuna_integral.pyx":1034
+  /* "tuna_integral.pyx":1140
  *         double reduced_exponent = exponent_sum_12 * exponent_sum_34 / (exponent_sum_12 + exponent_sum_34)
  * 
  *         double Rz_12 = centre_1[2] - centre_2[2]             # <<<<<<<<<<<<<<
@@ -27960,7 +29245,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Rz_12 = ((__pyx_v_centre_1[2]) - (__pyx_v_centre_2[2]));
 
-  /* "tuna_integral.pyx":1035
+  /* "tuna_integral.pyx":1141
  * 
  *         double Rz_12 = centre_1[2] - centre_2[2]
  *         double Rz_34 = centre_3[2] - centre_4[2]             # <<<<<<<<<<<<<<
@@ -27969,7 +29254,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Rz_34 = ((__pyx_v_centre_3[2]) - (__pyx_v_centre_4[2]));
 
-  /* "tuna_integral.pyx":1037
+  /* "tuna_integral.pyx":1143
  *         double Rz_34 = centre_3[2] - centre_4[2]
  * 
  *         double Pz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum_12             # <<<<<<<<<<<<<<
@@ -27978,7 +29263,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Pz = (((__pyx_v_exponent_1 * (__pyx_v_centre_1[2])) + (__pyx_v_exponent_2 * (__pyx_v_centre_2[2]))) / __pyx_v_exponent_sum_12);
 
-  /* "tuna_integral.pyx":1038
+  /* "tuna_integral.pyx":1144
  * 
  *         double Pz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum_12
  *         double Qz = (exponent_3 * centre_3[2] + exponent_4 * centre_4[2]) / exponent_sum_34             # <<<<<<<<<<<<<<
@@ -27987,7 +29272,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Qz = (((__pyx_v_exponent_3 * (__pyx_v_centre_3[2])) + (__pyx_v_exponent_4 * (__pyx_v_centre_4[2]))) / __pyx_v_exponent_sum_34);
 
-  /* "tuna_integral.pyx":1039
+  /* "tuna_integral.pyx":1145
  *         double Pz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum_12
  *         double Qz = (exponent_3 * centre_3[2] + exponent_4 * centre_4[2]) / exponent_sum_34
  *         double PQz = Pz - Qz             # <<<<<<<<<<<<<<
@@ -27996,7 +29281,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_PQz = (__pyx_v_Pz - __pyx_v_Qz);
 
-  /* "tuna_integral.pyx":1041
+  /* "tuna_integral.pyx":1147
  *         double PQz = Pz - Qz
  * 
  *         int n_hermite_x_12 = <int>(l_1 + l_2 + 1)             # <<<<<<<<<<<<<<
@@ -28005,7 +29290,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_hermite_x_12 = ((int)((__pyx_v_l_1 + __pyx_v_l_2) + 1));
 
-  /* "tuna_integral.pyx":1042
+  /* "tuna_integral.pyx":1148
  * 
  *         int n_hermite_x_12 = <int>(l_1 + l_2 + 1)
  *         int n_hermite_y_12 = <int>(m_1 + m_2 + 1)             # <<<<<<<<<<<<<<
@@ -28014,7 +29299,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_hermite_y_12 = ((int)((__pyx_v_m_1 + __pyx_v_m_2) + 1));
 
-  /* "tuna_integral.pyx":1043
+  /* "tuna_integral.pyx":1149
  *         int n_hermite_x_12 = <int>(l_1 + l_2 + 1)
  *         int n_hermite_y_12 = <int>(m_1 + m_2 + 1)
  *         int n_hermite_z_12 = <int>(n_1 + n_2 + 1)             # <<<<<<<<<<<<<<
@@ -28023,7 +29308,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_hermite_z_12 = ((int)((__pyx_v_n_1 + __pyx_v_n_2) + 1));
 
-  /* "tuna_integral.pyx":1044
+  /* "tuna_integral.pyx":1150
  *         int n_hermite_y_12 = <int>(m_1 + m_2 + 1)
  *         int n_hermite_z_12 = <int>(n_1 + n_2 + 1)
  *         int n_hermite_x_34 = <int>(l_3 + l_4 + 1)             # <<<<<<<<<<<<<<
@@ -28032,7 +29317,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_hermite_x_34 = ((int)((__pyx_v_l_3 + __pyx_v_l_4) + 1));
 
-  /* "tuna_integral.pyx":1045
+  /* "tuna_integral.pyx":1151
  *         int n_hermite_z_12 = <int>(n_1 + n_2 + 1)
  *         int n_hermite_x_34 = <int>(l_3 + l_4 + 1)
  *         int n_hermite_y_34 = <int>(m_3 + m_4 + 1)             # <<<<<<<<<<<<<<
@@ -28041,7 +29326,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_hermite_y_34 = ((int)((__pyx_v_m_3 + __pyx_v_m_4) + 1));
 
-  /* "tuna_integral.pyx":1046
+  /* "tuna_integral.pyx":1152
  *         int n_hermite_x_34 = <int>(l_3 + l_4 + 1)
  *         int n_hermite_y_34 = <int>(m_3 + m_4 + 1)
  *         int n_hermite_z_34 = <int>(n_3 + n_4 + 1)             # <<<<<<<<<<<<<<
@@ -28050,7 +29335,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_n_hermite_z_34 = ((int)((__pyx_v_n_3 + __pyx_v_n_4) + 1));
 
-  /* "tuna_integral.pyx":1048
+  /* "tuna_integral.pyx":1154
  *         int n_hermite_z_34 = <int>(n_3 + n_4 + 1)
  * 
  *         int Vmax = <int>(n_1 + n_2 + n_3 + n_4)             # <<<<<<<<<<<<<<
@@ -28059,7 +29344,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Vmax = ((int)(((__pyx_v_n_1 + __pyx_v_n_2) + __pyx_v_n_3) + __pyx_v_n_4));
 
-  /* "tuna_integral.pyx":1049
+  /* "tuna_integral.pyx":1155
  * 
  *         int Vmax = <int>(n_1 + n_2 + n_3 + n_4)
  *         int Nmax = <int>((l_1 + m_1 + n_1) + (l_2 + m_2 + n_2) + (l_3 + m_3 + n_3) + (l_4 + m_4 + n_4))             # <<<<<<<<<<<<<<
@@ -28068,7 +29353,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Nmax = ((int)(((((__pyx_v_l_1 + __pyx_v_m_1) + __pyx_v_n_1) + ((__pyx_v_l_2 + __pyx_v_m_2) + __pyx_v_n_2)) + ((__pyx_v_l_3 + __pyx_v_m_3) + __pyx_v_n_3)) + ((__pyx_v_l_4 + __pyx_v_m_4) + __pyx_v_n_4)));
 
-  /* "tuna_integral.pyx":1050
+  /* "tuna_integral.pyx":1156
  *         int Vmax = <int>(n_1 + n_2 + n_3 + n_4)
  *         int Nmax = <int>((l_1 + m_1 + n_1) + (l_2 + m_2 + n_2) + (l_3 + m_3 + n_3) + (l_4 + m_4 + n_4))
  *         int stride = Nmax + 1             # <<<<<<<<<<<<<<
@@ -28077,7 +29362,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_stride = (__pyx_v_Nmax + 1);
 
-  /* "tuna_integral.pyx":1053
+  /* "tuna_integral.pyx":1159
  * 
  *         int t, u, v, tau, nu, phi
  *         int t_start = <int>((l_1 + l_2) & 1)             # <<<<<<<<<<<<<<
@@ -28086,7 +29371,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_t_start = ((int)((__pyx_v_l_1 + __pyx_v_l_2) & 1));
 
-  /* "tuna_integral.pyx":1054
+  /* "tuna_integral.pyx":1160
  *         int t, u, v, tau, nu, phi
  *         int t_start = <int>((l_1 + l_2) & 1)
  *         int u_start = <int>((m_1 + m_2) & 1)             # <<<<<<<<<<<<<<
@@ -28095,7 +29380,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_u_start = ((int)((__pyx_v_m_1 + __pyx_v_m_2) & 1));
 
-  /* "tuna_integral.pyx":1055
+  /* "tuna_integral.pyx":1161
  *         int t_start = <int>((l_1 + l_2) & 1)
  *         int u_start = <int>((m_1 + m_2) & 1)
  *         int tau_start = <int>((l_3 + l_4) & 1)             # <<<<<<<<<<<<<<
@@ -28104,7 +29389,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_tau_start = ((int)((__pyx_v_l_3 + __pyx_v_l_4) & 1));
 
-  /* "tuna_integral.pyx":1056
+  /* "tuna_integral.pyx":1162
  *         int u_start = <int>((m_1 + m_2) & 1)
  *         int tau_start = <int>((l_3 + l_4) & 1)
  *         int nu_start = <int>((m_3 + m_4) & 1)             # <<<<<<<<<<<<<<
@@ -28113,7 +29398,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_nu_start = ((int)((__pyx_v_m_3 + __pyx_v_m_4) & 1));
 
-  /* "tuna_integral.pyx":1059
+  /* "tuna_integral.pyx":1165
  *         int n_xy
  * 
  *         double integral = 0.0             # <<<<<<<<<<<<<<
@@ -28122,7 +29407,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_integral = 0.0;
 
-  /* "tuna_integral.pyx":1066
+  /* "tuna_integral.pyx":1172
  *         double sign
  * 
  *         double *hermite_x_12 = NULL             # <<<<<<<<<<<<<<
@@ -28131,7 +29416,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_x_12 = NULL;
 
-  /* "tuna_integral.pyx":1067
+  /* "tuna_integral.pyx":1173
  * 
  *         double *hermite_x_12 = NULL
  *         double *hermite_y_12 = NULL             # <<<<<<<<<<<<<<
@@ -28140,7 +29425,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_y_12 = NULL;
 
-  /* "tuna_integral.pyx":1068
+  /* "tuna_integral.pyx":1174
  *         double *hermite_x_12 = NULL
  *         double *hermite_y_12 = NULL
  *         double *hermite_z_12 = NULL             # <<<<<<<<<<<<<<
@@ -28149,7 +29434,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_z_12 = NULL;
 
-  /* "tuna_integral.pyx":1069
+  /* "tuna_integral.pyx":1175
  *         double *hermite_y_12 = NULL
  *         double *hermite_z_12 = NULL
  *         double *hermite_x_34 = NULL             # <<<<<<<<<<<<<<
@@ -28158,7 +29443,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_x_34 = NULL;
 
-  /* "tuna_integral.pyx":1070
+  /* "tuna_integral.pyx":1176
  *         double *hermite_z_12 = NULL
  *         double *hermite_x_34 = NULL
  *         double *hermite_y_34 = NULL             # <<<<<<<<<<<<<<
@@ -28167,7 +29452,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_y_34 = NULL;
 
-  /* "tuna_integral.pyx":1071
+  /* "tuna_integral.pyx":1177
  *         double *hermite_x_34 = NULL
  *         double *hermite_y_34 = NULL
  *         double *hermite_z_34 = NULL             # <<<<<<<<<<<<<<
@@ -28176,7 +29461,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_z_34 = NULL;
 
-  /* "tuna_integral.pyx":1073
+  /* "tuna_integral.pyx":1179
  *         double *hermite_z_34 = NULL
  * 
  *         double *boys_table = NULL             # <<<<<<<<<<<<<<
@@ -28185,7 +29470,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_boys_table = NULL;
 
-  /* "tuna_integral.pyx":1074
+  /* "tuna_integral.pyx":1180
  * 
  *         double *boys_table = NULL
  *         double *pow_table = NULL             # <<<<<<<<<<<<<<
@@ -28194,7 +29479,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_pow_table = NULL;
 
-  /* "tuna_integral.pyx":1075
+  /* "tuna_integral.pyx":1181
  *         double *boys_table = NULL
  *         double *pow_table = NULL
  *         double *Rz_table = NULL             # <<<<<<<<<<<<<<
@@ -28203,7 +29488,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Rz_table = NULL;
 
-  /* "tuna_integral.pyx":1079
+  /* "tuna_integral.pyx":1185
  *     # If the sum of angular momenta is odd, by parity the integral is zero
  * 
  *     if ((l_1 + l_2 + l_3 + l_4) & 1) or ((m_1 + m_2 + m_3 + m_4) & 1):             # <<<<<<<<<<<<<<
@@ -28221,7 +29506,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "tuna_integral.pyx":1081
+    /* "tuna_integral.pyx":1187
  *     if ((l_1 + l_2 + l_3 + l_4) & 1) or ((m_1 + m_2 + m_3 + m_4) & 1):
  * 
  *         return 0.0             # <<<<<<<<<<<<<<
@@ -28231,7 +29516,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
     __pyx_r = 0.0;
     goto __pyx_L0;
 
-    /* "tuna_integral.pyx":1079
+    /* "tuna_integral.pyx":1185
  *     # If the sum of angular momenta is odd, by parity the integral is zero
  * 
  *     if ((l_1 + l_2 + l_3 + l_4) & 1) or ((m_1 + m_2 + m_3 + m_4) & 1):             # <<<<<<<<<<<<<<
@@ -28240,7 +29525,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   }
 
-  /* "tuna_integral.pyx":1084
+  /* "tuna_integral.pyx":1190
  * 
  * 
  *     hermite_x_12 = <double*>malloc(n_hermite_x_12 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28249,7 +29534,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_x_12 = ((double *)malloc((__pyx_v_n_hermite_x_12 * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1085
+  /* "tuna_integral.pyx":1191
  * 
  *     hermite_x_12 = <double*>malloc(n_hermite_x_12 * sizeof(double))
  *     hermite_y_12 = <double*>malloc(n_hermite_y_12 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28258,7 +29543,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_y_12 = ((double *)malloc((__pyx_v_n_hermite_y_12 * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1086
+  /* "tuna_integral.pyx":1192
  *     hermite_x_12 = <double*>malloc(n_hermite_x_12 * sizeof(double))
  *     hermite_y_12 = <double*>malloc(n_hermite_y_12 * sizeof(double))
  *     hermite_z_12 = <double*>malloc(n_hermite_z_12 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28267,7 +29552,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_z_12 = ((double *)malloc((__pyx_v_n_hermite_z_12 * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1087
+  /* "tuna_integral.pyx":1193
  *     hermite_y_12 = <double*>malloc(n_hermite_y_12 * sizeof(double))
  *     hermite_z_12 = <double*>malloc(n_hermite_z_12 * sizeof(double))
  *     hermite_x_34 = <double*>malloc(n_hermite_x_34 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28276,7 +29561,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_x_34 = ((double *)malloc((__pyx_v_n_hermite_x_34 * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1088
+  /* "tuna_integral.pyx":1194
  *     hermite_z_12 = <double*>malloc(n_hermite_z_12 * sizeof(double))
  *     hermite_x_34 = <double*>malloc(n_hermite_x_34 * sizeof(double))
  *     hermite_y_34 = <double*>malloc(n_hermite_y_34 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28285,7 +29570,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_y_34 = ((double *)malloc((__pyx_v_n_hermite_y_34 * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1089
+  /* "tuna_integral.pyx":1195
  *     hermite_x_34 = <double*>malloc(n_hermite_x_34 * sizeof(double))
  *     hermite_y_34 = <double*>malloc(n_hermite_y_34 * sizeof(double))
  *     hermite_z_34 = <double*>malloc(n_hermite_z_34 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28294,7 +29579,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_hermite_z_34 = ((double *)malloc((__pyx_v_n_hermite_z_34 * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1091
+  /* "tuna_integral.pyx":1197
  *     hermite_z_34 = <double*>malloc(n_hermite_z_34 * sizeof(double))
  * 
  *     boys_table = <double*>malloc((Nmax + 1) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28303,7 +29588,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_boys_table = ((double *)malloc(((__pyx_v_Nmax + 1) * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1092
+  /* "tuna_integral.pyx":1198
  * 
  *     boys_table = <double*>malloc((Nmax + 1) * sizeof(double))
  *     pow_table = <double*>malloc((Nmax + 1) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28312,7 +29597,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_pow_table = ((double *)malloc(((__pyx_v_Nmax + 1) * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1093
+  /* "tuna_integral.pyx":1199
  *     boys_table = <double*>malloc((Nmax + 1) * sizeof(double))
  *     pow_table = <double*>malloc((Nmax + 1) * sizeof(double))
  *     Rz_table = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -28321,7 +29606,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_Rz_table = ((double *)malloc((((__pyx_v_Vmax + 1) * (__pyx_v_Nmax + 1)) * (sizeof(double)))));
 
-  /* "tuna_integral.pyx":1095
+  /* "tuna_integral.pyx":1201
  *     Rz_table = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
  * 
  *     if (hermite_x_12 == NULL or hermite_y_12 == NULL or hermite_z_12 == NULL or             # <<<<<<<<<<<<<<
@@ -28347,7 +29632,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
     goto __pyx_L7_bool_binop_done;
   }
 
-  /* "tuna_integral.pyx":1096
+  /* "tuna_integral.pyx":1202
  * 
  *     if (hermite_x_12 == NULL or hermite_y_12 == NULL or hermite_z_12 == NULL or
  *         hermite_x_34 == NULL or hermite_y_34 == NULL or hermite_z_34 == NULL or             # <<<<<<<<<<<<<<
@@ -28373,7 +29658,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
     goto __pyx_L7_bool_binop_done;
   }
 
-  /* "tuna_integral.pyx":1097
+  /* "tuna_integral.pyx":1203
  *     if (hermite_x_12 == NULL or hermite_y_12 == NULL or hermite_z_12 == NULL or
  *         hermite_x_34 == NULL or hermite_y_34 == NULL or hermite_z_34 == NULL or
  *         boys_table == NULL or pow_table == NULL or Rz_table == NULL):             # <<<<<<<<<<<<<<
@@ -28396,7 +29681,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
   __pyx_t_1 = __pyx_t_2;
   __pyx_L7_bool_binop_done:;
 
-  /* "tuna_integral.pyx":1095
+  /* "tuna_integral.pyx":1201
  *     Rz_table = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
  * 
  *     if (hermite_x_12 == NULL or hermite_y_12 == NULL or hermite_z_12 == NULL or             # <<<<<<<<<<<<<<
@@ -28405,7 +29690,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   if (__pyx_t_1) {
 
-    /* "tuna_integral.pyx":1099
+    /* "tuna_integral.pyx":1205
  *         boys_table == NULL or pow_table == NULL or Rz_table == NULL):
  * 
  *         free(hermite_x_12)             # <<<<<<<<<<<<<<
@@ -28414,7 +29699,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_hermite_x_12);
 
-    /* "tuna_integral.pyx":1100
+    /* "tuna_integral.pyx":1206
  * 
  *         free(hermite_x_12)
  *         free(hermite_y_12)             # <<<<<<<<<<<<<<
@@ -28423,7 +29708,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_hermite_y_12);
 
-    /* "tuna_integral.pyx":1101
+    /* "tuna_integral.pyx":1207
  *         free(hermite_x_12)
  *         free(hermite_y_12)
  *         free(hermite_z_12)             # <<<<<<<<<<<<<<
@@ -28432,7 +29717,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_hermite_z_12);
 
-    /* "tuna_integral.pyx":1102
+    /* "tuna_integral.pyx":1208
  *         free(hermite_y_12)
  *         free(hermite_z_12)
  *         free(hermite_x_34)             # <<<<<<<<<<<<<<
@@ -28441,7 +29726,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_hermite_x_34);
 
-    /* "tuna_integral.pyx":1103
+    /* "tuna_integral.pyx":1209
  *         free(hermite_z_12)
  *         free(hermite_x_34)
  *         free(hermite_y_34)             # <<<<<<<<<<<<<<
@@ -28450,7 +29735,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_hermite_y_34);
 
-    /* "tuna_integral.pyx":1104
+    /* "tuna_integral.pyx":1210
  *         free(hermite_x_34)
  *         free(hermite_y_34)
  *         free(hermite_z_34)             # <<<<<<<<<<<<<<
@@ -28459,7 +29744,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_hermite_z_34);
 
-    /* "tuna_integral.pyx":1105
+    /* "tuna_integral.pyx":1211
  *         free(hermite_y_34)
  *         free(hermite_z_34)
  *         free(boys_table)             # <<<<<<<<<<<<<<
@@ -28468,7 +29753,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_boys_table);
 
-    /* "tuna_integral.pyx":1106
+    /* "tuna_integral.pyx":1212
  *         free(hermite_z_34)
  *         free(boys_table)
  *         free(pow_table)             # <<<<<<<<<<<<<<
@@ -28477,7 +29762,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_pow_table);
 
-    /* "tuna_integral.pyx":1107
+    /* "tuna_integral.pyx":1213
  *         free(boys_table)
  *         free(pow_table)
  *         free(Rz_table)             # <<<<<<<<<<<<<<
@@ -28486,7 +29771,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     free(__pyx_v_Rz_table);
 
-    /* "tuna_integral.pyx":1109
+    /* "tuna_integral.pyx":1215
  *         free(Rz_table)
  * 
  *         return 0.0             # <<<<<<<<<<<<<<
@@ -28496,7 +29781,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
     __pyx_r = 0.0;
     goto __pyx_L0;
 
-    /* "tuna_integral.pyx":1095
+    /* "tuna_integral.pyx":1201
  *     Rz_table = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
  * 
  *     if (hermite_x_12 == NULL or hermite_y_12 == NULL or hermite_z_12 == NULL or             # <<<<<<<<<<<<<<
@@ -28505,88 +29790,88 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   }
 
-  /* "tuna_integral.pyx":1111
+  /* "tuna_integral.pyx":1217
  *         return 0.0
  * 
  *     fill_hermite_table(l_1, l_2, 0.0, exponent_1, exponent_2, hermite_x_12, True)             # <<<<<<<<<<<<<<
  *     fill_hermite_table(m_1, m_2, 0.0, exponent_1, exponent_2, hermite_y_12, True)
  *     fill_hermite_table(n_1, n_2, Rz_12, exponent_1, exponent_2, hermite_z_12, False)
 */
-  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_l_1, __pyx_v_l_2, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2, __pyx_v_hermite_x_12, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1111, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_l_1, __pyx_v_l_2, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2, __pyx_v_hermite_x_12, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1217, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1112
+  /* "tuna_integral.pyx":1218
  * 
  *     fill_hermite_table(l_1, l_2, 0.0, exponent_1, exponent_2, hermite_x_12, True)
  *     fill_hermite_table(m_1, m_2, 0.0, exponent_1, exponent_2, hermite_y_12, True)             # <<<<<<<<<<<<<<
  *     fill_hermite_table(n_1, n_2, Rz_12, exponent_1, exponent_2, hermite_z_12, False)
  * 
 */
-  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_m_1, __pyx_v_m_2, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2, __pyx_v_hermite_y_12, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1112, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_m_1, __pyx_v_m_2, 0.0, __pyx_v_exponent_1, __pyx_v_exponent_2, __pyx_v_hermite_y_12, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1218, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1113
+  /* "tuna_integral.pyx":1219
  *     fill_hermite_table(l_1, l_2, 0.0, exponent_1, exponent_2, hermite_x_12, True)
  *     fill_hermite_table(m_1, m_2, 0.0, exponent_1, exponent_2, hermite_y_12, True)
  *     fill_hermite_table(n_1, n_2, Rz_12, exponent_1, exponent_2, hermite_z_12, False)             # <<<<<<<<<<<<<<
  * 
  *     fill_hermite_table(l_3, l_4, 0.0, exponent_3, exponent_4, hermite_x_34, True)
 */
-  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_n_1, __pyx_v_n_2, __pyx_v_Rz_12, __pyx_v_exponent_1, __pyx_v_exponent_2, __pyx_v_hermite_z_12, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1113, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_n_1, __pyx_v_n_2, __pyx_v_Rz_12, __pyx_v_exponent_1, __pyx_v_exponent_2, __pyx_v_hermite_z_12, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1219, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1115
+  /* "tuna_integral.pyx":1221
  *     fill_hermite_table(n_1, n_2, Rz_12, exponent_1, exponent_2, hermite_z_12, False)
  * 
  *     fill_hermite_table(l_3, l_4, 0.0, exponent_3, exponent_4, hermite_x_34, True)             # <<<<<<<<<<<<<<
  *     fill_hermite_table(m_3, m_4, 0.0, exponent_3, exponent_4, hermite_y_34, True)
  *     fill_hermite_table(n_3, n_4, Rz_34, exponent_3, exponent_4, hermite_z_34, False)
 */
-  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_l_3, __pyx_v_l_4, 0.0, __pyx_v_exponent_3, __pyx_v_exponent_4, __pyx_v_hermite_x_34, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1115, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_l_3, __pyx_v_l_4, 0.0, __pyx_v_exponent_3, __pyx_v_exponent_4, __pyx_v_hermite_x_34, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1221, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1116
+  /* "tuna_integral.pyx":1222
  * 
  *     fill_hermite_table(l_3, l_4, 0.0, exponent_3, exponent_4, hermite_x_34, True)
  *     fill_hermite_table(m_3, m_4, 0.0, exponent_3, exponent_4, hermite_y_34, True)             # <<<<<<<<<<<<<<
  *     fill_hermite_table(n_3, n_4, Rz_34, exponent_3, exponent_4, hermite_z_34, False)
  * 
 */
-  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_m_3, __pyx_v_m_4, 0.0, __pyx_v_exponent_3, __pyx_v_exponent_4, __pyx_v_hermite_y_34, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1116, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_m_3, __pyx_v_m_4, 0.0, __pyx_v_exponent_3, __pyx_v_exponent_4, __pyx_v_hermite_y_34, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1222, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1117
+  /* "tuna_integral.pyx":1223
  *     fill_hermite_table(l_3, l_4, 0.0, exponent_3, exponent_4, hermite_x_34, True)
  *     fill_hermite_table(m_3, m_4, 0.0, exponent_3, exponent_4, hermite_y_34, True)
  *     fill_hermite_table(n_3, n_4, Rz_34, exponent_3, exponent_4, hermite_z_34, False)             # <<<<<<<<<<<<<<
  * 
  *     fill_boys_table(Nmax, reduced_exponent * PQz * PQz, boys_table)
 */
-  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_n_3, __pyx_v_n_4, __pyx_v_Rz_34, __pyx_v_exponent_3, __pyx_v_exponent_4, __pyx_v_hermite_z_34, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1117, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_hermite_table(__pyx_v_n_3, __pyx_v_n_4, __pyx_v_Rz_34, __pyx_v_exponent_3, __pyx_v_exponent_4, __pyx_v_hermite_z_34, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1223, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1119
+  /* "tuna_integral.pyx":1225
  *     fill_hermite_table(n_3, n_4, Rz_34, exponent_3, exponent_4, hermite_z_34, False)
  * 
  *     fill_boys_table(Nmax, reduced_exponent * PQz * PQz, boys_table)             # <<<<<<<<<<<<<<
  *     fill_pow_table(Nmax, reduced_exponent, pow_table)
  *     fill_Rz_linear_table(Vmax, Nmax, PQz, boys_table, pow_table, Rz_table)
 */
-  __pyx_f_13tuna_integral_fill_boys_table(__pyx_v_Nmax, ((__pyx_v_reduced_exponent * __pyx_v_PQz) * __pyx_v_PQz), __pyx_v_boys_table); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1119, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_boys_table(__pyx_v_Nmax, ((__pyx_v_reduced_exponent * __pyx_v_PQz) * __pyx_v_PQz), __pyx_v_boys_table); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1225, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1120
+  /* "tuna_integral.pyx":1226
  * 
  *     fill_boys_table(Nmax, reduced_exponent * PQz * PQz, boys_table)
  *     fill_pow_table(Nmax, reduced_exponent, pow_table)             # <<<<<<<<<<<<<<
  *     fill_Rz_linear_table(Vmax, Nmax, PQz, boys_table, pow_table, Rz_table)
  * 
 */
-  __pyx_f_13tuna_integral_fill_pow_table(__pyx_v_Nmax, __pyx_v_reduced_exponent, __pyx_v_pow_table); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1120, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_pow_table(__pyx_v_Nmax, __pyx_v_reduced_exponent, __pyx_v_pow_table); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1226, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1121
+  /* "tuna_integral.pyx":1227
  *     fill_boys_table(Nmax, reduced_exponent * PQz * PQz, boys_table)
  *     fill_pow_table(Nmax, reduced_exponent, pow_table)
  *     fill_Rz_linear_table(Vmax, Nmax, PQz, boys_table, pow_table, Rz_table)             # <<<<<<<<<<<<<<
  * 
  *     for t in range(t_start, n_hermite_x_12, 2):
 */
-  __pyx_f_13tuna_integral_fill_Rz_linear_table(__pyx_v_Vmax, __pyx_v_Nmax, __pyx_v_PQz, __pyx_v_boys_table, __pyx_v_pow_table, __pyx_v_Rz_table); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1121, __pyx_L1_error)
+  __pyx_f_13tuna_integral_fill_Rz_linear_table(__pyx_v_Vmax, __pyx_v_Nmax, __pyx_v_PQz, __pyx_v_boys_table, __pyx_v_pow_table, __pyx_v_Rz_table); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1227, __pyx_L1_error)
 
-  /* "tuna_integral.pyx":1123
+  /* "tuna_integral.pyx":1229
  *     fill_Rz_linear_table(Vmax, Nmax, PQz, boys_table, pow_table, Rz_table)
  * 
  *     for t in range(t_start, n_hermite_x_12, 2):             # <<<<<<<<<<<<<<
@@ -28598,7 +29883,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
   for (__pyx_t_5 = __pyx_v_t_start; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=2) {
     __pyx_v_t = __pyx_t_5;
 
-    /* "tuna_integral.pyx":1125
+    /* "tuna_integral.pyx":1231
  *     for t in range(t_start, n_hermite_x_12, 2):
  * 
  *         coefficient_x_12 = hermite_x_12[t]             # <<<<<<<<<<<<<<
@@ -28607,7 +29892,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
     __pyx_v_coefficient_x_12 = (__pyx_v_hermite_x_12[__pyx_v_t]);
 
-    /* "tuna_integral.pyx":1127
+    /* "tuna_integral.pyx":1233
  *         coefficient_x_12 = hermite_x_12[t]
  * 
  *         for tau in range(tau_start, n_hermite_x_34, 2):             # <<<<<<<<<<<<<<
@@ -28619,7 +29904,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
     for (__pyx_t_8 = __pyx_v_tau_start; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=2) {
       __pyx_v_tau = __pyx_t_8;
 
-      /* "tuna_integral.pyx":1129
+      /* "tuna_integral.pyx":1235
  *         for tau in range(tau_start, n_hermite_x_34, 2):
  * 
  *             coefficient_x_34 = hermite_x_34[tau]             # <<<<<<<<<<<<<<
@@ -28628,17 +29913,17 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
       __pyx_v_coefficient_x_34 = (__pyx_v_hermite_x_34[__pyx_v_tau]);
 
-      /* "tuna_integral.pyx":1130
+      /* "tuna_integral.pyx":1236
  * 
  *             coefficient_x_34 = hermite_x_34[tau]
  *             x_factor = coefficient_x_12 * coefficient_x_34 * odd_double_double_fact_from_even(t + tau)             # <<<<<<<<<<<<<<
  * 
  *             for u in range(u_start, n_hermite_y_12, 2):
 */
-      __pyx_t_9 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even((__pyx_v_t + __pyx_v_tau)); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 1130, __pyx_L1_error)
+      __pyx_t_9 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even((__pyx_v_t + __pyx_v_tau)); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 1236, __pyx_L1_error)
       __pyx_v_x_factor = ((__pyx_v_coefficient_x_12 * __pyx_v_coefficient_x_34) * __pyx_t_9);
 
-      /* "tuna_integral.pyx":1132
+      /* "tuna_integral.pyx":1238
  *             x_factor = coefficient_x_12 * coefficient_x_34 * odd_double_double_fact_from_even(t + tau)
  * 
  *             for u in range(u_start, n_hermite_y_12, 2):             # <<<<<<<<<<<<<<
@@ -28650,7 +29935,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
       for (__pyx_t_12 = __pyx_v_u_start; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=2) {
         __pyx_v_u = __pyx_t_12;
 
-        /* "tuna_integral.pyx":1134
+        /* "tuna_integral.pyx":1240
  *             for u in range(u_start, n_hermite_y_12, 2):
  * 
  *                 coefficient_y_12 = hermite_y_12[u]             # <<<<<<<<<<<<<<
@@ -28659,7 +29944,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
         __pyx_v_coefficient_y_12 = (__pyx_v_hermite_y_12[__pyx_v_u]);
 
-        /* "tuna_integral.pyx":1136
+        /* "tuna_integral.pyx":1242
  *                 coefficient_y_12 = hermite_y_12[u]
  * 
  *                 for nu in range(nu_start, n_hermite_y_34, 2):             # <<<<<<<<<<<<<<
@@ -28671,7 +29956,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
         for (__pyx_t_15 = __pyx_v_nu_start; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=2) {
           __pyx_v_nu = __pyx_t_15;
 
-          /* "tuna_integral.pyx":1138
+          /* "tuna_integral.pyx":1244
  *                 for nu in range(nu_start, n_hermite_y_34, 2):
  * 
  *                     coefficient_y_34 = hermite_y_34[nu]             # <<<<<<<<<<<<<<
@@ -28680,17 +29965,17 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
           __pyx_v_coefficient_y_34 = (__pyx_v_hermite_y_34[__pyx_v_nu]);
 
-          /* "tuna_integral.pyx":1139
+          /* "tuna_integral.pyx":1245
  * 
  *                     coefficient_y_34 = hermite_y_34[nu]
  *                     xy_factor = x_factor * coefficient_y_12 * coefficient_y_34 * odd_double_double_fact_from_even(u + nu)             # <<<<<<<<<<<<<<
  *                     n_xy = ((t + tau) >> 1) + ((u + nu) >> 1)
  * 
 */
-          __pyx_t_9 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even((__pyx_v_u + __pyx_v_nu)); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 1139, __pyx_L1_error)
+          __pyx_t_9 = __pyx_f_13tuna_integral_odd_double_double_fact_from_even((__pyx_v_u + __pyx_v_nu)); if (unlikely(__pyx_t_9 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 1245, __pyx_L1_error)
           __pyx_v_xy_factor = (((__pyx_v_x_factor * __pyx_v_coefficient_y_12) * __pyx_v_coefficient_y_34) * __pyx_t_9);
 
-          /* "tuna_integral.pyx":1140
+          /* "tuna_integral.pyx":1246
  *                     coefficient_y_34 = hermite_y_34[nu]
  *                     xy_factor = x_factor * coefficient_y_12 * coefficient_y_34 * odd_double_double_fact_from_even(u + nu)
  *                     n_xy = ((t + tau) >> 1) + ((u + nu) >> 1)             # <<<<<<<<<<<<<<
@@ -28699,7 +29984,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
           __pyx_v_n_xy = (((__pyx_v_t + __pyx_v_tau) >> 1) + ((__pyx_v_u + __pyx_v_nu) >> 1));
 
-          /* "tuna_integral.pyx":1142
+          /* "tuna_integral.pyx":1248
  *                     n_xy = ((t + tau) >> 1) + ((u + nu) >> 1)
  * 
  *                     for v in range(n_hermite_z_12):             # <<<<<<<<<<<<<<
@@ -28711,7 +29996,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
           for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
             __pyx_v_v = __pyx_t_18;
 
-            /* "tuna_integral.pyx":1144
+            /* "tuna_integral.pyx":1250
  *                     for v in range(n_hermite_z_12):
  * 
  *                         coefficient_z_12 = hermite_z_12[v]             # <<<<<<<<<<<<<<
@@ -28720,7 +30005,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
             __pyx_v_coefficient_z_12 = (__pyx_v_hermite_z_12[__pyx_v_v]);
 
-            /* "tuna_integral.pyx":1146
+            /* "tuna_integral.pyx":1252
  *                         coefficient_z_12 = hermite_z_12[v]
  * 
  *                         if coefficient_z_12 == 0.0:             # <<<<<<<<<<<<<<
@@ -28730,7 +30015,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
             __pyx_t_1 = (__pyx_v_coefficient_z_12 == 0.0);
             if (__pyx_t_1) {
 
-              /* "tuna_integral.pyx":1148
+              /* "tuna_integral.pyx":1254
  *                         if coefficient_z_12 == 0.0:
  * 
  *                             continue             # <<<<<<<<<<<<<<
@@ -28739,7 +30024,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
               goto __pyx_L24_continue;
 
-              /* "tuna_integral.pyx":1146
+              /* "tuna_integral.pyx":1252
  *                         coefficient_z_12 = hermite_z_12[v]
  * 
  *                         if coefficient_z_12 == 0.0:             # <<<<<<<<<<<<<<
@@ -28748,7 +30033,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
             }
 
-            /* "tuna_integral.pyx":1150
+            /* "tuna_integral.pyx":1256
  *                             continue
  * 
  *                         for phi in range(n_hermite_z_34):             # <<<<<<<<<<<<<<
@@ -28760,7 +30045,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
             for (__pyx_t_21 = 0; __pyx_t_21 < __pyx_t_20; __pyx_t_21+=1) {
               __pyx_v_phi = __pyx_t_21;
 
-              /* "tuna_integral.pyx":1152
+              /* "tuna_integral.pyx":1258
  *                         for phi in range(n_hermite_z_34):
  * 
  *                             coefficient_z_34 = hermite_z_34[phi]             # <<<<<<<<<<<<<<
@@ -28769,7 +30054,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
               __pyx_v_coefficient_z_34 = (__pyx_v_hermite_z_34[__pyx_v_phi]);
 
-              /* "tuna_integral.pyx":1154
+              /* "tuna_integral.pyx":1260
  *                             coefficient_z_34 = hermite_z_34[phi]
  * 
  *                             if coefficient_z_34 == 0.0:             # <<<<<<<<<<<<<<
@@ -28779,7 +30064,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
               __pyx_t_1 = (__pyx_v_coefficient_z_34 == 0.0);
               if (__pyx_t_1) {
 
-                /* "tuna_integral.pyx":1156
+                /* "tuna_integral.pyx":1262
  *                             if coefficient_z_34 == 0.0:
  * 
  *                                 continue             # <<<<<<<<<<<<<<
@@ -28788,7 +30073,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
                 goto __pyx_L27_continue;
 
-                /* "tuna_integral.pyx":1154
+                /* "tuna_integral.pyx":1260
  *                             coefficient_z_34 = hermite_z_34[phi]
  * 
  *                             if coefficient_z_34 == 0.0:             # <<<<<<<<<<<<<<
@@ -28797,7 +30082,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
               }
 
-              /* "tuna_integral.pyx":1158
+              /* "tuna_integral.pyx":1264
  *                                 continue
  * 
  *                             if ((tau + nu + phi) & 1):             # <<<<<<<<<<<<<<
@@ -28807,7 +30092,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
               __pyx_t_1 = ((((__pyx_v_tau + __pyx_v_nu) + __pyx_v_phi) & 1) != 0);
               if (__pyx_t_1) {
 
-                /* "tuna_integral.pyx":1160
+                /* "tuna_integral.pyx":1266
  *                             if ((tau + nu + phi) & 1):
  * 
  *                                 sign = -1.0             # <<<<<<<<<<<<<<
@@ -28816,7 +30101,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
                 __pyx_v_sign = -1.0;
 
-                /* "tuna_integral.pyx":1158
+                /* "tuna_integral.pyx":1264
  *                                 continue
  * 
  *                             if ((tau + nu + phi) & 1):             # <<<<<<<<<<<<<<
@@ -28826,7 +30111,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
                 goto __pyx_L30;
               }
 
-              /* "tuna_integral.pyx":1164
+              /* "tuna_integral.pyx":1270
  *                             else:
  * 
  *                                 sign = 1.0             # <<<<<<<<<<<<<<
@@ -28838,7 +30123,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
               }
               __pyx_L30:;
 
-              /* "tuna_integral.pyx":1166
+              /* "tuna_integral.pyx":1272
  *                                 sign = 1.0
  * 
  *                             integral += xy_factor * coefficient_z_12 * coefficient_z_34 * sign * Rz_table[(v + phi) * stride + n_xy]             # <<<<<<<<<<<<<<
@@ -28855,7 +30140,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
     }
   }
 
-  /* "tuna_integral.pyx":1169
+  /* "tuna_integral.pyx":1275
  * 
  * 
  *     prefactor = 2.0 * pow(PI, 2.5) / (exponent_sum_12 * exponent_sum_34 * sqrt(exponent_sum_12 + exponent_sum_34))             # <<<<<<<<<<<<<<
@@ -28864,7 +30149,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_prefactor = ((2.0 * pow(__pyx_v_13tuna_integral_PI, 2.5)) / ((__pyx_v_exponent_sum_12 * __pyx_v_exponent_sum_34) * sqrt((__pyx_v_exponent_sum_12 + __pyx_v_exponent_sum_34))));
 
-  /* "tuna_integral.pyx":1170
+  /* "tuna_integral.pyx":1276
  * 
  *     prefactor = 2.0 * pow(PI, 2.5) / (exponent_sum_12 * exponent_sum_34 * sqrt(exponent_sum_12 + exponent_sum_34))
  *     integral *= prefactor             # <<<<<<<<<<<<<<
@@ -28873,7 +30158,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   __pyx_v_integral = (__pyx_v_integral * __pyx_v_prefactor);
 
-  /* "tuna_integral.pyx":1172
+  /* "tuna_integral.pyx":1278
  *     integral *= prefactor
  * 
  *     free(hermite_x_12)             # <<<<<<<<<<<<<<
@@ -28882,7 +30167,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_hermite_x_12);
 
-  /* "tuna_integral.pyx":1173
+  /* "tuna_integral.pyx":1279
  * 
  *     free(hermite_x_12)
  *     free(hermite_y_12)             # <<<<<<<<<<<<<<
@@ -28891,7 +30176,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_hermite_y_12);
 
-  /* "tuna_integral.pyx":1174
+  /* "tuna_integral.pyx":1280
  *     free(hermite_x_12)
  *     free(hermite_y_12)
  *     free(hermite_z_12)             # <<<<<<<<<<<<<<
@@ -28900,7 +30185,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_hermite_z_12);
 
-  /* "tuna_integral.pyx":1175
+  /* "tuna_integral.pyx":1281
  *     free(hermite_y_12)
  *     free(hermite_z_12)
  *     free(hermite_x_34)             # <<<<<<<<<<<<<<
@@ -28909,7 +30194,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_hermite_x_34);
 
-  /* "tuna_integral.pyx":1176
+  /* "tuna_integral.pyx":1282
  *     free(hermite_z_12)
  *     free(hermite_x_34)
  *     free(hermite_y_34)             # <<<<<<<<<<<<<<
@@ -28918,7 +30203,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_hermite_y_34);
 
-  /* "tuna_integral.pyx":1177
+  /* "tuna_integral.pyx":1283
  *     free(hermite_x_34)
  *     free(hermite_y_34)
  *     free(hermite_z_34)             # <<<<<<<<<<<<<<
@@ -28927,7 +30212,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_hermite_z_34);
 
-  /* "tuna_integral.pyx":1178
+  /* "tuna_integral.pyx":1284
  *     free(hermite_y_34)
  *     free(hermite_z_34)
  *     free(boys_table)             # <<<<<<<<<<<<<<
@@ -28936,7 +30221,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_boys_table);
 
-  /* "tuna_integral.pyx":1179
+  /* "tuna_integral.pyx":1285
  *     free(hermite_z_34)
  *     free(boys_table)
  *     free(pow_table)             # <<<<<<<<<<<<<<
@@ -28945,7 +30230,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_pow_table);
 
-  /* "tuna_integral.pyx":1180
+  /* "tuna_integral.pyx":1286
  *     free(boys_table)
  *     free(pow_table)
  *     free(Rz_table)             # <<<<<<<<<<<<<<
@@ -28954,7 +30239,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
 */
   free(__pyx_v_Rz_table);
 
-  /* "tuna_integral.pyx":1182
+  /* "tuna_integral.pyx":1288
  *     free(Rz_table)
  * 
  *     return integral             # <<<<<<<<<<<<<<
@@ -28962,7 +30247,7 @@ static double __pyx_f_13tuna_integral_electron_repulsion(double __pyx_v_exponent
   __pyx_r = __pyx_v_integral;
   goto __pyx_L0;
 
-  /* "tuna_integral.pyx":990
+  /* "tuna_integral.pyx":1096
  * 
  * 
  * cdef double electron_repulsion(double exponent_1, long *angmom_1, double *centre_1, double exponent_2, long *angmom_2, double *centre_2,             # <<<<<<<<<<<<<<
@@ -30272,7 +31557,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #endif
   __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_7cpython_4type_type) __PYX_ERR(3, 9, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyImport_ImportModule("numpy"); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 228, __pyx_L1_error)
+  __pyx_t_1 = PyImport_ImportModule("numpy"); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_mstate->__pyx_ptype_5numpy_dtype = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "dtype",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
@@ -30282,7 +31567,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyArray_Descr), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyArray_Descr),
   #endif
-  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_dtype) __PYX_ERR(2, 228, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_dtype) __PYX_ERR(2, 229, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_flatiter = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "flatiter",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyArrayIterObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyArrayIterObject),
@@ -30291,7 +31576,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyArrayIterObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyArrayIterObject),
   #endif
-  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_flatiter) __PYX_ERR(2, 273, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_flatiter) __PYX_ERR(2, 274, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_broadcast = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "broadcast",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyArrayMultiIterObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyArrayMultiIterObject),
@@ -30300,7 +31585,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyArrayMultiIterObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyArrayMultiIterObject),
   #endif
-  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_broadcast) __PYX_ERR(2, 277, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_broadcast) __PYX_ERR(2, 278, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_ndarray = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "ndarray",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyArrayObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyArrayObject),
@@ -30309,7 +31594,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyArrayObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyArrayObject),
   #endif
-  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_ndarray) __PYX_ERR(2, 316, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_ndarray) __PYX_ERR(2, 317, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_generic = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "generic",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30318,7 +31603,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_generic) __PYX_ERR(2, 825, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_generic) __PYX_ERR(2, 826, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_number = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "number",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30327,7 +31612,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_number) __PYX_ERR(2, 827, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_number) __PYX_ERR(2, 828, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_integer = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "integer",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30336,7 +31621,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_integer) __PYX_ERR(2, 829, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_integer) __PYX_ERR(2, 830, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_signedinteger = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "signedinteger",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30345,7 +31630,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_signedinteger) __PYX_ERR(2, 831, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_signedinteger) __PYX_ERR(2, 832, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_unsignedinteger = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "unsignedinteger",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30354,7 +31639,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_unsignedinteger) __PYX_ERR(2, 833, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_unsignedinteger) __PYX_ERR(2, 834, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_inexact = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "inexact",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30363,7 +31648,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_inexact) __PYX_ERR(2, 835, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_inexact) __PYX_ERR(2, 836, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_floating = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "floating",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30372,7 +31657,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_floating) __PYX_ERR(2, 837, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_floating) __PYX_ERR(2, 838, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_complexfloating = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "complexfloating",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30381,7 +31666,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_complexfloating) __PYX_ERR(2, 839, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_complexfloating) __PYX_ERR(2, 840, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_flexible = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "flexible",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30390,7 +31675,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_flexible) __PYX_ERR(2, 841, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_flexible) __PYX_ERR(2, 842, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_character = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "character",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
@@ -30399,7 +31684,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyObject),
   #endif
-  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_character) __PYX_ERR(2, 843, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Warn_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_character) __PYX_ERR(2, 844, __pyx_L1_error)
   __pyx_mstate->__pyx_ptype_5numpy_ufunc = __Pyx_ImportType_3_1_4(__pyx_t_1, "numpy", "ufunc",
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
   sizeof(PyUFuncObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyUFuncObject),
@@ -30408,7 +31693,7 @@ static int __Pyx_modinit_type_import_code(__pyx_mstatetype *__pyx_mstate) {
   #else
   sizeof(PyUFuncObject), __PYX_GET_STRUCT_ALIGNMENT_3_1_4(PyUFuncObject),
   #endif
-  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_ufunc) __PYX_ERR(2, 907, __pyx_L1_error)
+  __Pyx_ImportType_CheckSize_Ignore_3_1_4); if (!__pyx_mstate->__pyx_ptype_5numpy_ufunc) __PYX_ERR(2, 908, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_RefNannyFinishContext();
   return 0;
@@ -31379,145 +32664,182 @@ __Pyx_RefNannySetupContext("PyInit_tuna_integral", 0);
   if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_dipole, __pyx_t_5) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "tuna_integral.pyx":306
+  /* "tuna_integral.pyx":307
+ * 
+ * 
+ * cpdef double calculate_quadrupole_integral(object bf_1, object bf_2, quadrupole_origin, str direction):             # <<<<<<<<<<<<<<
+ * 
+ *     """
+*/
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_5calculate_quadrupole_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_quadrupole_integral, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[5])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 307, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_quadrupole_integral, __pyx_t_5) < 0) __PYX_ERR(0, 307, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "tuna_integral.pyx":345
+ * 
+ * 
+ * def quadrupole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, quadrupole_origin: ndarray, direction: str) -> float:             # <<<<<<<<<<<<<<
+ * 
+ *     """
+*/
+  __pyx_t_5 = __Pyx_PyDict_NewPresized(9); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_1, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_2, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_quadrupole_origin, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_direction, __pyx_mstate_global->__pyx_n_u_str) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_return, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_7quadrupole, 0, __pyx_mstate_global->__pyx_n_u_quadrupole, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[6])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_4, __pyx_t_5);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_quadrupole, __pyx_t_4) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+
+  /* "tuna_integral.pyx":410
  * 
  * 
  * cpdef double calculate_nuclear_electron_integral(object bf_1, object bf_2, double[:] nucleus):             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_5calculate_nuclear_electron_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_nuclear_electron_integ, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[5])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 306, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_nuclear_electron_integ, __pyx_t_5) < 0) __PYX_ERR(0, 306, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_9calculate_nuclear_electron_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_nuclear_electron_integ, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[7])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 410, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_nuclear_electron_integ, __pyx_t_4) < 0) __PYX_ERR(0, 410, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "tuna_integral.pyx":344
+  /* "tuna_integral.pyx":448
  * 
  * 
  * def nuclear_attraction(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, nucleus: ndarray) -> float:             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_5 = __Pyx_PyDict_NewPresized(8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 344, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_1, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_2, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_nucleus, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_return, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_7nuclear_attraction, 0, __pyx_mstate_global->__pyx_n_u_nuclear_attraction, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[6])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 344, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 448, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_4, __pyx_t_5);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_nuclear_attraction, __pyx_t_4) < 0) __PYX_ERR(0, 344, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_exponent_1, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_angmom_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_centre_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_exponent_2, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_angmom_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_centre_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_nucleus, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_return, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_11nuclear_attraction, 0, __pyx_mstate_global->__pyx_n_u_nuclear_attraction, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[8])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 448, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_5, __pyx_t_4);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_nuclear_attraction, __pyx_t_5) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "tuna_integral.pyx":419
+  /* "tuna_integral.pyx":523
  * 
  * 
  * cpdef double calculate_kinetic_integral(object bf_1, object bf_2):             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_9calculate_kinetic_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_kinetic_integral, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[7])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 419, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_kinetic_integral, __pyx_t_4) < 0) __PYX_ERR(0, 419, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_13calculate_kinetic_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_kinetic_integral, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[9])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 523, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_kinetic_integral, __pyx_t_5) < 0) __PYX_ERR(0, 523, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "tuna_integral.pyx":455
+  /* "tuna_integral.pyx":559
  * 
  * 
  * def kinetic(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 455, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_exponent_1, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_angmom_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_centre_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_exponent_2, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_angmom_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_centre_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_return, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_11kinetic, 0, __pyx_mstate_global->__pyx_n_u_kinetic, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[8])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 455, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 559, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_5, __pyx_t_4);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_kinetic, __pyx_t_5) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_1, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_2, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_return, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_15kinetic, 0, __pyx_mstate_global->__pyx_n_u_kinetic, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[10])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 559, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_4, __pyx_t_5);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_kinetic, __pyx_t_4) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "tuna_integral.pyx":508
+  /* "tuna_integral.pyx":612
  * 
  * 
  * cpdef double calculate_overlap_integral(object bf_1, object bf_2):             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_13calculate_overlap_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_overlap_integral, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[9])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 508, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_overlap_integral, __pyx_t_5) < 0) __PYX_ERR(0, 508, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_17calculate_overlap_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_overlap_integral, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[11])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 612, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_overlap_integral, __pyx_t_4) < 0) __PYX_ERR(0, 612, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "tuna_integral.pyx":543
+  /* "tuna_integral.pyx":649
  * 
  * 
  * def overlap(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_5 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 543, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_1, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_exponent_2, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_angmom_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_centre_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_return, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_15overlap, 0, __pyx_mstate_global->__pyx_n_u_overlap, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[10])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 543, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 649, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_4, __pyx_t_5);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_overlap, __pyx_t_4) < 0) __PYX_ERR(0, 543, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_exponent_1, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_angmom_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_centre_1, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_exponent_2, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_angmom_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_centre_2, __pyx_mstate_global->__pyx_n_u_ndarray) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_return, __pyx_mstate_global->__pyx_n_u_float) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_19overlap, 0, __pyx_mstate_global->__pyx_n_u_overlap, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[12])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 649, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_5, __pyx_t_4);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_overlap, __pyx_t_5) < 0) __PYX_ERR(0, 649, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "tuna_integral.pyx":583
+  /* "tuna_integral.pyx":689
  * 
  * 
  * cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, double[:, :, :, :] ERI_AO, list bfs):             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_17calculate_electron_repulsion_integrals, 0, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[11])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 583, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int, __pyx_t_4) < 0) __PYX_ERR(0, 583, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_21calculate_electron_repulsion_integrals, 0, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[13])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 689, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int, __pyx_t_5) < 0) __PYX_ERR(0, 689, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "tuna_integral.pyx":659
+  /* "tuna_integral.pyx":765
  * 
  * 
  * cpdef double calculate_electron_repulsion_integral(Basis bf_1, Basis bf_2, Basis bf_3, Basis bf_4):             # <<<<<<<<<<<<<<
  * 
  *     """
 */
-  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_19calculate_electron_repulsion_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int_2, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[12])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 659, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int_2, __pyx_t_4) < 0) __PYX_ERR(0, 659, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_13tuna_integral_23calculate_electron_repulsion_integral, 0, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int_2, NULL, __pyx_mstate_global->__pyx_n_u_tuna_integral, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[14])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 765, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_calculate_electron_repulsion_int_2, __pyx_t_5) < 0) __PYX_ERR(0, 765, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
   /* "tuna_integral.pyx":1
  * # cython: boundscheck=False, wraparound=False, nonecheck=False, cdivision=True             # <<<<<<<<<<<<<<
  * 
  * cimport cython
 */
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_test, __pyx_t_4) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_5 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_test, __pyx_t_5) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
   /*--- Wrapped vars code ---*/
 
@@ -31604,8 +32926,12 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_Ellipsis, sizeof(__pyx_k_Ellipsis), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ellipsis */
   {__pyx_k_Empty_shape_tuple_for_cython_arr, sizeof(__pyx_k_Empty_shape_tuple_for_cython_arr), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_Empty_shape_tuple_for_cython_arr */
   {__pyx_k_Ex, sizeof(__pyx_k_Ex), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ex */
+  {__pyx_k_Ex1, sizeof(__pyx_k_Ex1), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ex1 */
+  {__pyx_k_Ex2, sizeof(__pyx_k_Ex2), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ex2 */
   {__pyx_k_Ey, sizeof(__pyx_k_Ey), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ey */
   {__pyx_k_Ez, sizeof(__pyx_k_Ez), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ez */
+  {__pyx_k_Ez1, sizeof(__pyx_k_Ez1), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ez1 */
+  {__pyx_k_Ez2, sizeof(__pyx_k_Ez2), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Ez2 */
   {__pyx_k_ImportError, sizeof(__pyx_k_ImportError), 0, 1, 1}, /* PyObject cname: __pyx_n_u_ImportError */
   {__pyx_k_Incompatible_checksums_0x_x_vs_0, sizeof(__pyx_k_Incompatible_checksums_0x_x_vs_0), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_Incompatible_checksums_0x_x_vs_0 */
   {__pyx_k_IndexError, sizeof(__pyx_k_IndexError), 0, 1, 1}, /* PyObject cname: __pyx_n_u_IndexError */
@@ -31624,6 +32950,8 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_P, sizeof(__pyx_k_P), 0, 1, 1}, /* PyObject cname: __pyx_n_u_P */
   {__pyx_k_PCz, sizeof(__pyx_k_PCz), 0, 1, 1}, /* PyObject cname: __pyx_n_u_PCz */
   {__pyx_k_PickleError, sizeof(__pyx_k_PickleError), 0, 1, 1}, /* PyObject cname: __pyx_n_u_PickleError */
+  {__pyx_k_Qx, sizeof(__pyx_k_Qx), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Qx */
+  {__pyx_k_Qz, sizeof(__pyx_k_Qz), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Qz */
   {__pyx_k_R_12, sizeof(__pyx_k_R_12), 0, 1, 1}, /* PyObject cname: __pyx_n_u_R_12 */
   {__pyx_k_Rz, sizeof(__pyx_k_Rz), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Rz */
   {__pyx_k_Rz_12, sizeof(__pyx_k_Rz_12), 0, 1, 1}, /* PyObject cname: __pyx_n_u_Rz_12 */
@@ -31675,6 +33003,7 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_calculate_kinetic_integral, sizeof(__pyx_k_calculate_kinetic_integral), 0, 1, 1}, /* PyObject cname: __pyx_n_u_calculate_kinetic_integral */
   {__pyx_k_calculate_nuclear_electron_integ, sizeof(__pyx_k_calculate_nuclear_electron_integ), 0, 1, 1}, /* PyObject cname: __pyx_n_u_calculate_nuclear_electron_integ */
   {__pyx_k_calculate_overlap_integral, sizeof(__pyx_k_calculate_overlap_integral), 0, 1, 1}, /* PyObject cname: __pyx_n_u_calculate_overlap_integral */
+  {__pyx_k_calculate_quadrupole_integral, sizeof(__pyx_k_calculate_quadrupole_integral), 0, 1, 1}, /* PyObject cname: __pyx_n_u_calculate_quadrupole_integral */
   {__pyx_k_centre_1, sizeof(__pyx_k_centre_1), 0, 1, 1}, /* PyObject cname: __pyx_n_u_centre_1 */
   {__pyx_k_centre_2, sizeof(__pyx_k_centre_2), 0, 1, 1}, /* PyObject cname: __pyx_n_u_centre_2 */
   {__pyx_k_class, sizeof(__pyx_k_class), 0, 1, 1}, /* PyObject cname: __pyx_n_u_class */
@@ -31766,6 +33095,8 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_pyx_type, sizeof(__pyx_k_pyx_type), 0, 1, 1}, /* PyObject cname: __pyx_n_u_pyx_type */
   {__pyx_k_pyx_unpickle_Enum, sizeof(__pyx_k_pyx_unpickle_Enum), 0, 1, 1}, /* PyObject cname: __pyx_n_u_pyx_unpickle_Enum */
   {__pyx_k_pyx_vtable, sizeof(__pyx_k_pyx_vtable), 0, 1, 1}, /* PyObject cname: __pyx_n_u_pyx_vtable */
+  {__pyx_k_quadrupole, sizeof(__pyx_k_quadrupole), 0, 1, 1}, /* PyObject cname: __pyx_n_u_quadrupole */
+  {__pyx_k_quadrupole_origin, sizeof(__pyx_k_quadrupole_origin), 0, 1, 1}, /* PyObject cname: __pyx_n_u_quadrupole_origin */
   {__pyx_k_qualname, sizeof(__pyx_k_qualname), 0, 1, 1}, /* PyObject cname: __pyx_n_u_qualname */
   {__pyx_k_range, sizeof(__pyx_k_range), 0, 1, 1}, /* PyObject cname: __pyx_n_u_range */
   {__pyx_k_reduce, sizeof(__pyx_k_reduce), 0, 1, 1}, /* PyObject cname: __pyx_n_u_reduce */
@@ -31802,8 +33133,10 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_update, sizeof(__pyx_k_update), 0, 1, 1}, /* PyObject cname: __pyx_n_u_update */
   {__pyx_k_v, sizeof(__pyx_k_v), 0, 1, 1}, /* PyObject cname: __pyx_n_u_v */
   {__pyx_k_x, sizeof(__pyx_k_x), 0, 1, 1}, /* PyObject cname: __pyx_n_u_x */
+  {__pyx_k_xx, sizeof(__pyx_k_xx), 0, 1, 1}, /* PyObject cname: __pyx_n_u_xx */
   {__pyx_k_y, sizeof(__pyx_k_y), 0, 1, 1}, /* PyObject cname: __pyx_n_u_y */
   {__pyx_k_z, sizeof(__pyx_k_z), 0, 1, 1}, /* PyObject cname: __pyx_n_u_z */
+  {__pyx_k_zz, sizeof(__pyx_k_zz), 0, 1, 1}, /* PyObject cname: __pyx_n_u_zz */
   {0, 0, 0, 0, 0}
 };
 /* InitStrings.proto */
@@ -31823,7 +33156,7 @@ static int __Pyx_InitCachedBuiltins(__pyx_mstatetype *__pyx_mstate) {
   __pyx_builtin_Ellipsis = __Pyx_GetBuiltinName(__pyx_mstate->__pyx_n_u_Ellipsis); if (!__pyx_builtin_Ellipsis) __PYX_ERR(1, 408, __pyx_L1_error)
   __pyx_builtin_id = __Pyx_GetBuiltinName(__pyx_mstate->__pyx_n_u_id); if (!__pyx_builtin_id) __PYX_ERR(1, 618, __pyx_L1_error)
   __pyx_builtin_IndexError = __Pyx_GetBuiltinName(__pyx_mstate->__pyx_n_u_IndexError); if (!__pyx_builtin_IndexError) __PYX_ERR(1, 914, __pyx_L1_error)
-  __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_mstate->__pyx_n_u_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(2, 1010, __pyx_L1_error)
+  __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_mstate->__pyx_n_u_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(2, 1011, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -31886,6 +33219,7 @@ static int __Pyx_InitConstants(__pyx_mstatetype *__pyx_mstate) {
   __pyx_mstate->__pyx_umethod_PyUnicode_Type__lower.method_name = &__pyx_mstate->__pyx_n_u_lower;
   if (__Pyx_InitStrings(__pyx_string_tab, __pyx_mstate->__pyx_string_tab, __pyx_string_tab_encodings) < 0) __PYX_ERR(0, 1, __pyx_L1_error);
   __pyx_mstate->__pyx_float_1_5 = PyFloat_FromDouble(1.5); if (unlikely(!__pyx_mstate->__pyx_float_1_5)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_mstate->__pyx_float_2_0 = PyFloat_FromDouble(2.0); if (unlikely(!__pyx_mstate->__pyx_float_2_0)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_mstate->__pyx_float_neg_0_5 = PyFloat_FromDouble(-0.5); if (unlikely(!__pyx_mstate->__pyx_float_neg_0_5)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_mstate->__pyx_int_0 = PyLong_FromLong(0); if (unlikely(!__pyx_mstate->__pyx_int_0)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_mstate->__pyx_int_1 = PyLong_FromLong(1); if (unlikely(!__pyx_mstate->__pyx_int_1)) __PYX_ERR(0, 1, __pyx_L1_error)
@@ -31949,44 +33283,54 @@ static int __Pyx_CreateCodeObjects(__pyx_mstatetype *__pyx_mstate) {
     __pyx_mstate_global->__pyx_codeobj_tab[4] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_dipole, __pyx_k_PPaat_u_M_M_a_a_i_i_j_fA_fA_9Ba, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[4])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 306, 175};
+    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 4, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 307, 169};
+    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_bf_1, __pyx_mstate->__pyx_n_u_bf_2, __pyx_mstate->__pyx_n_u_quadrupole_origin, __pyx_mstate->__pyx_n_u_direction};
+    __pyx_mstate_global->__pyx_codeobj_tab[5] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_quadrupole_integral, __pyx_k_1_F_1D_D_iq_A_U_4r_U_4r_Bc_QdRW, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[5])) goto bad;
+  }
+  {
+    const __Pyx_PyCode_New_function_description descr = {8, 0, 0, 28, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 345, 472};
+    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_exponent_1, __pyx_mstate->__pyx_n_u_angmom_1, __pyx_mstate->__pyx_n_u_centre_1, __pyx_mstate->__pyx_n_u_exponent_2, __pyx_mstate->__pyx_n_u_angmom_2, __pyx_mstate->__pyx_n_u_centre_2, __pyx_mstate->__pyx_n_u_quadrupole_origin, __pyx_mstate->__pyx_n_u_direction, __pyx_mstate->__pyx_n_u_l_1, __pyx_mstate->__pyx_n_u_m_1, __pyx_mstate->__pyx_n_u_n_1, __pyx_mstate->__pyx_n_u_l_2, __pyx_mstate->__pyx_n_u_m_2, __pyx_mstate->__pyx_n_u_n_2, __pyx_mstate->__pyx_n_u_R_12, __pyx_mstate->__pyx_n_u_exponent_sum, __pyx_mstate->__pyx_n_u_prefactor, __pyx_mstate->__pyx_n_u_P, __pyx_mstate->__pyx_n_u_Sx, __pyx_mstate->__pyx_n_u_Sy, __pyx_mstate->__pyx_n_u_Sz, __pyx_mstate->__pyx_n_u_Ex1, __pyx_mstate->__pyx_n_u_Ex2, __pyx_mstate->__pyx_n_u_Qx, __pyx_mstate->__pyx_n_u_integral, __pyx_mstate->__pyx_n_u_Ez1, __pyx_mstate->__pyx_n_u_Ez2, __pyx_mstate->__pyx_n_u_Qz};
+    __pyx_mstate_global->__pyx_codeobj_tab[6] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_quadrupole, __pyx_k_TTeex_y_U_U_i_i_q_q_r_fA_fA_9Ba, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[6])) goto bad;
+  }
+  {
+    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 410, 175};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_bf_1, __pyx_mstate->__pyx_n_u_bf_2, __pyx_mstate->__pyx_n_u_nucleus};
-    __pyx_mstate_global->__pyx_codeobj_tab[5] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_nuclear_electron_integ, __pyx_k_0_1_F_1D_D_iq_A_E_b_E_b_2S_BTTU, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[5])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[7] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_nuclear_electron_integ, __pyx_k_0_1_F_1D_D_iq_A_E_b_E_b_2S_BTTU, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[7])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {7, 0, 0, 30, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 344, 516};
+    const __Pyx_PyCode_New_function_description descr = {7, 0, 0, 30, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 448, 516};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_exponent_1, __pyx_mstate->__pyx_n_u_angmom_1, __pyx_mstate->__pyx_n_u_centre_1, __pyx_mstate->__pyx_n_u_exponent_2, __pyx_mstate->__pyx_n_u_angmom_2, __pyx_mstate->__pyx_n_u_centre_2, __pyx_mstate->__pyx_n_u_nucleus, __pyx_mstate->__pyx_n_u_l_1, __pyx_mstate->__pyx_n_u_m_1, __pyx_mstate->__pyx_n_u_n_1, __pyx_mstate->__pyx_n_u_l_2, __pyx_mstate->__pyx_n_u_m_2, __pyx_mstate->__pyx_n_u_n_2, __pyx_mstate->__pyx_n_u_exponent_sum, __pyx_mstate->__pyx_n_u_PCz, __pyx_mstate->__pyx_n_u_Rz_12, __pyx_mstate->__pyx_n_u_Vmax, __pyx_mstate->__pyx_n_u_Nmax, __pyx_mstate->__pyx_n_u_stride, __pyx_mstate->__pyx_n_u_boys_tab, __pyx_mstate->__pyx_n_u_pow_tab, __pyx_mstate->__pyx_n_u_Rz, __pyx_mstate->__pyx_n_u_integral, __pyx_mstate->__pyx_n_u_Ex, __pyx_mstate->__pyx_n_u_Ey, __pyx_mstate->__pyx_n_u_Ez, __pyx_mstate->__pyx_n_u_t, __pyx_mstate->__pyx_n_u_u, __pyx_mstate->__pyx_n_u_v, __pyx_mstate->__pyx_n_u_nxy};
-    __pyx_mstate_global->__pyx_codeobj_tab[6] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_nuclear_attraction, __pyx_k_44GG_m_n_A_A_S_S_____fA_fA_A_HA, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[6])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[8] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_nuclear_attraction, __pyx_k_44GG_m_n_A_A_S_S_____fA_fA_A_HA, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[8])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 2, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 419, 152};
+    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 2, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 523, 152};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_bf_1, __pyx_mstate->__pyx_n_u_bf_2};
-    __pyx_mstate_global->__pyx_codeobj_tab[7] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_kinetic_integral, __pyx_k_q_1_F_1D_D_iq_A_E_b_E_b_2S_eSTT, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[7])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[9] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_kinetic_integral, __pyx_k_q_1_F_1D_D_iq_A_E_b_E_b_2S_eSTT, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[9])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {6, 0, 0, 23, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 455, 600};
+    const __Pyx_PyCode_New_function_description descr = {6, 0, 0, 23, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 559, 600};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_exponent_1, __pyx_mstate->__pyx_n_u_angmom_1, __pyx_mstate->__pyx_n_u_centre_1, __pyx_mstate->__pyx_n_u_exponent_2, __pyx_mstate->__pyx_n_u_angmom_2, __pyx_mstate->__pyx_n_u_centre_2, __pyx_mstate->__pyx_n_u_l_1, __pyx_mstate->__pyx_n_u_m_1, __pyx_mstate->__pyx_n_u_n_1, __pyx_mstate->__pyx_n_u_l_2, __pyx_mstate->__pyx_n_u_m_2, __pyx_mstate->__pyx_n_u_n_2, __pyx_mstate->__pyx_n_u_R_12, __pyx_mstate->__pyx_n_u_A, __pyx_mstate->__pyx_n_u_B, __pyx_mstate->__pyx_n_u_C, __pyx_mstate->__pyx_n_u_Sx, __pyx_mstate->__pyx_n_u_Sy, __pyx_mstate->__pyx_n_u_Sz, __pyx_mstate->__pyx_n_u_Tx, __pyx_mstate->__pyx_n_u_Ty, __pyx_mstate->__pyx_n_u_Tz, __pyx_mstate->__pyx_n_u_integral};
-    __pyx_mstate_global->__pyx_codeobj_tab[8] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_kinetic, __pyx_k_QQbbu_v_B_B_C_fA_fA_9Ba_2Yb_2Q, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[8])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[10] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_kinetic, __pyx_k_QQbbu_v_B_B_C_fA_fA_9Ba_2Yb_2Q, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[10])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 2, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 508, 152};
+    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 2, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 612, 152};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_bf_1, __pyx_mstate->__pyx_n_u_bf_2};
-    __pyx_mstate_global->__pyx_codeobj_tab[9] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_overlap_integral, __pyx_k_q_1_F_1D_D_iq_A_E_b_E_b_2S_eSTT, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[9])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[11] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_overlap_integral, __pyx_k_q_1_F_1D_D_iq_A_E_b_E_b_2S_eSTT, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[11])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {6, 0, 0, 16, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 543, 183};
+    const __Pyx_PyCode_New_function_description descr = {6, 0, 0, 16, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 649, 183};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_exponent_1, __pyx_mstate->__pyx_n_u_angmom_1, __pyx_mstate->__pyx_n_u_centre_1, __pyx_mstate->__pyx_n_u_exponent_2, __pyx_mstate->__pyx_n_u_angmom_2, __pyx_mstate->__pyx_n_u_centre_2, __pyx_mstate->__pyx_n_u_l_1, __pyx_mstate->__pyx_n_u_m_1, __pyx_mstate->__pyx_n_u_n_1, __pyx_mstate->__pyx_n_u_l_2, __pyx_mstate->__pyx_n_u_m_2, __pyx_mstate->__pyx_n_u_n_2, __pyx_mstate->__pyx_n_u_Sx, __pyx_mstate->__pyx_n_u_Sy, __pyx_mstate->__pyx_n_u_Sz, __pyx_mstate->__pyx_n_u_integral};
-    __pyx_mstate_global->__pyx_codeobj_tab[10] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_overlap, __pyx_k_QQbbu_v_B_B_C_fA_fA_auE_HAS_4_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[10])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[12] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_overlap, __pyx_k_QQbbu_v_B_B_C_fA_fA_auE_HAS_4_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[12])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 583, 381};
+    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 3, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 689, 381};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_n_basis, __pyx_mstate->__pyx_n_u_ERI_AO, __pyx_mstate->__pyx_n_u_bfs};
-    __pyx_mstate_global->__pyx_codeobj_tab[11] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_electron_repulsion_int, __pyx_k_U_1_wc_E_ar_1_7_Qa_U_2Rq_wc_2U, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[11])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[13] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_electron_repulsion_int, __pyx_k_U_1_wc_E_ar_1_7_Qa_U_2Rq_wc_2U, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[13])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 4, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 659, 411};
+    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 4, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 765, 411};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_bf_1, __pyx_mstate->__pyx_n_u_bf_2, __pyx_mstate->__pyx_n_u_bf_3, __pyx_mstate->__pyx_n_u_bf_4};
-    __pyx_mstate_global->__pyx_codeobj_tab[12] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_electron_repulsion_int_2, __pyx_k_2_1_U_4q_E_at1_U_4q_E_at1_D_Qc, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[12])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[14] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_tuna_integral_pyx, __pyx_mstate->__pyx_n_u_calculate_electron_repulsion_int_2, __pyx_k_2_1_U_4q_E_at1_U_4q_E_at1_D_Qc, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[14])) goto bad;
   }
   Py_DECREF(tuple_dedup_map);
   return 0;

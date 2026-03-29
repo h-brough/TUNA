@@ -1,358 +1,25 @@
 import numpy as np
 import time, sys
 from termcolor import colored
-from functools import partial
 from numpy import ndarray
 from dataclasses import dataclass
 
 
-def process_keyword(key_strings, default_value, params=None, boolean=True, check_next_space=False, mandatory_value=False, associated_keyword_default=None, value_type=None, plot_path=False):
+"""
 
-    """
-    
-    Processes new keywords and their parameters.
+This is the TUNA module for constants and utility functions, written first for version 0.3.0 and rewritten for version 0.10.1.
 
-    Args:
-        key_strings (list): List of different optional keywords per keyword
-        default_value (variable): Default value of keyword
-        params (list, optional): List of parameters
-        check_next_space (bool): Should the next space be checked
-        mandatory_value (bool): Does the parameter have a mandatory value
-        associated_keyword_default (variable): Secondary keyword's default value
-        value_type (variable): Type of optional parameter
-        plot_path (bool): Is this keyword to give a path for a plot
+Various widely useful functions are stored here, as are the defining constants which are used throughout the program. This module does not import any other 
+TUNA module, and is imported by all other TUNA modules.
 
-    Returns:
-        keyword (variable): The value of the keyword
-        associated_keyword (variable, optional): The value of the associated keyword
-    
-    """
+This module contains:
 
-    keyword = default_value
-    associated_keyword = associated_keyword_default
+1. A class to contain all the defining and emergent constants used in TUNA
+2. Dataclasses for the SCF output container, molecular integrals, electronic structure method and exchange-correlation functional
+3. Various utility functions used throughout the program (clean_coordinates, log, error, etc.)
+4. Dictionaries and lists containing all the atom types, calculation types, electronic structure methods (electronic_structure_methods, atomic_properties, etc.)
 
-    # If no type given, just use the default value
-    if value_type is None:
-        
-        value_type = type(default_value)
-
-    if params:
-
-        for i, param in enumerate(params):
-
-                if param in key_strings:
-                    
-                    # Simple boolean keywords
-                    if boolean:
-
-                        keyword = True
-
-                    if check_next_space:
-                        
-                        # Makes sure a param is given
-                        if i + 1 < len(params):
-
-                            next_value = params[i + 1]
-
-                            try:
-
-                                next_value = value_type(next_value)
-
-                                # Checks for string after keyword with certain extensions
-                                if plot_path: 
-
-                                    extensions = [".PNG", ".JPG", ".PDF", ".SVG", ".JPEG", ".TIF", ".TIFF", ".BMP", ".RAW", ".EPS", ".PS"]
-
-                                    if any(params[params.index("SAVEPLOT") + 1].endswith(ext) for ext in extensions):
-                                        
-                                        associated_keyword = str(params[params.index("SAVEPLOT") + 1]).lower()
-                                        keyword = True
-                                    
-                            # Error if wrong keyword value
-                            except ValueError:
-                                
-                                if mandatory_value:
-
-                                    error(f"Parameter \"{param}\" must be of type {value_type.__name__}, got {type(next_value).__name__} instead!")
-                                
-                                else:
-                                    pass
-
-                            if boolean and not plot_path:
-
-                                associated_keyword = next_value
-
-                                # Lower cases the path given for plotting or trajectory
-
-                                if type(associated_keyword) == str:
-
-                                    if "." in associated_keyword:
-
-                                        associated_keyword = associated_keyword.lower()
-                                
-                            # Just takes the next value for certain parameters
-                            elif not boolean and not plot_path:
-
-                                keyword = next_value   
-
-                        else:
-                            
-                            associated_keyword = associated_keyword_default
-
-                            if mandatory_value:
-
-                                error(f"Parameter \"{param}\" requested but no value specified!")
-                        
-
-    # Return either one or two keywords per keyword
-    if check_next_space and boolean:
-
-        return keyword, associated_keyword
-
-    return keyword
-
-
-
-
-
-
-
-
-
-class Calculation:
-
-    """
-
-    Processes and calculates from user-defined parameters specified at the start of a TUNA calculation.
-
-    Various default values for parameters are specified here. This object is created once per TUNA calculation.
-    
-    """
-
-    def __init__(self, calculation_type: str, method: str, start_time: float, params: list, basis: str, atomic_symbols: list):
-        
-        """
-
-        Initialises the Calculation object.
-
-        calculation_type (str): What kind of calculation - SPE, OPT, FREQ, etc.
-        method (str): Electronic structure method
-        start_time (time): Start time for calculation, after modules have been imported
-        params (list): Requested parameters for calculation
-        basis (str): Requested basis set 
-        atomic_symbols (list): List of atomic symbols
-
-        """
-
-        # Defines fundamental calculation parameters
-        self.calculation_type = calculation_type
-        self.method = method
-        self.start_time = start_time
-        self.params = params
-        self.basis = basis
-        self.original_basis = basis
-        self.atomic_symbols = atomic_symbols
-        self.DFT_calculation = True if method in DFT_methods else False
-        self.reference = "Undefined"
-
-        # Timing floats
-        self.SCF_time = 0.0
-        self.integrals_time = 0.0
-        self.correlation_time = 0.0
-        self.excited_state_time = 0.0
-
-        # Prevents running "params" through every function call
-        keyword = partial(process_keyword, params=params)
-
-
-        # Simple boolean keywords
-        self.additional_print = keyword(["P"], False)
-        self.terse = keyword(["T"], False)
-        self.debug = keyword(["DEBUG"], False)
-        self.decontract = keyword(["DECONTRACT"], False)
-        self.natural_orbitals = keyword(["NATORBS"], False)
-        self.no_singles = keyword(["NOSINGLES"], False)
-        self.MO_read_requested = keyword(["MOREAD"], False)
-        self.MO_read = keyword(["MOREAD"], False)
-        self.MO_read = not keyword(["NOMOREAD"], False)
-        self.no_MO_read = keyword(["NOMOREAD"], False)
-        self.D2 = keyword(["D2"], False)
-        self.calc_hess = keyword(["CALCHESS"], False)
-        self.opt_max = keyword(["OPTMAX"], False)
-        self.no_trajectory = keyword(["NOTRAJ"], False)
-        self.scan_plot = keyword(["SCANPLOT"], False)
-        self.plot_dashed_lines = keyword(["DASH"], False)
-        self.plot_dotted_lines = keyword(["DOT"], False)
-        self.add_plot = keyword(["ADDPLOT"], False)
-        self.extrapolate = keyword(["EXTRAPOLATE"], False)
-        self.delete_plot = keyword(["DELPLOT"], False)
-        self.plot_density = keyword(["DENSPLOT"], False)
-        self.plot_spin_density = keyword(["SPINDENSPLOT"], False)
-        self.plot_HOMO = keyword(["PLOTHOMO"], False)
-        self.plot_LUMO = keyword(["PLOTLUMO"], False)
-        self.plot_difference_density = keyword(["DIFFDENSPLOT"], False)
-        self.plot_difference_spin_density = keyword(["DIFFSPINDENSPLOT"], False)
-        self.no_DFT_exchange = keyword(["NOX"], False)
-        self.no_DFT_correlation = keyword(["NOC"], False)
-        self.plot_vibrational_wavefunctions = keyword(["PLOTVIB"], False)
-        self.core_guess = keyword(["COREGUESS"], False)
-        self.superposition_guess = keyword(["SADGUESS"], False)
-        self.self_consistent_guess = keyword(["SCFGUESS"], True)
-        self.polarisability = keyword(["POLAR", "POLARISABILITY", "POLARIZABILITY"], False)
-        self.hyperpolarisability = keyword(["HYPER", "HYPERPOLARISABILITY", "HYPERPOLARIZABILITY"], False)
-        self.dipole = keyword(["DIPOLE"], False)
-        self.vertical = keyword(["VERTICAL"], False)
-
-        # Convergence keywords with optional parameters
-        self.DIIS, self.max_DIIS_matrices = keyword(["DIIS"], True, check_next_space=True, associated_keyword_default=6, value_type=int)
-        if self.DIIS: self.DIIS = not keyword(["NODIIS"], False)
-
-        self.damping, self.damping_factor = keyword(["DAMP"], True, check_next_space=True, associated_keyword_default=None, value_type=float)
-        if self.damping: self.damping = not keyword(["NODAMP"], False)
-        if keyword(["SLOWCONV"], False): self.damping_factor = 0.5
-        if keyword(["VERYSLOWCONV"], False): self.damping_factor = 0.85
-
-        self.damping = keyword(["DAMP"], True)
-        self.damping = not keyword(["NODAMP"], False)
-        self.max_damping = keyword(["MAXDAMP"], 0.700, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-
-        # Keywords with mandatory parameters
-        self.charge = keyword(["CH", "CHARGE"], 0, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.multiplicity = keyword(["ML", "MULTIPLICITY"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.default_multiplicity = not keyword(["ML", "MULTIPLICITY"], False)
-        self.S_eigenvalue_threshold = keyword(["STHRESH"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.rotate_guess= keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[0]
-        self.theta = keyword(["ROTATE"], False, check_next_space=True, associated_keyword_default=45, value_type=float)[1]
-        self.no_rotate_guess = keyword(["NOROTATE"], False)
-
-        # Custom masses
-        self.custom_mass_1 = keyword(["M1"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.custom_mass_2 = keyword(["M2"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-
-        # Convergence and optimisation keywords
-        self.max_iter = keyword(["MAXITER"], 100, boolean=False, check_next_space=True, value_type=int, mandatory_value=True) + 1
-        self.max_step = keyword(["MAXSTEP"], 0.2, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.default_hessian = keyword(["DEFAULTHESS"], 0.25, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.geom_max_iter = keyword(["GEOMMAXITER", "MAXGEOMITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.scan_step = keyword(["STEP", "SCANSTEP"], None, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.scan_number = keyword(["NUM", "SCANNUMBER"], None, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.timestep = keyword(["STEP", "TIMESTEP"], 0.1, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.MD_number_of_steps = keyword(["NUM", "MDNUMBER"], 50, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-
-        # Thermochemistry keywords
-        self.temperature = 0.0 if self.calculation_type == "MD" else 298.15
-        self.temperature = keyword(["TEMP", "TEMPERATURE"], self.temperature, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.pressure = keyword(["PRES", "PRESSURE"], 101325, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-
-
-        # Post-Hartree-Fock keywords
-
-        self.SSS_requested, self.same_spin_scaling = keyword(["SSS"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1 / 3)
-        self.OSS_requested, self.opposite_spin_scaling = keyword(["OSS"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=6 / 5)
-        self.MP3_scaling = keyword(["MP3S", "MP3SCALING", "MP3SCAL"], 1 / 4, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.MP2_conv = keyword(["MPCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.MP2_max_iter = keyword(["MPMAXITER"], 30, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.CC_conv = keyword(["CCCONV"], 1e-8, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.amp_conv = keyword(["AMPCONV"], 1e-7, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.print_n_amplitudes = keyword(["PRINTAMPS"], 10, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.CC_max_iter = keyword(["CCMAXITER"], 50, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.cc_damp_requested, self.coupled_cluster_damping_parameter = keyword(["CCDAMP"], False, check_next_space=True, value_type=float, mandatory_value=True, associated_keyword_default=0.25)
-        self.coupled_cluster_damping_parameter = self.coupled_cluster_damping_parameter if self.cc_damp_requested else 0
-        self.freeze_core, self.freeze_n_orbitals = keyword(["FREEZECORE"], False, boolean=True, check_next_space=True, value_type=int, mandatory_value=False, associated_keyword_default=None)
-        self.n_MP2_grid_points = keyword(["MPGRID"], 20, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-
-        # DFT keywords
-        self.functional = DFT_methods.get(self.method)
-        self.X_alpha = keyword(["XA"], 2 / 3, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.integral_accuracy_requested, self.integral_accuracy = keyword(["INTACC"], False, check_next_space=True, value_type=float, associated_keyword_default=4.0)
-        self.DFX_requested, self.DFX_prop = keyword(["DFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
-        self.DFC_requested, self.DFC_prop = keyword(["DFC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
-        self.MPC_requested, self.MPC_prop = keyword(["MPC"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=0)
-
-        # Checks for Hartree theory requested
-        if self.method in ["H", "UH"]:
-            
-            self.HFX_requested, self.HFX_prop = (False, 0) 
-
-        else: 
-             
-            self.HFX_requested, self.HFX_prop = keyword(["HFX"], False, check_next_space=True, mandatory_value=True, boolean=True, value_type=float, associated_keyword_default=1)
-        
-        if self.DFT_calculation: 
-            
-            # Only overwrites HFX, etc., if a DFT calculation is requested
-
-            if not self.HFX_requested: self.HFX_prop = self.functional.HFX
-            if not self.DFX_requested: self.DFX_prop = self.functional.DFX
-            if not self.DFC_requested: self.DFC_prop = self.functional.DFC
-            if not self.MPC_requested: self.MPC_prop = self.functional.MPC
-
-            if not self.SSS_requested: self.same_spin_scaling = self.functional.same_spin_scaling
-            if not self.OSS_requested: self.opposite_spin_scaling = self.functional.opposite_spin_scaling
-        
-        
-        self.DFX_prop = 0 if self.no_DFT_exchange else self.DFX_prop
-        self.DFC_prop = 0 if self.no_DFT_correlation else self.DFC_prop
-
-        # Excited state keywords
-        self.root = keyword(["ROOT"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-        self.CIS_contribution_threshold = keyword(["CISTHRESH"], 1, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.n_states = keyword(["NSTATES"], 10, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-
-        # External printing keywords
-        self.trajectory, self.trajectory_path = keyword(["TRAJ"], False, boolean=True, check_next_space=True, mandatory_value=False, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
-        self.save_plot, self.save_plot_filepath = keyword(["SAVEPLOT"], False, check_next_space=True, associated_keyword_default="tuna-plot.pdf", value_type=str, plot_path=True)
-        self.scan_plot_colour = next((code for name, code in color_map.items() if name in params), "b")
-        self.custom_basis_file = keyword(["BASIS"], None, boolean=False, check_next_space=True, mandatory_value=True, associated_keyword_default="tuna-trajectory.xyz", value_type=str)
-        self.plot_molecular_orbital, self.molecular_orbital_to_plot = keyword(["PLOTMO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
-        self.plot_natural_orbital, self.natural_orbital_to_plot = keyword(["PLOTNO"], False, check_next_space=True, value_type=int, associated_keyword_default=1)
-        
-        # Convergence keywords for SCF and optimisations
-        self.SCF_conv = constants.convergence_criteria_SCF["tight"] if self.calculation_type in ["OPT", "FREQ", "OPTFREQ", "MD", "ANHARM"] else constants.convergence_criteria_SCF["medium"]
-        self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if self.calculation_type in ["FREQ", "OPTFREQ", "ANHARM"] or self.polarisability or self.hyperpolarisability else self.SCF_conv
-        self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "CIS" in self.method and self.SCF_conv != constants.convergence_criteria_SCF["extreme"] else self.SCF_conv
-
-        self.SCF_conv = constants.convergence_criteria_SCF["loose"] if "LOOSE" in params or "LOOSESCF" in params else self.SCF_conv
-        self.SCF_conv = constants.convergence_criteria_SCF["medium"] if "MEDIUM" in params or "MEDIUMSCF"in params else self.SCF_conv
-        self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "TIGHT" in params or "TIGHTSCF" in params else self.SCF_conv
-        self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if "EXTREME" in params or "EXTREMESCF" in params else self.SCF_conv
-
-        self.geom_conv = constants.convergence_criteria_optimisation["tight"] if self.calculation_type == "OPTFREQ" else constants.convergence_criteria_optimisation["medium"]
-        self.geom_conv = constants.convergence_criteria_optimisation["loose"] if "LOOSEOPT" in params else self.geom_conv 
-        self.geom_conv = constants.convergence_criteria_optimisation["medium"] if "MEDIUMOPT" in params else self.geom_conv
-        self.geom_conv = constants.convergence_criteria_optimisation["tight"] if "TIGHTOPT" in params else self.geom_conv
-        self.geom_conv = constants.convergence_criteria_optimisation["extreme"] if "EXTREMEOPT" in params else self.geom_conv
-
-
-        # Tightness criteria for DFT grid
-        self.grid_conv = constants.convergence_criteria_grid["loose"] if "LOOSEGRID" in params else constants.convergence_criteria_grid["medium"]
-        self.grid_conv = constants.convergence_criteria_grid["medium"] if "MEDIUMGRID" in params else self.grid_conv
-        self.grid_conv = constants.convergence_criteria_grid["tight"] if "TIGHTGRID" in params else self.grid_conv
-        self.grid_conv = constants.convergence_criteria_grid["extreme"] if "EXTREMEGRID" in params else self.grid_conv
-        
-
-        # Processes the NOSINGLES keyword
-        self.method = process_no_singles_keyword(self.method, self.no_singles) 
-        self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital
-        self.n_electrons_for_ip_or_ea = keyword(["NELEC"], 1, boolean=False, check_next_space=True, value_type=int, mandatory_value=True)
-
-        # Initial guess keywords
-        self.ghost_atom_present = any("X" in symbol for symbol in atomic_symbols)
-        self.self_consistent_guess = False if self.core_guess or self.superposition_guess or len(atomic_symbols) == 1 or self.ghost_atom_present else self.self_consistent_guess
-        self.core_guess = True if len(atomic_symbols) == 1 or self.ghost_atom_present else self.core_guess
-        self.anharm_convergence = keyword(["ANHARMCONV"], 0.01, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-
-
-        # Electric field keywords
-        self.electric_field_x = keyword(["EX"], 0, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.electric_field_y = keyword(["EY"], 0, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-        self.electric_field_z = keyword(["EZ"], 0, boolean=False, check_next_space=True, value_type=float, mandatory_value=True)
-
-        self.electric_field = np.array([self.electric_field_x, self.electric_field_y, self.electric_field_z])
-
-        self.monatomic = True if len(atomic_symbols) == 1 or self.ghost_atom_present else False
-        self.diatomic = not self.monatomic
-        
+"""
 
 
 
@@ -367,17 +34,20 @@ class Constants:
     """
 
     # Fundamental constants to define Hartree land
+
     planck_constant_in_joules_seconds = 6.62607015e-34
     elementary_charge_in_coulombs = 1.602176634e-19
     electron_mass_in_kilograms = 9.1093837139e-31
     permittivity_in_farad_per_metre = 8.8541878188e-12
 
     # Non-quantum fundamental constants
+
     c_in_metres_per_second = 299792458
     k_in_joules_per_kelvin = 1.380649e-23
     avogadro = 6.02214076e23
 
     # Emergent unit conversions
+
     atomic_mass_unit_in_kg = 0.001 / avogadro
     reduced_planck_constant_in_joules_seconds = planck_constant_in_joules_seconds / (2 * np.pi)
     bohr_in_metres = 4 * np.pi * permittivity_in_farad_per_metre * reduced_planck_constant_in_joules_seconds ** 2 / (electron_mass_in_kilograms * elementary_charge_in_coulombs ** 2)
@@ -393,16 +63,42 @@ class Constants:
     eV_in_hartree = hartree_in_joules / elementary_charge_in_coulombs
 
     # Emergent constants
+
     c = c_in_metres_per_second * atomic_time_in_seconds / bohr_in_metres
     k = k_in_joules_per_kelvin / hartree_in_joules
     h = 2 * np.pi
 
-    # System-wide consistent parameters
-    numerical_derivative_prod = 0.001 # This works much better than 0.0001 for hyperpolarisability, presumably more stable
+    # Gradient correct to 9 sf. for "EXTREME" and "TIGHT", 8 sf. for "MEDIUM" and 7 sf. for "LOOSE"
+
+    FIRST_GEOM_DERIVATIVE_PROD = 0.00005   
+
+    # Dipole moment correct to 9 sf. for "EXTREME" and "TIGHT", 7 sf. for "MEDIUM" and 6 sf. for "LOOSE"
+
+    FIRST_ELEC_DERIVATIVE_PROD = 0.00001 
+
+    # Hessian correct to 8 sf. for "EXTREME", 7 sf. for "TIGHT", 6 sf. for "MEDIUM" and 5 sf. for "LOOSE" - which is still correct frequency to 0.01 per cm
+
+    SECOND_GEOM_DERIVATIVE_PROD = 0.01
+
+    # Isotropic polarisability correct to 7 sf. for "EXTREME", 5 sf. for "TIGHT", 4 sf. for "MEDIUM" and 3 sf. for "LOOSE"
+
+    SECOND_ELEC_DERIVATIVE_PROD = 0.001
+    
+    # Second-order VPT is correct to 8 sf. for "EXTREME" and "TIGHT", 5 sf. for "MEDIUM" and 2 sf. for "LOOSE" - a compromise between third and fourth derivative precision
+
+    THIRD_GEOM_DERIVATIVE_PROD = 0.025
+
+    # Parallel hyperpolarisability correct to 5 sf. for "EXTREME", 2sf for "TIGHT", "MEDIUM" and "LOOSE"
+
+    THIRD_ELEC_DERIVATIVE_PROD = 0.0015
+
+    # Constants for cleaning things on the DFT grid
+
     density_floor = 1e-23
     sigma_floor = density_floor ** 2
 
     # Convergence criteria for self-consistent field
+
     convergence_criteria_SCF = {
 
         "loose" : {"delta_E": 0.000001, "max_DP": 0.00001, "RMS_DP": 0.000001, "commutator": 0.0001, "name": "loose"},
@@ -413,6 +109,7 @@ class Constants:
     }
 
     # Convergence criteria for geometry optimisation
+
     convergence_criteria_optimisation = {
 
         "loose" : {"gradient": 0.001, "step": 0.01, "name": "loose"},
@@ -423,6 +120,7 @@ class Constants:
     }
 
     # Tightness criteria for the DFT grid
+    
     convergence_criteria_grid = {
 
         "loose" : {"integral_accuracy": 3, "extent_multiplier": 0.7, "name": "loose"},
@@ -430,13 +128,16 @@ class Constants:
         "tight" : {"integral_accuracy": 5, "extent_multiplier": 1, "name": "tight"},
         "extreme" : {"integral_accuracy": 7, "extent_multiplier": 1.2, "name": "extreme"},
 
-
     }
 
 
-
-
 constants = Constants()
+
+
+
+
+
+
 
 
 
@@ -454,17 +155,18 @@ class Integrals:
     T: ndarray  # Kinetic integrals
     V_NE: ndarray  # Nuclear-electron integrals
     D: ndarray  # Dipole integrals
+    Q: ndarray  # Quadrupole integrals
 
     ERI_AO: ndarray  # Two-electron integrals
-
-    Q: ndarray | None = None # Total electric field integrals
+    
+    F: ndarray | None = None # Total electric field integrals
 
     @property
     def H_core(self):
 
-        if self.Q is not None:
+        if self.F is not None:
 
-            return self.T + self.V_NE + self.Q
+            return self.T + self.V_NE + self.F
 
         return self.T + self.V_NE
     
@@ -484,6 +186,9 @@ class Integrals:
 
 
 
+
+
+
 @dataclass
 class Output:
 
@@ -493,9 +198,10 @@ class Output:
     
     """
 
+    # Components of energy
+
     energy: float
 
-    # Components of energy
     kinetic_energy: float
     nuclear_electron_energy: float
     coulomb_energy: float
@@ -504,34 +210,41 @@ class Output:
     electric_field_energy: float
 
     # Density and overlap matrices in AO basis
+
     P: ndarray
     P_alpha: ndarray
     P_beta: ndarray
     S: ndarray
+    X: ndarray
 
     # Molecular orbitals
+
     molecular_orbitals: ndarray
     molecular_orbitals_alpha: ndarray
     molecular_orbitals_beta: ndarray
 
     # Orbital energies
+
     epsilons: ndarray
     epsilons_alpha: ndarray
     epsilons_beta: ndarray
 
     # Electron densities on grid
+
     density: ndarray
     alpha_density: ndarray
     beta_density: ndarray
 
     # Converged matrices in AO basis
+
     F_alpha: ndarray
     F_beta: ndarray
     T: ndarray
     V_NE: ndarray
 
-    integrals: Integrals
+    # Molecular integrals
 
+    integrals: Integrals
 
     @property 
     def epsilons_combined(self):
@@ -555,6 +268,79 @@ class Output:
 
 
 
+
+
+@dataclass
+class Method:
+
+    """
+    
+    Defines an electronic structure method.
+
+    """
+
+    # The keyword for this method, ignoring "U" for unrestricted calculations, e.g. "HF"
+
+    name: str
+
+    # What is the human-readable method name, e.g. "Hartree-Fock theory"
+
+    generic_name: str
+
+    # Can this method be used with an unrestricted reference?
+
+    unrestricted_available: bool = True
+
+    # What kind of electronic structure method is this?
+    
+    method_base: bool = "HF"
+
+    # Is this a method for excited states?
+
+    excited_state_method: bool = False
+
+    # Is this method unrestricted
+
+    unrestricted: bool = False
+
+    @property
+    def long_name(self) -> str:
+        
+        if self.unrestricted:
+
+            return "unrestricted " + self.generic_name 
+
+        return self.generic_name
+
+    @property
+    def perturbative_method(self) -> bool:
+
+        return self.method_base in ["MP2", "MP3", "MP4"] 
+
+    @property
+    def coupled_cluster_method(self) -> bool:
+
+        return self.method_base == "CC"
+
+    @property
+    def correlated_method(self) -> bool:
+
+        return self.coupled_cluster_method or self.perturbative_method
+
+    @property
+    def density_functional_method(self) -> bool:
+
+        return self.method_base == "DFT"
+
+
+
+
+
+
+
+
+
+
 @dataclass
 class Functional:
 
@@ -568,21 +354,26 @@ class Functional:
     c_functional: callable
 
     # Proportions of density-functional and Hartree-Fock exchange
+
     DFX: float = 1.0
     HFX: float = 0.0
 
-    # Proportion of density-functional and perturbative correlation
+    # Proportion of density-functional and second-order perturbative correlation
+
     DFC: float = 1.0
     MPC: float = 0.0
 
     # Same-spin scaling and opposite-spin scaling for double-hybrid functionals
+
     same_spin_scaling: float = 1.0
     opposite_spin_scaling: float = 1.0
 
     # Is the functional LDA, GGA or meta-GGA - which derivatives are needed for the exchange-correlation potential
+
     functional_class: str = "LDA"
 
     # Dispersion S6 value for D2 correction
+
     D2_S6: float = 1.2
 
     @property
@@ -604,53 +395,6 @@ class Functional:
 
 
 
-
-
-
-
-
-def process_no_singles_keyword(method: str, no_singles: bool) -> str:
-
-    """"
-    
-    Processes the "NOSINGLES" keyword.
-
-    Args:
-        method (str): Electronic structure method
-        no_singles (bool): Don't calculate single excitations
-
-    Returns:
-        method (str): Updated electronic structure method
-    
-    """
-
-    prefix = ""
-
-    # Makes sure U is not lost
-
-    if method.startswith("U"):
-
-        prefix = "U"
-        method = method[1:]  
-
-    # CEPA0 defaults to LCCSD, but turns into LCCD if "NOSINGLES" is used
-
-    method = "LCCSD" if "CEPA" in method else method
-
-    if no_singles:
-
-        match method:
-
-            case "LCCSD": method = "LCCD"
-            case "CCSD": method = "CCD"
-            case "CCSD[T]": method = "CCD"
-            case "CCSDT": method = "CCD"
-            case "CCSDT[Q]": method = "CCD"
-            case "CCSDTQ": method = "CCD"
-
-    method = prefix + method  
-
-    return method
 
 
 
@@ -684,6 +428,9 @@ def bohr_to_angstrom(length_in_bohr: float | list | ndarray) -> float | ndarray:
 
 
 
+
+
+
 def angstrom_to_bohr(length_in_angstrom: float | list | ndarray) -> float | ndarray: 
     
     """
@@ -703,6 +450,9 @@ def angstrom_to_bohr(length_in_angstrom: float | list | ndarray) -> float | ndar
     length_in_bohr = length_in_angstrom / constants.bohr_radius_in_angstrom
 
     return length_in_bohr
+
+
+
 
 
 
@@ -735,6 +485,8 @@ def one_dimension_to_three(coordinates_1D: ndarray) -> ndarray:
 
 
 
+
+
 def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray: 
     
     """
@@ -753,6 +505,10 @@ def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray:
     
     return coordinates_1D
     
+
+
+
+
 
 
 
@@ -784,15 +540,18 @@ def calculate_bond_length(coordinates: ndarray) -> float:
 
 
 
-def calculate_first_derivative(F_backward: float, F_forward: float, dx: float) -> float:
+
+def calculate_first_derivative(F_m_1: float, F_p_1: float, dx: float) -> float:
 
     """
 
-    Calculates the numerical first derivative of a function using the central difference method.
+    Calculates the numerical first derivative of a function using the central differences method.
+
+    This has error of O(dx^2).
 
     Args:
-        F_backward (float): Value of the function at x - dx
-        F_forward (float): Value of the function at x + dx
+        F_m_1 (float): Value of the function at x - dx
+        F_p_1 (float): Value of the function at x + dx
         dx (float): Step size
 
     Returns:
@@ -800,7 +559,7 @@ def calculate_first_derivative(F_backward: float, F_forward: float, dx: float) -
 
     """
 
-    dF_dx = (F_forward - F_backward) / (2 * dx)
+    dF_dx = (F_p_1 - F_m_1) / (2 * dx)
 
     return dF_dx
 
@@ -810,18 +569,23 @@ def calculate_first_derivative(F_backward: float, F_forward: float, dx: float) -
 
 
 
-def calculate_second_derivative(F_far_backward: float, F_backward: float, F: float, F_forward: float, F_far_forward: float, dx: float) -> float:
+
+
+
+def calculate_second_derivative(F_m_2: float, F_m_1: float, F: float, F_p_1: float, F_p_2: float, dx: float) -> float:
 
     """
     
     Calculates the numerical second derivative of a function using the five-point stencil method.
 
+    This has error of O(dx^4).
+
     Args:
-        F_far_backward (float): Value of the function at x - 2dx
-        F_backward (float): Value of the function at x - dx
+        F_m_2 (float): Value of the function at x - 2dx
+        F_m_1 (float): Value of the function at x - dx
         F (float): Value of the function at x
-        F_forward (float): Value of the function at x + dx
-        F_far_forward (float): Value of the function at x + 2dx
+        F_p_1 (float): Value of the function at x + dx
+        F_p_2 (float): Value of the function at x + 2dx
         dx (float): Step size
 
     Returns:
@@ -831,7 +595,7 @@ def calculate_second_derivative(F_far_backward: float, F_backward: float, F: flo
 
     # Equation from Wikipedia page on numerical second derivative methods, fairly noise-resistant formula
 
-    d2F_dx2 = (-F_far_backward + 16 * F_backward - 30 * F + 16 * F_forward -  F_far_forward) / (12 * dx ** 2)
+    d2F_dx2 = (-F_m_2 + 16 * F_m_1 - 30 * F + 16 * F_p_1 -  F_p_2) / (12 * dx ** 2)
 
     return d2F_dx2
 
@@ -842,19 +606,25 @@ def calculate_second_derivative(F_far_backward: float, F_backward: float, F: flo
 
 
 
-def calculate_third_derivative(F_very_far_backward: float, F_far_backward: float, F_backward: float, F_forward: float, F_far_forward: float, F_very_far_forward: float, dx: float) -> float:
 
+
+def calculate_third_derivative(F_m_4: float, F_m_3: float, F_m_2: float, F_m_1: float, F_p_1: float, F_p_2: float, F_p_3: float, F_p_4: float, dx: float) -> float:
+    
     """
     
-    Calculates the numerical second derivative of a function using the five-point stencil method.
+    Calculates the numerical third derivative of a function using the eight-point stencil method.
+
+    This has error of O(dx^6).
 
     Args:
-        F_very_far_backward (float): Value of the function at x - 3dx
-        F_far_backward (float): Value of the function at x - 2dx
-        F_backward (float): Value of the function at x - dx
-        F_forward (float): Value of the function at x + dx
-        F_far_forward (float): Value of the function at x + 2dx
-        F_very_far_forward (float): Value of the function at x + 3dx
+        F_m_4 (float): Value of the function at x - 4dx
+        F_m_3 (float): Value of the function at x - 3dx
+        F_m_2 (float): Value of the function at x - 2dx
+        F_m_1 (float): Value of the function at x - dx
+        F_p_1 (float): Value of the function at x + dx
+        F_p_2 (float): Value of the function at x + 2dx
+        F_p_3 (float): Value of the function at x + 3dx
+        F_p_4 (float): Value of the function at x + 4dx
         dx (float): Step size
 
     Returns:
@@ -862,7 +632,7 @@ def calculate_third_derivative(F_very_far_backward: float, F_far_backward: float
 
     """
 
-    d3F_dx3 = (F_very_far_backward - 8 * F_far_backward + 13 * F_backward - 13 * F_forward + 8 * F_far_forward - F_very_far_forward) / (8 * dx ** 3)
+    d3F_dx3 = (-7 * F_m_4 + 72 * F_m_3 - 338 * F_m_2 + 488 * F_m_1 - 488 * F_p_1 + 338 * F_p_2 - 72 * F_p_3 + 7 * F_p_4) / (240 * dx ** 3)
 
     return d3F_dx3
 
@@ -873,7 +643,47 @@ def calculate_third_derivative(F_very_far_backward: float, F_far_backward: float
 
 
 
-def convert_boolean_to_string(boolean: bool):
+
+
+def calculate_fourth_derivative(F_m_4: float, F_m_3: float, F_m_2: float, F_m_1: float, F:float, F_p_1: float, F_p_2: float, F_p_3: float, F_p_4: float, dx: float) -> float:
+    
+    """
+    
+    Calculates the numerical fourth derivative of a function using the nine-point stencil method.
+
+    This has error of O(dx^6).
+
+    Args:
+        F_m_4 (float): Value of the function at x - 4dx
+        F_m_3 (float): Value of the function at x - 3dx
+        F_m_2 (float): Value of the function at x - 2dx
+        F_m_1 (float): Value of the function at x - dx
+        F (float): Value of the function at x
+        F_p_1 (float): Value of the function at x + dx
+        F_p_2 (float): Value of the function at x + 2dx
+        F_p_3 (float): Value of the function at x + 3dx
+        F_p_4 (float): Value of the function at x + 4dx
+        dx (float): Step size
+
+    Returns:
+        d4F_dx4 (float): Fourth derivative of the function at x
+
+    """
+
+    d4F_dx4 = (7 * F_m_4 - 96 * F_m_3 +676 * F_m_2 -1952 * F_m_1 +2730 * F - 1952 * F_p_1 + 676 * F_p_2 - 96 * F_p_3 + 7 * F_p_4) / (240 * dx ** 4)
+
+    return d4F_dx4
+
+
+
+
+
+
+
+
+
+
+def convert_boolean_to_string(boolean: bool) -> str:
 
     """
 
@@ -891,67 +701,6 @@ def convert_boolean_to_string(boolean: bool):
 
 
 
-
-
-
-
-def finish_calculation(calculation: Calculation) -> None:
-
-    """
-
-    Finishes the calculation and exits the program.
-
-    Args:   
-        calculation (Calculation): Calculation object
-
-    Returns:
-        None : This function does not return anything
-
-    """
-
-    # Calculates total time for the TUNA calculation
-    end_time = time.perf_counter()
-    total_time = end_time - calculation.start_time
-    
-    if calculation.additional_print:
-
-        log(f"\n Time taken for molecular integrals:      {calculation.integrals_time - calculation.start_time:8.2f} seconds", calculation, 3)
-        log(f" Time taken for SCF iterations:           {calculation.SCF_time - calculation.integrals_time:8.2f} seconds", calculation, 3)
-
-        if calculation.method in correlated_methods: 
-            
-            log(f" Time taken for correlated calculation:   {calculation.correlation_time - calculation.SCF_time:8.2f} seconds", calculation, 3)
-        
-        if calculation.method in excited_state_methods:
-        
-            log(f" Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:6.2f} seconds", calculation, 3)
-
-    if total_time > 120:
-
-        minutes = total_time // 60
-        seconds = total_time % 60
-
-        if total_time > 7200:
-            
-            hours = total_time // 3600
-            extra_minutes = (total_time % 3600) // 60
-
-            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
-
-        else:
-            
-            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
-
-    # Prints the finale message
-    else:
-        
-        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n","white"), calculation, 1)
-    
-
-    # Exits the program
-    sys.exit()
-
-    return
 
 
 
@@ -984,6 +733,8 @@ def symmetrise(matrix: ndarray) -> ndarray:
 
 
 
+
+
 def calculate_centre_of_mass(masses: ndarray, coordinates: ndarray) -> float: 
     
     """
@@ -1003,6 +754,8 @@ def calculate_centre_of_mass(masses: ndarray, coordinates: ndarray) -> float:
     
 
     return centre_of_mass
+
+
 
 
 
@@ -1042,6 +795,10 @@ def is_molecule_aligned_on_z_axis(molecule: any) -> bool:
                     is_molecule_aligned = False
 
     return is_molecule_aligned
+
+
+
+
 
 
 
@@ -1145,6 +902,8 @@ def error(message: str) -> None:
 
 
 
+
+
 def warning(message: str, space: int = 1) -> None: 
     
     """
@@ -1168,7 +927,9 @@ def warning(message: str, space: int = 1) -> None:
 
 
 
-def log(message: str, calculation: Calculation, priority: int = 1, end: str = "\n", silent: bool = False, colour: str = "light_grey") -> None:
+
+
+def log(message: str, calculation: any, priority: int = 1, end: str = "\n", silent: bool = False, colour: str = "light_grey") -> None:
 
     """
 
@@ -1177,9 +938,10 @@ def log(message: str, calculation: Calculation, priority: int = 1, end: str = "\
     Args:   
         message (string): Error message
         calculation (Calculation): Calculation object
-        priority (int, optional): Priority of message (1 to always appear, 2 to appear unless T keyword used, and 3 only to appear if P keyword used)
+        priority (int, optional): Priority of message (1 to always appear, 2 to appear unless T keyword used, and 3 only to appear if P keyword used, 4 if DEBUG)
         end (string, optional): End of message
         silent (bool, optional): Specifies whether to print anything
+        colour (str, optional): Colour for logging
 
     """
 
@@ -1209,15 +971,123 @@ def log(message: str, calculation: Calculation, priority: int = 1, end: str = "\
 
 
 
-def log_spacer(calculation, priority=1, start="", end="", space=" ", silent=False):
+
+
+
+def log_spacer(calculation: any, priority: int = 1, start: str = "", end: str = "", space: str = " ", silent: bool = False) -> None:
+
+    """
+    
+    Prints out a normal size wavey spacer.
+
+    Args:
+        calculation (Calculation): Calculation object
+        priority (int, optional): Priority to print this
+        start (str, optional): What to print at the start of the line
+        end (str, optional): What to print at the end of the line
+        space (str, optional): How many spaces to print at the start
+        silent (bool, optional): Cancel logging
+    
+    """
 
     log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent=silent)
 
+    return
 
 
-def log_big_spacer(calculation, priority=1, start="", end="", space=" ", silent=False):
+
+
+
+
+
+
+
+
+def log_big_spacer(calculation: any, priority: int = 1, start: str = "", end: str = "", space: str = " ", silent: bool = False) -> None:
+
+    """
+    
+    Prints out a very big wavey spacer.
+
+    Args:
+        calculation (Calculation): Calculation object
+        priority (int, optional): Priority to print this
+        start (str, optional): What to print at the start of the line
+        end (str, optional): What to print at the end of the line
+        space (str, optional): How many spaces to print at the start
+        silent (bool, optional): Cancel logging
+    
+    """
 
     log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent=silent)
+
+    return
+
+
+
+
+
+
+
+
+
+
+def finish_calculation(calculation: any) -> None:
+
+    """
+
+    Finishes the calculation and exits the program.
+
+    Args:   
+        calculation (Calculation): Calculation object
+
+    """
+
+    # Calculates total time for the TUNA calculation
+
+    end_time = time.perf_counter()
+    total_time = end_time - calculation.start_time
+    
+    if calculation.additional_print:
+
+        log(f"\n Time taken for molecular integrals:      {calculation.integrals_time - calculation.start_time:8.2f} seconds", calculation, 3)
+        log(f" Time taken for SCF iterations:           {calculation.SCF_time - calculation.integrals_time:8.2f} seconds", calculation, 3)
+
+        if calculation.method.correlated_method: 
+            
+            log(f" Time taken for correlated calculation:   {calculation.correlation_time - calculation.SCF_time:8.2f} seconds", calculation, 3)
+        
+        if calculation.method.excited_state_method:
+        
+            log(f" Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:6.2f} seconds", calculation, 3)
+
+    if total_time > 120:
+
+        minutes = total_time // 60
+        seconds = total_time % 60
+
+        if total_time > 7200:
+            
+            hours = total_time // 3600
+            extra_minutes = (total_time % 3600) // 60
+
+            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+
+        else:
+            
+            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+
+    else:
+        
+        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n", "white"), calculation, 1)
+    
+    # Exits the program
+
+    sys.exit()
+
+    return
+
+
 
 
 
@@ -1228,297 +1098,226 @@ def log_big_spacer(calculation, priority=1, start="", end="", space=" ", silent=
 
 calculation_types = {
 
-    "SPE": "Single point energy",
-    "OPT": "Geometry optimisation",
-    "FREQ": "Harmonic frequency",
-    "OPTFREQ": "Optimisation and harmonic frequency",
-    "SCAN": "Coordinate scan",
-    "MD": "Ab initio molecular dynamics",
-    "FORCE": "Force",
-    "ANHARM": "Anharmonic frequency",
-    "IP": "Ionisation potential",
-    "EA": "Electron affinity"
+    "SPE"       :     "Single point energy",
+    "OPT"       :     "Geometry optimisation",
+    "FREQ"      :     "Harmonic frequency",
+    "OPTFREQ"   :     "Optimisation and harmonic frequency",
+    "SCAN"      :     "Coordinate scan",
+    "MD"        :     "Ab initio molecular dynamics",
+    "FORCE"     :     "Force",
+    "ANHARM"    :     "Anharmonic frequency",
+    "IP"        :     "Ionisation potential",
+    "EA"        :     "Electron affinity",
+    "BDE"       :     "Bond dissociation energy"
     
     }
 
 
 
 
-method_types = {
+
+
+
+
+
+
+electronic_structure_methods = [
+
+    Method("H", "Hartree theory"),
+    Method("HF", "Hartree-Fock theory"),
+    Method("RHF", "Hartree-Fock theory"),
+
+    Method("MP2", "MP2 theory", method_base = "MP2"),
+    Method("OMP2", "orbital-optimised MP2 theory", method_base = "MP2"), 
+    Method("IMP2", "iterative MP2 theory", unrestricted_available = False, method_base = "MP2"),
+    Method("LMP2", "Laplace transform MP2 theory", unrestricted_available = False, method_base = "MP2"),
+    Method("SCS-MP2", "spin-component-scaled MP2 theory", method_base = "MP2"),
+    Method("DLPNO-MP2", "domain-based local pair natural orbital MP2 theory", method_base = "MP2"),
     
-    "H": "Hartree theory", 
-    "UH": "unrestricted Hartree theory", 
-    "HF": "Hartree-Fock theory", 
-    "RHF": "restricted Hartree-Fock theory", 
-    "UHF": "unrestricted Hartree-Fock theory", 
-    "IMP2": "iterative MP2 theory", 
-    "LMP2": "Laplace transform MP2 theory", 
-    "MP2": "MP2 theory", 
-    "UMP2": "unrestricted MP2 theory", 
-    "SCS-MP2": "spin-component-scaled MP2 theory", 
-    "USCS-MP2": "unrestricted spin-component-scaled MP2 theory", 
-    "MP3": "MP3 theory", 
-    "UMP3": "unrestricted MP3 theory", 
-    "SCS-MP3": "spin-component-scaled MP3 theory", 
-    "USCS-MP3": "unrestricted spin-component-scaled MP3 theory", 
-    "MP4": "MP4 theory",
-    "MP4[SDTQ]": "MP4 theory",
-    "MP4[SDQ]": "MP4 theory with singles, doubles and quadruples",
-    "MP4[DQ]": "MP4 theory with doubles and quadruples",
-    "OMP2": "orbital-optimised MP2 theory", 
-    "UOMP2": "unrestricted orbital-optimised MP2 theory",
-    "CIS": "configuration interaction singles",        
-    "UCIS": "unrestricted configuration interaction singles",
-    "CIS[D]": "configuration interaction singles with perturbative doubles",
-    "UCIS[D]": "unrestricted configuration interaction singles with perturbative doubles",
-    "CCD": "coupled cluster doubles",
-    "UCCD": "unrestricted coupled cluster doubles",
-    "CEPA0": "coupled electron pair approximation",
-    "UCEPA0": "unrestricted coupled electron pair approximation",
-    "LCCD": "linearised coupled cluster doubles",
-    "ULCCD": "unrestricted linearised coupled cluster doubles",
-    "LCCSD": "linearised coupled cluster singles and doubles",
-    "ULCCSD": "unrestricted linearised coupled cluster singles and doubles",
-    "CEPA": "coupled electron pair approximation",
-    "UCEPA": "unrestricted coupled electron pair approximation",
-    "CEPA[0]": "coupled electron pair approximation",
-    "UCEPA[0]": "unrestricted coupled electron pair approximation",
-    "QCISD": "quadratic configuration interaction singles and doubles",
-    "UQCISD": "unrestricted quadratic configuration interaction singles and doubles",
-    "CCSD": "coupled cluster singles and doubles",
-    "UCCSD": "unrestricted coupled cluster singles and doubles",
-    "QCISD[T]": "quadratic configuration interaction singles, doubles and perturbative triples",
-    "UQCISD[T]": "unrestricted quadratic configuration interaction singles, doubles and perturbative triples",
-    "CCSD[T]": "coupled cluster singles, doubles and perturbative triples",
-    "UCCSD[T]": "unrestricted coupled cluster singles, doubles and perturbative triples",
-    "CCSDT": "coupled cluster singles, doubles and triples",
-    "UCCSDT": "unrestricted coupled cluster singles, doubles and triples",
-    "CCSDT[Q]": "coupled cluster singles, doubles, triples and perturbative quadruples",
-    "CCSDTQ": "coupled cluster singles, doubles, triples and quadruples",
-    "LDA": "density functional theory via local density approximation",
-    "ULDA": "unrestricted density functional theory via local density approximation",
-    "LSDA": "density functional theory via local spin density approximation",
-    "ULSDA": "unrestricted density functional theory via local spin density approximation",
-    "SVWN": "density functional theory with Slater exchange and VWN correlation",
-    "USVWN": "unrestricted density functional theory with Slater exchange and VWN correlation",
-    "SVWN3": "density functional theory with Slater exchange and VWN-III correlation",
-    "USVWN3": "unrestricted density functional theory with Slater exchange and VWN-III correlation",
-    "SVWN5": "density functional theory with Slater exchange and VWN-V correlation",
-    "USVWN5": "unrestricted density functional theory with Slater exchange and VWN-V correlation",
-    "BVWN": "density functional theory with Becke exchange and VWN correlation",
-    "UBVWN": "unrestricted density functional theory with Becke exchange and VWN correlation",
-    "BVWN3": "density functional theory with Becke exchange and VWN-III correlation",
-    "UBVWN3": "unrestricted density functional theory with Becke exchange and VWN-III correlation",
-    "BVWN5": "density functional theory with Becke exchange and VWN-V correlation",
-    "UBVWN5": "unrestricted density functional theory with Becke exchange and VWN-V correlation",
-    "SPW": "density functional theory with Slater exchange and Perdew-Wang correlation",
-    "USPW": "unrestricted density functional theory with Slater exchange and Perdew-Wang correlation",
-    "HFS": "Hartree-Fock theory with Slater exchange", 
-    "RHFS": "restricted Hartree-Fock theory with Slater exchange", 
-    "UHFS": "unrestricted Hartree-Fock theory with Slater exchange", 
-    "HFB": "Hartree-Fock theory with Becke exchange", 
-    "RHFB": "restricted Hartree-Fock theory with Becke exchange", 
-    "UHFB": "unrestricted Hartree-Fock theory with Becke exchange", 
-    "PBE": "density functional theory with PBE exchange and correlation",
-    "UPBE": "unrestricted density functional theory with PBE exchange and correlation",
-    "PBE0": "hybrid density functional theory with PBE exchange and correlation",
-    "UPBE0": "unrestricted hybrid density functional theory with PBE exchange and correlation",
-    "PBE0-DH": "double-hybrid density functional theory with PBE exchange and correlation",
-    "UPBE0-DH": "unrestricted double-hybrid density functional theory with PBE exchange and correlation",
-    "PBE-QIDH": "double-hybrid density functional theory with PBE exchange and correlation",
-    "UPBE-QIDH": "unrestricted double-hybrid density functional theory with PBE exchange and correlation",
-    "PBE0-2": "double-hybrid density functional theory with PBE exchange and correlation",
-    "UPBE0-2": "unrestricted double-hybrid density functional theory with PBE exchange and correlation",
-    "BLYP": "density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UBLYP": "unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "BP86": "density functional theory with Becke exchange and Perdew 1986 correlation",
-    "UBP86": "unrestricted density functional theory with Becke exchange and Perdew 1986 correlation",
-    "B1P86": "hybrid density functional theory with Becke exchange and Perdew 1986 correlation",
-    "UB1P86": "hybrid unrestricted density functional theory with Becke exchange and Perdew 1986 correlation",
-    "SLYP": "density functional theory with Slater exchange and Lee-Yang-Parr correlation",
-    "USLYP": "unrestricted density functional theory with Slater exchange and Lee-Yang-Parr correlation",
-    "BHLYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UBHLYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B1LYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB1LYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B3LYP": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB3LYP": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B3LYP/G": "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB3LYP/G": "hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "DSD-BLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UDSD-BLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2K-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2K-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2T-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2T-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2G-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2G-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "B2NC-PLYP": "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation",
-    "UB2NC-PLYP": "double-hybrid unrestricted density functional theory with Becke exchange and Lee-Yang-Parr correlation",   
-    "TPSS": "density functional theory with TPSS exchange and correlation",
-    "UTPSS": "unrestricted density functional theory with TPSS exchange and correlation",
-    "TPSSH": "hybrid density functional theory with TPSS exchange and correlation",
-    "UTPSSH": "unrestricted density functional theory with TPSS exchange and correlation",
-    "TPSS0": "hybrid density functional theory with TPSS exchange and correlation",
-    "UTPSS0": "hybrid unrestricted density functional theory with TPSS exchange and correlation",
-    "PWP": "density functional theory with Perdew-Wang exchange and Perdew 1986 correlation",
-    "UPWP": "unrestricted density functional theory with Perdew-Wang exchange and Perdew 1986 correlation",
-    "MPWLYP": "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
-    "UMPWLYP": "unrestricted density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
-    "MPW1LYP": "hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
-    "UMPW1LYP": "unrestricted hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
-    "MPW2PLYP": "double-hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
-    "UMPW2PLYP": "unrestricted double-hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation",
-    "MPWPW": "density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation",
-    "UMPWPW": "unrestricted density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation",
-    "PW1PW": "hybrid density functional theory with Perdew-Wang exchange and Perdew-Wang correlation",
-    "UPW1PW": "hybrid unrestricted density functional theory with Perdew-Wang exchange and Perdew-Wang correlation",
-    "MPW1PW": "hybrid density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation",
-    "UMPW1PW": "hybrid unrestricted density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation",
-    "B3PW91": "hybrid density functional theory with Becke exchange and Perdew-Wang correlation",
-    "UB3PW91": "hybrid unrestricted density functional theory with Becke exchange and Perdew-Wang correlation",
-    "B3P86": "hybrid density functional theory with Becke exchange and Perdew 1986 correlation",
-    "UB3P86": "hybrid unrestricted density functional theory with Becke exchange and Perdew 1986 correlation",
-
-    }
-
-
-
-coupled_cluster_methods = [
-
-    "CCD", "UCCD", "CEPA0", "UCEPA0", "LCCD", "ULCCD",  "LCCSD", "ULCCSD", "CEPA", "UCEPA", "CEPA[0]", "UCEPA[0]", "QCISD", "UQCISD", "CCSD", "UCCSD", "QCISD[T]", "UQCISD[T]", "CCSD[T]", "UCCSD[T]", "CCSDT", "UCCSDT", "CCSDTQ", "CCSDT[Q]"
-
-    ]  
-
-
-second_order_perturbative_methods = [
+    Method("MP3", "MP3 theory", method_base = "MP3"),
+    Method("SCS-MP3", "spin-component-scaled MP3 theory", method_base = "MP3"),
     
-    "MP2", "UMP2", "SCS-MP2", "USCS-MP2", "OMP2", "UOMP2", "IMP2", "LMP2"
-
-    ]
-
-
-third_order_perturbative_methods = [
+    Method("MP4", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
+    Method("MP4[SDTQ]", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
+    Method("MP4[SDQ]", "MP4 theory with singles, doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
+    Method("MP4[DQ]", "MP4 theory with doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
     
-    "MP3", "UMP3", "SCS-MP3", "USCS-MP3"
+    Method("CIS", "configuration interaction singles", excited_state_method = True),
+    Method("CIS[D]", "configuration interaction singles with perturbative doubles", excited_state_method = True),
 
-    ]
-
-
-fourth_order_perturbative_methods = [
+    Method("CCD", "coupled cluster doubles", method_base = "CC"),
+    Method("CEPA", "coupled electron pair approximation", method_base = "CC"),
+    Method("CEPA0", "coupled electron pair approximation", method_base = "CC"),
+    Method("CEPA[0]", "coupled electron pair approximation", method_base = "CC"),
+    Method("LCCD", "linearised coupled cluster doubles", method_base = "CC"),
+    Method("LCCSD", "linearised coupled cluster singles and doubles", method_base = "CC"),
+    Method("QCISD", "quadratic configuration interaction singles and doubles", method_base = "CC"),
+    Method("QCISD[T]", "quadratic configuration interaction singles, doubles and perturbative triples", method_base = "CC"),
+    Method("CC2", "approximate coupled cluster singles and doubles", unrestricted_available = False, method_base = "CC"),
+    Method("CC3", "approximate coupled cluster singles, doubles and triples", unrestricted_available = False, method_base = "CC"),
     
-    "MP4", "MP4[SDTQ]", "MP4[SDQ]", "MP4[DQ]"
-
-    ]
-
-
-excited_state_methods = [
+    Method("CCSD", "coupled cluster singles and doubles", method_base = "CC"),
+    Method("CCSD[T]", "coupled cluster singles, doubles and perturbative triples", method_base = "CC"),
+    Method("CCSDT","coupled cluster singles, doubles and triples", method_base = "CC"),
+    Method("CCSDT[Q]", "coupled cluster singles, doubles, triples and perturbative quadruples", unrestricted_available = False, method_base = "CC"),
+    Method("CCSDTQ", "coupled cluster singles, doubles, triples and quadruples", unrestricted_available = False, method_base = "CC"),
     
-    "CIS", "UCIS", "UCIS[D]", "CIS[D]"
+    Method("HFS", "Hartree-Fock theory with Slater exchange", method_base = "DFT"),
+    Method("LDA", "density functional theory via local density approximation", method_base = "DFT"),
+    Method("LSDA", "density functional theory via local spin density approximation", method_base = "DFT"),
+    Method("SVWN", "density functional theory with Slater exchange and VWN correlation", method_base = "DFT"),
+    Method("SVWN3", "density functional theory with Slater exchange and VWN-III correlation", method_base = "DFT"),
+    Method("SVWN5", "density functional theory with Slater exchange and VWN-V correlation", method_base = "DFT"),
+    Method("SPW", "density functional theory with Slater exchange and Perdew-Wang correlation", method_base = "DFT"),
+    
+    Method("HFB", "Hartree-Fock theory with Becke exchange", method_base = "DFT"),
+    Method("BVWN", "density functional theory with Becke exchange and VWN correlation", method_base = "DFT"),
+    Method("BVWN3","density functional theory with Becke exchange and VWN-III correlation", method_base = "DFT"),
+    Method("BVWN5", "density functional theory with Becke exchange and VWN-V correlation", method_base = "DFT"),
+    Method("PBE", "density functional theory with PBE exchange and correlation", method_base = "DFT"),
+    Method("BLYP", "density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("SLYP", "density functional theory with Slater exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("PWP", "density functional theory with Perdew-Wang exchange and Perdew 1986 correlation", method_base = "DFT"),
+    Method("MPWPW", "density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation", method_base = "DFT"),
+    Method("MPWLYP", "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("BP86", "density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
+    
+    Method("TPSS", "density functional theory with TPSS exchange and correlation", method_base = "DFT"),
+    
+    Method("PBE0", "hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
+    Method( "B1P86", "hybrid density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
+    Method("BHLYP", "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B1LYP", "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B3LYP", "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B3LYP/G", "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("MPW1LYP", "hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("PW1PW", "hybrid density functional theory with Perdew-Wang exchange and Perdew-Wang correlation", method_base = "DFT"),
+    Method("MPW1PW", "hybrid density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation", method_base = "DFT"),
+    Method("B3PW91", "hybrid density functional theory with Becke exchange and Perdew-Wang correlation", method_base = "DFT"),
+    Method("B3P86", "hybrid density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
+    Method("TPSSH", "hybrid density functional theory with TPSS exchange and correlation", method_base = "DFT"),
+    Method("TPSS0", "hybrid density functional theory with TPSS exchange and correlation", method_base = "DFT"),
+
+    Method("PBE0-DH", "double-hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
+    Method("PBE-QIDH", "double-hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
+    Method("PBE0-2", "double-hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
+    Method("B2PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("DSD-BLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B2-PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B2K-PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B2T-PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B2G-PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("B2NC-PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("MPW2PLYP", "double-hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
 
     ]
 
 
 
-perturbative_methods = second_order_perturbative_methods + third_order_perturbative_methods + fourth_order_perturbative_methods
 
-correlated_methods = coupled_cluster_methods + perturbative_methods
+
+
+
 
 
 
 DFT_methods = {
 
-    "HFS" : Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
-    "UHFS" : Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
-    "SVWN" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USVWN" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "LSDA" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "ULSDA" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "LDA" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "ULDA" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "SVWN3" : Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USVWN3" : Functional("S", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "SVWN5" : Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USVWN5" : Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "SPW" : Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USPW" : Functional("S", "UPW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "PBE" : Functional("PBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
-    "UPBE" : Functional("PBE", "UPBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
-    "PBE0" : Functional("PBE", "PBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UPBE0" : Functional("PBE", "UPBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "PBE0-DH" : Functional("PBE", "PBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
-    "UPBE0-DH" : Functional("PBE", "UPBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
-    "PBE-QIDH" : Functional("PBE", "PBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
-    "UPBE-QIDH" : Functional("PBE", "UPBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
-    "PBE0-2" : Functional("PBE", "PBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
-    "UPBE0-2" : Functional("PBE", "UPBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
-    "HFB" : Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
-    "UHFB" : Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
-    "BVWN" : Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UBVWN" : Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "BVWN3" : Functional("B", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UBVWN3" : Functional("B", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "BVWN5" : Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UBVWN5" : Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "BLYP" : Functional("B", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
-    "UBLYP" : Functional("B", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
-    "BHLYP" : Functional("B", "LYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
-    "UBHLYP" : Functional("B", "ULYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
-    "B1LYP" : Functional("B", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UB1LYP" : Functional("B", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "PWP" : Functional("PW", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UPWP" : Functional("PW", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "SLYP" : Functional("S", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "USLYP" : Functional("S", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "B3LYP" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UB3LYP" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B3LYP/G" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UB3LYP/G" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B2PLYP" : Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "UB2PLYP" : Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "B2-PLYP" : Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "UB2-PLYP" : Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "B2K-PLYP" : Functional("B", "LYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
-    "UB2K-PLYP" : Functional("B", "ULYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
-    "B2T-PLYP" : Functional("B", "LYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
-    "UB2T-PLYP" : Functional("B", "ULYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
-    "B2G-PLYP" : Functional("B", "LYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
-    "UB2G-PLYP" : Functional("B", "ULYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
-    "B2NC-PLYP" : Functional("B", "LYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
-    "UB2NC-PLYP" : Functional("B", "ULYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
-    "DSD-BLYP" : Functional("B", "LYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
-    "UDSD-BLYP" : Functional("B", "ULYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
-    "BP86" : Functional("B", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UBP86" : Functional("B", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B1P86" : Functional("B", "P86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UB1P86" : Functional("B", "UP86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "TPSS" : Functional("TPSS", "TPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
-    "UTPSS" : Functional("TPSS", "UTPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
-    "TPSSH" : Functional("TPSS", "TPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "UTPSSH" : Functional("TPSS", "UTPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "TPSS0" : Functional("TPSS", "TPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "UTPSS0" : Functional("TPSS", "UTPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "MPWLYP" : Functional("MPW", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPWLYP" : Functional("MPW", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "MPW1LYP" : Functional("MPW", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPW1LYP" : Functional("MPW", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "MPW2PLYP" : Functional("MPW", "LYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
-    "UMPW2PLYP" : Functional("MPW", "ULYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
-    "MPWPW" : Functional("MPW", "PW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPWPW" : Functional("MPW", "UPW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "PW1PW" : Functional("PW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UPW1PW" : Functional("PW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "MPW1PW" : Functional("MPW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPW1PW" : Functional("MPW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "B3PW91" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
-    "UB3PW91" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
-    "B3P86" : Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
-    "UB3P86" : Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+    # At some point, want to handle the unrestricted cases together here, since exchange is always the same
+
+    "HFS"         :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
+    "UHFS"        :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
+    "SVWN"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USVWN"       :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LSDA"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "ULSDA"       :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "ULDA"        :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN3"       :     Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USVWN3"      :     Functional("S", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN5"       :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USVWN5"      :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SPW"         :     Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "USPW"        :     Functional("S", "UPW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "PBE"         :     Functional("PBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
+    "UPBE"        :     Functional("PBE", "UPBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
+    "PBE0"        :     Functional("PBE", "PBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UPBE0"       :     Functional("PBE", "UPBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "PBE0-DH"     :     Functional("PBE", "PBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
+    "UPBE0-DH"    :     Functional("PBE", "UPBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
+    "PBE-QIDH"    :     Functional("PBE", "PBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
+    "UPBE-QIDH"   :     Functional("PBE", "UPBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
+    "PBE0-2"      :     Functional("PBE", "PBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
+    "UPBE0-2"     :     Functional("PBE", "UPBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
+    "HFB"         :     Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
+    "UHFB"        :     Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
+    "BVWN"        :     Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UBVWN"       :     Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BVWN3"       :     Functional("B", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UBVWN3"      :     Functional("B", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BVWN5"       :     Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UBVWN5"      :     Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BLYP"        :     Functional("B", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
+    "UBLYP"       :     Functional("B", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
+    "BHLYP"       :     Functional("B", "LYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
+    "UBHLYP"      :     Functional("B", "ULYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
+    "B1LYP"       :     Functional("B", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UB1LYP"      :     Functional("B", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "PWP"         :     Functional("PW", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UPWP"        :     Functional("PW", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "SLYP"        :     Functional("S", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "USLYP"       :     Functional("S", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "B3LYP"       :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "UB3LYP"      :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "B3LYP/G"     :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "UB3LYP/G"    :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "B2PLYP"      :     Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "UB2PLYP"     :     Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "B2-PLYP"     :     Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "UB2-PLYP"    :     Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
+    "B2K-PLYP"    :     Functional("B", "LYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
+    "UB2K-PLYP"   :     Functional("B", "ULYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
+    "B2T-PLYP"    :     Functional("B", "LYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
+    "UB2T-PLYP"   :     Functional("B", "ULYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
+    "B2G-PLYP"    :     Functional("B", "LYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
+    "UB2G-PLYP"   :     Functional("B", "ULYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
+    "B2NC-PLYP"   :     Functional("B", "LYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
+    "UB2NC-PLYP"  :     Functional("B", "ULYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
+    "DSD-BLYP"    :     Functional("B", "LYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
+    "UDSD-BLYP"   :     Functional("B", "ULYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
+    "BP86"        :     Functional("B", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "UBP86"       :     Functional("B", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
+    "B1P86"       :     Functional("B", "P86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UB1P86"      :     Functional("B", "UP86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "TPSS"        :     Functional("TPSS", "TPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
+    "UTPSS"       :     Functional("TPSS", "UTPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
+    "TPSSH"       :     Functional("TPSS", "TPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "UTPSSH"      :     Functional("TPSS", "UTPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "TPSS0"       :     Functional("TPSS", "TPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "UTPSS0"      :     Functional("TPSS", "UTPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "MPWLYP"      :     Functional("MPW", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPWLYP"     :     Functional("MPW", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW1LYP"     :     Functional("MPW", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPW1LYP"    :     Functional("MPW", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW2PLYP"    :     Functional("MPW", "LYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
+    "UMPW2PLYP"   :     Functional("MPW", "ULYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
+    "MPWPW"       :     Functional("MPW", "PW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPWPW"      :     Functional("MPW", "UPW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "PW1PW"       :     Functional("PW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UPW1PW"      :     Functional("PW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW1PW"      :     Functional("MPW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UMPW1PW"     :     Functional("MPW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "B3PW91"      :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+    "UB3PW91"     :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+    "B3P86"       :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+    "UB3P86"      :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
+
 }
+
+
+
+
+
 
 
 
@@ -1645,22 +1444,12 @@ basis_types = {
     "AUG-ANO-PVTZ" : "aug-ano-pVTZ",
     "AUG-ANO-PVQZ" : "aug-ano-pVQZ",
     "AUG-ANO-PV5Z" : "aug-ano-pV5Z",
+
 }
 
 
 
 
-color_map = {
-
-    "RED": "r",
-    "GREEN": "g",
-    "BLUE": "b",
-    "CYAN": "c",
-    "MAGENTA": "m",
-    "YELLOW": "y",
-    "BLACK": "k",
-    "WHITE": "w",
-}
 
 
 
@@ -1670,6 +1459,7 @@ color_map = {
 atomic_properties = {
             
     "X" : {
+
         "charge" : 0,
         "mass" : 0,
         "C6" : 0,
@@ -1678,9 +1468,11 @@ atomic_properties = {
         "core_orbitals": 0,
         "name" : "ghost",
         "density" : None
+
     },
 
     "H" : {
+
         "charge" : 1,
         "mass" : 1.007825,
         "C6" : 2.4283,
@@ -1689,9 +1481,11 @@ atomic_properties = {
         "core_orbitals": 0,
         "name" : "hydrogen",
         "density" : np.array([[1]])
+
     },
 
     "HE" : {
+
         "charge" : 2,
         "mass" : 4.002603,
         "C6" : 1.3876,
@@ -1700,9 +1494,11 @@ atomic_properties = {
         "core_orbitals": 0,
         "name" : "helium",
         "density" : np.array([[2]])
+
     },
 
     "LI" : {
+
         "charge" : 3,
         "mass" : 7.016004,
         "C6" : 27.92545,
@@ -1715,6 +1511,7 @@ atomic_properties = {
     },
 
     "BE" : {
+
         "charge" : 4,
         "mass" : 9.012182,
         "C6" : 27.92545,
@@ -1727,6 +1524,7 @@ atomic_properties = {
     },
 
     "B" : {
+
         "charge" : 5,
         "mass" : 11.009305,
         "C6" : 54.28985,
@@ -1739,6 +1537,7 @@ atomic_properties = {
     },
 
     "C" : {
+
         "charge" : 6,
         "mass" : 12.000000,
         "C6" : 30.35375,
@@ -1751,6 +1550,7 @@ atomic_properties = {
     },
 
     "N" : {
+
         "charge" : 7,
         "mass" : 14.003074,
         "C6" : 21.33435,
@@ -1763,6 +1563,7 @@ atomic_properties = {
     },
 
     "O" : {
+
         "charge" : 8,
         "mass" : 15.994915,
         "C6" : 12.1415,
@@ -1775,6 +1576,7 @@ atomic_properties = {
     },
 
     "F" : {
+
         "charge" : 9,
         "mass" : 18.998403,
         "C6" : 13.00875,
@@ -1787,6 +1589,7 @@ atomic_properties = {
     },
 
     "NE" : {
+
         "charge" : 10,
         "mass" : 19.992440,
         "C6" : 10.92735,
@@ -1799,6 +1602,7 @@ atomic_properties = {
     },
 
     "NA" : {
+
         "charge" : 11,
         "mass" : 22.989770,
         "C6" : 99.03995,
@@ -1807,9 +1611,11 @@ atomic_properties = {
         "core_orbitals": 1,
         "name" : "sodium",
         "density" : np.array([[2.17662152, -6.46761790e-01, 0, 0, 0, 1.12325209e-01, 0, 0, 0], [-6.46761790e-01, 2.37933229, 0, 0, 0, -5.32213795e-01, 0, 0, 0], [0, 0, 1.59827524, 0, 0, 0, 3.51284476e-01, 0, 0], [0, 0, 0, 1.59827524, 0, 0, 0, 3.51284476e-01, 0], [0, 0, 0, 0, 1.59827524, 0, 0, 0, 3.51284476e-01], [1.12325209e-01, -5.32213795e-01, 0, 0, 0, 1.27775127, 0, 0, 0], [0, 0, 3.51284476e-01, 0, 0, 0, 7.73009653e-02, 0, 0], [0, 0, 0, 3.51284476e-01, 0, 0, 0, 7.73009653e-02, 0], [0, 0, 0, 0, 3.51284476e-01, 0, 0, 0, 7.73009653e-02]])
+   
     },
 
     "MG" : {
+
         "charge" : 12,
         "mass" : 23.985042,
         "C6" : 99.03995,
@@ -1818,9 +1624,11 @@ atomic_properties = {
         "core_orbitals": 1,
         "name" : "magnesium",
         "density" : np.array([[2.20235014, -0.71327382, 0, 0, 0, 0.21565979, 0, 0, 0], [-0.71327382, 2.52187183, 0, 0, 0, -0.88613634, 0, 0, 0], [0, 0, 1.7603467, 0, 0, 0, 0.26850121, 0, 0], [0, 0, 0, 1.7603467, 0, 0, 0, 0.26850121, 0], [0, 0, 0, 0, 1.7603467, 0, 0, 0, 0.26850121], [0.21565979, -0.88613634, 0, 0, 0, 2.31198223, 0, 0, 0], [0, 0, 0.26850121, 0, 0, 0, 0.04095381, 0, 0], [0, 0, 0, 0.26850121, 0, 0, 0, 0.04095381, 0], [0, 0, 0, 0, 0.26850121, 0, 0, 0, 0.04095381]])
+    
     },
 
     "AL" : {
+
         "charge" : 13,
         "mass" : 26.981538,
         "C6" : 187.15255,
@@ -1829,9 +1637,11 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "aluminium",
         "density": np.array([[2.21518153, -0.7210589, 0, 0, 0, 0.17765448, 0, 0, 0], [-0.7210589, 2.42119273, 0, 0, 0, -0.69637357, 0, 0, 0], [0, 0, 2.00715026, -0.00013103, -0.0624102, 0, -0.17674644, 0.00032326, 0.15397241], [0, 0, -0.00013103, 1.85304795, 5.307e-05, 0, 0.00032326, 0.20343991, -0.00013092], [0, 0, -0.0624102, 5.307e-05, 1.87832344, 0, 0.15397241, -0.00013092, 0.14108264], [0.17765448, -0.69637357, 0, 0, 0, 2.20073007, 0, 0, 0], [0, 0, -0.17674644, 0.00032326, 0.15397241, 0, 0.96020735, -0.00079744, -0.37983008], [0, 0, 0.00032326, 0.20343991, -0.00013092, 0, -0.00079744, 0.02233666, 0.00032296], [0, 0, 0.15397241, -0.00013092, 0.14108264, 0, -0.37983008, 0.00032296, 0.17616399]])
+    
     },
 
     "SI" : {
+
         "charge" : 14,
         "mass" : 27.976927,
         "C6" : 160.09435,
@@ -1840,9 +1650,11 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "silicon",
         "density": np.array([[2.23075361, -0.7411749, 0, 0, 0, 0.15812382, 0, 0, 0], [-0.7411749, 2.38444931, 0, 0, 0, -0.59611799, 0, 0, 0], [0, 0, 1.90557606, 0, 0, 0, 0.1529621, 0, 0], [0, 0, 0, 2.15540668, 0, 0, 0, -0.57876127, 0], [0, 0, 0, 0, 1.90557606, 0, 0, 0, 0.1529621], [0.15812382, -0.59611799, 0, 0, 0, 2.1494, 0, 0, 0], [0, 0, 0.1529621, 0, 0, 0, 0.01227839, 0, 0], [0, 0, 0, -0.57876127, 0, 0, 0, 2.15540668, 0], [0, 0, 0, 0, 0.1529621, 0, 0, 0, 0.01227839]])
+    
     },
 
     "P" : {
+
         "charge" : 15,
         "mass" : 30.973762,
         "C6" : 135.9848,
@@ -1851,9 +1663,11 @@ atomic_properties = {
         "core_orbitals": 5,        
         "name" : "phosphorus",
         "density": np.array([[2.2491554, -0.77208347, 0, 0, 0, 0.16024315, 0, 0, 0], [-0.77208347, 2.3962711, 0, 0, 0, -0.58386231, 0, 0, 0], [0, 0, 1.9839067, -0.06015484, -0.05490761, 0, -0.05656304, 0.1850791, 0.16994956], [0, 0, -0.06015484, 2.0002586, 0.00511423, 0, 0.1850791, -0.10642059, -0.01632541], [0, 0, -0.05490761, 0.00511423, 2.1244592, 0, 0.16994956, -0.01632541, -0.49095309], [0.16024315, -0.58386231, 0, 0, 0, 2.1426492, 0, 0, 0], [0, 0, -0.05656304, 0.1850791, 0.16994956, 0, 0.58002822, -0.56941502, -0.52603041], [0, 0, 0.1850791, -0.10642059, -0.01632541, 0, -0.56941502, 0.73200918, 0.05206724], [0, 0, 0.16994956, -0.01632541, -0.49095309, 0, -0.52603041, 0.05206724, 1.9225545]])
+    
     },
 
     "S" : {
+
         "charge" : 16,
         "mass" : 31.972071,
         "C6" : 96.61165,
@@ -1862,9 +1676,11 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "sulfur",
         "density": np.array([[2.26601244, -0.799712, 0, 0, 0, 0.16211699, 0, 0, 0], [-0.799712, 2.40784748, 0, 0, 0, -0.57394585, 0, 0, 0], [0, 0, 2.13878051, -0.02469174, -0.00351481, 0, -0.54127214, 0.07973172, 0.01134962], [0, 0, -0.02469174, 1.94413911, -0.02814566, 0, 0.07973172, 0.08724145, 0.09088472], [0, 0, -0.00351481, -0.02814566, 2.13785753, 0, 0.01134962, 0.09088472, -0.53829176], [0.16211699, -0.57394585, 0, 0, 0, 2.13721465, 0, 0, 0], [0, 0, -0.54127214, 0.07973172, 0.01134962, 0, 2.10971252, -0.25746048, -0.03664888], [0, 0, 0.07973172, 0.08724145, 0.09088472, 0, -0.25746048, 0.08018887, -0.29347446], [0, 0, 0.01134962, 0.09088472, -0.53829176, 0, -0.03664888, -0.29347446, 2.10008862]])
+   
     },
 
     "CL" : {
+
         "charge" : 17,
         "mass" : 34.968853,
         "C6" : 87.93915,
@@ -1873,9 +1689,11 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "chlorine",
         "density" : np.array([[2.27846455, -0.81566933, 0, 0, 0, 0.14797638, 0, 0, 0], [-0.81566933, 2.39225803, 0, 0, 0, -0.51184572, 0, 0, 0], [0, 0, 2.04723353, -0.02649908, 0.0046819, 0, -0.24466305, 0.09752204, -0.01723034], [0, 0, -0.02649908, 2.10392172, 0.0018477, 0, 0.09752204, -0.45328717, -0.00679993], [0, 0, 0.0046819, 0.0018477, 2.11405309, 0, -0.01723034, -0.00679993, -0.49057268], [0.14797638, -0.51184572, 0, 0, 0, 2.10986634, 0, 0, 0], [0, 0, -0.24466305, 0.09752204, -0.01723034, 0, 1.20496033, -0.35890104, 0.06341118], [0, 0, 0.09752204, -0.45328717, -0.00679993, 0, -0.35890104, 1.97273974, 0.02502514], [0, 0, -0.01723034, -0.00679993, -0.49057268, 0, 0.06341118, 0.02502514, 2.10995807]])
+   
     },
 
     "AR" : {
+
         "charge" : 18,
         "mass" : 39.962383,
         "C6" : 79.96045,
@@ -1884,6 +1702,7 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "argon",
         "density" : np.array([[2.29450954, -0.84439346, 0, 0, 0, 0.16247279, 0, 0, 0], [-0.84439346, 2.42446138, 0, 0, 0, -0.55006745, 0, 0, 0], [0, 0, 2.12900247, 0, 0, 0, -0.52406734, 0, 0], [0, 0, 0, 2.12900247, 0, 0, 0, -0.52406734, 0], [0, 0, 0, 0, 2.12900247, 0, 0, 0, -0.52406734], [0.16247279, -0.55006745, 0, 0, 0, 2.12522405, 0, 0, 0], [0, 0, -0.52406734, 0, 0, 0, 2.12900247, 0, 0], [0, 0, 0, -0.52406734, 0, 0, 0, 2.12900247, 0], [0, 0, 0, 0, -0.52406734, 0, 0, 0, 2.12900247]])
+   
     }
 
 }

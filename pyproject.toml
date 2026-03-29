@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 name = "QuantumTUNA"
 dynamic = ["version"]
 authors = [
-  { name = "Harry Brough", email = "harry.brough@postgrad.manchester.ac.uk"}
+  { name = "Harry Brough", email = "harry.brough@manchester.ac.uk"}
 ]
 keywords = ["quantum chemistry", "molecular physics", "hartree-fock", "mp2", "dft", "coupled cluster", "theoretical chemistry", "computational chemistry", "molecular modeling"]
 dependencies = [
@@ -22,7 +22,7 @@ dependencies = [
   "termcolor",
 ]
 
-description = "A user-friendly quantum chemistry program for diatomics."
+description = "A streamlined quantum chemistry program for atoms and diatomics."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"

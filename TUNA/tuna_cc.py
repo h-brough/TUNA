@@ -4,6 +4,7 @@ import tuna_mp as mp
 from tuna_util import *
 import sys
 from tuna_molecule import Molecule
+from tuna_calc import Calculation
 
 
 """
@@ -15,10 +16,12 @@ using damping and DIIS. For most methods, interleaved physicist's notation is us
 einsum function of NumPy is used throughout with "optimize=True" to approximate the most efficient contraction path, leading to huge speedups and 
 reductions in memory requirements.
 
+Updated in version 0.10.1 to add spin-restricted CC2 and CC3.
+
 The module contains:
 
 1. Functions to calculate the coupled cluster energy (calculate_restricted_coupled_cluster_energy, calculate_unrestricted_coupled_cluster_energy)
-2. Useful utility functions (is_coupled_cluster_converged, permute, permute_symmetric)
+2. Useful utility functions (is_coupled_cluster_converged, permute)
 3. The amplitude update equations for all coupled cluster methods
 4. Perturbative triples and quadruples functions (calculate_restricted_CCSD_T_energy, calculate_restricted_CCSDT_Q_energy)
 4. The main routine to run coupled cluster energy calculations, and to apply the post-processing (begin_coupled_cluster_calculation)
@@ -28,7 +31,7 @@ The module contains:
 
 
 
-def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, t_amplitudes: tuple, method: str, F: ndarray) -> tuple[float, float, float, float]:
+def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, t_amplitudes: tuple, method: Method, F: ndarray) -> tuple:
    
     """
 
@@ -38,6 +41,7 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
         t_amplitudes (tuple): Amplitudes
+        method (Method): Electronic structure method
         F (array): Spatial-orbital Fock matrix
 
     Returns:
@@ -64,7 +68,7 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
 
     # In linearised and QCI methods, the total energy does not have a disconnected contribution
 
-    if method not in ["CCSD", "CCSD[T]", "CCSDT", "CCSDT[Q]", "CCSDTQ"]:
+    if method.name in ["LCCD", "LCCSD", "QCISD", "QCISD[T]"]:
 
         E_disconnected_doubles = 0
 
@@ -81,7 +85,7 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
 
 
 
-def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray, t_amplitudes: tuple, method: str, F: ndarray) -> tuple[float, float, float, float]:
+def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray, t_amplitudes: tuple, method: Method, F: ndarray) -> tuple:
 
     """
     
@@ -92,6 +96,7 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
         v (slice): Virtual orbital slice
         g (array): Spin-orbital antisymmetrised two-electron integrals
         t_amplitudes (tuple): Amplitudes
+        method (Method): Electronic structure method
         F (array): Spin-orbital Fock matrix
     
     Returns:
@@ -118,7 +123,7 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
     
     # In linearised and QCI methods, the total energy does not have a disconnected contribution
 
-    if method not in ["CCSD", "CCSD[T]", "CCSDT", "UCCSD", "UCCSD[T]", "UCCSDT"]:
+    if method.name in ["LCCD", "LCCSD", "QCISD", "QCISD[T]", "ULCCD", "ULCCSD", "UQCISD", "UQCISD[T]"]:
 
         E_disconnected_doubles = 0
 
@@ -135,7 +140,7 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
 
 
 
-def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, reference: str, method: str, calculation: Calculation, silent: bool) -> None:
+def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, reference: str, method: Method, calculation: Calculation, silent: bool) -> None:
 
     """
     
@@ -147,17 +152,17 @@ def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: 
         v (slice): Virtual orbital slice
         t_amplitudes (array): Amplitudes
         reference (str): Either RHF or UHF
-        method (str): Electronic structure method
+        method (Method): Electronic structure method
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
     
     """
 
     log_spacer(calculation, silent=silent, start="\n")
-    log(f"              {method:>5} Energy and Density ", calculation, 1, silent=silent, colour="white")
+    log(f"              {method.name:>5} Energy and Density ", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
-    log(f"  Energy convergence tolerance:        {calculation.CC_conv:.10f}", calculation, 1, silent=silent)
+    log(f"  Energy convergence tolerance:        {calculation.correlated_energy_convergence:.10f}", calculation, 1, silent=silent)
     log(f"  Amplitude convergence tolerance:     {calculation.amp_conv:.10f}", calculation, 1, silent=silent)
 
     # Calculates the initial guess MP2 energy
@@ -166,25 +171,25 @@ def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: 
 
     if reference == "RHF":
         
-        E_MP2 = mp.calculate_restricted_t_amplitude_energy(t_ijab, g[o, o, v, v])
+        E_MP2 = mp.calculate_restricted_MP2_energy(t_ijab, g[o, o, v, v])
 
     else:
             
-        E_MP2 = mp.calculate_t_amplitude_energy(t_ijab, g[o, o, v, v])
+        E_MP2 = mp.calculate_unrestricted_MP2_energy(t_ijab, g[o, o, v, v])
 
 
     log(f"\n  Guess t-amplitude MP2 energy:       {E_MP2:.10f}\n", calculation, 1, silent=silent)
 
-    if calculation.coupled_cluster_damping_parameter != 0 : 
+    if calculation.correlated_damping_parameter != 0 : 
         
-        log(f"  Using damping parameter of {calculation.coupled_cluster_damping_parameter:.2f} for convergence.", calculation, 1, silent=silent)
+        log(f"  Using damping parameter of {calculation.correlated_damping_parameter:.2f} for convergence.", calculation, 1, silent=silent)
 
     if calculation.DIIS: 
 
         log(f"  Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence.", calculation, 1, silent=silent)
 
 
-    log(f"\n  Starting {method} iterations...\n", calculation, 1, silent=silent)
+    log(f"\n  Starting {method.name} iterations...\n", calculation, 1, silent=silent)
 
 
     log_spacer(calculation, silent=silent)
@@ -232,98 +237,6 @@ def permute(array: ndarray, idx_1: int, idx_2: int) -> ndarray:
 
 
 
-def permute_symmetric(array: ndarray, idx_1: int, idx_2: int, idx_3: int, idx_4: int) -> ndarray:
-
-    """
-
-    Incorporates symmetric ymmetric permutation into an array. 
-
-    Args:
-        array (array): Array to be permuted
-        idx_1 (int): First index
-        idx_2 (int): Second index
-        idx_3 (int): Third index
-        idx_4 (int): Fourth index
-
-    Returns:
-        permuted_array (array): Symmetrically permuted array
-
-    """
-
-    permuted_array = array + array.swapaxes(idx_1, idx_2).swapaxes(idx_3, idx_4)
-
-    return permuted_array
-
-
-
-
-
-
-
-
-
-
-
-def permute_three_column_indices(array: ndarray) -> ndarray:
-
-    """
-
-    Permutes all the columns in a three-index tensor, eg. (ijk abc) -> (jik bac) and the rest
-
-    Args:
-        array (array): Array to be permuted
-
-    Returns:
-        permuted_array (array): Permuted array
-
-    """
-
-    permuted_array = array + array.transpose(0, 2, 1, 3, 5, 4) + array.transpose(1, 0, 2, 4, 3, 5) + array.transpose(1, 2, 0, 4, 5, 3) 
-
-    permuted_array = permuted_array + array.transpose(2, 0, 1, 5, 3, 4) + array.transpose(2, 1, 0, 5, 4, 3)
-
-    return permuted_array
-
-
-
-
-
-
-
-
-
-
-def permute_four_column_indices(array: ndarray) -> ndarray:
-
-    """
-
-    Permutes all the columns in a four-index tensor, eg. (ijkl abcd) -> (jikl bacd) and the rest
-
-    Args:
-        array (array): Array to be permuted
-
-    Returns:
-        permuted_array (array): Permuted array
-
-    """
-
-    array = array + array.swapaxes(0, 3).swapaxes(4, 7) + array.swapaxes(1, 3).swapaxes(5, 7) + array.swapaxes(2, 3).swapaxes(6, 7)
-
-    array = array + array.swapaxes(0, 2).swapaxes(4, 6) + array.swapaxes(1, 2).swapaxes(5, 6)
-
-    permuted_array = array + array.swapaxes(0, 1).swapaxes(4, 5)
-
-    return permuted_array
-
-
-
-
-
-
-
-
-
-
 def is_coupled_cluster_converged(delta_E: float, t_amplitudes: tuple, t_amplitudes_old: tuple, calculation: Calculation) -> bool:
 
     """
@@ -347,7 +260,7 @@ def is_coupled_cluster_converged(delta_E: float, t_amplitudes: tuple, t_amplitud
 
     # First checks for energy convergence
 
-    if abs(delta_E) < calculation.CC_conv:
+    if abs(delta_E) < calculation.correlated_energy_convergence:
 
         # Then checks for doubles amplitudes convergence
 
@@ -528,10 +441,9 @@ def apply_DIIS(t_amplitudes: tuple, t_amplitudes_old: tuple, t_vectors: tuple, e
 
     t_ia, t_ijab, t_ijkabc, t_ijklabcd = t_amplitudes
     t_ia_old, t_ijab_old, t_ijkabc_old, t_ijklabcd_old = t_amplitudes_old
-
     t_ia_vector, t_ijab_vector, t_ijkabc_vector, t_ijklabcd_vector = t_vectors
 
-    def store_block(t, t_old, history):
+    def store_block(t: ndarray, t_old: ndarray, history: list) -> ndarray:
 
         # Stores a block of t-amplitudes for extrapolation
 
@@ -1449,7 +1361,7 @@ def run_unrestricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
     
     Updates the amplitudes for unrestricted CCSD.
 
-    All equations from Stanton paper on DPD coupled cluster (10.1063/1.460620) - curtailed by me into QCISD.
+    All equations from Stanton paper on DPD coupled cluster (10.1063/1.460620).
 
     Args:
         g (array): Spin orbital two-electron integrals
@@ -1515,6 +1427,200 @@ def run_unrestricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
     t_ia = e_ia * t_ia_temporary
     t_ijab = e_ijab * t_ijab_temporary
     
+    t_amplitudes = t_ia, t_ijab, None, None
+
+    return t_amplitudes
+
+
+
+
+
+
+
+
+
+
+def run_restricted_CC2_iteration(o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, molecular_orbitals: ndarray, integrals: Integrals) -> tuple:
+    
+    """
+    
+    Updates the amplitudes for restricted CC2. Uses T1 dressing.
+
+    Taken from the Jiang2024 version of T1-dressed CCSDT then curtailed by me into CC2.
+
+    Args:
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        t_amplitudes (tuple): Amplitudes
+        e_denominators (tuple): Epsilon denominators
+        molecular_orbitals (array): Molecular orbitals
+        integrals (Integrals): Molecular integrals
+
+    Returns:
+        t_amplitudes (tuple): Updated amplitudes
+    
+    """
+
+    t_ia, _, _, _ = t_amplitudes
+    e_ia, e_ijab, _, _ = e_denominators
+
+    # Combines molecular orbitals with T1 dressing
+
+    X, Y = molecular_orbitals.copy(), molecular_orbitals.copy()
+
+    X[:, v] -= molecular_orbitals[:, o] @ t_ia
+    Y[:, o] += molecular_orbitals[:, v] @ t_ia.T
+    
+    # Full H_core transformation
+
+    h_hat = np.einsum("ap,bq,ab->pq", X, Y, integrals.H_core, optimize=True)
+
+    # Transform only the ERI blocks actually needed
+
+    g_vovo = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, v], Y[:, o], X[:, v], Y[:, o], integrals.ERI_AO, optimize=True)
+    g_ovvv = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, v], X[:, v], Y[:, v], integrals.ERI_AO, optimize=True)
+    g_ooov = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, o], X[:, o], Y[:, v], integrals.ERI_AO, optimize=True)
+    g_oovo = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, o], X[:, v], Y[:, o], integrals.ERI_AO, optimize=True)
+    g_ovoo = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, v], X[:, o], Y[:, o], integrals.ERI_AO, optimize=True)
+
+    # Build only the needed F_hat blocks
+
+    F_vo = h_hat[v, o] + 2 * np.einsum("kkai->ai", g_oovo, optimize=True) - np.einsum("kiak->ai", g_oovo, optimize=True)
+    F_ov = h_hat[o, v] + 2 * np.einsum("kkia->ia", g_ooov, optimize=True) - np.einsum("kaik->ia", g_ovoo, optimize=True)
+
+    # CC2 doubles amplitudes are perturbative, not iteratively updated like CCSD, uses MP2-like expression
+
+    t_ijab = ci.build_MP2_t_amplitudes(g_vovo.transpose(1, 3, 0, 2), e_ijab)
+    
+    # Antisymmetrised doubles combination used in the CC2 singles residual
+
+    u_ijab = 2 * t_ijab - t_ijab.swapaxes(2, 3)
+
+    # Temporary arrays for CC2 singles
+
+    A_ia = np.einsum("kicd,kcad->ia", u_ijab, g_ovvv, optimize=True)
+    B_ia = -1 * np.einsum("klac,kilc->ia", u_ijab, g_ooov, optimize=True)
+    C_ia = np.einsum("kc,ikac->ia", F_ov, u_ijab, optimize=True)
+
+    # Contributions to CC2 singles amplitudes
+
+    residual_ia = F_vo.swapaxes(0, 1) + A_ia + B_ia + C_ia
+
+    # Updates amplitudes
+
+    t_ia += e_ia * residual_ia
+
+    t_amplitudes = t_ia, t_ijab, None, None
+
+    return t_amplitudes
+
+
+
+
+
+
+
+
+
+
+def run_restricted_CC3_iteration(o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, molecular_orbitals: ndarray, integrals: Integrals) -> tuple:
+
+    """
+    
+    Updates the amplitudes for restricted CC3. Uses T1 dressing.
+
+    Taken from the Jiang2024 version of T1-dressed CCSDT then curtailed by me into CC3.
+
+    Args:
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        t_amplitudes (tuple): Amplitudes
+        e_denominators (tuple): Epsilon denominators
+        molecular_orbitals (array): Molecular orbitals
+        integrals (Integrals): Molecular integrals
+
+    Returns:
+        t_amplitudes (tuple): Updated amplitudes
+    
+    """
+
+    t_ia, t_ijab, _, _ = t_amplitudes
+    e_ia, e_ijab, e_ijkabc, _ = e_denominators
+
+    # Combines molecular orbitals with T1 dressing
+
+    X, Y = molecular_orbitals.copy(), molecular_orbitals.copy()
+
+    X[:, v] -= molecular_orbitals[:, o] @ t_ia
+    Y[:, o] += molecular_orbitals[:, v] @ t_ia.T
+    
+    # Transforms the atomic orbital basis molecular integrals with T1 dressing into chemists' notation
+
+    g_hat = np.einsum("ap,bq,gr,ds,abgd->pqrs", X, Y, X, Y, integrals.ERI_AO, optimize=True)
+    h_hat = np.einsum("ap,bq,ab->pq", X, Y, integrals.H_core, optimize=True)
+
+    # Repeatedly used arrays in CCSD / CC3
+
+    l_hat = 2 * g_hat - g_hat.swapaxes(1, 3)
+    u_ijab = 2 * t_ijab - t_ijab.swapaxes(2, 3)
+
+    # The T1 dressed Fock matrix - not using "o" as the full Fock matrix needs to be transformed
+
+    F_hat = h_hat + np.einsum("kkpq->pq", l_hat[slice(0, o.stop), slice(0, o.stop), :, :], optimize=True)
+
+    # Temporary arrays for CCSD singles
+
+    A_ia = np.einsum("kicd,kcad->ia", u_ijab, g_hat[o, v, v, v], optimize=True)
+    B_ia = -1 * np.einsum("klac,kilc->ia", u_ijab, g_hat[o, o, o, v], optimize=True)
+    C_ia = np.einsum("kc,ikac->ia", F_hat[o, v], u_ijab, optimize=True)
+
+    # Temporary arrays for CCSD doubles
+
+    beta_ijkl = g_hat[o, o, o, o].transpose(1, 3, 0, 2) + np.einsum("ijcd,kcld->ijkl", t_ijab, g_hat[o, v, o, v], optimize=True)
+    gamma_kiac = g_hat[o, o, v, v] - (1 / 2) * np.einsum("liad,kdlc->kiac", t_ijab, g_hat[o, v, o, v], optimize=True)
+
+    delta_aikc = 2 * g_hat[v, o, o, v] - g_hat[o, o, v, v].transpose(2, 1, 0, 3) 
+    delta_aikc += (1 / 2) * np.einsum("ilad,ldkc->aikc", u_ijab, 2 * g_hat[o, v, o, v] - g_hat[o, v, o, v].swapaxes(1, 3), optimize=True)
+    
+    F_tilde_tilde_bc = F_hat[v, v] - np.einsum("klbd,ldkc->bc", u_ijab, g_hat[o, v, o, v], optimize=True)
+    F_tilde_tilde_kj = F_hat[o, o] + np.einsum("ljcd,kdlc->kj", u_ijab, g_hat[o, v, o, v], optimize=True)
+    
+    A_ijab = np.einsum("ijcd,acbd->ijab", t_ijab, g_hat[v, v, v, v], optimize=True)
+    B_ijab = np.einsum("klab,ijkl->ijab", t_ijab, beta_ijkl, optimize=True)
+    C_ijab = -1 * np.einsum("kjbc,kiac->ijab", t_ijab, gamma_kiac, optimize=True)
+    D_ijab = (1 / 2) * np.einsum("jkbc,aikc->ijab", u_ijab, delta_aikc, optimize=True)
+    E_ijab = np.einsum("ijac,bc->ijab", t_ijab, F_tilde_tilde_bc, optimize=True)
+    G_ijab = -1 * np.einsum("ikab,kj->ijab", t_ijab, F_tilde_tilde_kj, optimize=True)
+
+    # This is not iterative, but approximated from the doubles amplitudes
+
+    t_ijkabc = mp.calculate_restricted_second_order_triples_amplitudes(e_ijkabc, t_ijab, g_hat, o, v)
+
+    u_ijkabc = 2 * t_ijkabc - t_ijkabc.swapaxes(3, 4) - t_ijkabc.swapaxes(3, 5)
+
+    # Triples contributions to the CCSD doubles residual
+
+    temp_ijab = np.einsum("kc,ijkabc->ijab", F_hat[o, v], t_ijkabc - t_ijkabc.swapaxes(4, 5), optimize=True)
+    temp_ijab += np.einsum("ackd,ijkcbd->ijab", g_hat[v, v, o, v], 2 * t_ijkabc - t_ijkabc.swapaxes(4, 5) - t_ijkabc.swapaxes(3, 5), optimize=True)
+    temp_ijab += -1 * np.einsum("kilc,ljkcba->ijab", g_hat[o, o, o, v], u_ijkabc, optimize=True)
+
+    # Contributions to CCSD amplitudes
+
+    residual_ia = F_hat[v, o].swapaxes(0, 1) + A_ia + B_ia + C_ia
+
+    residual_ijab = g_hat[v, o, v, o].transpose(1, 3, 0, 2) + A_ijab + B_ijab 
+    residual_ijab += mp.permute_symmetric((1 / 2) * C_ijab + C_ijab.swapaxes(0, 1) + D_ijab + E_ijab + G_ijab, (0, 1), (2, 3))
+
+    # Connected-triples contributions for CC3
+
+    residual_ia += np.einsum("jbkc,ijkabc->ia", l_hat[o, v, o, v], t_ijkabc - t_ijkabc.swapaxes(3, 4), optimize=True) 
+    residual_ijab += mp.permute_symmetric(temp_ijab, (0, 1), (2, 3)) 
+
+    # Updates amplitudes
+
+    t_ia += e_ia * residual_ia
+    t_ijab += e_ijab * residual_ijab
+
     t_amplitudes = t_ia, t_ijab, None, None
 
     return t_amplitudes
@@ -1650,14 +1756,14 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
     residual_ia = F_hat[v, o].swapaxes(0, 1) + A_ia + B_ia + C_ia
 
     residual_ijab = g_hat[v, o, v, o].transpose(1, 3, 0, 2) + A_ijab + B_ijab 
-    residual_ijab += permute_symmetric((1 / 2) * C_ijab + C_ijab.swapaxes(0, 1) + D_ijab + E_ijab + G_ijab, 0, 1, 2, 3)
+    residual_ijab += mp.permute_symmetric((1 / 2) * C_ijab + C_ijab.swapaxes(0, 1) + D_ijab + E_ijab + G_ijab, (0, 1), (2, 3))
 
     # Contributions to CCSDT amplitudes
 
     residual_ia += np.einsum("jbkc,ijkabc->ia", l_hat[o, v, o, v], t_ijkabc - t_ijkabc.swapaxes(3, 4), optimize=True) 
-    residual_ijab += permute_symmetric(temp_ijab, 0, 1, 2, 3) 
+    residual_ijab += mp.permute_symmetric(temp_ijab, (0, 1), (2, 3)) 
 
-    residual_ijkabc = permute_three_column_indices(np.einsum("ijad,ckbd->ijkabc", t_ijab, xi_ckbd, optimize=True) - np.einsum("ilab,cklj->ijkabc", t_ijab, xi_cklj, optimize=True)) 
+    residual_ijkabc = mp.permute_three_column_indices(np.einsum("ijad,ckbd->ijkabc", t_ijab, xi_ckbd, optimize=True) - np.einsum("ilab,cklj->ijkabc", t_ijab, xi_cklj, optimize=True)) 
     residual_ijkabc += permute_short(temp_ijkabc)
 
     # Updates amplitudes
@@ -2071,11 +2177,11 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
     
     # The quadruple amplitudes don't mix with the singles - first to be updated are the doubles
 
-    residual_ijab += permute_symmetric((1 / 4) * np.einsum("menf,mnijefab->ijab", g_hat[o, v, o, v], beta, optimize=True), 0, 1, 2, 3)
+    residual_ijab += mp.permute_symmetric((1 / 4) * np.einsum("menf,mnijefab->ijab", g_hat[o, v, o, v], beta, optimize=True), (0, 1), (2, 3))
     
     # Triples residuals updated with quadruples influence
 
-    residual_ijkabc += permute_three_column_indices((1 / 6) * np.einsum("me,mijkeabc->ijkabc", F_hat[o, v], alpha, optimize=True) + (1 / 2) * np.einsum("aemf,mijkfebc->ijkabc", g_hat[v, v, o, v], alpha, optimize=True) - (1 / 2) * np.einsum("menj,minkeabc->ijkabc", g_hat[o, v, o, o], alpha, optimize=True))
+    residual_ijkabc += mp.permute_three_column_indices((1 / 6) * np.einsum("me,mijkeabc->ijkabc", F_hat[o, v], alpha, optimize=True) + (1 / 2) * np.einsum("aemf,mijkfebc->ijkabc", g_hat[v, v, o, v], alpha, optimize=True) - (1 / 2) * np.einsum("menj,minkeabc->ijkabc", g_hat[o, v, o, o], alpha, optimize=True))
 
     # Builds complicated quadruples residual
 
@@ -2097,7 +2203,7 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
 
     # Applies final 24-fold permutation to the quadruples residual
 
-    residual_ijklabcd = permute_four_column_indices(residual_ijklabcd)
+    residual_ijklabcd = mp.permute_four_column_indices(residual_ijklabcd)
 
     # Updates amplitudes
 
@@ -2119,7 +2225,7 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
 
 
 
-def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndarray, t_ijab: ndarray, o: slice, v: slice, method: str, calculation: Calculation, silent: bool) -> float:
+def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndarray, t_ijab: ndarray, o: slice, v: slice, method: Method, calculation: Calculation, silent: bool) -> float:
 
 
     """ 
@@ -2133,7 +2239,7 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
         t_ijab (array): Converged doubles amplitudes
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
-        method (str): Electronic structure method
+        method (Method): Electronic structure method
         calculation (Calculation): Calculation object
         silent (bool, optional): Cancel logging
 
@@ -2142,10 +2248,10 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
     """
 
-    method = method.replace("[", "(").replace("]", ")")
+    method.name = method.name.replace("[", "(").replace("]", ")")
 
     log_spacer(calculation, silent=silent, start="\n")
-    log(f"                    {method} Energy ", calculation, 1, silent=silent, colour="white")
+    log(f"                    {method.name} Energy ", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
 
@@ -2166,7 +2272,7 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
     space = " "
 
-    if "QCISD" in method: 
+    if "QCISD" in method.name: 
         
         # This factor of two arises because part of the MP5 disconnected triples are included in the CCSD equations, but not the QCISD equations
 
@@ -2183,11 +2289,11 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
     
     log(f"[Done]", calculation, 1, silent=silent)
 
-    log(f"\n  Calculating {method} correlation energy... {space}", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     E_CCSD_T = (1 / 3) * np.einsum("ijkabc,ijkabc,ijkabc->", W_ijkabc + V_ijkabc, W, e_ijkabc, optimize=True)
     
-    log(f"[Done]\n\n  {method} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent=silent) 
+    log(f"[Done]\n\n  {method.name} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent=silent) 
 
     return E_CCSD_T
 
@@ -2200,7 +2306,7 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
 
 
-def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndarray, t_ijab: ndarray, o: slice, v: slice, method: str, calculation: Calculation, silent: bool) -> float:
+def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndarray, t_ijab: ndarray, o: slice, v: slice, method: Method, calculation: Calculation, silent: bool) -> float:
 
     """ 
     
@@ -2213,6 +2319,7 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
         t_ijab (array): Converged doubles amplitudes
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
+        method (Method): Electronic structure method
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
 
@@ -2221,11 +2328,10 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
     """
 
-    method = method.replace("[", "(").replace("]", ")")
-    method = method.split("U")[1] if "U" in method else method
+    method.name = method.name.replace("[", "(").replace("]", ")")
 
     log_spacer(calculation, silent=silent, start="\n")
-    log(f"                   {method} Energy  ", calculation, 1, silent=silent, colour="white")
+    log(f"                   {method.name} Energy  ", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
     def permute_three_indices(array_ijab, idx1, idx2, idx3):
@@ -2245,7 +2351,7 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
     # This factor of two arises because part of the MP5 disconnected triples are included in the CCSD equations, but not the QCISD equations
 
-    if "QCISD" in method: 
+    if "QCISD" in method.name: 
         
         t_ijkabc_d *= 2
         space = ""
@@ -2259,14 +2365,14 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
     log(f"[Done]", calculation, 1, silent=silent)
 
-    log(f"\n  Calculating {method} correlation energy... {space}", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end="", silent=silent); sys.stdout.flush()
         
     # Final contraction for the CCSD(T) energy using the connected and disconnected approximate triples amplitudes
 
     E_CCSD_T = (1 / 36) * np.einsum("ijkabc,ijkabc->", t_ijkabc_c / e_ijkabc, t_ijkabc_c + t_ijkabc_d, optimize=True)
 
-    log(f"[Done]\n\n  {method} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent=silent) 
-
+    log(f"[Done]\n\n  {method.name} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent=silent) 
+    
 
     return E_CCSD_T
 
@@ -2322,7 +2428,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
     G += np.einsum("cfae,ijeb,klfd->ijklabcd", g[v, v, v, v], t_ijab, t_ijab, optimize=True) 
     G += - 2 * np.einsum("bemi,kjce,mlad->ijklabcd", g[v, v, o, o], t_ijab, t_ijab, optimize=True)
 
-    G = (1 / 2) * permute_four_column_indices(G)
+    G = (1 / 2) * mp.permute_four_column_indices(G)
 
     t_ijklabcd = G * e_ijklabcd
 
@@ -2367,7 +2473,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
     log(f"  Contribution from MP6:              {E_CCSDT_Q_MP6:13.10f}", calculation, 2, silent=silent) 
 
     log(f"\n  CCSDT(Q) correlation energy:        {E_CCSDT_Q:13.10f}", calculation, 1, silent=silent) 
-
+    
 
     return E_CCSDT_Q
 
@@ -2380,7 +2486,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
 
 
-def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray, method: str, reference: str, calculation: Calculation, silent: bool, SCF_output: Output, integrals: Integrals) -> tuple:
+def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray, method: Method, calculation: Calculation, silent: bool, SCF_output: Output, integrals: Integrals) -> tuple:
 
     """
     
@@ -2393,8 +2499,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
         t_amplitudes (array): Guess  amplitudes
         e_denominators (array): Epsilons tensors
         F (array): Fock matrix in spin or spatial orbital basis
-        method (string): Electronic structure method
-        reference (string): Either RHF or UHF
+        method (Method): Electronic structure method
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
         SCF_output (Output): Output object
@@ -2408,15 +2513,16 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
     E_CC = 0.0
 
-    calculate_singles = not "CCD" in method
-    calculate_triples = "CCSDT" in method
-    calculate_quadruples = "CCSDTQ" in method
+    calculate_iterative_singles = not "CCD" in method.name
+    calculate_iterative_triples = "CCSDT" in method.name
+    calculate_iterative_quadruples = "CCSDTQ" in method.name
 
-    # Chops of "U" in front of method
+    # Chops of "[T]" or "[Q]" in the method name 
     
-    method = method.split("U")[1] if "U" in method else method
-    method = method.split("[T]")[0] if "[T]" in method else method
-    method = method.split("[Q]")[0] if "[Q]" in method else method
+    original_method_name = method.name
+
+    method.name = method.name.split("[T]")[0] if "[T]" in method.name else method.name
+    method.name = method.name.split("[Q]")[0] if "[Q]" in method.name else method.name
 
     # Sets up DIIS vectors
 
@@ -2426,33 +2532,31 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
     # Common printing for all coupled cluster calculations
 
-    coupled_cluster_initial_print(g, o, v, t_amplitudes, reference, method, calculation, silent)
+    coupled_cluster_initial_print(g, o, v, t_amplitudes, calculation.reference, method, calculation, silent)
 
-    if reference == "RHF":
+    if calculation.reference == "RHF":
         
         # Useful intermediate quantity for restricted coupled cluster
 
         w = 2 * g - g.swapaxes(0, 1)
 
-    for step in range(1, calculation.CC_max_iter + 1):
+    for step in range(1, calculation.correlated_max_iter + 1):
 
         E_old = E_CC
 
         # Easier just to set singles amplitudes to zero than keep checking if it's present
 
-        t_ia_old = t_ia.copy() if calculate_singles else np.zeros_like(e_denominators[0]) 
+        t_ia_old = t_ia.copy() if calculate_iterative_singles else np.zeros_like(e_denominators[0]) 
         t_ijab_old = t_ijab.copy()
-        t_ijkabc_old = t_ijkabc.copy() if calculate_triples else None
-        t_ijklabcd_old = t_ijklabcd.copy() if calculate_quadruples else None
-            
+        t_ijkabc_old = t_ijkabc.copy() if calculate_iterative_triples else None
+        t_ijklabcd_old = t_ijklabcd.copy() if calculate_iterative_quadruples else None
 
         t_amplitudes = t_ia, t_ijab, t_ijkabc, t_ijklabcd
         t_amplitudes_old = t_ia_old, t_ijab_old, t_ijkabc_old, t_ijklabcd_old
 
+        if calculation.reference == "RHF":
 
-        if reference == "RHF":
-
-            match method:
+            match method.name:
 
                 case "LCCD":
 
@@ -2466,10 +2570,18 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
                     t_amplitudes = run_restricted_LCCSD_iteration(g, o, v, t_amplitudes, e_denominators, w)
 
+                case "CC2":
+
+                    t_amplitudes = run_restricted_CC2_iteration(o, v, t_amplitudes, e_denominators, SCF_output.molecular_orbitals, integrals)
+
+                case "CC3":
+
+                    t_amplitudes = run_restricted_CC3_iteration(o, v, t_amplitudes, e_denominators, SCF_output.molecular_orbitals, integrals)
+
                 case "CCSD":
 
                     t_amplitudes = run_restricted_CCSD_iteration(g, o, v, t_amplitudes, e_denominators, w, F)
-
+                    
                 case "QCISD":
 
                     t_amplitudes = run_restricted_QCISD_iteration(g, o, v, t_amplitudes, e_denominators, w)
@@ -2488,10 +2600,9 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
             E_CC, E_CC_singles, E_CC_connected_doubles, E_CC_disconnected_doubles = calculate_restricted_coupled_cluster_energy(o, v, w, t_amplitudes, method, F)
             
 
+        elif calculation.reference == "UHF":
 
-        elif reference == "UHF":
-
-            match method:
+            match method.name:
 
                 case "LCCD":
 
@@ -2529,7 +2640,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
         if E_CC > 1000 or any(not np.isfinite(amplitude).all() for amplitude in t_amplitudes if amplitude is not None):
 
-            error(f"Non-finite encountered in {method} iteration. Try stronger damping with the CCDAMP keyword?.")
+            error(f"Non-finite encountered in {method.name} iteration. Try stronger damping with the CCDAMP keyword?.")
 
         # Calculates the change in energy
 
@@ -2545,9 +2656,9 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
             
             break
 
-        if step >= calculation.CC_max_iter: 
+        if step >= calculation.correlated_max_iter: 
             
-            error(f"The {method} iterations failed to converge! Try increasing the maximum iterations with CCMAXITER?")
+            error(f"The {method.name} iterations failed to converge! Try increasing the maximum iterations with CCMAXITER?")
 
         # Update amplitudes with DIIS                   
 
@@ -2555,7 +2666,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
         # Damps the t-amplitudes if this is requested
 
-        t_amplitudes = apply_damping(calculation.coupled_cluster_damping_parameter, t_amplitudes, t_amplitudes_old)
+        t_amplitudes = apply_damping(calculation.correlated_damping_parameter, t_amplitudes, t_amplitudes_old)
 
         # Need to unpack again within the loop
 
@@ -2568,7 +2679,9 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
     log(f"  Connected doubles contribution:     {E_CC_connected_doubles:13.10f}", calculation, 1, silent=silent)
     log(f"  Disconnected doubles contribution:  {E_CC_disconnected_doubles:13.10f}", calculation, 1, silent=silent)
 
-    log(f"\n  {method} correlation energy:  {" " * (10 - len(method))}    {E_CC:.10f}", calculation, 1, silent=silent)
+    log(f"\n  {method.name} correlation energy:  {" " * (10 - len(method.name))}    {E_CC:.10f}", calculation, 1, silent=silent)
+
+    method.name = original_method_name
 
 
     return E_CC, t_amplitudes
@@ -2582,7 +2695,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
 
 
-def begin_coupled_cluster_calculation(method: str, molecule: Molecule, SCF_output: Output, integrals: Integrals, X: ndarray, calculation: Calculation, silent: bool) -> tuple:
+def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_output: Output, integrals: Integrals, X: ndarray, calculation: Calculation, silent: bool) -> tuple:
 
     """
     
@@ -2592,7 +2705,7 @@ def begin_coupled_cluster_calculation(method: str, molecule: Molecule, SCF_outpu
     the post-processing including the T1 diagnostic, linaerised density and optional natural orbitals and occupancies.
 
     Args:
-        method (str): Electronic structure method
+        method (Method): Electronic structure method
         molecule (Molecule): Molecule object
         SCF_output (Output): Output object
         integrals (Integrals): Molecular integrals in AO basis
@@ -2611,8 +2724,8 @@ def begin_coupled_cluster_calculation(method: str, molecule: Molecule, SCF_outpu
     E_CC, E_perturbative = 0, 0
     occupancies, natural_orbitals = None, None
 
-    calculate_triples = method in ["CCSDT", "UCCSDT", "CCSD[T]", "UCCSD[T]", "QCISD[T]", "UQCISD[T]", "CCSDT[Q]", "CCSDTQ"]
-    calculate_quadruples = method in ["CCSDT[Q]", "CCSDTQ"]
+    calculate_triples = method.name in ["CCSDT", "CCSD[T]", "QCISD[T]", "CCSDT[Q]", "CCSDTQ", "CC3"]
+    calculate_quadruples = method.name in ["CCSDT[Q]", "CCSDTQ"]
 
 
     if calculation.reference == "RHF":
@@ -2673,7 +2786,7 @@ def begin_coupled_cluster_calculation(method: str, molecule: Molecule, SCF_outpu
 
     # Calculates the coupled cluster energy
 
-    E_CC, t_amplitudes = calculate_coupled_cluster_energy(g, o, v, t_amplitudes, e_denominators, F, method, calculation.reference, calculation, silent, SCF_output, integrals)
+    E_CC, t_amplitudes = calculate_coupled_cluster_energy(g, o, v, t_amplitudes, e_denominators, F, method, calculation, silent, SCF_output, integrals)
 
     t_ia, t_ijab, t_ijkabc, t_ijklabcd = t_amplitudes
 
@@ -2699,7 +2812,7 @@ def begin_coupled_cluster_calculation(method: str, molecule: Molecule, SCF_outpu
         
         occupancies, natural_orbitals = mp.calculate_natural_orbitals(density_matrices[0], X, calculation, silent=silent)
 
-    if "[T]" in method:
+    if "[T]" in method.name:
 
         if calculation.reference == "UHF":
 
@@ -2710,7 +2823,7 @@ def begin_coupled_cluster_calculation(method: str, molecule: Molecule, SCF_outpu
             E_perturbative = calculate_restricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, method, calculation, silent)
 
 
-    elif "[Q]" in method:
+    elif "[Q]" in method.name:
 
         E_perturbative = calculate_restricted_CCSDT_Q_energy(g, e_ijklabcd, t_ijab, t_ijkabc, o, v, calculation, silent)
 

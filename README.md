@@ -6,7 +6,7 @@
 [![PyPI downloads](https://img.shields.io/pypi/dm/quantumtuna.svg)](https://pypistats.org/packages/QuantumTUNA)
 
 
-Welcome to TUNA! A user-friendly quantum chemistry program for diatomics. 
+Welcome to TUNA! A streamlined quantum chemistry program for atoms and diatomics. 
 
 The program contains a collection of quantum chemistry methods, and considerable effort has been taken to document everything. The manual provides numerous examples and explanations for how TUNA works.
 

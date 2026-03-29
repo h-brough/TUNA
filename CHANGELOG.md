@@ -1,5 +1,40 @@
 # Changelog
 
+## TUNA 0.10.1 — 02/04/2026
+
+### Added
+
+- Approximate anharmonic frequencies with second-order vibrational perturbation theory, `VPT2`
+- Analytical and numerical quadrupole moment with `QUADRUPOLE`
+- Spin-restricted CC2 and CC3 energy and linearised density
+- Counterpoise-corrected bond dissociation energy calculation type, `BDE`
+- Turn off counterpoise correction with `NOCP`, use zero-point energy with `ZPE`
+- Correlated methods now avoid redundant calculations when full configuration interaction is achieved
+- Much more robust handling of user-supplied keywords
+
+### Changed
+
+- Numerical derivatives are now much more consistent and stable, allowing looser SCF convergence
+- Ionisation potential and electron affinity calculations now use `TIGHT` SCF criteria by default
+- For `ANHARM` and `VPT2` calculations, `TIGHTOPT` is now the default
+- Eight energy evaluations are now used in parallel hyperpolarisability calculations rather than six
+- Energy convergence criteria for iterative correlated calculations are now the same as for the SCF by default
+- Correlated calculations with insufficient virtual orbitals will no longer exit with an error
+- Removed `CCDAMP`, `CCMAXITER`, `MPMAXITER`, `MPCONV` and `NOSINGLES` keywords
+- Replaced with new unified correlation keywords: `CORRDAMP`, `CORRMAXITER` and `ECONV`
+- Separated the keyword manager into its own module, tuna_calc
+- All code is now modernised, consistent in style and type-hinted
+
+### Fixed
+
+- Numerical electric properties were not working for unrestricted references
+- Using a decontracted basis set was broken for self-consistent guesses
+- The coordinate axis of a vibrational wavefunctions plot was in bohr, rather than angstroms
+- Spin component scaling of the density matrix wasn't working for double-hybrid functionals
+- Improved consistency of logging throughout program
+
+<br>
+
 ## TUNA 0.10.0 — 15/03/2026
 
 ### Added

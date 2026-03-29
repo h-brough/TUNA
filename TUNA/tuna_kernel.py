@@ -2,12 +2,13 @@
 from tuna_integrals import tuna_integral as ints
 from tuna_molecule import Molecule, Atom
 from tuna_util import *
+from tuna_calc import Calculation
 import numpy as np
 from numpy import ndarray
 import tuna_dft as dft
 import sys, time
 import tuna_ci as ci
-import tuna_postscf as postscf
+import tuna_props as props
 import tuna_mp as mp
 import tuna_cc as cc
 import tuna_out as out
@@ -18,6 +19,8 @@ import tuna_out as out
 This is the TUNA module for various low level calculations, written first for version 0.10.0.
 
 Here live various fairly random functions, that are used within an energy calculation but are not needed in the high level tuna_energy module.
+
+Updated in version 0.10.1 to begin implementation of D3 dispersion correction.
 
 This module contains:
 
@@ -64,7 +67,9 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
     log("  Number of virtual orbitals: " + str(n_virt_print), calculation, 1, silent=silent)
     log(f"\n  Point group: {molecule.point_group}", calculation, 1, silent=silent)
 
-    if len(molecule.atomic_symbols) == 2: log(f"  Bond length: {bohr_to_angstrom(molecule.bond_length):.5f} ", calculation, 1, silent=silent)
+    if calculation.diatomic:
+        
+        log(f"  Bond length: {bohr_to_angstrom(molecule.bond_length):.5f} ", calculation, 1, silent=silent)
 
     for atom in molecule.atoms:
 
@@ -224,7 +229,7 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
         log(f"  Quintuple-zeta SCF energy:       {E_SCF_large:16.10f}", calculation, 1, silent=silent)
 
 
-    if calculation.method in correlated_methods:
+    if calculation.method.correlated_method:
         
         if small_basis_zeta == "double":
 
@@ -243,7 +248,7 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
 
     log(f"\n  Extrapolated SCF energy:         {E_SCF_extrapolated:16.10f}", calculation, 1, silent=silent)
 
-    if calculation.method in correlated_methods:
+    if calculation.method.correlated_method:
         
         log(f"  Extrapolated correlation energy: {E_corr_extrapolated:16.10f}", calculation, 1, silent=silent)
 
@@ -262,20 +267,20 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
 
 
 
-def print_reference_type(method: str, calculation: Calculation, silent: bool) -> None:
+def print_reference_type(method: Method, calculation: Calculation, silent: bool) -> None:
 
     """
     
     Prints whether the calculation is an (un)restricted HF or KS calculation.
 
     Args:
-        method (str): Electronic structure method
+        method (Method): Electronic structure method
         calculation (Calculation): Calculation object
         silent (bool): Whether to suppress output
 
     """
 
-    reference_type = "Kohn-Sham" if method in DFT_methods else "Hartree-Fock"
+    reference_type = "Kohn-Sham" if method.density_functional_method else "Hartree-Fock"
 
     if calculation.reference == "RHF": 
         
@@ -296,7 +301,7 @@ def print_reference_type(method: str, calculation: Calculation, silent: bool) ->
 
 
 
-def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_functions: list, centre_of_mass: float) -> tuple[ndarray, ndarray, ndarray, ndarray]:
+def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_functions: list, centre_of_mass: float) -> tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
 
     """"
     
@@ -313,6 +318,7 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
         T (array): Kinetic energy matrix in AO basis
         V_NE (array): Nuclear-electron matrix in AO basis
         D (array): Dipole integrals in AO basis
+        Q (array): Quadrupole integrals in AO basis
 
     """
 
@@ -321,6 +327,7 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
     S = np.zeros((n_basis, n_basis)) 
     V_NE = np.zeros((n_basis, n_basis)) 
     T = np.zeros((n_basis, n_basis)) 
+    Q = np.zeros((2, n_basis, n_basis)) 
     D = np.zeros((3, n_basis, n_basis)) 
 
     dipole_origin = np.array([0, 0, centre_of_mass])
@@ -340,6 +347,11 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
             D[0, i, j] = D[0, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "x")
             D[1, i, j] = D[1, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "y")
             D[2, i, j] = D[2, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "z")
+            
+            # Forms the xx and zz components of the quadrupole moment matrix
+
+            Q[0, i, j] = Q[0, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "xx")
+            Q[1, i, j] = Q[1, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "zz")
 
             for atom in atoms:
 
@@ -350,7 +362,7 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
             V_NE[j, i] = V_NE[i, j]
 
 
-    return S, T, V_NE, D
+    return S, T, V_NE, D, Q
 
 
 
@@ -417,7 +429,7 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     log(" Calculating one-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    S, T, V_NE, D = calculate_one_electron_integrals(molecule.atoms, n_basis, molecule.basis_functions, molecule.centre_of_mass)
+    S, T, V_NE, D, Q = calculate_one_electron_integrals(molecule.atoms, n_basis, molecule.basis_functions, molecule.centre_of_mass)
 
     log("[Done]", calculation, 1, silent=silent)
 
@@ -447,12 +459,9 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     # Packages up the one- and two-electron integrals
 
-    integrals = Integrals(S, T, V_NE, D, ERI_AO)
+    integrals = Integrals(S, T, V_NE, D, Q, ERI_AO)
 
     return integrals
-
-
-
 
 
 
@@ -471,16 +480,48 @@ def apply_electric_field(D: ndarray, electric_field: ndarray) -> ndarray:
 
     Args:
         D (array): Dipole integrals
-        electric-field (array): Electric field
+        electric_field (array): Electric field
     
     Returns:
-        Q (array): Electric field integrals
+        F (array): Electric field integrals
     
     """
 
-    Q = np.einsum("i,ijk->jk", electric_field, D, optimize=True)
+    F = np.einsum("i,ijk->jk", electric_field, D, optimize=True)
 
-    return Q
+    return F
+
+
+
+
+
+
+
+
+
+
+def apply_electric_field_gradient(Q: ndarray, electric_field_gradient: ndarray) -> ndarray:
+
+    """
+    
+    Determines the one-electron integrals within an electric field, the contribution to the Hamiltonian.
+
+    Args:
+        D (array): Dipole integrals
+        electric_field_gradient (array): Electric field gradient
+    
+    Returns:
+        F (array): Electric field integrals
+    
+    """
+
+    # There are only two independent components of the quadrupole tensor for diatomics
+
+    Q = np.array([Q[0], np.zeros_like(Q[0]), Q[1]])
+
+    F = np.einsum("i,ijk->jk", electric_field_gradient, Q, optimize=True)
+
+    return F
 
 
 
@@ -554,6 +595,13 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
     # Diagonalises overlap matrix
 
     S_vals, S_vecs = np.linalg.eigh(S)
+
+    # This error only happens in really weird situations
+
+    if min(S_vals) < 0:
+
+        error("A negative overlap matrix eigenvalue was found!")
+
     S_sqrt = S_vecs * np.sqrt(S_vals) @ S_vecs.T
     
     # Finds the smalest eigenvalue of the overlap matrix to check for linear dependencies
@@ -581,7 +629,7 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
 
 
 
-def print_SCF_energy(final_energy: float, reference: str, method: str, calculation: Calculation, silent: bool) -> None:
+def print_SCF_energy(final_energy: float, reference: str, method: Method, calculation: Calculation, silent: bool) -> None:
 
     """
     
@@ -590,13 +638,13 @@ def print_SCF_energy(final_energy: float, reference: str, method: str, calculati
     Args:
         final_energy (float): Final SCF energy
         reference (str): Reference state
-        method (str): Electronic structure method
+        method (Method): Electronic structure method
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
     
     """
     
-    space = " " * max(0, 8 - len(method))
+    space = " " * max(0, 8 - len(method.name))
 
     if reference == "RHF" and not calculation.DFT_calculation: 
         
@@ -608,11 +656,11 @@ def print_SCF_energy(final_energy: float, reference: str, method: str, calculati
 
     elif reference == "RHF":
         
-        log(f"\n Restricted {method} energy: {space}      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+        log(f"\n Restricted {method.name} energy: {space}      " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
     elif reference == "UHF":
             
-            log(f"\n Unrestricted {method} energy: {space}    " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
+            log(f"\n Unrestricted {method.name} energy: {space}    " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
 
     return
@@ -650,6 +698,84 @@ def check_overlap_eigenvalues(smallest_S_eigenvalue: float, calculation: Calcula
         warning(f"Smallest overlap matrix eigenvalue is close to the threshold, at {smallest_S_eigenvalue:.8f}! \n", space=1)
 
     return
+
+
+
+
+
+
+
+
+
+
+def calculate_fractional_coordination_number(atoms: list, bond_length: float) -> float:
+
+    """
+
+    Calculates the fractional coordination number for D3 dispersion correction.
+
+    Args:
+        atoms (list): List of atom objects
+        bond_length (float): Bond length in bohr
+    
+    Returns:
+        coordination_number (float): Fractional coordination number
+    
+    """
+
+    k_1 = 16
+    k_2 = 4 / 3
+
+    # This equation is from Grimme2010
+
+    exponential_term = -k_1 * (k_2 * (atoms[0].vdw_radius + atoms[1].vdw_radius) / bond_length - 1)
+
+    coordination_number = 1 / (1 + np.exp(exponential_term))
+
+    return coordination_number
+
+
+
+
+
+
+
+
+
+
+def calculate_D3_dispersion_energy(molecule: Molecule, bond_length: float) -> float:
+    
+    """
+
+    Calculates the semi-empirical D3 dispersion energy.
+
+    Args:
+        molecule (list): List of atom objects
+        bond_length (float): Bond length in bohr
+    
+    Returns:
+        E_D3 (float): D3 dispersion energy
+   
+    """
+
+    def damping_function(alpha_n, s_n, R):
+
+        return 1 / (1 + 6 * (bond_length / (s_n * R)) ** - alpha_n)
+
+    s_6, s_8 = 0.0, 0.0
+    C_6, C_8 = 0.0, 0.0
+    alpha_6, alpha_8 = 0.0, 0.0
+
+    R = 0.0
+
+    E_D3_S6 = s_6 * C_6 / bond_length ** 6 * damping_function(alpha_6, s_6, R)
+    E_D3_S8 = s_8 * C_8 / bond_length ** 8 * damping_function(alpha_8, s_8, R)
+
+    E_D3 = E_D3_S6 + E_D3_S8
+
+    raise(NotImplementedError)
+
+    return E_D3
 
 
 
@@ -710,7 +836,7 @@ def calculate_D2_dispersion_energy(molecule: Molecule, calculation: Calculation,
 
 
 
-def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SCF_output: Output, weights: ndarray, calculation: Calculation, X: ndarray, E_D2: float, V_NN: float, silent: bool, terse: bool) -> tuple:
+def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SCF_output: Output, grid_container: tuple, calculation: Calculation, X: ndarray, E_D2: float, V_NN: float, silent: bool, terse: bool) -> tuple:
 
     """
     
@@ -720,7 +846,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         molecule (Molecule): Molecule object
         integrals (Integrals): Molecular integrals
         SCF_output (Output): Output object
-        weights (array): Grid weights for DFT
+        grid_container (tuple): Grid information for DFT
         calculation (Calculation): Calculation
         X (array): Fock transformation matrix
         E_D2 (float): D2 dispersion energy
@@ -738,6 +864,8 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
     method = calculation.method
     do_DFT = calculation.DFT_calculation
 
+    bfs_on_grid, weights, _ = grid_container
+
     molecular_orbitals = SCF_output.molecular_orbitals
     P = SCF_output.P
     P_alpha = SCF_output.P_alpha
@@ -749,6 +877,8 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     natural_orbitals = None
     SCF_output.D = integrals.D
+    SCF_output.Q = integrals.Q
+
 
     if reference == "UHF": 
         
@@ -756,7 +886,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         # Calculates UHF spin contamination and prints to the console
 
-        postscf.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, reference_type, silent=silent)
+        props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, reference_type, silent=silent)
 
         # Calculates the natural orbitals if requested
 
@@ -769,7 +899,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # Prints the individual components of the total SCF energy
 
-    postscf.print_energy_components(SCF_output, V_NN, calculation, silent=silent)
+    props.print_energy_components(SCF_output, V_NN, calculation, silent=silent)
 
     if do_DFT: 
         
@@ -778,23 +908,23 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
 
-    if method in perturbative_methods or calculation.MPC_prop != 0: 
+    if method.perturbative_method or calculation.MPC_prop != 0: 
             
-        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, _, natural_orbitals = mp.calculate_Moller_Plesset(method, molecule, SCF_output, integrals, calculation, X, V_NN, silent=silent)
+        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, _, natural_orbitals = mp.run_perturbation_theory_calculation(method, molecule, SCF_output, integrals, calculation, V_NN, silent=silent)
         
-        postscf.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "MP2", silent=silent)
+        props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "MP2", silent=silent)
 
 
     # If a coupled-cluster calculation is requested, calculates the energy and density matrices
 
-    elif method in coupled_cluster_methods:
+    elif method.method_base == "CC":
 
         E_CC, E_CC_perturbative, (P, P_alpha, P_beta), _, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
         
-        postscf.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "Coupled cluster", silent=silent)
+        props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "Coupled cluster", silent=silent)
 
 
-    if method in correlated_methods:
+    if method.correlated_method:
 
         calculation.correlation_time = time.perf_counter()
 
@@ -805,10 +935,10 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     if not terse and not silent:
         
-        postscf.post_SCF_output(molecule, calculation, P, integrals.S, molecule.partition_ranges, SCF_output, P_alpha, P_beta)
+        props.calculate_molecular_properties(molecule, calculation, P, integrals.S, SCF_output, P_alpha, P_beta)
     
 
-    if method in excited_state_methods:
+    if method.excited_state_method:
 
         log("\n\n Beginning excited state calculation...", calculation, 1, silent=silent)
 
@@ -828,7 +958,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
            
            # Optionally uses CIS density for dipole moment and population analysis
 
-           postscf.post_SCF_output(molecule, calculation, P, integrals.S, molecule.partition_ranges, SCF_output, P_alpha, P_beta)
+           props.calculate_molecular_properties(molecule, calculation, P, integrals.S, SCF_output, P_alpha, P_beta)
 
     else:
         
@@ -842,9 +972,9 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # Adds up and prints MP2 energies
 
-    if method in second_order_perturbative_methods or calculation.MPC_prop != 0: 
+    if method.method_base == "MP2" or calculation.MPC_prop != 0: 
         
-        space = " " * max(0, 8 - len(method))
+        space = " " * max(0, 8 - len(method.name))
 
         # If a double-hybrid functional is being used, multiply by the correlation proportion
 
@@ -858,16 +988,16 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         else:
             
-            log(f" Correlation energy from {method}: {space}" + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
+            log(f" Correlation energy from {method.name}: {space}" + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
 
 
     # Adds up and prints MP3 energies
 
-    elif method in third_order_perturbative_methods:
+    elif method.method_base == "MP3":
         
         final_energy += E_MP2 + E_MP3
 
-        if method == "SCS-MP3":
+        if method.name == "SCS-MP3":
 
             log(f" Correlation energy from SCS-MP2:  " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
             log(f" Correlation energy from SCS-MP3:  " + f"{E_MP3:16.10f}\n", calculation, 1, silent=silent)
@@ -881,22 +1011,22 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # Adds up and prints MP4 energies
 
-    elif method in fourth_order_perturbative_methods:
+    elif method.method_base == "MP4":
         
         final_energy += E_MP2 + E_MP3 + E_MP4
 
         log(f" Correlation energy from MP2:      " + f"{E_MP2:16.10f}", calculation, 1, silent=silent)
         log(f" Correlation energy from MP3:      " + f"{E_MP3:16.10f}", calculation, 1, silent=silent)
 
-        if method == "MP4" or method == "MP4[SDTQ]":
+        if method.name in ["MP4", "MP4[SDTQ]"]:
 
             log(f" Correlation energy from MP4:      " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
 
-        elif method == "MP4[SDQ]":
+        elif method.name == "MP4[SDQ]":
 
             log(f" Correlation energy from MP4(SDQ): " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
 
-        elif method == "MP4[DQ]":
+        elif method.name == "MP4[DQ]":
 
             log(f" Correlation energy from MP4(DQ):  " + f"{E_MP4:16.10f}\n", calculation, 1, silent=silent)
 
@@ -904,47 +1034,42 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # Adds up and prints coupled cluster energies
 
-    elif method in coupled_cluster_methods:
+    elif method.method_base == "CC":
+
+        method.name = method.name.replace("[", "(").replace("]", ")")
 
         final_energy += E_CC + E_CC_perturbative
-
-        if "CCSD[T]" in method:
-
-            log(f" Correlation energy from CCSD:     " + f"{E_CC:16.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from CCSD(T):  " + f"{E_CC_perturbative:16.10f}\n", calculation, 1, silent=silent)
-            log(f" Total correlation energy:         " + f"{E_CC + E_CC_perturbative:16.10f}\n", calculation, 3, silent=silent)
         
-        elif "QCISD[T]" in method:
+        space = " " * max(0, 8 - len(method.name))
 
-            log(f" Correlation energy from QCISD:    " + f"{E_CC:16.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from QCISD(T): " + f"{E_CC_perturbative:16.10f}\n", calculation, 1, silent=silent)
-            log(f" Total correlation energy:         " + f"{E_CC + E_CC_perturbative:16.10f}\n", calculation, 3, silent=silent)
+        if "(" in method.name:
 
-        elif "CCSDT[Q]" in method:
-
-            log(f" Correlation energy from CCSDT:    " + f"{E_CC:16.10f}", calculation, 1, silent=silent)
-            log(f" Correlation energy from CCSDT(Q): " + f"{E_CC_perturbative:16.10f}\n", calculation, 1, silent=silent)
-            log(f" Total correlation energy:         " + f"{E_CC + E_CC_perturbative:16.10f}\n", calculation, 3, silent=silent)
+            log(f" Correlation energy from {method.name.split("(")[0]}:{space}    {E_CC:16.10f}", calculation, 1, silent=silent)
+            log(f" Correlation energy from {method.name}: {space}{E_CC_perturbative:16.10f}\n", calculation, 1, silent=silent)
+            log(f" Total correlation energy: {space}       {E_CC + E_CC_perturbative:16.10f}\n", calculation, 3, silent=silent)
 
         else:
             
-            space = " " * max(0, 8 - len(method))
+            log(f" Correlation energy from {method.name}:{space} " + f"{E_CC:16.10f}\n", calculation, 1, silent=silent)
 
-            log(f" Correlation energy from {method}:{space} " + f"{E_CC:16.10f}\n", calculation, 1, silent=silent)
+        # Important to return this to baseline for multi-energy calculations
+
+        method.name = method.name.replace("(", "[").replace(")", "]")
+
 
 
     # Prints CIS energy of state of interest
 
-    elif method in excited_state_methods:
+    elif method.excited_state_method:
 
         final_energy = E_CIS
 
-        method = method.replace("[", "(").replace("]", ")")
-        space = " " * max(0, 8 - len(method))
+        method.name = method.name.replace("[", "(").replace("]", ")")
+        space = " " * max(0, 8 - len(method.name))
 
         log(f"\n Excitation energy is the energy difference to excited state {calculation.root}.", calculation, 1, silent=silent)
         
-        log(f"\n Excitation energy from {method}:  {space}" + f"{E_transition:16.10f}", calculation, 1, silent=silent)
+        log(f"\n Excitation energy from {method.name}:  {space}" + f"{E_transition:16.10f}", calculation, 1, silent=silent)
     
     
     # This is the total final energy
@@ -967,4 +1092,168 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         out.show_two_dimensional_plot(calculation, molecule, P, P_alpha, P_beta, P_transition_alpha, P_transition_beta, P_transition, molecular_orbitals, natural_orbitals)
 
 
+    """
+    
+    NEED TO DEAL WITH THIS
+
+    """
+
+    if method.name == "DLPNO-MP2":
+        
+        calculation.functional = DFT_methods.get("LDA")
+
+        bfs_on_grid, weights, _ = dft.set_up_integration_grid(molecule.basis_functions, molecule.atoms, molecule.bond_length, molecule.n_electrons, P_alpha, P_beta, calculation) 
+
+        mp.run_DLPNO_MP2(molecule, bfs_on_grid, weights, calculation, integrals, SCF_output)
+
+
     return final_energy, P
+
+
+
+
+
+
+
+
+
+
+def calculate_charge_change_energy(reference_energy: float, charged_energy: float, reference_molecule: Molecule, charged_molecule: Molecule, calculation: Calculation) -> float:
+ 
+    """
+    
+    Calculates and prints the vertical or adiabatic ionisation potential or electron affinity.
+
+    Args:
+        reference_energy (float): Final energy of original system
+        charged_energy (float): Final energy of charged system
+        reference_molecule (Molecule): Final molecule of original system
+        charged_molecule (Molecule): Final molecule of charged system
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        energy_change (float): Either ionisation potential or electron affinity
+    
+    """
+
+    charge_difference = charged_molecule.charge - reference_molecule.charge
+
+    # The convention for electron affinity is the other way around from ionisation potential
+
+    energy_change = charged_energy - reference_energy if charge_difference > 0 else reference_energy - charged_energy
+
+    # Is the molecule allowed to relax or not
+
+    prefix = "Vertical" if calculation.vertical or calculation.monatomic else "Adiabatic"
+
+    if charge_difference > 0:
+
+        property_name = "Ionisation Potential"
+
+        action_line = f"  Ionisation from charge {format_charge(reference_molecule.charge)} to {format_charge(charged_molecule.charge)}..."
+        
+
+    # There will always be a charge difference of some kind
+
+    else:
+
+        property_name = "Electron Affinity"
+
+        action_line = f"  Electron attachment from charge {format_charge(reference_molecule.charge)} to {format_charge(charged_molecule.charge)}..."
+        
+
+    log_spacer(calculation, start="\n")
+
+    log(f"{property_name:^55}", calculation)
+
+    log_spacer(calculation)
+
+    log(action_line, calculation)
+
+    log(f"\n  Energy of reference system:      {reference_energy:16.10f}", calculation)
+    log(f"  Energy of charged system:        {charged_energy:16.10f}", calculation, end="\n\n")
+
+    if not calculation.monatomic and not calculation.vertical:
+
+        log(f"  Bond length of reference system:     {bohr_to_angstrom(reference_molecule.bond_length):12.5f}", calculation)
+        log(f"  Bond length of charged system:       {bohr_to_angstrom(charged_molecule.bond_length):12.5f}", calculation, end="\n\n") 
+
+    label = f"  {prefix} {property_name.lower()}:"
+    log(f"{label:<35}{energy_change:16.10f}", calculation)
+
+    log_spacer(calculation)
+
+
+    return energy_change
+
+
+
+
+
+
+
+
+
+
+def print_bond_dissociation_energy_information(first_atom_energy: float, second_atom_energy: float, optimised_energy: float, zero_point_energy: float, optimised_molecule: Molecule, calculation: Calculation) -> None:
+
+    """
+    
+    Calculates the bond dissociation energy from input energies, and prints it.
+
+    Args:
+        first_atom_energy (float): Final energy of first atom
+        second_atom_energy (float): Final energy of second atom
+        optimised_energy (float): Final energy of optimised molecule
+        zero_point_energy (float): Zero-point energy of optimised molecule
+        optimised_molecule (Molecule): Molecule at equilibrium geometry
+        calculation (Calculation): Calculation object    
+    
+    """
+
+    # Simply calculate the bond dissociation energy, with and without zero-point correction
+
+    corrected_diatomic_energy = optimised_energy + zero_point_energy
+
+    bond_dissociation_energy = first_atom_energy + second_atom_energy - optimised_energy
+    bond_dissociation_energy_corrected = first_atom_energy + second_atom_energy - corrected_diatomic_energy
+
+    log_spacer(calculation, start="\n")
+    log(f"             Bond Disscociation Energy", calculation)
+    log_spacer(calculation)
+    
+    if calculation.no_counterpoise_correction:
+        
+        log(f"  Atomic energies are not counterpoise corrected...\n", calculation)
+    
+    else:
+
+        log(f"  Atomic energies are counterpoise corrected...\n", calculation)
+
+    first_space = " " * (5 - len(optimised_molecule.atoms[0].symbol_formatted))
+    second_space = " " * (5 - len(optimised_molecule.atoms[1].symbol_formatted))
+
+    log(f"  Energy of {optimised_molecule.atoms[0].symbol_formatted} atom:            {first_space}{first_atom_energy:16.10f}", calculation)
+    
+    # Only print out second atom information if the molecule is heteronuclear
+
+    if optimised_molecule.heteronuclear:
+        
+        log(f"  Energy of {optimised_molecule.atoms[1].symbol_formatted} atom:            {second_space}{second_atom_energy:16.10f}", calculation)
+    
+    log(f"\n  Molecular energy:                {optimised_energy:16.10f}", calculation)
+    
+    if calculation.do_ZPE_correction:
+
+        log(f"  Zero-point energy:               {zero_point_energy:16.10f}", calculation)
+        log(f"\n  Corrected molecular energy:      {corrected_diatomic_energy:16.10f}", calculation)
+
+    log(f"\n  Bond dissociation energy:        {bond_dissociation_energy:16.10f}", calculation)
+    
+    if calculation.do_ZPE_correction:
+
+        log(f"  Corrected dissociation energy:   {bond_dissociation_energy_corrected:16.10f}", calculation)
+
+    log_spacer(calculation)
+
+    return

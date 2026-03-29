@@ -303,6 +303,110 @@ def dipole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: 
 
 
 
+
+cpdef double calculate_quadrupole_integral(object bf_1, object bf_2, quadrupole_origin, str direction):
+
+    """
+    
+    Calculates a raw quadrupole second-moment integral between basis functions, <1| (r - quadrupole_origin)^2 |2>, for a direction.
+    
+    Args:
+        bf_1 (Basis): First basis function
+        bf_2 (Basis): Second basis function
+        quadrupole_origin (array): Coordinates of quadrupole origin
+        direction (str): Either "xx" or "zz"
+
+    Returns:
+        integral (float): Quadrupole integral between contracted Gaussians
+        
+    """
+
+    cdef double integral = 0.0
+
+    for ia, ca in enumerate(bf_1.coefs):
+
+        for ib, cb in enumerate(bf_2.coefs):
+
+            # Applies coefficients and norms to integrals between primitive Gaussians
+
+            integral += (bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * quadrupole(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, quadrupole_origin, direction))
+
+    return integral
+
+
+
+
+
+
+
+
+
+
+def quadrupole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, quadrupole_origin: ndarray, direction: str) -> float:
+   
+    """
+    
+    Calculates a Cartesian raw quadrupole second-moment integral between primitive Gaussians, <1| (r - quadrupole_origin)^2 |2>.
+    
+    Args:
+        exponent_1 (float): Gaussian exponent on first centre
+        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
+        centre_1 (array): Coordinates of first centre
+        exponent_2 (float): Gaussian exponent on second centre
+        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
+        centre_2 (array): Coordinates of second centre
+        quadrupole_origin (array): Quadrupole origin
+        direction (str): Either "xx" or "zz"
+    
+    Returns:
+        integral (float): Quadrupole integral between primitive Gaussians
+
+    """
+
+    l_1, m_1, n_1 = angmom_1
+    l_2, m_2, n_2 = angmom_2
+
+    R_12 = centre_1 - centre_2
+
+    exponent_sum = exponent_1 + exponent_2
+    prefactor = pow(PI / exponent_sum, 1.5)
+
+    P = (exponent_1 * centre_1 + exponent_2 * centre_2) / exponent_sum - quadrupole_origin
+
+    # Calculates the overlap integrals between primitive Gaussians
+    
+    Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
+    Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
+    Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
+
+    # Only calculates one component of the quadrupole integrals
+
+    if direction.lower() == "xx":
+
+        Ex1 = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2)
+        Ex2 = hermite_coeff(l_1, l_2, 2, R_12[0], exponent_1, exponent_2)
+
+        Qx = 2.0 * Ex2 + 2.0 * P[0] * Ex1 + (P[0] * P[0] + 1.0 / (2.0 * exponent_sum)) * Sx
+
+        integral = prefactor * Qx * Sy * Sz
+
+    elif direction.lower() == "zz":
+
+        Ez1 = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2)
+        Ez2 = hermite_coeff(n_1, n_2, 2, R_12[2], exponent_1, exponent_2)
+
+        Qz = 2.0 * Ez2 + 2.0 * P[2] * Ez1 + (P[2] * P[2] + 1.0 / (2.0 * exponent_sum)) * Sz
+
+        integral = prefactor * Sx * Sy * Qz
+
+
+    return integral
+
+
+
+
+
+
 cpdef double calculate_nuclear_electron_integral(object bf_1, object bf_2, double[:] nucleus):
 
     """
@@ -532,6 +636,8 @@ cpdef double calculate_overlap_integral(object bf_1, object bf_2):
 
 
     return integral
+
+
 
 
 

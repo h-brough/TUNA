@@ -4,9 +4,9 @@ TUNA
 
 ~~~~ Theoretical Unification of Nuclear Arrangements ~~~~
 
-A user-friendly quantum chemistry program for diatomics.
+A streamlined quantum chemistry program for atoms and diatomics.
 
 """
 
-__version__ = "0.10.0"
+__version__ = "0.10.1"
 __author__ = "Harry Brough"
