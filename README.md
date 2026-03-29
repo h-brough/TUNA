@@ -46,7 +46,7 @@ The program requires Python 3.12 or higher and the following packages:
 The simplest way to install TUNA and its dependencies is by running
 
 ```
-pip install QuantumTUNA
+pip install quantumtuna
 ```
 
 Find the path to where TUNA is installed, `*/TUNA/`, with the other Python site packages.
