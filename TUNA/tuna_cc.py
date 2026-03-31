@@ -40,6 +40,7 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
     Args:
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
+        w (array): Antisymmetric spatial orbital two-electron integrals
         t_amplitudes (tuple): Amplitudes
         method (Method): Electronic structure method
         F (array): Spatial-orbital Fock matrix
