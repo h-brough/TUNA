@@ -1394,6 +1394,8 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
 
 def run_DLPNO_MP2(molecule, bfs_on_grid, weights, calculation, integrals, SCF_output):
 
+    raise NotImplementedError("DLPNO-MP2 is not implemented yet! Coming soon...")
+
     epsilons = SCF_output.epsilons
     molecular_orbitals = SCF_output.molecular_orbitals
 

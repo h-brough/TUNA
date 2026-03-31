@@ -1092,21 +1092,6 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         out.show_two_dimensional_plot(calculation, molecule, P, P_alpha, P_beta, P_transition_alpha, P_transition_beta, P_transition, molecular_orbitals, natural_orbitals)
 
 
-    """
-    
-    NEED TO DEAL WITH THIS
-
-    """
-
-    if method.name == "DLPNO-MP2":
-        
-        calculation.functional = DFT_methods.get("LDA")
-
-        bfs_on_grid, weights, _ = dft.set_up_integration_grid(molecule.basis_functions, molecule.atoms, molecule.bond_length, molecule.n_electrons, P_alpha, P_beta, calculation) 
-
-        mp.run_DLPNO_MP2(molecule, bfs_on_grid, weights, calculation, integrals, SCF_output)
-
-
     return final_energy, P
 
 
