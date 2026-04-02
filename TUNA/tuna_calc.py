@@ -88,6 +88,7 @@ KEYWORDS = [
     Keyword("T", "terse"),
     Keyword("DEBUG", "debug"),
     Keyword("DECONTRACT", "decontract"),
+    Keyword("CARTHARM", "cartesian_harmonics"),
     Keyword("EXTRAPOLATE", "extrapolate"),
 
     Keyword("NOROTATE", "no_rotate_guess"),

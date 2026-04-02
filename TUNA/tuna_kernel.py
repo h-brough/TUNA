@@ -4,6 +4,7 @@ from tuna_molecule import Molecule, Atom
 from tuna_util import *
 from tuna_calc import Calculation
 import numpy as np
+from scipy.linalg import block_diag
 from numpy import ndarray
 import tuna_dft as dft
 import sys, time
@@ -21,6 +22,7 @@ This is the TUNA module for various low level calculations, written first for ve
 Here live various fairly random functions, that are used within an energy calculation but are not needed in the high level tuna_energy module.
 
 Updated in version 0.10.1 to begin implementation of D3 dispersion correction.
+Updated in version 0.11.0 to enable calculations to be run with spherical, rather than Cartesian, harmonics.
 
 This module contains:
 
@@ -126,8 +128,6 @@ def enforce_density_matrix_idempotency(P_guess_alpha: ndarray, P_guess_beta: nda
         P_guess_beta (array): Idempotent beta guess density
 
     """
-
-    log(" Enforcing density matrix idempotency...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
     # Forces the trace of the guess density to be correct
 
@@ -135,8 +135,6 @@ def enforce_density_matrix_idempotency(P_guess_alpha: ndarray, P_guess_beta: nda
     P_guess_beta = dft.clean_density_matrix(P_guess_beta, S, n_beta)
     
     P_guess = P_guess_alpha + P_guess_beta
-
-    log("[Done]\n", calculation, 1, silent=silent)
 
     return P_guess, P_guess_alpha, P_guess_beta
 
@@ -284,11 +282,11 @@ def print_reference_type(method: Method, calculation: Calculation, silent: bool)
 
     if calculation.reference == "RHF": 
         
-        log(f" Beginning restricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
+        log(f"\n Beginning restricted {reference_type} calculation...  ", calculation, 1, silent=silent)
 
     else: 
         
-        log(f" Beginning unrestricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
+        log(f"\n Beginning unrestricted {reference_type} calculation...  ", calculation, 1, silent=silent)
 
     return
 
@@ -305,7 +303,7 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
 
     """"
     
-    Calculates one-electron integrals.
+    Calculates one-electron integrals in the Cartesian harmonic basis.
 
     Args:
         atoms (list): List of atoms
@@ -314,24 +312,23 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
         centre_of_mass (float): Z-coordinate of centre of mass
 
     Returns:
-        S (array): Overlap matrix in AO basis
-        T (array): Kinetic energy matrix in AO basis
-        V_NE (array): Nuclear-electron matrix in AO basis
-        D (array): Dipole integrals in AO basis
-        Q (array): Quadrupole integrals in AO basis
+        S_cart (array): Overlap matrix in AO basis
+        T_cart (array): Kinetic energy matrix in AO basis
+        V_NE_cart (array): Nuclear-electron matrix in AO basis
+        D_cart (array): Dipole integrals in AO basis
+        Q_cart (array): Quadrupole integrals in AO basis
 
     """
 
     # Initialises the matrices
 
-    S = np.zeros((n_basis, n_basis)) 
-    V_NE = np.zeros((n_basis, n_basis)) 
-    T = np.zeros((n_basis, n_basis)) 
-    Q = np.zeros((2, n_basis, n_basis)) 
-    D = np.zeros((3, n_basis, n_basis)) 
+    S_cart = np.zeros((n_basis, n_basis)) 
+    V_NE_cart = np.zeros((n_basis, n_basis)) 
+    T_cart = np.zeros((n_basis, n_basis)) 
+    Q_cart = np.zeros((2, n_basis, n_basis)) 
+    D_cart = np.zeros((3, n_basis, n_basis)) 
 
     dipole_origin = np.array([0, 0, centre_of_mass])
-
 
     for i in range(n_basis):
 
@@ -339,30 +336,30 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
             
             # Forms the overlap and kinetic matrices
 
-            S[i, j] = S[j, i] = ints.calculate_overlap_integral(basis_functions[i], basis_functions[j])
-            T[i, j] = T[j, i] = ints.calculate_kinetic_integral(basis_functions[i], basis_functions[j])
+            S_cart[i, j] = S_cart[j, i] = ints.calculate_overlap_integral(basis_functions[i], basis_functions[j])
+            T_cart[i, j] = T_cart[j, i] = ints.calculate_kinetic_integral(basis_functions[i], basis_functions[j])
 
             # Forms the x, y and z components of the dipole moment matrix
 
-            D[0, i, j] = D[0, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "x")
-            D[1, i, j] = D[1, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "y")
-            D[2, i, j] = D[2, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "z")
+            D_cart[0, i, j] = D_cart[0, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "x")
+            D_cart[1, i, j] = D_cart[1, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "y")
+            D_cart[2, i, j] = D_cart[2, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "z")
             
             # Forms the xx and zz components of the quadrupole moment matrix
 
-            Q[0, i, j] = Q[0, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "xx")
-            Q[1, i, j] = Q[1, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "zz")
+            Q_cart[0, i, j] = Q_cart[0, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "xx")
+            Q_cart[1, i, j] = Q_cart[1, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "zz")
 
             for atom in atoms:
 
                 # Adds to the nuclear-electron attraction matrix
 
-                V_NE[i, j] += -atom.charge * ints.calculate_nuclear_electron_integral(basis_functions[i], basis_functions[j], atom.origin)
+                V_NE_cart[i, j] += -atom.charge * ints.calculate_nuclear_electron_integral(basis_functions[i], basis_functions[j], atom.origin)
 
-            V_NE[j, i] = V_NE[i, j]
+            V_NE_cart[j, i] = V_NE_cart[i, j]
 
 
-    return S, T, V_NE, D, Q
+    return S_cart, T_cart, V_NE_cart, D_cart, Q_cart
 
 
 
@@ -377,26 +374,26 @@ def calculate_two_electron_integrals(n_basis: int, basis_functions: list) -> nda
 
     """"
     
-    Calculates two-electron integrals.
+    Calculates two-electron integrals in the Cartesian harmonic basis.
 
     Args:
         n_basis (int): Number of basis functions
         basis_functions (list): Basis functions
     
     Returns:
-        ERI_AO (array): Electron repulsion integrals in AO basis
+        ERI_AO_cart (array): Electron repulsion integrals in AO basis
         
     """
 
-    ERI_AO = np.zeros((n_basis, n_basis, n_basis, n_basis))  
+    ERI_AO_cart = np.zeros((n_basis, n_basis, n_basis, n_basis))  
 
     # Calculates electron repulsion integrals - diatomic parity skips over known zero values if molecule is aligned on the z axis
 
-    ERI_AO = ints.calculate_electron_repulsion_integrals(n_basis, ERI_AO, basis_functions)
+    ERI_AO_cart = ints.calculate_electron_repulsion_integrals(n_basis, ERI_AO_cart, basis_functions)
 
-    ERI_AO = np.asarray(ERI_AO)
+    ERI_AO_cart = np.asarray(ERI_AO_cart)
 
-    return ERI_AO
+    return ERI_AO_cart
 
 
 
@@ -427,15 +424,15 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     # Calculates the one-electron integrals
 
-    log(" Calculating one-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating one-electron integrals...     ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
-    S, T, V_NE, D, Q = calculate_one_electron_integrals(molecule.atoms, n_basis, molecule.basis_functions, molecule.centre_of_mass)
+    S_cart, T_cart, V_NE_cart, D_cart, Q_cart = calculate_one_electron_integrals(molecule.atoms, n_basis, molecule.basis_functions, molecule.centre_of_mass)
 
     log("[Done]", calculation, 1, silent=silent)
 
     # Makes sure the two-electron integrals can fit in memory, and calculate them
 
-    log(" Calculating two-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating two-electron integrals...     ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     try:
 
@@ -443,7 +440,7 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
             
             error("Molecule is incorrectly aligned! Unable to calculate two-electron integrals.")
 
-        ERI_AO = calculate_two_electron_integrals(n_basis, molecule.basis_functions)
+        ERI_AO_cart = calculate_two_electron_integrals(n_basis, molecule.basis_functions)
 
     except MemoryError:
 
@@ -451,6 +448,10 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
     
     log("[Done]", calculation, 1, silent=silent)
 
+    # Transforms into the spherical harmonic basis from Cartesian harmonics
+
+    S, T, V_NE, D, Q, ERI_AO = transform_to_spherical_harmonics(S_cart, T_cart, V_NE_cart, D_cart, Q_cart, ERI_AO_cart, molecule, calculation, silent)
+    
     # Measure the time taken to calculate the integrals, print if requested
 
     calculation.integrals_time = time.perf_counter()
@@ -462,6 +463,162 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
     integrals = Integrals(S, T, V_NE, D, Q, ERI_AO)
 
     return integrals
+
+
+
+
+
+
+
+
+
+
+def transform_to_spherical_harmonics(S_cart: ndarray, T_cart: ndarray, V_NE_cart: ndarray, D_cart: ndarray, Q_cart: ndarray, ERI_AO_cart: ndarray, molecule: Molecule, calculation: Calculation, silent: bool) -> tuple:
+
+    """
+    
+    Transforms the one- and two-electron integrals from Cartesian to spherical harmonic basis.
+
+    Args:
+        S_cart (array): Overlap matrix in Cartesian basis
+        T_cart (array): Kinetic energy matrix in Cartesian basis
+        V_NE_cart (array): Nuclear-electron matrix in Cartesian basis
+        D_cart (array): Dipole integrals in Cartesian basis
+        Q_cart (array): Quadrupole integrals in Cartesian basis
+        ERI_AO_cart (array): Electron repulsion integrals in Cartesian basis
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        silent (bool): Cancel logging
+    
+    Returns:
+        S (array): Overlap matrix in spherical harmonic basis
+        T (array): Kinetic energy matrix in spherical harmonic basis
+        V_NE (array): Nuclear-electron matrix in spherical harmonic basis
+        D (array): Dipole integrals in spherical harmonic basis
+        Q (array): Quadrupole integrals in spherical harmonic basis
+        ERI_AO (array): Electron repulsion integrals in spherical harmonic basis
+    
+    """
+
+    if calculation.cartesian_harmonics:
+
+        return S_cart, T_cart, V_NE_cart, D_cart, Q_cart, ERI_AO_cart
+    
+    log("\n Transforming to spherical harmonics...    ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    # Builds the Cartesian to spherical transformation matrix
+
+    U = build_spherical_harmonic_transformation_matrix(molecule, calculation)
+    
+    # Transforms the one-electron integrals
+
+    S = U @ S_cart @ U.T
+    T = U @ T_cart @ U.T
+    V_NE = U @ V_NE_cart @ U.T
+
+    # These integral matrices have multiple Cartesian components
+
+    D = np.einsum("mw,awx,nx->amn", U, D_cart, U, optimize=True)
+    Q = np.einsum("mw,awx,nx->amn", U, Q_cart, U, optimize=True)
+
+    # Transforms the two-electron integrals - first index of U needs to be Cartesian, second spherical
+
+    ERI_AO = np.einsum("mw,nx,wxyz,ky,lz->mnkl", U, U, ERI_AO_cart, U, U, optimize=True)
+    
+    log("[Done]\n", calculation, 1, silent=silent)
+
+    return S, T, V_NE, D, Q, ERI_AO
+
+
+
+
+
+
+
+
+
+
+def build_spherical_harmonic_transformation_matrix(molecule: Molecule, calculation: Calculation) -> ndarray:
+
+    U = np.eye(molecule.n_basis)
+
+    # Don't apply linear map if "CARTHARMONICS" is used
+
+    U_S = np.eye(1)
+
+    U_P = np.eye(3)
+
+    # Cartesian harmonics are ordered from x^n, ... y^n, ... z^n 
+
+    # get hese lines up one by one
+
+    U_D = np.array([
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],                                 # d_xy
+        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],                                 # d_yz
+        [-0.5, 0.0, 0.0, -0.5, 0.0, 1.0],                               # d_z^2
+        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],                                 # d_xz
+        [np.sqrt(3)/2, 0.0, 0.0, -np.sqrt(3)/2, 0.0, 0.0],              # d_x^2-y^2
+    ], dtype=float)
+    
+    U_F = np.array([
+        [0.0, 3*np.sqrt(2)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(10)/4, 0.0, 0.0, 0.0], # y(3x^2-y^2)
+        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], # xyz
+        [0.0, -np.sqrt(30)/20, 0.0, 0.0, 0.0, 0.0, -np.sqrt(6)/4, 0.0, np.sqrt(30)/5, 0.0], # y(4z^2-x^2-y^2)
+        [0.0, 0.0, -3*np.sqrt(5)/10, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(5)/10, 0.0, 1.0], # z(2z^2-3x^2-3y^2)
+        [-np.sqrt(6)/4, 0.0, 0.0, -np.sqrt(30)/20, 0.0, np.sqrt(30)/5, 0.0, 0.0, 0.0, 0.0], # x(4z^2-x^2-y^2)
+        [0.0, 0.0, np.sqrt(3)/2, 0.0, 0.0, 0.0, 0.0, -np.sqrt(3)/2, 0.0, 0.0], # z(x^2-y^2)
+        [np.sqrt(10)/4, 0.0, 0.0, -3*np.sqrt(2)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], # x(x^2-3y^2)
+    ], dtype=float)
+
+    #print(np.array([molecule.basis_functions[i].shell for i in range(molecule.n_basis)]))
+
+
+    U_G = np.array([
+            # m = -4: xy(x^2-y^2)
+            [0.0, np.sqrt(35)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(35)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            # m = -3: yz(3x^2-y^2)
+            [0.0, 0.0, 0.0, 0.0, np.sqrt(14)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -np.sqrt(14)/4, 0.0, 0.0, 0.0],
+            # m = -2: xy(7z^2-r^2)
+            [0.0, -np.sqrt(7)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(7)/4, 0.0, np.sqrt(7)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            # m = -1: yz(7z^2-3r^2)
+            [0.0, 0.0, 0.0, 0.0, -3*np.sqrt(14)/20, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(14)/20, 0.0, np.sqrt(14)/5, 0.0],
+            # m = 0: 35z^4 - 30z^2r^2 + 3r^4
+            [3/8, 0.0, 0.0, 3/4, 0.0, -3*np.sqrt(5)/8, 0.0, 0.0, 0.0, 0.0, 3/8, 0.0, -3*np.sqrt(5)/8, 0.0, 1.0],
+            # m = 1: xz(7z^2-3r^2)
+            [0.0, 0.0, -3*np.sqrt(14)/20, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(14)/20, 0.0, np.sqrt(14)/5, 0.0, 0.0, 0.0, 0.0, 0.0],
+            # m = 2: (x^2-y^2)(7z^2-r^2)
+            [-np.sqrt(7)/4, 0.0, 0.0, 0.0, 0.0, np.sqrt(7)/2, 0.0, 0.0, 0.0, 0.0, np.sqrt(7)/4, 0.0, -np.sqrt(7)/2, 0.0, 0.0],
+            # m = 3: xz(x^2-3y^2)
+            [0.0, 0.0, np.sqrt(14)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(14)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            # m = 4: x^4 - 6x^2y^2 + y^4
+            [np.sqrt(35)/8, 0.0, 0.0, -3*np.sqrt(3)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, np.sqrt(35)/8, 0.0, 0.0, 0.0, 0.0]
+        ], dtype=float)
+
+
+    # Links angular momentum to linear map matrix block
+
+    block_map = {0: U_S, 1: U_P, 2: U_D, 3: U_F, 4: U_G, 5: None, 6: None}
+    
+    i = 0
+
+    # Iteratively builds block diagonal transformation matrix
+
+    while i < molecule.n_basis:
+
+        # Angular momentum for shell
+
+        L = sum(molecule.basis_functions[i].shell)
+
+        # How many iterations to jump forwards depends on angular momentum (1 for s, 3 for p, 6 for d, 10 for f, etc.)
+
+        n_cart = (L + 1) * (L + 2) // 2
+
+        U = block_diag(U, block_map[L]) if i != 0 else np.eye(1)
+
+        i += n_cart 
+
+
+    return U
 
 
 
@@ -586,7 +743,7 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
         
     """
 
-    log("\n Constructing Fock transformation matrix...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Constructing Fock transformation matrix...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     # Symmetrise the overlap matrix
 

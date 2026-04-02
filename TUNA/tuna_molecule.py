@@ -14,6 +14,8 @@ This is the TUNA module for molecule and atom management, written first for vers
 At the start of every energy evaluation, a Molecule object is made. This contains information inherited from Calculation, as well as structural information, 
 data about the number of electrons, orbitals, etc. and is used to update the reference stored in Calculation (restricted or unrestricted).
 
+Updated in version 0.11.0 to make more consistent x, y and z grouping for Cartesian Gaussian subshells.
+
 This module contains:
 
 1. A class to define an Atom
@@ -136,10 +138,6 @@ class Molecule:
 
         self.prepare_molecule(self.calculation)
 
-        # Interprets whether we need a RHF/RKS or UHF/UKS calculation
-
-        self.process_restricted_or_unrestricted_reference(self.calculation)
-
         # Initialises the bond length to None - it is calculated only for diatomics
 
         self.bond_length = 0.0
@@ -202,11 +200,6 @@ class Molecule:
         # Builds a list of all the primitive Gaussians
         
         self.primitive_Gaussians = [basis_function.num_exps for basis_function in self.basis_functions]
-
-        # The partitioning of the basis set into atoms is done here, by checking which basis functions are located on which atoms
-
-        self.partitioned_basis_functions = [[bf for bf in self.basis_functions if np.allclose(bf.origin, atom.origin)] for atom in self.atoms]
-        self.partition_ranges = [len(group) for group in self.partitioned_basis_functions]
         self.angular_momentum_list = generate_angular_momentum_list(self.basis_functions)
         
         # Initialises the centre of mass to the origin for now
@@ -256,7 +249,7 @@ class Molecule:
 
 
 
-    def process_restricted_or_unrestricted_reference(self, calculation: Calculation) -> None:
+    def process_basis_functions(self, calculation: Calculation, integrals: Integrals) -> None:
         
         """
         
@@ -265,8 +258,16 @@ class Molecule:
         Args:
             self (Molecule): Molecule object
             calculation (Calculation): Calculation object
+            integrals (Integrals): Integrals object
         
         """
+
+        self.n_basis = integrals.n_basis
+
+        # The partitioning of the basis set into atoms is done here, by checking which basis functions are located on which atoms
+
+        self.partitioned_basis_functions = [[bf for bf in self.basis_functions if np.allclose(bf.origin, atom.origin)] for atom in self.atoms]
+        self.partition_ranges = [len(group) for group in self.partitioned_basis_functions]
 
         # If multiplicity not specified but molecule has an odd number of electrons, set it to a doublet
 
@@ -554,14 +555,14 @@ def form_basis(atoms: list, basis_data: dict, decontract: bool) -> tuple:
 
 
 
-def convert_angular_momentum_to_subshell(angular_momemtum_string: str) -> list:
+def convert_angular_momentum_to_subshell(angular_momentum_string: str) -> list:
 
     """
     
     Converts angular momentum string from basis data into array of subshells, for Cartesian harmonics.
 
     Args:
-        angular_momemtum_string (str): Angular momentum, ie. "S", "P", "D", etc.
+        angular_momentum_string (str): Angular momentum, ie. "S", "P", "D", etc.
     
     Returns:
         exponent_list (list): List of triples of subshells
@@ -570,22 +571,19 @@ def convert_angular_momentum_to_subshell(angular_momemtum_string: str) -> list:
 
     # These are the exponents on each Cartesian Gaussian x, y, z for each atomic orbital within each subshell
 
-    subshells = {
+    shells = "SPDFGHI"
 
-        "S": [(0, 0, 0)],
-        "P": [(1, 0, 0), (0, 1, 0), (0, 0, 1)],
-        "D": [(2, 0, 0), (1, 1, 0), (1, 0, 1), (0, 2, 0), (0, 1, 1), (0, 0, 2)],
-        "F": [(3, 0, 0), (2, 1, 0), (2, 0, 1), (1, 2, 0), (1, 1, 1), (1, 0, 2), (0, 3, 0), (0, 2, 1), (0, 1, 2), (0, 0, 3)],
-        "G": [(4, 0, 0), (0, 4, 0), (0, 0, 4), (3, 1, 0), (3, 0, 1), (1, 3, 0), (0, 3, 1), (1, 0, 3), (0, 1, 3), (2, 2, 0), (2, 0, 2), (0, 2, 2), (2, 1, 1), (1, 2, 1), (1, 1, 2)],
-        "H": [(5, 0, 0), (0, 5, 0), (0, 0, 5), (4, 1, 0), (4, 0, 1), (1, 4, 0), (0, 4, 1), (1, 0, 4), (0, 1, 4), (3, 2, 0), (3, 0, 2), (0, 3, 2), (2, 3, 0), (2, 0, 3), (0, 2, 3), (3, 1, 1), (1, 3, 1), (1, 1, 3), (2, 2, 1), (2, 1, 2), (1, 2, 2)],
-        "I": [(6, 0, 0), (0, 6, 0), (0, 0, 6), (5, 1, 0), (5, 0, 1), (1, 5, 0), (0, 5, 1), (1, 0, 5), (0, 1, 5), (4, 2, 0), (4, 0, 2), (0, 4, 2), (2, 4, 0), (2, 0, 4), (0, 2, 4), (4, 1, 1), (1, 4, 1), (1, 1, 4), (3, 3, 0), (3, 0, 3), (0, 3, 3), (3, 2, 1), (3, 1, 2), (2, 3, 1), (1, 3, 2), (2, 1, 3), (1, 2, 3), (2, 2, 2)]
+    L = shells.find(angular_momentum_string.upper())
+
+    if L == -1:
     
-    }
-    
-    exponent_list = subshells[str(angular_momemtum_string)]
+        error("Only up to \"I\" type basis functions are implemented!")
+
+    # This orders exponents as x^n, ..., y^n, ... z^n
+
+    exponent_list = [(i, j, L - i - j) for i in range(L, -1, -1) for j in range(L - i, -1, -1)]
 
     return exponent_list
-
 
 
 

@@ -762,14 +762,26 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     """
 
-    log("\n Setting up molecule...  ", calculation, 1, silent=silent, end="")
+    # Prints "Beginning RHF/UHF/KS calculation..."
+
+    kern.print_reference_type(calculation.method, calculation, silent)
+
+    log("\n Setting up molecule...     ", calculation, 1, silent=silent, end="")
 
     # Builds molecule object using calculation and atomic parameters
 
-    molecule = Molecule(atomic_symbols, coordinates, calculation, do_correlation=do_correlation)
+    molecule = Molecule(atomic_symbols, coordinates, calculation, do_correlation = do_correlation)
 
     log("[Done]\n", calculation, 1, silent=silent)
     
+    # Calculates the integrals between Gaussian basis functions
+
+    integrals = kern.calculate_analytical_integrals(molecule, calculation, silent) if integrals is None else integrals
+
+    # Finishes the molecule build with the integral basis data
+
+    molecule.process_basis_functions(calculation, integrals)
+
     # Prints out the information about the molecule and calculation
 
     kern.print_molecule_information(molecule, calculation, silent)
@@ -782,14 +794,6 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     E_D2 = kern.calculate_D2_dispersion_energy(molecule, calculation, silent) if calculation.diatomic and calculation.D2 else 0
     
-    # Prints "Beginning RHF/UHF/KS calculation..."
-
-    kern.print_reference_type(calculation.method, calculation, silent)
-
-    # Calculates the integrals between Gaussian basis functions
-
-    integrals = kern.calculate_analytical_integrals(molecule, calculation, silent) if integrals is None else integrals
-
     # Calculates Fock transformation matrix from overlap matrix
 
     X, smallest_S_eigenvalue, S_inverse = kern.calculate_Fock_transformation_matrix(integrals.S, calculation, silent)

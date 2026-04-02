@@ -1,5 +1,25 @@
 # Changelog
 
+## TUNA 0.11.0  — XX/07/2026
+
+### Added
+
+- Do for one electron first, spherical harmonic transformation, get that working with large basis sets, then worry about 2E. H atom
+- Do in python, numpy badly first, then port to cython one program has infrastructure or scipy sparse?
+- Then need to sort out DFT, should be faster overall as fewer functions to loop over, but need to form linear combinations - bit awkward
+- Clean up the list of functionals, to only be restricted versions - handle unrestricted generally
+- Sort out being able to use "DIPOLE" with harmonic intensities
+- Look at parallelism of Cython and other speedups, compiler flags
+- Generalise basis set extrapolation, add 5->6 extrapolation
+CARTHARMONICS keyword
+
+### Changed
+
+### Fixed
+
+<br>
+
+
 ## TUNA 0.10.1 — 02/04/2026
 
 ### Added

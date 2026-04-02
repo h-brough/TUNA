@@ -179,6 +179,11 @@ class Integrals:
     def two_electron_integrals(self):
 
         return self.ERI_AO
+    
+    @property
+    def n_basis(self):
+
+        return self.S.shape[0]
 
 
 
