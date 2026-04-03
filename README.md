@@ -11,7 +11,7 @@ Welcome to TUNA! A streamlined quantum chemistry program for atoms and diatomics
 The program contains a collection of quantum chemistry methods, and considerable effort has been taken to document everything. The manual provides numerous examples and explanations for how TUNA works.
 
 <br>
-<p align="center"><img src="https://raw.githubusercontent.com/h-brough/TUNA/9dd6ad4a5705cd38ffa64add120b2296aa9068ce/TUNA%20Logo.svg" alt="Fish swimming through a wavepacket." width=480 /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/h-brough/TUNA/9dd6ad4a5705cd38ffa64add120b2296aa9068ce/TUNA%20Logo.svg" alt="Fish swimming through a wavepacket." width=400 /></p>
 
 ## Contents
 
