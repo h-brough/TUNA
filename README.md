@@ -29,7 +29,7 @@ The repository includes:
 
 ## Documentation
 
-A copy of the <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
+The <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
 
 ## Using TUNA
 
