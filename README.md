@@ -29,7 +29,7 @@ The repository includes:
 
 ## Documentation
 
-A copy of the <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed.
+A copy of the <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
 
 ## Using TUNA
 
@@ -79,3 +79,9 @@ TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
 Read the manual for details!
+
+## Citation
+
+If TUNA is used in a publication, please consider citing it as follows:
+
+H. Brough, TUNA: A streamlined quantum chemistry program for atoms and diatomics, arXiv preprint, 2026, <a href="https://arxiv.org/abs/2604.01471">arXiv:2604.01471</a>.
