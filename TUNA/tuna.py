@@ -26,8 +26,7 @@ The module contains:
 
 if len(sys.argv) > 1 and sys.argv[1] in ["-version", "--version"]:
 
-    print(f"TUNA {VERSION}")
-    sys.exit(0)
+    sys.exit(f"TUNA {VERSION}")
 
 
 # Prints the big fish logo
@@ -51,6 +50,7 @@ import tuna_kernel as kern
 
 print(colored("[Done]\n", "light_grey", force_color=True))
 
+# The time starts counting after modules are imported
 
 start_time = time.perf_counter()
 
@@ -144,9 +144,11 @@ def parse_input() -> tuple[str, str, str, list[str], ndarray, list[str]]:
 
     # Rejects requests for tiny bond lengths, such as two atoms on top of each other
 
-    if len(coordinates_1D) == 2 and coordinates_1D[1] < 0.01: 
+    MINIMUM_BOND_LENGTH_ANGSTROMS = 0.01
+
+    if len(coordinates_1D) == 2 and coordinates_1D[1] < MINIMUM_BOND_LENGTH_ANGSTROMS: 
         
-        error(f"Bond length ({coordinates_1D[1]} angstroms) is too small! Minimum bond length is 0.01 angstroms.")
+        error(f"Bond length ({coordinates_1D[1]} angstroms) is too small! Minimum bond length is {MINIMUM_BOND_LENGTH_ANGSTROMS} angstroms.")
 
     # Converts 1D coordinate array in angstroms to 3D array ion bohr
 
@@ -320,7 +322,10 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
             md.run_molecular_dynamics_simulation(calculation, atomic_symbols, coordinates)
             
             
-            
+    return
+
+
+
 
 
 
@@ -367,6 +372,8 @@ def main() -> None:
     # Finishes the calculation, printing the time taken
 
     finish_calculation(calculation)
+
+    return
 
 
 

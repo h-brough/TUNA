@@ -15,6 +15,8 @@ This is the TUNA module for many-body perturbation theory, written first for ver
 
 Functions for many-body perturbation theory, including MP2, MP3 and MP4 are found here.
 
+Updated in version 0.11.0 to add the relaxed density matrix.
+
 The module contains:
 
 1. Functions permute high rank tensors, used here and in tuna_cc (permute_symmetric, permute_three_column_indices, etc.)
@@ -164,6 +166,46 @@ def calculate_unrestricted_MP2_energy(t_ijab: ndarray, g_oovv: ndarray) -> float
     E_MP2 = (1 / 4) * np.einsum("ijab,ijab->", t_ijab, g_oovv, optimize=True)
 
     return E_MP2
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_relaxed_MP2_density_matrix(t_ijab, P_unrelaxed, g, o, v, n_occ, n_virt):
+
+    # These are for spin orbitals
+
+    P_relaxed = P_unrelaxed
+
+    A_ia_jb = ci.calculate_A_matrix()
+
+    def calculate_unrestricted_MP2_lagrangian():
+
+        L_ia = np.einsum("jk,jaki->ia", P_unrelaxed[o, o], g[o, v, o, o], optimize=True) 
+        L_ia += np.einsum("bc,baci->ia", P_unrelaxed[v, v], g[v, v, v, o], optimize=True)
+
+        L_ia += np.einsum("ijbc,abcj->ia", t_ijab, g[v, v, v, o], optimize=True) 
+        L_ia -= np.einsum("jkac,ijkc->ia", t_ijab, g[o, o, o, v], optimize=True)
+
+        return L_ia
+
+    L_ia = calculate_unrestricted_MP2_lagrangian()
+
+    z_ia = np.linalg.solve(A_ia_jb, -L_ia)
+
+    z_ia = z_ia.reshape(n_occ, n_virt)
+
+
+    P_relaxed[o, v] = z_ia
+    P_relaxed[v, o] = z_ia.T
+
+
+    return P_relaxed
 
 
 
@@ -505,7 +547,7 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
     t_ijab = np.zeros_like(ERI_MO[o, o, v, v])
 
     E_MP2 = 0
-    E_conv = calculation.correlated_energy_convergence
+    E_conv = calculation.energy_convergence
 
     log_spacer(calculation, silent=silent, start="\n")
     log("           Iterative MP2 Energy and Density ", calculation, 1, silent=silent, colour="white")
@@ -786,9 +828,9 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
     
     # Transforms ERI for alpha, beta and alpha and beta spins
 
-    ERI_SO_a = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_alpha, C_spin_block_alpha)
-    ERI_SO_b = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_beta, C_spin_block_beta)
-    ERI_SO_ab = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_alpha, C_spin_block_beta)
+    ERI_SO_a = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_alpha, C_spin_block_alpha, calculation, True)
+    ERI_SO_b = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_beta, C_spin_block_beta, calculation, True)
+    ERI_SO_ab = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_alpha, C_spin_block_beta, calculation, True)
 
     # Antisymmetrises alpha and beta spins, but not alpha-beta spins
 
@@ -950,7 +992,7 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
     log("      Orbital-optimised MP2 Energy and Density ", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
-    log(f"\n  Tolerance for energy convergence:    {calculation.correlated_energy_convergence:.10f}", 1, silent=silent)
+    log(f"\n  Tolerance for energy convergence:    {calculation.energy_convergence:.10f}", 1, silent=silent)
     log("\n  Starting orbital-optimised MP2 iterations...\n", calculation, 1, end="", silent=silent)
 
     log_spacer(calculation, silent=silent, start="\n")
@@ -1050,7 +1092,7 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
         # Uses new orbitals to form new core Hamiltonian and antisymmetrised two-electron integrals
 
         H_core_SO = ci.transform_matrix_AO_to_SO(H_core_spin_block, C_spin_block)
-        ERI_SO = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block)
+        ERI_SO = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block, calculation, True)
         g = ci.antisymmetrise_integrals(ERI_SO)
 
         # Calculates total energy from one-electron and two-electron contractions with one- and two-electron Hamiltonians
@@ -1071,7 +1113,7 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
 
         # If convergence criteria has been reached, exit loop
 
-        if (abs(delta_E)) < calculation.correlated_energy_convergence:
+        if (abs(delta_E)) < calculation.energy_convergence:
 
             break
 
@@ -1149,15 +1191,8 @@ def run_restricted_MP3(calculation: Calculation, g: ndarray, epsilons: ndarray, 
     # Taken from Molecular Electronic-Structure Theory
 
     t_dash_ijab = 2 * np.einsum("ijab,iajb->ijab", e_ijab, L[o, v, o, v], optimize=True)
-    t_tilde_ijab = t_dash_ijab
     
     log(f"[Done]", calculation, 1, silent=silent)
-
-    # This should be zero if t_tilde_ijab is calculated correctly
-
-    symmetry_diagnostic = np.max(t_tilde_ijab - t_tilde_ijab.swapaxes(0,1).swapaxes(2,3))
-
-    log(f"  Symmetry diagnostic: {symmetry_diagnostic:13.10f}\n", calculation, 3,  silent=silent)
 
     log("  Calculating MP3 correlation energy...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
@@ -1166,7 +1201,7 @@ def run_restricted_MP3(calculation: Calculation, g: ndarray, epsilons: ndarray, 
     X_ijab = (1 / 2) * np.einsum("ijcd,acbd->ijab", t_ijab, g[v, v, v, v], optimize=True) + (1 / 2) * np.einsum("klab,kilj->ijab", t_ijab, g[o, o, o, o], optimize=True)
     X_ijab += np.einsum("ikac,bjkc->ijab", t_ijab, L[v, o, o, v], optimize=True) - np.einsum("kjac,bcki->ijab", t_ijab, g[v, v, o, o], optimize=True) - np.einsum("kiac,bjkc->ijab", t_ijab, g[v, o, o, v], optimize=True) 
 
-    E_MP3 = np.einsum("ijab,ijab->", t_tilde_ijab, X_ijab, optimize=True)
+    E_MP3 = np.einsum("ijab,ijab->", t_dash_ijab, X_ijab, optimize=True)
 
     log(f"[Done]\n\n  MP3 correlation energy:             {E_MP3:13.10f}", calculation, 1, silent=silent)
 
@@ -1181,7 +1216,7 @@ def run_restricted_MP3(calculation: Calculation, g: ndarray, epsilons: ndarray, 
         log(f"  SCS-MP3 correlation energy:       {(E_MP3 + E_MP2):15.10f}", calculation, 1, silent=silent)
 
 
-    return E_MP3, e_ijab, t_ijab, t_tilde_ijab, L
+    return E_MP3, e_ijab, t_ijab, t_dash_ijab, L
 
 
 
@@ -1258,7 +1293,7 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
     Args:
         e_ijab (array): Doubles epsilons tensor
         t_ijab (array): MP2 t-amplitudes
-        t_tilde_ijab (array): MP t_tilde-amplitudes
+        t_tilde_ijab (array): MP2 t_tilde-amplitudes
         L (array): MP2 Lagrange multipliers    
         g (array): Non-antisymmetrised electron repulsion integrals in spatial orbital basis
         epsilons (array): Fock matrix eigenvalues
@@ -1638,7 +1673,7 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
         natural_orbitals (array): Natural orbitals from (SCS-)MP2 density
 
     """
-
+    
     E_MP2 = 0
     E_MP3 = 0
     E_MP4 = 0
@@ -1693,7 +1728,9 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
     else:
 
         # Run MP2 first
-         
+        
+        timer("MP2", 0)
+
         if calculation.reference == "UHF":
 
             E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, ERI_spin_block, X, silent=silent)
@@ -1702,10 +1739,13 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
             E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, X, calculation, molecule, silent=silent)
 
+        timer("MP2", 1)
 
         if method.method_base == "MP3" or method.method_base == "MP4": 
 
             # Next run MP3
+            
+            timer("MP3", 0)
 
             if calculation.reference == "UHF":
             
@@ -1714,13 +1754,18 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
             else:
 
                 E_MP3, e_ijab, t_ijab, t_tilde_ijab, L = run_restricted_MP3(calculation, ERI_MO, epsilons, E_MP2, o, v, silent=silent)
+            
+            timer("MP3", 1)
 
-                # Next run MP4
+            # Next run MP4
 
-                if method.method_base == "MP4":
-                    
-                    E_MP4 = run_restricted_MP4(e_ijab, t_ijab, t_tilde_ijab, L, ERI_MO, epsilons, o, v, calculation, silent=silent)
+            if method.method_base == "MP4":
+                
+                timer("MP4", 0)
 
+                E_MP4 = run_restricted_MP4(e_ijab, t_ijab, t_tilde_ijab, L, ERI_MO, epsilons, o, v, calculation, silent=silent)
+
+                timer("MP4", 1)
 
     log_spacer(calculation, silent=silent)
 

@@ -144,9 +144,9 @@ def calculate_analytical_quadrupole_moment(centre_of_mass: float, charges: ndarr
         Q (array): Quadrupole integral matrix in AO basis
 
     Returns:
-        total_dipole_moment (float): Total molecular dipole moment in atomic units
-        nuclear_dipole_moment (float): Nuclear dipole moment in atomic units
-        electronic_dipole_moment (float): Electronic dipole moment in atomic units
+        isotropic_quadrupole_moment (float): Isotropic quadrupole moment in atomic units
+        nuclear_quadrupole_moment (float): Nuclear quadrupole moment in atomic units
+        anisotropic_quadrupole_moment (float): Anisotropic quadrupole in atomic units
 
     """
 
@@ -331,7 +331,7 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
 
     # Adds up different energy components
 
-    one_electron_energy = SCF_output.nuclear_electron_energy + SCF_output.kinetic_energy + SCF_output.electric_field_energy
+    one_electron_energy = SCF_output.nuclear_electron_energy + SCF_output.kinetic_energy + SCF_output.electric_field_energy + SCF_output.electric_field_gradient_energy 
     two_electron_energy = SCF_output.exchange_energy + SCF_output.coulomb_energy + SCF_output.correlation_energy
 
     electronic_energy = one_electron_energy + two_electron_energy
@@ -360,6 +360,10 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
     if np.linalg.norm(calculation.electric_field) > 0:
     
         log(f"  Electric field energy:            {SCF_output.electric_field_energy:15.10f}", calculation, 2, silent=silent)
+    
+    if np.linalg.norm(calculation.electric_field_gradient) > 0:
+    
+        log(f"  Electric field gradient energy:   {SCF_output.electric_field_gradient_energy:15.10f}", calculation, 2, silent=silent)
 
     log(f"\n  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent=silent)
     log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent=silent)
@@ -541,9 +545,11 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
     """
 
-    log_spacer(calculation, 3, start="\n")
-    log("           Molecular Orbital Eigenvalues", calculation, 3, colour="white")
-    log_spacer(calculation, 3)
+    priority = 1 if calculation.print_molecular_orbitals else 3
+
+    log_spacer(calculation, priority=priority, start="\n")
+    log("           Molecular Orbital Eigenvalues", calculation, priority=priority, colour="white")
+    log_spacer(calculation, priority=priority)
 
     epsilons, epsilons_alpha, epsilons_beta = SCF_output.epsilons, SCF_output.epsilons_alpha, SCF_output.epsilons_beta
 
@@ -553,11 +559,11 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
         if molecule.n_beta > 0:
 
-            log("\n    Alpha Eigenvalues           Beta Eigenvalues\n", calculation, 3)
+            log("\n    Alpha Eigenvalues           Beta Eigenvalues\n", calculation, priority=priority)
             
-            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
-            log("   N    Occ.   Epsilon         N    Occ.   Epsilon  ", calculation, 3)
-            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, 3)
+            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority=priority)
+            log("   N    Occ.   Epsilon         N    Occ.   Epsilon  ", calculation, priority=priority)
+            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority=priority)
             
             # Occupied orbitals are alpha electrons only
 
@@ -566,18 +572,18 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
             for i, (epsilon_alpha, epsilon_beta) in enumerate(zip(epsilons_alpha, epsilons_beta)):
 
-                log(f"  {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}       {(i + 1):2.0f}     {occupancies_beta[i]}   {epsilon_beta:10.6f}", calculation, 3)
+                log(f"  {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}       {(i + 1):2.0f}     {occupancies_beta[i]}   {epsilon_beta:10.6f}", calculation, priority=priority)
 
-            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 3)
+            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, priority=priority)
 
 
         else:
 
-            log("\n  Alpha eigenvalues:\n", calculation, 3)
+            log("\n  Alpha eigenvalues:\n", calculation, priority=priority)
             
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~  ", calculation, 3)
-            log("    N    Occ.   Epsilon     ", calculation, 3)
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~   ", calculation, 3)
+            log("  ~~~~~~~~~~~~~~~~~~~~~~~  ", calculation, priority=priority)
+            log("    N    Occ.   Epsilon     ", calculation, priority=priority)
+            log("  ~~~~~~~~~~~~~~~~~~~~~~~   ", calculation, priority=priority)
             
             # Occupied orbitals are alpha electrons only
 
@@ -585,15 +591,15 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
             for i, epsilon_alpha in enumerate(epsilons_alpha):
 
-                log(f"   {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}    ", calculation, 3)
+                log(f"   {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}    ", calculation, priority=priority)
 
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~  \n", calculation, 3)
+            log("  ~~~~~~~~~~~~~~~~~~~~~~~  \n", calculation, priority=priority)
 
 
     elif calculation.reference == "RHF":
 
-        log("    N            Occupation             Epsilon ", calculation, 3)
-        log_spacer(calculation, 3)
+        log("    N            Occupation             Epsilon ", calculation, priority=priority)
+        log_spacer(calculation, priority=priority)
 
         # Occupied orbitals (doubly occupied) depend on number electron pairs
 
@@ -601,7 +607,7 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
         for i, epsilon in enumerate(epsilons):
 
-            log(f"   {(i + 1):2.0f}                {occupancies[i]}                {epsilon:10.6f}", calculation, 3)
+            log(f"   {(i + 1):2.0f}                {occupancies[i]}                {epsilon:10.6f}", calculation, priority=priority)
 
 
     return
@@ -627,10 +633,12 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
         SCF_output (Output): Output object
 
     """
+    
+    priority = 1 if calculation.print_molecular_orbitals else 3
 
-    log_spacer(calculation, 3, start="")
-    log("           Molecular Orbital Coefficients", calculation, 3, colour="white")
-    log_spacer(calculation, 3)
+    log_spacer(calculation, priority=priority, start="")
+    log("           Molecular Orbital Coefficients", calculation, priority=priority, colour="white")
+    log_spacer(calculation, priority=priority)
 
     # Build per-orbital atom symbol and subshell label lists
 
@@ -665,7 +673,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 
         """
 
-        l_of = {ch: i for i, ch in enumerate("spdfghi")}
+        l_of = {ch: i for i, ch in enumerate("spdfgh")}
 
         def min_n(letter): 
             
@@ -675,7 +683,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 
             l = l_of.get(letter, 0)
 
-            return (l + 1) * (l + 2) / 2
+            return 2 * l + 1
 
         formatted, idx = [], 0
 
@@ -699,9 +707,23 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
                     
                 state[letter] = (n, used)
 
+                shell_m = letter
+
+                if letter == "p":
+
+                    shell_m = letter + " " + ("x" if used == 1 else "y" if used == 2 else "z")
+
+                elif letter == "d":
+
+                    shell_m = letter + " " + ("xy" if used == 1 else "xz" if used == 2 else "yz" if used == 3 else "x2y2" if used == 4 else "z2")
+
+                elif letter == "f":
+
+                    shell_m = letter + " " + ("xy" if used == 1 else "xz" if used == 2 else "yz" if used == 3 else "x2y2" if used == 4 else "z2" if used == 5 else "z2" if used == 6 else "z2")
+
                 # Determines the orbital with the principal quantum number and angular momentum
 
-                formatted.append(f"{n}{letter}")
+                formatted.append(f"{n}{shell_m}")
 
                 idx += 1
 
@@ -740,7 +762,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 
         if k == switch_value and len(atoms) == 2:
 
-            log("", calculation, 3)
+            log("", calculation, priority=priority)
 
         symbol_list[k] = sym
 
@@ -760,11 +782,14 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
         
         """
 
-        for mo in range(min(len(eps), molecule.n_alpha + 10)):
+        # The "PRINTMOS" keyword overrides not using "P" for additional print
+
+
+        for mo in range(min(len(eps), calculation.n_orbitals_to_print)):
 
             occ = "(Occupied)" if n_occ > mo else "(Virtual)"
 
-            log(f"\n   MO {mo+1} {occ}\n", calculation, 3)
+            log(f"\n   MO {mo+1} {occ}\n", calculation, priority=priority)
 
             has_printed_1 = has_printed_2 = False
 
@@ -773,7 +798,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
                 try:
                     symbol_list[k], has_printed_1, has_printed_2 = format_molecular_orbitals(symbol_list, k, switch_value, molecule.atomic_symbols, calculation, has_printed_1, has_printed_2)
                     
-                    log("    " + symbol_list[k] + f"  {formatted_ang_mom[k]}  :  {molecular_orbitals.T[mo][k]:7.4f}", calculation, 3)
+                    log("    " + symbol_list[k] + f"  {formatted_ang_mom[k]}  :  {molecular_orbitals.T[mo][k]:7.4f}", calculation, priority=priority)
                 
                 except: 
                     
@@ -786,9 +811,9 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
         show_beta = molecule.n_beta > 0
 
         header = "\n Alpha coefficients:          Beta coefficients:" if show_beta else "\n Alpha coefficients:         "
-        log(header, calculation, 3)
+        log(header, calculation, priority=priority)
 
-        for mo in range(min(len(SCF_output.epsilons_alpha), molecule.n_alpha + 10)):
+        for mo in range(min(len(SCF_output.epsilons_alpha), calculation.n_orbitals_to_print)):
 
             occ_a = "(Occupied)" if molecule.n_alpha > mo else "(Virtual)"
 
@@ -796,11 +821,11 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 
                 occ_b = "(Occupied)" if molecule.n_beta > mo else "(Virtual)"
 
-                log(f"\n  MO {mo+1} {occ_a}              MO {mo+1} {occ_b}\n", calculation, 3)
+                log(f"\n  MO {mo+1} {occ_a}              MO {mo+1} {occ_b}\n", calculation, priority=priority)
 
             else:
 
-                log(f"\n   MO {mo+1} {occ_a}      \n", calculation, 3)
+                log(f"\n   MO {mo+1} {occ_a}      \n", calculation, priority=priority)
 
             has_printed_1 = has_printed_2 = False
 
@@ -816,7 +841,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 
                         line += "           " + symbol_list[k] + f"  {formatted_ang_mom[k]}  :  {SCF_output.molecular_orbitals_beta.T[mo][k]:7.4f}"
                     
-                    log(line, calculation, 3)
+                    log(line, calculation, priority=priority)
 
                 except: 
                     
@@ -828,7 +853,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 
         print_coeffs(SCF_output.molecular_orbitals, SCF_output.epsilons, molecule.n_doubly_occ)
 
-    log_spacer(calculation, 3, start="\n")
+    log_spacer(calculation, priority=priority, start="\n")
 
     return
 

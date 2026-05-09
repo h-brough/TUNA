@@ -95,6 +95,7 @@ class Constants:
     # Constants for cleaning things on the DFT grid
 
     density_floor = 1e-23
+    exponent_ceiling = 600
     sigma_floor = density_floor ** 2
 
     # Convergence criteria for self-consistent field
@@ -126,7 +127,7 @@ class Constants:
         "loose" : {"integral_accuracy": 3, "extent_multiplier": 0.7, "name": "loose"},
         "medium" : {"integral_accuracy": 4, "extent_multiplier": 0.9, "name": "medium"},
         "tight" : {"integral_accuracy": 5, "extent_multiplier": 1, "name": "tight"},
-        "extreme" : {"integral_accuracy": 7, "extent_multiplier": 1.2, "name": "extreme"},
+        "extreme" : {"integral_accuracy": 7, "extent_multiplier": 1.3, "name": "extreme"},
 
     }
 
@@ -160,6 +161,7 @@ class Integrals:
     ERI_AO: ndarray  # Two-electron integrals
     
     F: ndarray | None = None # Total electric field integrals
+    G: ndarray | None = None # Total electric field gradient integrals
 
     @property
     def H_core(self):
@@ -213,6 +215,7 @@ class Output:
     exchange_energy: float
     correlation_energy: float
     electric_field_energy: float
+    electric_field_gradient_energy: float
 
     # Density and overlap matrices in AO basis
 
@@ -377,9 +380,11 @@ class Functional:
 
     functional_class: str = "LDA"
 
-    # Dispersion S6 value for D2 correction
+    # Dispersion S6 value for D2 correction and b value for VV10 correction
 
     D2_S6: float = 1.2
+    VV10_b: float = 3.9
+    VV10_scaling: float = 1.0
 
     @property
     def functional_type(self) -> str:
@@ -785,11 +790,11 @@ def is_molecule_aligned_on_z_axis(molecule: any) -> bool:
 
     is_molecule_aligned = True
 
-    if len(molecule.atoms) == 2:
+    if molecule.n_atoms == 2:
 
         # Iterates over both atoms, over the x and y coordinates
 
-        for i in range(len(molecule.atoms)):
+        for i in range(molecule.n_atoms):
 
             for j in range(2):
                 
@@ -954,19 +959,19 @@ def log(message: str, calculation: any, priority: int = 1, end: str = "\n", sile
 
         if priority == 1: 
             
-            print(colored(message, colour), end=end)
+            print(colored(message, colour), end=end, flush=True)
         
         elif priority == 2 and not calculation.terse: 
             
-            print(colored(message, colour, force_color = True), end=end)
+            print(colored(message, colour, force_color = True), end=end, flush=True)
         
         elif priority == 3 and calculation.additional_print: 
             
-            print(colored(message, colour, force_color = True), end=end)
+            print(colored(message, colour, force_color = True), end=end, flush=True)
         
         elif priority == 4 and calculation.debug: 
             
-            print(colored(message, colour, force_color = True), end=end)
+            print(colored(message, colour, force_color = True), end=end, flush=True)
 
     return
 
@@ -1037,6 +1042,101 @@ def log_big_spacer(calculation: any, priority: int = 1, start: str = "", end: st
 
 
 
+# These need to be module level to always cache the timers
+
+active_timers = {}
+completed_timers = {}
+
+
+def timer(name: str, state: int) -> None:
+
+    """
+
+    Determines the time taken for a particular section of code.
+
+    Args:
+        name (str): Identifier for the block being times
+        state (int): To start is 0, to stop is 1
+
+    """
+
+
+    if state == 1:
+        
+        if name in active_timers:
+
+            # Calculates the time elapsed for the named timer
+
+            elapsed = time.perf_counter() - active_timers.pop(name)
+
+            # Adds the elapsed time into the "completed_timers" dictionary with the same name
+
+            completed_timers[name] = completed_timers.get(name, 0) + elapsed
+
+        else:
+
+            warning(f"Tried to stop timer \"{name}\" but it was not running!")
+    
+    else:
+
+        active_timers[name] = time.perf_counter()
+
+    return
+
+
+
+
+
+
+
+
+
+
+def print_timer_information(calculation: any, total_time: float) -> None:
+    
+    """
+
+    Prints the timer information.
+
+    Args:
+        calculation (Calculation): Calculation object
+        total_time (float): Total calculation time
+
+    """
+
+    log_spacer(calculation, start="\n", priority = 3)
+    log("      Calculation Timing Information (Seconds)", calculation, priority = 3)
+    log_spacer(calculation, priority = 3)
+
+    # Sort dictionary by duration from smallest to largest
+
+    flipped_completed_timers = [(time, name) for name, time in completed_timers.items()]
+
+    flipped_completed_timers.sort()
+
+    sorted_times = [(name, time) for time, name in flipped_completed_timers]
+
+    for name, duration in sorted_times:
+
+        log(f"  {name:<35}  | {duration:>10.4f}", calculation, priority = 3)
+    
+    log(f"                                       |", calculation, priority = 3)
+
+    log(f"  {"Total calculation time":<35}  | {total_time:>10.4f}", calculation, priority = 3)
+
+    log_spacer(calculation, priority = 3)
+
+    return
+
+
+
+
+
+
+
+
+
+
 def finish_calculation(calculation: any) -> None:
 
     """
@@ -1052,19 +1152,10 @@ def finish_calculation(calculation: any) -> None:
 
     end_time = time.perf_counter()
     total_time = end_time - calculation.start_time
-    
-    if calculation.additional_print:
 
-        log(f"\n Time taken for molecular integrals:      {calculation.integrals_time - calculation.start_time:8.2f} seconds", calculation, 3)
-        log(f" Time taken for SCF iterations:           {calculation.SCF_time - calculation.integrals_time:8.2f} seconds", calculation, 3)
+    # Prints the time of each of the sub-calculations
 
-        if calculation.method.correlated_method: 
-            
-            log(f" Time taken for correlated calculation:   {calculation.correlation_time - calculation.SCF_time:8.2f} seconds", calculation, 3)
-        
-        if calculation.method.excited_state_method:
-        
-            log(f" Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:6.2f} seconds", calculation, 3)
+    print_timer_information(calculation, total_time)
 
     if total_time > 120:
 
@@ -1086,6 +1177,7 @@ def finish_calculation(calculation: any) -> None:
         
         log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n", "white"), calculation, 1)
     
+
     # Exits the program
 
     sys.exit()
@@ -1149,6 +1241,8 @@ electronic_structure_methods = [
     
     Method("CIS", "configuration interaction singles", excited_state_method = True),
     Method("CIS[D]", "configuration interaction singles with perturbative doubles", excited_state_method = True),
+    Method("CISD", "configuration interaction singles and doubles", method_base = "CC"),
+    Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC"),
 
     Method("CCD", "coupled cluster doubles", method_base = "CC"),
     Method("CEPA", "coupled electron pair approximation", method_base = "CC"),
@@ -1180,17 +1274,27 @@ electronic_structure_methods = [
     Method("BVWN3","density functional theory with Becke exchange and VWN-III correlation", method_base = "DFT"),
     Method("BVWN5", "density functional theory with Becke exchange and VWN-V correlation", method_base = "DFT"),
     Method("PBE", "density functional theory with PBE exchange and correlation", method_base = "DFT"),
+    Method("RPBE", "density functional theory with modified PBE exchange and PBE correlation", method_base = "DFT"),
+    Method("REVPBE", "density functional theory with revised PBE exchange and PBE correlation", method_base = "DFT"),
     Method("BLYP", "density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("SLYP", "density functional theory with Slater exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("PWP", "density functional theory with Perdew-Wang exchange and Perdew 1986 correlation", method_base = "DFT"),
     Method("MPWPW", "density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation", method_base = "DFT"),
     Method("MPWLYP", "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("BP86", "density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
+    Method("MPWLYP", "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("BP86", "density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
     
     Method("TPSS", "density functional theory with TPSS exchange and correlation", method_base = "DFT"),
+    Method("REVTPSS", "density functional theory with revised TPSS exchange and correlation", method_base = "DFT"),
+    Method("SCAN", "density functional theory with SCAN exchange and correlation", method_base = "DFT"),
+    Method("RSCAN", "density functional theory with regularised SCAN exchange and correlation", method_base = "DFT"),
+    Method("R2SCAN", "density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
     
     Method("PBE0", "hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
-    Method( "B1P86", "hybrid density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
+    Method("REVPBE0", "hybrid density functional theory with revised PBE exchange and correlation", method_base = "DFT"),
+    Method("REVPBE38", "hybrid density functional theory with revised PBE exchange and correlation", method_base = "DFT"),
+    Method("B1P86", "hybrid density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
     Method("BHLYP", "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("B1LYP", "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("B3LYP", "hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
@@ -1202,6 +1306,12 @@ electronic_structure_methods = [
     Method("B3P86", "hybrid density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
     Method("TPSSH", "hybrid density functional theory with TPSS exchange and correlation", method_base = "DFT"),
     Method("TPSS0", "hybrid density functional theory with TPSS exchange and correlation", method_base = "DFT"),
+    Method("SCAN0", "hybrid density functional theory with SCAN exchange and correlation", method_base = "DFT"),
+    Method("R2SCANH", "hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("R2SCAN0", "hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("R2SCAN50", "hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("B97", "hybrid density functional theory with Becke exchange and correlation", method_base = "DFT"),
+    Method("B97-D", "hybrid density functional theory with Becke exchange and correlation", method_base = "DFT"),
 
     Method("PBE0-DH", "double-hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
     Method("PBE-QIDH", "double-hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
@@ -1214,6 +1324,12 @@ electronic_structure_methods = [
     Method("B2G-PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("B2NC-PLYP", "double-hybrid density functional theory with Becke exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("MPW2PLYP", "double-hybrid density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
+    Method("R2SCAN0-DH", "double-hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("R2SCAN-CIDH", "double-hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("R2SCAN-QIDH", "double-hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("R2SCAN0-2", "double-hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("PR2SCAN50", "double-hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("PR2SCAN69", "double-hybrid density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
 
     ]
 
@@ -1228,94 +1344,71 @@ electronic_structure_methods = [
 
 DFT_methods = {
 
-    # At some point, want to handle the unrestricted cases together here, since exchange is always the same
+    "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9),
+    "SVWN"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LSDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LDA"          :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN3"        :     Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN5"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SPW"          :     Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "PBE"          :     Functional("PBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75, VV10_b=6.4),
+    "RPBE"         :     Functional("RPBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", VV10_b=4.0),
+    "REVPBE"       :     Functional("REVPBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", VV10_b=3.7),
+    "PBE0"         :     Functional("PBE", "PBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA", VV10_b=6.9),
+    "REVPBE0"      :     Functional("REVPBE", "PBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA", VV10_b=4.3),
+    "REVPBE38"     :     Functional("REVPBE", "PBE", DFX=0.625, HFX=0.375, DFC=1, MPC=0, functional_class="GGA", VV10_b=4.7),
+    "PBE0-DH"      :     Functional("PBE", "PBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
+    "PBE-QIDH"     :     Functional("PBE", "PBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
+    "PBE0-2"       :     Functional("PBE", "PBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
+    "HFB"          :     Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
+    "BVWN"         :     Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BVWN3"        :     Functional("B", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BVWN5"        :     Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "BLYP"         :     Functional("B", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2, VV10_b=4.0),
+    "BHLYP"        :     Functional("B", "LYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
+    "B1LYP"        :     Functional("B", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "PWP"          :     Functional("PW", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "SLYP"         :     Functional("S", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "B3LYP"        :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05, VV10_b=4.8),
+    "B3LYP/G"      :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05, VV10_b=4.8),
+    "B2PLYP"       :     Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55, VV10_b=7.8),
+    "B2-PLYP"      :     Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55, VV10_b=7.8),
+    "B2K-PLYP"     :     Functional("B", "LYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
+    "B2T-PLYP"     :     Functional("B", "LYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
+    "B2G-PLYP"     :     Functional("B", "LYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
+    "B2NC-PLYP"    :     Functional("B", "LYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
+    "DSD-BLYP"     :     Functional("B", "LYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA", VV10_b=12.0),
+    "BP86"         :     Functional("B", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05, VV10_b=4.4),
+    "B1P86"        :     Functional("B", "P86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "UB1P86"       :     Functional("B", "UP86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "TPSS"         :     Functional("TPSS", "TPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0, VV10_b=5.0),
+    "REVTPSS"      :     Functional("REVTPSS", "REVTPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "SCAN"         :     Functional("SCAN", "SCAN", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=6.4),
+    "RSCAN"        :     Functional("RSCAN", "RSCAN", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=10.8),
+    "R2SCAN"       :     Functional("R2SCAN", "R2SCAN", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=12.3),
+    "TPSSH"        :     Functional("TPSS", "TPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=5.2),
+    "TPSS0"        :     Functional("TPSS", "TPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=5.5),
+    "SCAN0"        :     Functional("SCAN", "SCAN", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
+    "R2SCANH"      :     Functional("R2SCAN", "R2SCAN", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=11.9),
+    "R2SCAN0"      :     Functional("R2SCAN", "R2SCAN", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=11.4),
+    "R2SCAN50"     :     Functional("R2SCAN", "R2SCAN", DFX=0.5, HFX=0.5, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=10.8),
+    "MPWLYP"       :     Functional("MPW", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW1LYP"      :     Functional("MPW", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "MPW2PLYP"     :     Functional("MPW", "LYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
+    "MPWPW"        :     Functional("MPW", "PW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
+    "PW1PW"        :     Functional("PW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA", VV10_b=7.7),
+    "MPW1PW"       :     Functional("MPW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
+    "B3PW91"       :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", VV10_b=4.5),
+    "B3P86"        :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", VV10_b=5.3),
+    "R2SCAN0-DH"   :     Functional("R2SCAN", "R2SCAN", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, same_spin_scaling=0, opposite_spin_scaling=4/3, functional_class="meta-GGA"),
+    "R2SCAN-CIDH"  :     Functional("R2SCAN", "R2SCAN", DFX=1 - 1/np.cbrt(6), HFX=1/np.cbrt(6), DFC=5/6, MPC=1/6, same_spin_scaling=0, opposite_spin_scaling=4/3, functional_class="meta-GGA"),
+    "R2SCAN-QIDH"  :     Functional("R2SCAN", "R2SCAN", DFX=1 - 1/np.cbrt(3), HFX=1/np.cbrt(3), DFC=2/3, MPC=1/3, same_spin_scaling=0, opposite_spin_scaling=4/3, functional_class="meta-GGA"),
+    "R2SCAN0-2"    :     Functional("R2SCAN", "R2SCAN", DFX=1 - 1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.5, MPC=0.5, same_spin_scaling=0, opposite_spin_scaling=4/3, functional_class="meta-GGA"),
+    "PR2SCAN50"    :     Functional("R2SCAN", "R2SCAN", DFX=0.5, HFX=0.5, DFC=0.75, MPC=0.25, same_spin_scaling=0, opposite_spin_scaling=4/3, functional_class="meta-GGA", VV10_b=10.9207, VV10_scaling=0.75),
+    "PR2SCAN69"    :     Functional("R2SCAN", "R2SCAN", DFX=1 - 1/np.cbrt(3), HFX=1/np.cbrt(3), DFC=5/9, MPC=4/9, same_spin_scaling=0, opposite_spin_scaling=4/3, functional_class="meta-GGA", VV10_b=9.0691, VV10_scaling=0.5556),
+    "B97"          :     Functional("B97", "B97", DFX=1, HFX=0.1943, DFC=1, MPC=0, functional_class="GGA"),
+    "B97-D"        :     Functional("B97", "B97", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.25),
 
-    "HFS"         :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
-    "UHFS"        :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA"),
-    "SVWN"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USVWN"       :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "LSDA"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "ULSDA"       :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "LDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "ULDA"        :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "SVWN3"       :     Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USVWN3"      :     Functional("S", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "SVWN5"       :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USVWN5"      :     Functional("S", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "SPW"         :     Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "USPW"        :     Functional("S", "UPW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "PBE"         :     Functional("PBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
-    "UPBE"        :     Functional("PBE", "UPBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75),
-    "PBE0"        :     Functional("PBE", "PBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UPBE0"       :     Functional("PBE", "UPBE", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "PBE0-DH"     :     Functional("PBE", "PBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
-    "UPBE0-DH"    :     Functional("PBE", "UPBE", DFX=0.50, HFX=0.50, DFC=0.875, MPC=0.125, functional_class="GGA"),
-    "PBE-QIDH"    :     Functional("PBE", "PBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
-    "UPBE-QIDH"   :     Functional("PBE", "UPBE", DFX=0.31, HFX=0.69, DFC=0.67, MPC=0.33, functional_class="GGA"),
-    "PBE0-2"      :     Functional("PBE", "PBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
-    "UPBE0-2"     :     Functional("PBE", "UPBE", DFX=1-1/np.cbrt(2), HFX=1/np.cbrt(2), DFC=0.50, MPC=0.50, functional_class="GGA"),
-    "HFB"         :     Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
-    "UHFB"        :     Functional("B", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="GGA"),
-    "BVWN"        :     Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UBVWN"       :     Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "BVWN3"       :     Functional("B", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UBVWN3"      :     Functional("B", "UVWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "BVWN5"       :     Functional("B", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UBVWN5"      :     Functional("B", "UVWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "BLYP"        :     Functional("B", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
-    "UBLYP"       :     Functional("B", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.2),
-    "BHLYP"       :     Functional("B", "LYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
-    "UBHLYP"      :     Functional("B", "ULYP", DFX=0.50, HFX=0.50, DFC=1, MPC=0, functional_class="GGA"),
-    "B1LYP"       :     Functional("B", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UB1LYP"      :     Functional("B", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "PWP"         :     Functional("PW", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UPWP"        :     Functional("PW", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "SLYP"        :     Functional("S", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "USLYP"       :     Functional("S", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "B3LYP"       :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UB3LYP"      :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B3LYP/G"     :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UB3LYP/G"    :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B2PLYP"      :     Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "UB2PLYP"     :     Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "B2-PLYP"     :     Functional("B", "LYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "UB2-PLYP"    :     Functional("B", "ULYP", DFX=0.47, HFX=0.53, DFC=0.73, MPC=0.27, functional_class="GGA", D2_S6=0.55),
-    "B2K-PLYP"    :     Functional("B", "LYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
-    "UB2K-PLYP"   :     Functional("B", "ULYP", DFX=0.28, HFX=0.72, DFC=0.58, MPC=0.42, functional_class="GGA"),
-    "B2T-PLYP"    :     Functional("B", "LYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
-    "UB2T-PLYP"   :     Functional("B", "ULYP", DFX=0.40, HFX=0.60, DFC=0.69, MPC=0.31, functional_class="GGA"),
-    "B2G-PLYP"    :     Functional("B", "LYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
-    "UB2G-PLYP"   :     Functional("B", "ULYP", DFX=0.35, HFX=0.65, DFC=0.64, MPC=0.36, functional_class="GGA"),
-    "B2NC-PLYP"   :     Functional("B", "LYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
-    "UB2NC-PLYP"  :     Functional("B", "ULYP", DFX=0.19, HFX=0.81, DFC=0.45, MPC=0.55, functional_class="GGA"),
-    "DSD-BLYP"    :     Functional("B", "LYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
-    "UDSD-BLYP"   :     Functional("B", "ULYP", DFX=0.25, HFX=0.75, DFC=0.53, MPC=1, same_spin_scaling=0.60, opposite_spin_scaling=0.46, functional_class="GGA"),
-    "BP86"        :     Functional("B", "P86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "UBP86"       :     Functional("B", "UP86", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.05),
-    "B1P86"       :     Functional("B", "P86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UB1P86"      :     Functional("B", "UP86", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "TPSS"        :     Functional("TPSS", "TPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
-    "UTPSS"       :     Functional("TPSS", "UTPSS", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", D2_S6=1.0),
-    "TPSSH"       :     Functional("TPSS", "TPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "UTPSSH"      :     Functional("TPSS", "UTPSS", DFX=0.90, HFX=0.10, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "TPSS0"       :     Functional("TPSS", "TPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "UTPSS0"      :     Functional("TPSS", "UTPSS", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="meta-GGA"),
-    "MPWLYP"      :     Functional("MPW", "LYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPWLYP"     :     Functional("MPW", "ULYP", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "MPW1LYP"     :     Functional("MPW", "LYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPW1LYP"    :     Functional("MPW", "ULYP", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "MPW2PLYP"    :     Functional("MPW", "LYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
-    "UMPW2PLYP"   :     Functional("MPW", "ULYP", DFX=0.45, HFX=0.55, DFC=0.75, MPC=0.25, functional_class="GGA", D2_S6=0.4),
-    "MPWPW"       :     Functional("MPW", "PW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPWPW"      :     Functional("MPW", "UPW91", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA"),
-    "PW1PW"       :     Functional("PW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UPW1PW"      :     Functional("PW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "MPW1PW"      :     Functional("MPW", "PW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "UMPW1PW"     :     Functional("MPW", "UPW91", DFX=0.75, HFX=0.25, DFC=1, MPC=0, functional_class="GGA"),
-    "B3PW91"      :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
-    "UB3PW91"     :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
-    "B3P86"       :     Functional("B3", "3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
-    "UB3P86"      :     Functional("B3", "U3P", DFX=0.80, HFX=0.20, DFC=1, MPC=0, functional_class="GGA"),
 
 }
 

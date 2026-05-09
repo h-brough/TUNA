@@ -344,6 +344,8 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
         bond_length (float) : Optimised bond length
 
     """
+    
+    timer("Geometry optimisation", 0)
 
     geom_conv_criteria = calculation.geom_conv
     max_geom_iter = calculation.geom_max_iter
@@ -441,6 +443,8 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
             log(f"\n Optimisation converged in {iteration} iterations to bond length of {bohr_to_angstrom(bond_length):.5f} angstroms!", calculation, 1)
             log(f"\n Final single point energy: {energy:.10f}", calculation, 1)
+            
+            timer("Geometry optimisation", 1)
 
             return molecule, energy
 
@@ -468,7 +472,7 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
             old_bond_length = bond_length
             old_gradient = gradient
-     
+
     if multiple_iterations:
 
         error(F"Geometry optimisation did not converge in {max_geom_iter} iterations! Increase the maximum or give up!")
@@ -577,6 +581,8 @@ def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols:
     
     """
 
+    timer("Bond dissociation energy", 0)
+
     # First, optimise the molecular geometry
 
     optimised_molecule, optimised_energy = optimise_geometry(calculation, atomic_symbols, coordinates)
@@ -634,5 +640,7 @@ def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols:
     # Prints out the bond dissociation energy information
 
     kern.print_bond_dissociation_energy_information(first_atom_energy, second_atom_energy, optimised_energy, zero_point_energy, optimised_molecule, calculation)
+    
+    timer("Bond dissociation energy", 1)
 
     return

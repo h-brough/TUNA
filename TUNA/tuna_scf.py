@@ -1,9 +1,10 @@
 import numpy as np
-from tuna_util import log, error, symmetrise, log_big_spacer, Output, DFT_methods, Integrals
+from tuna_util import log, error, symmetrise, log_big_spacer, Output, DFT_methods, Integrals, timer
 from tuna_molecule import Molecule
 from tuna_calc import Calculation
 from numpy import ndarray
 import tuna_dft as dft
+import tuna_xc as xc
 
 
 """
@@ -398,7 +399,7 @@ def calculate_restricted_electronic_energy(integrals: Integrals, P: ndarray, J: 
     
     Returns:
         electronic_energy (float): Total electronic energy
-        energy_components (tuple): Tuple of energy components (kinetic, nuclear-electron, coulomb, exchange, correlation) 
+        energy_components (tuple): Tuple of energy components (kinetic, nuclear-electron, coulomb, exchange, correlation, electric field, electric field gradient) 
 
     """
 
@@ -407,6 +408,7 @@ def calculate_restricted_electronic_energy(integrals: Integrals, P: ndarray, J: 
     kinetic_energy = np.einsum("ij,ij->", P, integrals.T, optimize=True)
     nuclear_electron_energy = np.einsum("ij,ij->", P, integrals.V_NE, optimize=True)
     electric_field_energy = np.einsum("ij,ij->", P, integrals.F, optimize=True)
+    electric_field_gradient_energy = np.einsum("ij,ij->", P, integrals.G, optimize=True)
 
     # Calculates classical electron-electron repulsion energy
 
@@ -432,11 +434,11 @@ def calculate_restricted_electronic_energy(integrals: Integrals, P: ndarray, J: 
 
     # Sums up total electronic energy
 
-    electronic_energy = kinetic_energy + nuclear_electron_energy + coulomb_energy + exchange_energy + correlation_energy + electric_field_energy
+    electronic_energy = kinetic_energy + nuclear_electron_energy + coulomb_energy + exchange_energy + correlation_energy + electric_field_energy + electric_field_gradient_energy
 
     # Packages energy components into a tuple
 
-    energy_components = kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy
+    energy_components = kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy, electric_field_gradient_energy
 
     return electronic_energy, energy_components
 
@@ -473,7 +475,7 @@ def calculate_unrestricted_electronic_energy(integrals: Integrals, P_alpha: ndar
     
     Returns:
         electronic_energy (float): Total electronic energy
-        energy_components (tuple): Tuple of energy components (kinetic, nuclear-electron, coulomb, exchange, correlation) 
+        energy_components (tuple): Tuple of energy components (kinetic, nuclear-electron, coulomb, exchange, correlation, electric field, electric field gradient) 
 
     """
 
@@ -484,6 +486,7 @@ def calculate_unrestricted_electronic_energy(integrals: Integrals, P_alpha: ndar
     kinetic_energy = np.einsum("ij,ij->", P, integrals.T, optimize=True)
     nuclear_electron_energy = np.einsum("ij,ij->", P, integrals.V_NE, optimize=True)
     electric_field_energy = np.einsum("ij,ij->", P, integrals.F, optimize=True)
+    electric_field_gradient_energy = np.einsum("ij,ij->", P, integrals.G, optimize=True)
 
     # Calculates classical electron-electron repulsion energy
 
@@ -513,11 +516,11 @@ def calculate_unrestricted_electronic_energy(integrals: Integrals, P_alpha: ndar
 
     # Sums up total electronic energy
 
-    electronic_energy = kinetic_energy + nuclear_electron_energy + coulomb_energy + exchange_energy + correlation_energy + electric_field_energy
+    electronic_energy = kinetic_energy + nuclear_electron_energy + coulomb_energy + exchange_energy + correlation_energy + electric_field_energy + electric_field_gradient_energy
 
     # Packages energy components into a tuple
 
-    energy_components = kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy
+    energy_components = kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy, electric_field_gradient_energy
 
     return electronic_energy, energy_components
 
@@ -558,7 +561,7 @@ def construct_restricted_Fock_matrix(integrals: Integrals, P: ndarray, HFX_prop:
 
     # Builds the Fock matrix from one electron and two-electron contributions, scaling the exchange matrix for hybrid functionals
 
-    F = integrals.T + integrals.V_NE + integrals.F + J - (1 / 2) * K * HFX_prop + V_XC
+    F = integrals.T + integrals.V_NE + integrals.F + integrals.G + J - (1 / 2) * K * HFX_prop + V_XC
 
     # Symmetrises the Fock matrix
 
@@ -614,8 +617,8 @@ def construct_unrestricted_Fock_matrices(integrals: Integrals,  P_alpha: ndarray
 
     # Builds the Fock matrices from one electron and two-electron contributions, scaling the exchange matrix for hybrid functionals
 
-    F_alpha = integrals.T + integrals.V_NE + J_alpha + J_beta + integrals.F - K_alpha * HFX_prop + V_XC_alpha
-    F_beta = integrals.T + integrals.V_NE + J_alpha + J_beta + integrals.F - K_beta * HFX_prop + V_XC_beta
+    F_alpha = integrals.T + integrals.V_NE + J_alpha + J_beta + integrals.F + integrals.G - K_alpha * HFX_prop + V_XC_alpha
+    F_beta = integrals.T + integrals.V_NE + J_alpha + J_beta + integrals.F + integrals.G - K_beta * HFX_prop + V_XC_beta
 
     # Symmetrises the Fock matrices
 
@@ -685,6 +688,7 @@ def calculate_restricted_exchange_correlation_matrix(P: ndarray, bfs_on_grid: nd
     # Constructs exchange-correlation matrix considering hybrid functionals
 
     V_XC = V_X * calculation.DFX_prop + V_C * calculation.DFC_prop
+
 
     return V_XC, density, e_X, e_C
 
@@ -1040,9 +1044,10 @@ def apply_DIIS(commutator: float, step: int, P: ndarray, P_alpha: ndarray, P_bet
         rhs[-1] = -1
 
         try:
-
-            coeffs = np.linalg.solve(B, rhs)[:n_DIIS]  # Exclude the last coefficient which is for the constraint
-
+            
+            # Exclude the last coefficient which is for the constraint
+            
+            coeffs = np.linalg.solve(B, rhs)[:n_DIIS]  
 
             # Convert Fock_vector to separate alpha and beta lists
 
@@ -1338,6 +1343,8 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
         SCF_output (Output): Output object containing converged SCF data
 
     """
+    
+    timer("Self-consistent field", 0)
 
     log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
 
@@ -1360,23 +1367,21 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
     reference = calculation.reference
 
     P, P_alpha, P_beta, E = guess_objects
-    S, T, V_NE, D = integrals.one_electron_integrals
+    S, T, V_NE, _ = integrals.one_electron_integrals
     ERI_AO = integrals.ERI_AO
-    bfs_on_grid, weights, bf_gradients_on_grid = grid_container
+    bfs_on_grid, weights, bf_gradients_on_grid, _ = grid_container
 
     if calculation.DFT_calculation:
 
-        # The method strings from the functional definitions
+        # The functionals from the method strings
 
-        DFT_method_name = calculation.method.name if reference == "RHF" else "U" + calculation.method.name
+        exchange_functional = xc.exchange_functionals.get(DFT_methods.get(calculation.method.name).x_functional)
+        correlation_functional = xc.correlation_functionals.get(DFT_methods.get(calculation.method.name).c_functional)
 
-        exchange_method = DFT_methods.get(calculation.method.name).x_functional
-        correlation_method = DFT_methods.get(DFT_method_name).c_functional
+        # Selects the unrestricted correlation functional if the reference is unrestricted, otherwise the restricted one
 
-        # The functions from the method strings
+        correlation_functional = correlation_functional if reference == "RHF" else getattr(xc, correlation_functional.__name__.replace("restricted", "unrestricted"))
 
-        exchange_functional = dft.exchange_functionals.get(exchange_method)
-        correlation_functional = dft.correlation_functionals.get(correlation_method)
 
     else:
         
@@ -1449,11 +1454,13 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
 
         if check_convergence(calculation.SCF_conv, step, delta_E, maxDP, rmsDP, commutator, calculation, silent=silent): 
             
-            kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy = energy_components
+            kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy, electric_field_gradient_energy = energy_components
 
             # Builds SCF Output object with useful quantities
 
-            SCF_output = Output(E_total, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy, P, P_alpha, P_beta, S, X, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, density, alpha_density, beta_density, F_alpha, F_beta, T, V_NE, integrals)
+            SCF_output = Output(E_total, kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy, electric_field_gradient_energy, P, P_alpha, P_beta, S, X, molecular_orbitals, molecular_orbitals_alpha, molecular_orbitals_beta, epsilons, epsilons_alpha, epsilons_beta, density, alpha_density, beta_density, F_alpha, F_beta, T, V_NE, integrals)
+            
+            timer("Self-consistent field", 1)
 
             return SCF_output
 

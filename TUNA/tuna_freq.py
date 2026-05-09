@@ -1,4 +1,4 @@
-from tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer, calculate_first_derivative, Output, calculate_fourth_derivative, calculate_third_derivative
+from tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer, calculate_first_derivative, Output, calculate_fourth_derivative, calculate_third_derivative, timer
 import tuna_energy as energ
 from tuna_calc import Calculation
 import tuna_out as out
@@ -570,6 +570,8 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
         vibrational_energy_levels (array): Eigenvalues from nuclear Hamiltonian
 
     """
+    
+    timer("Anharmonic frequency", 0)
 
     # This value is more than enough for accuracy and extrapolation is not going to be the rate limiting step
 
@@ -666,6 +668,8 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
             log_big_spacer(calculation, 1)
 
             process_anharmonic_output(calculation, vibrational_wavefunctions, vibrational_energy_levels, transition_matrix, chi, dipole_moments_interpolated, x, V, molecule)
+            
+            timer("Anharmonic frequency", 1)
 
             return vibrational_energy_levels
 
@@ -700,6 +704,8 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
         zero_point_energy (float): Zero point energy in hartree
 
     """
+    
+    timer("Harmonic frequency", 0)
 
     # If "FREQ" keyword has been used, calculates the energy using the supplied atoms and coordinates, otherwise uses the supplied molecule and energy
 
@@ -708,7 +714,7 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
         _, molecule, energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
 
 
-    if calculation.perturbative_anharmonic:
+    if calculation.first_order_vpt or calculation.second_order_vpt:
 
         # If VPT2 is requested, we need the second and third derivative prods to be identical - this only marginally reduces second derivative quality
 
@@ -767,14 +773,17 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
 
     # Checks if the "VPT2" keyword has been used
+    
+    timer("Harmonic frequency", 1)
 
-    if calculation.perturbative_anharmonic:
+    if calculation.first_order_vpt or calculation.second_order_vpt:
 
-        frequency_hartree, zero_point_energy = calculate_VPT2_frequency(frequency_hartree, energy, calculation, atomic_symbols, coordinates, molecule, displaced_energies)
+        frequency_hartree, zero_point_energy = calculate_vibrational_perturbation_theory_frequency(frequency_hartree, energy, calculation, atomic_symbols, coordinates, molecule, displaced_energies)
     
     # Calculates and prints thermochemical corrections
 
     thermo.calculate_thermochemical_corrections(molecule, calculation, frequency_hartree, energy, zero_point_energy)
+    
 
 
     return hessian, reduced_mass, frequency_per_cm, zero_point_energy
@@ -788,11 +797,11 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
 
 
 
-def calculate_VPT2_frequency(frequency_hartree: float, energy: float, calculation: Calculation, atomic_symbols: list, coordinates: ndarray, molecule: Molecule, displaced_energies: tuple) -> tuple:
+def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float, energy: float, calculation: Calculation, atomic_symbols: list, coordinates: ndarray, molecule: Molecule, displaced_energies: tuple) -> tuple:
  
     """
     
-    Calculates the second-order vibrational perturbation theory fundamental frequency.
+    Calculates the vibrational perturbation theory fundamental frequency.
 
     Args:
         frequency_hartree (float): Harmonic frequency in hartree
@@ -808,11 +817,13 @@ def calculate_VPT2_frequency(frequency_hartree: float, energy: float, calculatio
         zero_point_energy (float): Anharmonic perturbative Zero-point energy
     
     """
+    
+    timer("Perturbative anharmonic frequency", 0)
 
-    log("\n Initialising second-order vibrational perturbation theory..   \n", calculation)
+    log("\n Initialising vibrational perturbation theory..   \n", calculation)
 
     log_spacer(calculation)
-    log("              VPT2 Frequency Correction", calculation)
+    log("              VPT2 Frequency Correction", calculation) if calculation.second_order_vpt else log("              VPT1 Frequency Correction", calculation)
     log_spacer(calculation)
     
     log(f"  Using finite difference of {constants.THIRD_GEOM_DERIVATIVE_PROD} a.u.   \n", calculation)
@@ -867,30 +878,61 @@ def calculate_VPT2_frequency(frequency_hartree: float, energy: float, calculatio
     third_derivative_term = -1 * d3E_dR3 ** 2 / (molecule.reduced_mass ** 3 * frequency_hartree ** 4)
     fourth_derivative_term = d4E_dR4 / (molecule.reduced_mass ** 2 * frequency_hartree ** 2)
 
+
+    def nth_energy_level_vpt(n: int) -> float:
+
+        # Calculates the energy of the nth energy level in vibrational perturbation theory.
+
+        # Harmonic contribution
+
+        E_n = frequency_hartree * (n + 1 / 2) 
+        
+        # First-order (VPT1) contribution
+
+        E_n += (1 / 16) * fourth_derivative_term * (n ** 2 + n + 1 / 2) 
+        
+        # Second-order (VPT2) contribution
+
+        E_n += third_derivative_term * (15 / 144 * (n + 1 / 2) ** 2 + 7 / 576)
+
+        return E_n
+
+
+    if calculation.first_order_vpt:
+
+        # The third derivative term only appears in VPT2
+
+        third_derivative_term = 0
+
     # Calculates the anharmonicity parameter
 
     anharmonicity = (5 / 48) * third_derivative_term + (1 / 16) * fourth_derivative_term
     
     chi = -anharmonicity / frequency_hartree
 
-    fundamental_frequency = frequency_hartree + 2 * anharmonicity
-    first_overtone = 2 * frequency_hartree + 6 * anharmonicity
+    # The perturbative anharmonic zero-point energy
 
-
-    # The new, anharmonic perturbative zero-point energy
-
-    zero_point_energy = (1 / 2) * frequency_hartree + (1 / 32) * fourth_derivative_term + (11 / 288) * third_derivative_term
-
+    zero_point_energy = nth_energy_level_vpt(0)
     equilibrium_energy = energy + zero_point_energy
     
+    # The perturbative anharmonic absorption frequencies
+
+    fundamental_frequency = nth_energy_level_vpt(1) - nth_energy_level_vpt(0)
+    first_overtone = nth_energy_level_vpt(2) - nth_energy_level_vpt(0)
+    second_overtone = nth_energy_level_vpt(3) - nth_energy_level_vpt(0)
+
     log(f"\n  Anharmonicity constant:                {chi:10.5f}", calculation)   
+    log(f"  Anharmonicity parameter:               {anharmonicity:10.5f}", calculation, priority=3)   
 
     log(f"\n  Zero-point energy:               {zero_point_energy:16.10f}", calculation)   
     log(f"  Equilibrium energy:              {equilibrium_energy:16.10f}", calculation)   
 
     log(f"\n  Fundamental frequency (per cm):        {fundamental_frequency * constants.per_cm_in_hartree:10.2f}", calculation)   
     log(f"  First overtone (per cm):               {first_overtone * constants.per_cm_in_hartree:10.2f}", calculation)   
+    log(f"  Second overtone (per cm):              {second_overtone * constants.per_cm_in_hartree:10.2f}", calculation, priority=3)   
     
     log_spacer(calculation)
+    
+    timer("Perturbative anharmonic frequency", 0)
 
     return fundamental_frequency, zero_point_energy

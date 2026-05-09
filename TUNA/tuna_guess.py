@@ -18,7 +18,9 @@ This is the TUNA module for determining the initial guess to a self-consistent f
 The options for initial guess are (1) core Hamiltonian diagonalisation (one-electron energy), (2) superposition of atomic densities or (3) minimal basis
 self-consistent field and projection, which is the best when combined with an initial SAD guess, so is the default. The atomic densities for SAD are stored in 
 tuna_util within atomic_properties as spherically averaged minimal basis density matrices, which are projected onto larger basis sets. For unrestricted references, 
-the spin-symmetry of the alpha and beta orbitals can be broken for symmetric molecules, or with the ROTATE keyword.
+the spin-symmetry of the alpha and beta orbitals can be broken for symmetric molecules, or with the "ROTATE" keyword.
+
+Updated in version 0.11.0 to rotate Cartesian basis functions onto spherical harmonics for guesses involving projection and Cythonise the cross-basis overlap.
 
 The module contains:
 
@@ -101,7 +103,7 @@ def form_minimal_basis_superposition_density(atoms: list[Atom]) -> ndarray:
 
     # The divisor by 2 ensures idempotency - forms block diagonal density
 
-    P_minimal = block_diag(atoms[0].density, atoms[1].density) / 2
+    P_minimal = block_diag(atoms[0].density, atoms[1].density) / 2 if len(atoms) > 1 else atoms[0].density
 
     return P_minimal
 
@@ -204,7 +206,7 @@ def break_density_spin_symmetry(P: ndarray, X: ndarray, n_occ: int, calculation:
 
 
 
-def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inverse: ndarray) -> ndarray:
+def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inverse: ndarray, spherical_harmonic_transformation_matrix: ndarray) -> ndarray:
 
     """
     
@@ -214,6 +216,7 @@ def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inv
         P_to_project (array): Density matrix to project
         S_cross (array): Overlap matrix between small and large basis sets
         S_target_inverse (int): Inverse overlap matrix of output, larger basis set
+        spherical_harmonic_transformation_matrix (array): Spherical harmonic transformation matrix
 
     Returns:
         P_target (array): Projected density matrix
@@ -221,50 +224,19 @@ def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inv
     """
 
 
+    # Transform target side to spherical harmonics
+
+    S_cross = spherical_harmonic_transformation_matrix @ S_cross
+
     # Projects the input density matrix onto the larger basis set of S inverse
 
-    P_target = np.einsum("ip,pq,qr,sr,sj->ij", S_target_inverse, S_cross, P_to_project, S_cross, S_target_inverse, optimize=True)
+    X = S_target_inverse @ S_cross
+
+    P_target = X @ P_to_project @ X.T
 
     return P_target
 
  
-
-
-
-
-
-
-
-
-def calculate_cross_basis_overlap_matrix(molecule_1: Molecule, molecule_2: Molecule) -> ndarray:
-    
-    """
-    
-    Calculates the overlap matrix between two different basis sets.
-    
-    Args:
-        molecule_1 (array): Molecule object in one basis set
-        molecule_2 (array): Molecule object in another basis set
-
-    Returns:
-        S_cross (array): Cross basis overlap matrix
-
-    """
-
-    S_cross = np.zeros((molecule_1.n_basis, molecule_2.n_basis))
-
-    # Calculates full, non-square cross overlap matrix between basis sets
-
-    for i in range(molecule_1.n_basis):
-
-        for j in range(molecule_2.n_basis):
-
-            S_cross[i, j] = ints.calculate_overlap_integral(molecule_1.basis_functions[i], molecule_2.basis_functions[j])
-    
-
-    return S_cross
-
-
 
 
 
@@ -334,19 +306,19 @@ def calculate_superposition_guess(S_inverse: ndarray, atomic_symbols: list[str],
     # Forms superposition of atomic densities density matrix
 
     P_minimal = form_minimal_basis_superposition_density(molecule.atoms)
-
+    
     # Builds minimal basis molecule
 
     molecule_minimal = build_minimal_basis_molecule(calculation, molecule, atomic_symbols)
 
     # Forms cross basis overlap matrix between STO-3G and the chosen basis
 
-    S_cross = calculate_cross_basis_overlap_matrix(molecule, molecule_minimal)
-    
+    S_cross = ints.calculate_cross_basis_overlap_matrix(molecule.n_cartesian_basis, molecule_minimal.n_cartesian_basis, molecule.cartesian_basis_functions, molecule_minimal.cartesian_basis_functions, calculation.number_of_threads)
+
     # Projects onto the larger basis set
 
-    P_guess_alpha = project_density_matrix(P_minimal, S_cross, S_inverse)
-    P_guess_beta = project_density_matrix(P_minimal, S_cross, S_inverse)
+    P_guess_alpha = project_density_matrix(P_minimal, S_cross, S_inverse, molecule.spherical_harmonic_transformation_matrix)
+    P_guess_beta = project_density_matrix(P_minimal, S_cross, S_inverse, molecule.spherical_harmonic_transformation_matrix)
 
     # If necessary, break the spin symmetry
 
@@ -460,15 +432,17 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
     # Only rotate guess MOs if there's an even number of electrons, and it hasn't been overridden by "NOROTATE"
 
     rotate_guess_mos = True if molecule.multiplicity == 1 and not calculation.no_rotate_guess and calculation.reference == "UHF" else False 
+    
+    if calculation.calculation_type != "SPE":
 
-    if calculation.reference == "RHF" and P_guess is not None:
+        if calculation.reference == "RHF" and P_guess is not None:
+                
+            log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent=silent)
+
+
+        elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None: 
             
-        log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent=silent)
-
-
-    elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None: 
-        
-        log("\n Using density matrices from previous step for guess. \n", calculation, silent=silent)
+            log("\n Using density matrices from previous step for guess. \n", calculation, silent=silent)
 
 
     elif calculation.core_guess:

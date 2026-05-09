@@ -16,9 +16,11 @@ from tuna_calc import Calculation
 This is the TUNA module for plotting and saving output files, written first for version 0.9.0. Updated and refactored in version 0.10.0
 to include plotting vibrational wavefunctions.
 
-Temporary coordinate scan plots are saved as pickle files. These can be written to several times to overlay multiple potential energy surfaces
+Temporary coordinate scan plots are saved as "pickle" files. These can be written to several times to overlay multiple potential energy surfaces
 on one plot. Densities, orbitals and vibrational wavefunctions can be plotted. Trajectories are written as xyz output files in MD simulations and 
 geometry optimisations, if requested.
+
+Updated in version 0.11.0 to rotate Cartesian basis functions expressed on a grid onto spherical harmonics.
 
 This module contains:
 
@@ -625,7 +627,8 @@ def show_two_dimensional_plot(calculation: Calculation, molecule: Molecule, P: n
     # Build grid and express basis functions on the grid
 
     grid = build_Cartesian_grid(molecule.bond_length)
-    basis_functions_on_grid = dft.construct_basis_functions_on_grid(molecule.basis_functions, grid)
+
+    basis_functions_on_grid = dft.construct_basis_functions_on_grid(molecule.cartesian_basis_functions, grid, molecule.spherical_harmonic_transformation_matrix)
 
     # Plots electron density
 
@@ -713,14 +716,14 @@ def save_trajectory_to_file(molecule: Molecule, energy: float, coordinates: ndar
         
         # Prints number of atoms and energy   
         #      
-        file.write(f"{len(molecule.atoms)}\n")
+        file.write(f"{molecule.n_atoms}\n")
         file.write(f"Coordinates from TUNA calculation, E = {energy:.10f}\n")
 
         coordinates_angstrom = bohr_to_angstrom(coordinates)
 
         # Prints coordinates
 
-        for i in range(len(molecule.atoms)):
+        for i in range(molecule.n_atoms):
 
             file.write(f"  {molecule.atomic_symbols[i]}      {coordinates_angstrom[i][0]:6f}      {coordinates_angstrom[i][1]:6f}      {coordinates_angstrom[i][2]:6f}\n")
 

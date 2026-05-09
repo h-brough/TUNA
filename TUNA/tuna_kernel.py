@@ -5,14 +5,16 @@ from tuna_util import *
 from tuna_calc import Calculation
 import numpy as np
 from scipy.linalg import block_diag
+import scipy.sparse as sp
 from numpy import ndarray
 import tuna_dft as dft
-import sys, time
+import sys
 import tuna_ci as ci
 import tuna_props as props
 import tuna_mp as mp
 import tuna_cc as cc
 import tuna_out as out
+import psutil
 
 
 """
@@ -22,7 +24,7 @@ This is the TUNA module for various low level calculations, written first for ve
 Here live various fairly random functions, that are used within an energy calculation but are not needed in the high level tuna_energy module.
 
 Updated in version 0.10.1 to begin implementation of D3 dispersion correction.
-Updated in version 0.11.0 to enable calculations to be run with spherical, rather than Cartesian, harmonics.
+Updated in version 0.11.0 to enable calculations to be run with spherical, rather than Cartesian, harmonics and enable 5Z/6Z extrapolation.
 
 This module contains:
 
@@ -58,7 +60,7 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent=silent)
 
     log("  Molecular structure: " + molecule.molecular_structure, calculation, 1, silent=silent)
-    log("\n  Number of basis functions: " + str(len(molecule.basis_functions)), calculation, 1, silent=silent)
+    log("\n  Number of basis functions: " + str(molecule.n_basis), calculation, 1, silent=silent)
     log("  Number of primitive Gaussians: " + str(np.sum(molecule.primitive_Gaussians)), calculation, 1, silent=silent)
     log("\n  Charge: " + str(molecule.charge), calculation, 1, silent=silent)
     log("  Multiplicity: " + str(molecule.multiplicity), calculation, 1, silent=silent)
@@ -77,7 +79,7 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
         # If the same atom makes up both atoms in the molecule, print the basis data only once
 
-        if len(molecule.atoms) == 2 and molecule.atoms[0].basis_charge == molecule.atoms[1].basis_charge and atom is molecule.atoms[1]: break
+        if molecule.n_atoms == 2 and molecule.atoms[0].basis_charge == molecule.atoms[1].basis_charge and atom is molecule.atoms[1]: break
 
         log(f"\n  Basis set for {atom.symbol_formatted} :\n", calculation, 3, silent=silent)
 
@@ -168,14 +170,16 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
     
     """
 
-    # Values from ORCA manual or Neese2010 - the quadruple-quintuple extrapolation values are assumed the same as triple-quadruple
+    # Values for 2Z/3Z and 3Z/4Z from ORCA manual or Neese2010
+
+    # Optimised the 4Z/5Z and 5Z/6Z alpha in house to reproduce the CBS limit of the hydrogen atom
 
     alpha_values = {
 
-        "CC-PVDZ" : 4.42, "CC-PVTZ" : 5.46, "CC-PVQZ" : 5.46,
-        "AUG-CC-PVDZ" : 4.30, "AUG-CC-PVTZ" : 5.79, "AUG-CC-PVQZ" : 5.79,
-        "D-AUG-CC-PVDZ" : 4.30, "D-AUG-CC-PVTZ" : 5.79, "D-AUG-CC-PVQZ" : 5.79,
-        "T-AUG-CC-PVDZ" : 4.30, "T-AUG-CC-PVTZ" : 5.79, "T-AUG-CC-PVQZ" : 5.79,
+        "CC-PVDZ" : 4.42, "CC-PVTZ" : 5.46, "CC-PVQZ" : 9.74, "CC-PV5Z" : 9.74,
+        "AUG-CC-PVDZ" : 4.30, "AUG-CC-PVTZ" : 5.79, "AUG-CC-PVQZ" : 9.71, "AUG-CC-PV5Z" : 9.71,
+        "D-AUG-CC-PVDZ" : 4.30, "D-AUG-CC-PVTZ" : 5.79, "D-AUG-CC-PVQZ" : 9.71, "D-AUG-CC-PV5Z" : 9.71,
+        "T-AUG-CC-PVDZ" : 4.30, "T-AUG-CC-PVTZ" : 5.79, "T-AUG-CC-PVQZ" : 9.71, "T-AUG-CC-PV5Z" : 9.71,
         "PC-1" : 7.02, "PC-2" : 9.78, "PC-3" : 9.78,
         "DEF2-SVP" : 10.39, "DEF2-TZVPP" : 7.88, "DEF2-TZVP" : 7.88,
         "DEF2-SVPD" : 10.39, "DEF2-TZVPPD" : 7.88, "DEF2-TZVPD" : 7.88,
@@ -184,26 +188,32 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
 
     }
 
-
     # To match the ORCA implementation, we use the optimised alpha value but take fixed beta values
 
+    zeta_params = {
+
+        "double":    ("Double",    "Triple",    2, 3, 2.4),
+        "triple":    ("Triple",    "Quadruple", 3, 4, 3.0),
+        "quadruple": ("Quadruple", "Quintuple", 4, 5, 3.0),
+        "quintuple": ("Quintuple", "Sextuple",  5, 6, 3.0),
+
+    }
+
     alpha = alpha_values.get(small_basis)
-    beta = 2.4 if small_basis_zeta == "double" else 3
 
     if alpha is None:
 
         error("Your chosen basis set is not parameterised for extrapolation!")
 
-    exponent_small = 2 if small_basis_zeta == "double" else 3 if small_basis_zeta == "triple" else 4
-    exponent_large = 3 if small_basis_zeta == "double" else 4 if small_basis_zeta == "triple" else 5
+    small_name, large_name, n_small, n_large, beta = zeta_params[small_basis_zeta]
 
     # Same SCF extrapolation as used in ORCA
 
-    E_SCF_extrapolated = E_SCF_small + (E_SCF_large - E_SCF_small) / (1 - np.exp(alpha * (np.sqrt(exponent_small) - np.sqrt(exponent_large))))
+    E_SCF_extrapolated = E_SCF_small + (E_SCF_large - E_SCF_small) / (1 - np.exp(alpha * (np.sqrt(n_small) - np.sqrt(n_large))))
 
     # Same correlation energy extrapolation as used in ORCA
 
-    E_corr_extrapolated = (exponent_small ** beta * E_corr_small - exponent_large ** beta  * E_corr_large) / (exponent_small ** beta - exponent_large ** beta)
+    E_corr_extrapolated = (n_small ** beta * E_corr_small - n_large ** beta * E_corr_large) / (n_small ** beta - n_large ** beta)
 
     E_extrapolated = E_SCF_extrapolated + E_corr_extrapolated
 
@@ -211,48 +221,24 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
     log(f"                Basis Set Extrapolation", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
-    if small_basis_zeta == "double":
-
-        log(f"  Double-zeta SCF energy:          {E_SCF_small:16.10f}", calculation, 1, silent=silent)
-        log(f"  Triple-zeta SCF energy:          {E_SCF_large:16.10f}", calculation, 1, silent=silent)
-    
-    if small_basis_zeta == "triple": 
-        
-        log(f"  Triple-zeta SCF energy:          {E_SCF_small:16.10f}", calculation, 1, silent=silent)
-        log(f"  Quadruple-zeta SCF energy:       {E_SCF_large:16.10f}", calculation, 1, silent=silent)
-
-    else:
-
-        log(f"  Quadruple-zeta SCF energy:       {E_SCF_small:16.10f}", calculation, 1, silent=silent)
-        log(f"  Quintuple-zeta SCF energy:       {E_SCF_large:16.10f}", calculation, 1, silent=silent)
-
+    log(f"  {small_name}-zeta SCF energy:".ljust(35) + f"{E_SCF_small:16.10f}",  calculation, 1, silent=silent)
+    log(f"  {large_name}-zeta SCF energy:".ljust(35) + f"{E_SCF_large:16.10f}", calculation, 1, silent=silent)
 
     if calculation.method.correlated_method:
-        
-        if small_basis_zeta == "double":
 
-            log(f"\n  Double-zeta correlation energy:  {E_corr_small:16.10f}", calculation, 1, silent=silent)
-            log(f"  Triple-zeta correlation energy:  {E_corr_large:16.10f}", calculation, 1, silent=silent)
-        
-        elif small_basis_zeta == "triple": 
+        log("\n" + f"  {small_name}-zeta correlation energy:".ljust(36) + f"{E_corr_small:15.10f}", calculation, 1, silent=silent)
+        log(f"  {large_name}-zeta correlation energy:".ljust(36) + f"{E_corr_large:15.10f}",        calculation, 1, silent=silent)
 
-            log(f"\n  Triple-zeta correlation energy:  {E_corr_small:16.10f}", calculation, 1, silent=silent)
-            log(f"  Quadruple-zeta correlation energy: {E_corr_large:14.10f}", calculation, 1, silent=silent)
-
-        else:
-
-            log(f"\n  Quadruple-zeta correlation energy:{E_corr_small:15.10f}", calculation, 1, silent=silent)
-            log(f"  Quintuple-zeta correlation energy:{E_corr_large:15.10f}", calculation, 1, silent=silent)
-
-    log(f"\n  Extrapolated SCF energy:         {E_SCF_extrapolated:16.10f}", calculation, 1, silent=silent)
+    log(f"\n  Extrapolated SCF energy:         {E_SCF_extrapolated:16.10f}",  calculation, 1, silent=silent)
 
     if calculation.method.correlated_method:
-        
+
         log(f"  Extrapolated correlation energy: {E_corr_extrapolated:16.10f}", calculation, 1, silent=silent)
 
     log(f"  Extrapolated total energy:       {E_extrapolated:16.10f}", calculation, 1, silent=silent)
 
     log_spacer(calculation, silent=silent)
+
 
     return E_extrapolated
 
@@ -282,11 +268,11 @@ def print_reference_type(method: Method, calculation: Calculation, silent: bool)
 
     if calculation.reference == "RHF": 
         
-        log(f"\n Beginning restricted {reference_type} calculation...  ", calculation, 1, silent=silent)
+        log(f" Beginning restricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
 
     else: 
         
-        log(f"\n Beginning unrestricted {reference_type} calculation...  ", calculation, 1, silent=silent)
+        log(f" Beginning unrestricted {reference_type} calculation...  \n", calculation, 1, silent=silent)
 
     return
 
@@ -295,21 +281,17 @@ def print_reference_type(method: Method, calculation: Calculation, silent: bool)
 
 
 
-
-
-
-
-def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_functions: list, centre_of_mass: float) -> tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
-
+def calculate_one_electron_integrals(n_atoms: int, atoms: list[Atom], n_basis: int, basis_functions: list, centre_of_mass: float, calculation: Calculation) -> tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
+    
     """"
     
     Calculates one-electron integrals in the Cartesian harmonic basis.
 
     Args:
         atoms (list): List of atoms
-        n_basis (int): Number of basis functions
         basis_functions (array): Basis functions
         centre_of_mass (float): Z-coordinate of centre of mass
+        calculation (Calculation): Calculation object
 
     Returns:
         S_cart (array): Overlap matrix in AO basis
@@ -319,45 +301,16 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
         Q_cart (array): Quadrupole integrals in AO basis
 
     """
+    
+    # Enforcing the type to be a float is crucial here, otherwise this gets converted to a list of integers for atoms
 
-    # Initialises the matrices
+    dipole_origin = np.array([0, 0, centre_of_mass], dtype = np.float64)
+ 
+    timer("One-electron integrals", 0)
 
-    S_cart = np.zeros((n_basis, n_basis)) 
-    V_NE_cart = np.zeros((n_basis, n_basis)) 
-    T_cart = np.zeros((n_basis, n_basis)) 
-    Q_cart = np.zeros((2, n_basis, n_basis)) 
-    D_cart = np.zeros((3, n_basis, n_basis)) 
+    S_cart, T_cart, V_NE_cart, D_cart, Q_cart = ints.calculate_one_electron_integrals(n_basis, basis_functions, n_atoms, atoms, dipole_origin, calculation.number_of_threads)
 
-    dipole_origin = np.array([0, 0, centre_of_mass])
-
-    for i in range(n_basis):
-
-        for j in range(i + 1):
-            
-            # Forms the overlap and kinetic matrices
-
-            S_cart[i, j] = S_cart[j, i] = ints.calculate_overlap_integral(basis_functions[i], basis_functions[j])
-            T_cart[i, j] = T_cart[j, i] = ints.calculate_kinetic_integral(basis_functions[i], basis_functions[j])
-
-            # Forms the x, y and z components of the dipole moment matrix
-
-            D_cart[0, i, j] = D_cart[0, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "x")
-            D_cart[1, i, j] = D_cart[1, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "y")
-            D_cart[2, i, j] = D_cart[2, j, i] = ints.calculate_dipole_integral(basis_functions[i], basis_functions[j], dipole_origin, "z")
-            
-            # Forms the xx and zz components of the quadrupole moment matrix
-
-            Q_cart[0, i, j] = Q_cart[0, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "xx")
-            Q_cart[1, i, j] = Q_cart[1, j, i] = ints.calculate_quadrupole_integral(basis_functions[i], basis_functions[j], dipole_origin, "zz")
-
-            for atom in atoms:
-
-                # Adds to the nuclear-electron attraction matrix
-
-                V_NE_cart[i, j] += -atom.charge * ints.calculate_nuclear_electron_integral(basis_functions[i], basis_functions[j], atom.origin)
-
-            V_NE_cart[j, i] = V_NE_cart[i, j]
-
+    timer("One-electron integrals", 1)
 
     return S_cart, T_cart, V_NE_cart, D_cart, Q_cart
 
@@ -370,7 +323,7 @@ def calculate_one_electron_integrals(atoms: list[Atom], n_basis: int, basis_func
 
 
 
-def calculate_two_electron_integrals(n_basis: int, basis_functions: list) -> ndarray:
+def calculate_two_electron_integrals(n_basis: int, basis_functions: list, calculation: Calculation) -> ndarray:
 
     """"
     
@@ -379,19 +332,24 @@ def calculate_two_electron_integrals(n_basis: int, basis_functions: list) -> nda
     Args:
         n_basis (int): Number of basis functions
         basis_functions (list): Basis functions
+        calculation (Calculation): Calculation object
     
     Returns:
         ERI_AO_cart (array): Electron repulsion integrals in AO basis
         
     """
+    
+    timer("Two-electron integrals", 0)
 
-    ERI_AO_cart = np.zeros((n_basis, n_basis, n_basis, n_basis))  
+    ERI_AO_cart = np.empty((n_basis, n_basis, n_basis, n_basis))  
 
     # Calculates electron repulsion integrals - diatomic parity skips over known zero values if molecule is aligned on the z axis
 
-    ERI_AO_cart = ints.calculate_electron_repulsion_integrals(n_basis, ERI_AO_cart, basis_functions)
-
+    ERI_AO_cart = ints.calculate_electron_repulsion_integrals(n_basis, ERI_AO_cart, basis_functions, calculation.number_of_threads)
+    
     ERI_AO_cart = np.asarray(ERI_AO_cart)
+    
+    timer("Two-electron integrals", 1)
 
     return ERI_AO_cart
 
@@ -419,30 +377,42 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
         integrals (Integrals): Integrals object containing the one- and two-electron integrals
 
     """
+    
+    if not is_molecule_aligned_on_z_axis(molecule): 
+            
+        error("Molecule is incorrectly aligned! Unable to calculate molecular integrals.")
+    
+    # Prevents memory overflow
 
-    n_basis = len(molecule.basis_functions)
+    memory_for_two_electron_integrals_bytes = 8 * molecule.n_cartesian_basis ** 4
+
+    log(f" Memory required for two-electron integrals is {memory_for_two_electron_integrals_bytes / 1e9:.2f} GB\n", calculation, 3)
+    
+    log(f" Molecular integral calculations are running on {calculation.number_of_threads} OpenMP threads.\n", calculation, 3)
+
+    if psutil.virtual_memory().available < memory_for_two_electron_integrals_bytes:
+
+        error("Not enough memory to store two-electron integrals! Try a smaller basis set or bigger computer.")
 
     # Calculates the one-electron integrals
 
-    log(" Calculating one-electron integrals...     ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating one-electron integrals...     ", calculation, 1, end="", silent=silent)
 
-    S_cart, T_cart, V_NE_cart, D_cart, Q_cart = calculate_one_electron_integrals(molecule.atoms, n_basis, molecule.basis_functions, molecule.centre_of_mass)
+    S_cart, T_cart, V_NE_cart, D_cart, Q_cart = calculate_one_electron_integrals(molecule.n_atoms, molecule.atoms, molecule.n_cartesian_basis, molecule.cartesian_basis_functions, molecule.centre_of_mass, calculation)
 
     log("[Done]", calculation, 1, silent=silent)
 
     # Makes sure the two-electron integrals can fit in memory, and calculate them
 
-    log(" Calculating two-electron integrals...     ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating two-electron integrals...     ", calculation, 1, end="", silent=silent)
 
     try:
 
-        if not is_molecule_aligned_on_z_axis(molecule): 
-            
-            error("Molecule is incorrectly aligned! Unable to calculate two-electron integrals.")
-
-        ERI_AO_cart = calculate_two_electron_integrals(n_basis, molecule.basis_functions)
+        ERI_AO_cart = calculate_two_electron_integrals(molecule.n_cartesian_basis, molecule.cartesian_basis_functions, calculation)
 
     except MemoryError:
+
+        # This shouldn't be able to run as we check the array will fit, but there may be edge cases where it's necessary
 
         error("Not enough memory to build two-electron integrals array! Uh oh!")
     
@@ -451,12 +421,6 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
     # Transforms into the spherical harmonic basis from Cartesian harmonics
 
     S, T, V_NE, D, Q, ERI_AO = transform_to_spherical_harmonics(S_cart, T_cart, V_NE_cart, D_cart, Q_cart, ERI_AO_cart, molecule, calculation, silent)
-    
-    # Measure the time taken to calculate the integrals, print if requested
-
-    calculation.integrals_time = time.perf_counter()
-
-    log(f"\n Time taken for integrals:  {calculation.integrals_time - calculation.start_time:.2f} seconds", calculation, 3, silent=silent)
 
     # Packages up the one- and two-electron integrals
 
@@ -504,12 +468,18 @@ def transform_to_spherical_harmonics(S_cart: ndarray, T_cart: ndarray, V_NE_cart
 
         return S_cart, T_cart, V_NE_cart, D_cart, Q_cart, ERI_AO_cart
     
+    timer("Spherical harmonic transformation", 0)
+
     log("\n Transforming to spherical harmonics...    ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
     # Builds the Cartesian to spherical transformation matrix
 
-    U = build_spherical_harmonic_transformation_matrix(molecule, calculation)
+    U = build_spherical_harmonic_transformation_matrix(molecule)
     
+    # Stores in the Molecule object
+
+    molecule.spherical_harmonic_transformation_matrix = U
+
     # Transforms the one-electron integrals
 
     S = U @ S_cart @ U.T
@@ -521,11 +491,30 @@ def transform_to_spherical_harmonics(S_cart: ndarray, T_cart: ndarray, V_NE_cart
     D = np.einsum("mw,awx,nx->amn", U, D_cart, U, optimize=True)
     Q = np.einsum("mw,awx,nx->amn", U, Q_cart, U, optimize=True)
 
-    # Transforms the two-electron integrals - first index of U needs to be Cartesian, second spherical
+    # Transforms the two-electron integrals with sparse matrices
 
-    ERI_AO = np.einsum("mw,nx,wxyz,ky,lz->mnkl", U, U, ERI_AO_cart, U, U, optimize=True)
-    
+    n_basis, n_cartesian_basis = U.shape
+
+    U_sp = sp.csc_matrix(U)
+    U_kron = sp.kron(U_sp, U_sp, format="csc")
+
+    # Ideally we would transform shell by shell in the integral engine, but I don't want to spend ages messing with the Cython
+
+    ERI_AO_cart_2D = ERI_AO_cart.reshape((n_cartesian_basis * n_cartesian_basis, n_cartesian_basis * n_cartesian_basis))
+
+    # A benefit is we can easily request Cartesian harmonics with "CARTHARM" and compare
+
+    temp = U_kron @ ERI_AO_cart_2D
+
+    # This is only really noticeable for cc-pV5/6Z, and it is probably a net gain regardless for most calculations
+
+    ERI_AO_2D = (U_kron @ temp.T).T
+
+    ERI_AO = ERI_AO_2D.reshape((n_basis, n_basis, n_basis, n_basis))
+
     log("[Done]\n", calculation, 1, silent=silent)
+    
+    timer("Spherical harmonic transformation", 1)
 
     return S, T, V_NE, D, Q, ERI_AO
 
@@ -538,11 +527,19 @@ def transform_to_spherical_harmonics(S_cart: ndarray, T_cart: ndarray, V_NE_cart
 
 
 
-def build_spherical_harmonic_transformation_matrix(molecule: Molecule, calculation: Calculation) -> ndarray:
+def build_spherical_harmonic_transformation_matrix(molecule: Molecule) -> ndarray:
 
-    U = np.eye(molecule.n_basis)
+    """
+    
+    Builds the transformation matrix mapping from Cartesian harmonics to spherical harmonics.
 
-    # Don't apply linear map if "CARTHARMONICS" is used
+    Args:
+        molecule (Molecule): Molecule object
+    
+    Returns:
+        spherical_harmonic_transformation_matrix (array): Cartesian harmonic to spherical harmonic map
+    
+    """
 
     U_S = np.eye(1)
 
@@ -550,75 +547,95 @@ def build_spherical_harmonic_transformation_matrix(molecule: Molecule, calculati
 
     # Cartesian harmonics are ordered from x^n, ... y^n, ... z^n 
 
-    # get hese lines up one by one
+    # px, py, pz
 
     U_D = np.array([
         [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],                                 # d_xy
-        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],                                 # d_yz
-        [-0.5, 0.0, 0.0, -0.5, 0.0, 1.0],                               # d_z^2
         [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],                                 # d_xz
+        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],                                 # d_yz
         [np.sqrt(3)/2, 0.0, 0.0, -np.sqrt(3)/2, 0.0, 0.0],              # d_x^2-y^2
+        [-0.5, 0.0, 0.0, -0.5, 0.0, 1.0],                               # d_z^2
     ], dtype=float)
     
     U_F = np.array([
-        [0.0, 3*np.sqrt(2)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(10)/4, 0.0, 0.0, 0.0], # y(3x^2-y^2)
-        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], # xyz
-        [0.0, -np.sqrt(30)/20, 0.0, 0.0, 0.0, 0.0, -np.sqrt(6)/4, 0.0, np.sqrt(30)/5, 0.0], # y(4z^2-x^2-y^2)
-        [0.0, 0.0, -3*np.sqrt(5)/10, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(5)/10, 0.0, 1.0], # z(2z^2-3x^2-3y^2)
-        [-np.sqrt(6)/4, 0.0, 0.0, -np.sqrt(30)/20, 0.0, np.sqrt(30)/5, 0.0, 0.0, 0.0, 0.0], # x(4z^2-x^2-y^2)
-        [0.0, 0.0, np.sqrt(3)/2, 0.0, 0.0, 0.0, 0.0, -np.sqrt(3)/2, 0.0, 0.0], # z(x^2-y^2)
-        [np.sqrt(10)/4, 0.0, 0.0, -3*np.sqrt(2)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], # x(x^2-3y^2)
+        [0.0, 3*np.sqrt(2)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(10)/4, 0.0, 0.0, 0.0], # y(3x^2-y^2) -3
+        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], # xyz -2
+        [0.0, -np.sqrt(30)/20, 0.0, 0.0, 0.0, 0.0, -np.sqrt(6)/4, 0.0, np.sqrt(30)/5, 0.0], # y(4z^2-x^2-y^2) -1
+        [0.0, 0.0, -3*np.sqrt(5)/10, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(5)/10, 0.0, 1.0], # z(2z^2-3x^2-3y^2) 0
+        [-np.sqrt(6)/4, 0.0, 0.0, -np.sqrt(30)/20, 0.0, np.sqrt(30)/5, 0.0, 0.0, 0.0, 0.0], # x(4z^2-x^2-y^2) 1
+        [0.0, 0.0, np.sqrt(3)/2, 0.0, 0.0, 0.0, 0.0, -np.sqrt(3)/2, 0.0, 0.0], # z(x^2-y^2) 2
+        [np.sqrt(10)/4, 0.0, 0.0, -3*np.sqrt(2)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], # x(x^2-3y^2) 3
     ], dtype=float)
-
-    #print(np.array([molecule.basis_functions[i].shell for i in range(molecule.n_basis)]))
 
 
     U_G = np.array([
-            # m = -4: xy(x^2-y^2)
-            [0.0, np.sqrt(35)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(35)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            # m = -3: yz(3x^2-y^2)
-            [0.0, 0.0, 0.0, 0.0, np.sqrt(14)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -np.sqrt(14)/4, 0.0, 0.0, 0.0],
-            # m = -2: xy(7z^2-r^2)
-            [0.0, -np.sqrt(7)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(7)/4, 0.0, np.sqrt(7)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            # m = -1: yz(7z^2-3r^2)
-            [0.0, 0.0, 0.0, 0.0, -3*np.sqrt(14)/20, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(14)/20, 0.0, np.sqrt(14)/5, 0.0],
-            # m = 0: 35z^4 - 30z^2r^2 + 3r^4
-            [3/8, 0.0, 0.0, 3/4, 0.0, -3*np.sqrt(5)/8, 0.0, 0.0, 0.0, 0.0, 3/8, 0.0, -3*np.sqrt(5)/8, 0.0, 1.0],
-            # m = 1: xz(7z^2-3r^2)
-            [0.0, 0.0, -3*np.sqrt(14)/20, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(14)/20, 0.0, np.sqrt(14)/5, 0.0, 0.0, 0.0, 0.0, 0.0],
-            # m = 2: (x^2-y^2)(7z^2-r^2)
-            [-np.sqrt(7)/4, 0.0, 0.0, 0.0, 0.0, np.sqrt(7)/2, 0.0, 0.0, 0.0, 0.0, np.sqrt(7)/4, 0.0, -np.sqrt(7)/2, 0.0, 0.0],
-            # m = 3: xz(x^2-3y^2)
-            [0.0, 0.0, np.sqrt(14)/4, 0.0, 0.0, 0.0, 0.0, -np.sqrt(14)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            # m = 4: x^4 - 6x^2y^2 + y^4
-            [np.sqrt(35)/8, 0.0, 0.0, -3*np.sqrt(3)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, np.sqrt(35)/8, 0.0, 0.0, 0.0, 0.0]
-        ], dtype=float)
+        [ 0.0,   np.sqrt(5)/2,        0.0,  0.0,              0.0,
+          0.0,  -np.sqrt(5)/2,        0.0,  0.0,              0.0,
+          0.0,   0.0,                 0.0,  0.0,              0.0],  # m=-4
+        [ 0.0,   0.0,                 0.0,  0.0,  3*np.sqrt(2)/4,
+          0.0,   0.0,                 0.0,  0.0,              0.0,
+          0.0,  -np.sqrt(10)/4,       0.0,  0.0,              0.0],  # m=-3
+        [ 0.0,  -np.sqrt(35)/14,      0.0,  0.0,              0.0,
+          0.0,  -np.sqrt(35)/14,      0.0,  3*np.sqrt(7)/7,   0.0,
+          0.0,   0.0,                 0.0,  0.0,              0.0],  # m=-2
+        [ 0.0,   0.0,                 0.0,  0.0, -3*np.sqrt(14)/28,
+          0.0,   0.0,                 0.0,  0.0,              0.0,
+          0.0,  -3*np.sqrt(70)/28,    0.0,  np.sqrt(70)/7,    0.0],  # m=-1
+        [ 3/8,   0.0,                 0.0,  3*np.sqrt(105)/140, 0.0,
+         -3*np.sqrt(105)/35,          0.0,  0.0,              0.0,   0.0,
+          3/8,   0.0,  -3*np.sqrt(105)/35,  0.0,              1.0],  # m= 0
+        [ 0.0,   0.0,  -3*np.sqrt(70)/28,   0.0,              0.0,
+          0.0,   0.0,  -3*np.sqrt(14)/28,   0.0,  np.sqrt(70)/7,
+          0.0,   0.0,                 0.0,  0.0,              0.0],  # m=+1
+        [-np.sqrt(5)/4,               0.0,  0.0,              0.0,   0.0,
+          3*np.sqrt(21)/14,           0.0,  0.0,              0.0,   0.0,
+          np.sqrt(5)/4,               0.0, -3*np.sqrt(21)/14, 0.0,   0.0],  # m=+2
+        [ 0.0,   0.0,   np.sqrt(10)/4, 0.0,                   0.0,
+          0.0,   0.0,  -3*np.sqrt(2)/4, 0.0,                  0.0,
+          0.0,   0.0,                 0.0,  0.0,              0.0],  # m=+3
+        [ np.sqrt(35)/8,              0.0,  0.0, -3*np.sqrt(3)/4,   0.0,
+          0.0,   0.0,                 0.0,  0.0,              0.0,
+          np.sqrt(35)/8,             0.0,  0.0,              0.0,   0.0],  # m=+4
+    ], dtype=float)
 
+    U_H = np.array([
+        [0.0, 5*np.sqrt(14)/16, 0.0, 0.0, 0.0, 0.0, -5*np.sqrt(6)/8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3*np.sqrt(14)/16, 0.0, 0.0, 0.0, 0.0, 0.0],                                                                       # m=-5
+        [0.0, 0.0, 0.0, 0.0, np.sqrt(5)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -np.sqrt(5)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],                                                                                           # m=-4
+        [0.0, -np.sqrt(70)/16, 0.0, 0.0, 0.0, 0.0, -np.sqrt(30)/24, 0.0, np.sqrt(6)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, np.sqrt(70)/16, 0.0, -np.sqrt(30)/6, 0.0, 0.0, 0.0],                                                       # m=-3
+        [0.0, 0.0, 0.0, 0.0, -np.sqrt(15)/6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -np.sqrt(15)/6, 0.0, np.sqrt(15)/3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],                                                                              # m=-2
+        [0.0, np.sqrt(15)/24, 0.0, 0.0, 0.0, 0.0, np.sqrt(35)/28, 0.0, -3*np.sqrt(7)/14, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, np.sqrt(15)/8, 0.0, -3*np.sqrt(35)/14, 0.0, np.sqrt(15)/3, 0.0],                                         # m=-1
+        [0.0, 0.0, 5/8, 0.0, 0.0, 0.0, 0.0, np.sqrt(105)/28, 0.0, -5*np.sqrt(21)/21, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5/8, 0.0, -5*np.sqrt(21)/21, 0.0, 1.0],                                                                      # m= 0
+        [np.sqrt(15)/8, 0.0, 0.0, np.sqrt(35)/28, 0.0, -3*np.sqrt(35)/14, 0.0, 0.0, 0.0, 0.0, np.sqrt(15)/24, 0.0, -3*np.sqrt(7)/14, 0.0, np.sqrt(15)/3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],                                         # m=+1
+        [0.0, 0.0, -np.sqrt(105)/12, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, np.sqrt(5)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, np.sqrt(105)/12, 0.0, -np.sqrt(5)/2, 0.0, 0.0],                                                                  # m=+2
+        [-np.sqrt(70)/16, 0.0, 0.0, np.sqrt(30)/24, 0.0, np.sqrt(30)/6, 0.0, 0.0, 0.0, 0.0, np.sqrt(70)/16, 0.0, -np.sqrt(6)/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],                                                        # m=+3
+        [0.0, 0.0, np.sqrt(35)/8, 0.0, 0.0, 0.0, 0.0, -3*np.sqrt(3)/4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, np.sqrt(35)/8, 0.0, 0.0, 0.0, 0.0],                                                                              # m=+4
+        [3*np.sqrt(14)/16, 0.0, 0.0, -5*np.sqrt(6)/8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5*np.sqrt(14)/16, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],                                                                       # m=+5
+    ], dtype=float)
 
     # Links angular momentum to linear map matrix block
 
-    block_map = {0: U_S, 1: U_P, 2: U_D, 3: U_F, 4: U_G, 5: None, 6: None}
+    block_map = {0: U_S, 1: U_P, 2: U_D, 3: U_F, 4: U_G, 5: U_H}
     
     i = 0
 
     # Iteratively builds block diagonal transformation matrix
 
-    while i < molecule.n_basis:
+    while i < molecule.n_cartesian_basis:
 
         # Angular momentum for shell
 
-        L = sum(molecule.basis_functions[i].shell)
+        L = sum(molecule.cartesian_basis_functions[i].shell)
 
         # How many iterations to jump forwards depends on angular momentum (1 for s, 3 for p, 6 for d, 10 for f, etc.)
 
         n_cart = (L + 1) * (L + 2) // 2
 
-        U = block_diag(U, block_map[L]) if i != 0 else np.eye(1)
+        spherical_harmonic_transformation_matrix = block_diag(spherical_harmonic_transformation_matrix, block_map[L]) if i != 0 else block_map[L]
 
         i += n_cart 
 
 
-    return U
+    return spherical_harmonic_transformation_matrix
 
 
 
@@ -664,21 +681,21 @@ def apply_electric_field_gradient(Q: ndarray, electric_field_gradient: ndarray) 
     Determines the one-electron integrals within an electric field, the contribution to the Hamiltonian.
 
     Args:
-        D (array): Dipole integrals
+        Q (array): Quadrupole integrals
         electric_field_gradient (array): Electric field gradient
     
     Returns:
-        F (array): Electric field integrals
+        G (array): Electric field gradient integrals
     
     """
 
     # There are only two independent components of the quadrupole tensor for diatomics
 
-    Q = np.array([Q[0], np.zeros_like(Q[0]), Q[1]])
+    Q = np.array([Q[0], Q[0], Q[1]])
 
-    F = np.einsum("i,ijk->jk", electric_field_gradient, Q, optimize=True)
+    G = np.einsum("i,ijk->jk", electric_field_gradient, Q, optimize=True)
 
-    return F
+    return G
 
 
 
@@ -742,6 +759,8 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
         S_inverse (array): Inverse overlap matrix
         
     """
+    
+    timer("Fock transformation matrix", 0)
 
     log(" Constructing Fock transformation matrix...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
@@ -774,6 +793,8 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
     S_inverse = np.linalg.inv(S)
 
     log("[Done]", calculation, 1, silent=silent)
+    
+    timer("Fock transformation matrix", 1)
 
     return X, smallest_S_eigenvalue, S_inverse
 
@@ -993,7 +1014,49 @@ def calculate_D2_dispersion_energy(molecule: Molecule, calculation: Calculation,
 
 
 
-def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SCF_output: Output, grid_container: tuple, calculation: Calculation, X: ndarray, E_D2: float, V_NN: float, silent: bool, terse: bool) -> tuple:
+def calculate_dispersion_energy(molecule: Molecule, calculation: Calculation, silent: bool) -> float:
+
+    """
+
+    Calculates the semi-empirical dispersion energy.
+
+    Args:
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        silent (bool): Should anything be printed
+
+    Returns:
+        E_dispersion (float): Semi-empirical dispersion energy
+
+    """
+
+    E_dispersion = 0
+
+    # Dispersion energy only calculated for diatomics
+
+    if calculation.monatomic:
+
+        return E_dispersion
+
+    # If the "D2" keyword is used
+
+    if calculation.D2:
+
+        E_dispersion = calculate_D2_dispersion_energy(molecule, calculation, silent)
+
+
+    return E_dispersion
+
+
+
+
+
+
+
+
+
+
+def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SCF_output: Output, grid_container: tuple, calculation: Calculation, X: ndarray, E_dispersion: float, V_NN: float, silent: bool, terse: bool) -> tuple:
 
     """
     
@@ -1006,7 +1069,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         grid_container (tuple): Grid information for DFT
         calculation (Calculation): Calculation
         X (array): Fock transformation matrix
-        E_D2 (float): D2 dispersion energy
+        E_dispersion (float): Dispersion energy
         V_NN (float): Nuclear repulsion energy
         silent (bool): Cancel logging
         terse (bool): Cancel post-SCF output
@@ -1021,7 +1084,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
     method = calculation.method
     do_DFT = calculation.DFT_calculation
 
-    bfs_on_grid, weights, _ = grid_container
+    _, weights, _, _ = grid_container
 
     molecular_orbitals = SCF_output.molecular_orbitals
     P = SCF_output.P
@@ -1081,13 +1144,6 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "Coupled cluster", silent=silent)
 
 
-    if method.correlated_method:
-
-        calculation.correlation_time = time.perf_counter()
-
-        log(f"\n Time taken for correlated calculation:  {calculation.correlation_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
-
-
     # Prints post SCF information, as long as its not an optimisation that hasn't finished yet
 
     if not terse and not silent:
@@ -1106,10 +1162,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         # Calculates the CIS excited states energy and density
 
         E_CIS, E_transition, P, P_alpha, P_beta, P_transition, P_transition_alpha, P_transition_beta = ci.run_CIS(integrals.ERI_AO, molecule.n_occ, molecule.n_virt, molecule.n_SO, calculation, SCF_output, molecule, silent=silent)
-        
-        calculation.excited_state_time = time.perf_counter()
 
-        log(f"\n Time taken for excited state calculation:  {calculation.excited_state_time - calculation.SCF_time:.2f} seconds", calculation, 3, silent=silent)
 
         if calculation.additional_print: 
            
@@ -1141,7 +1194,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         if do_DFT:
             
-            log(f" Double-hybrid correlation energy: " + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
+            log(f" Double-hybrid correlation energy:  " + f"{E_MP2:16.10f}\n", calculation, 1, silent=silent)
 
         else:
             
@@ -1233,13 +1286,13 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     log(" Final single point energy:        " + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
-    # Adds on D2 energy, and prints this as dispersion-corrected final energy
+    # Adds on dispersion energy, and prints this as dispersion-corrected final energy
 
-    if calculation.D2:
+    if calculation.D2 or calculation.VV10:
     
-        final_energy += E_D2
+        final_energy += E_dispersion
 
-        log("\n Semi-empirical dispersion energy: " + f"{E_D2:16.10f}", calculation, 1, silent=silent)
+        log("\n Semi-empirical dispersion energy: " + f"{E_dispersion:16.10f}", calculation, 1, silent=silent)
         log(" Dispersion-corrected final energy:" + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
     # If plotting has been requested, send the density and orbital information to the plotting module

@@ -138,7 +138,7 @@ def spin_block_molecular_orbitals(molecular_orbitals_alpha: ndarray, molecular_o
 
 
 
-def transform_ERI_AO_to_SO(ERI_AO: ndarray, C_1: ndarray, C_2: ndarray) -> ndarray:
+def transform_ERI_AO_to_SO(ERI_AO: ndarray, C_1: ndarray, C_2: ndarray, calculation: Calculation, silent: bool) -> ndarray:
 
     """
 
@@ -148,13 +148,47 @@ def transform_ERI_AO_to_SO(ERI_AO: ndarray, C_1: ndarray, C_2: ndarray) -> ndarr
         ERI_AO (array): Electron repulsion integrals in AO basis
         C_1 (array): Molecular orbitals in AO basis
         C_2 (array): Molecular orbitals in AO basis
+        calculation (Calculation): Calculation object
+        silent (bool): Cancel logging
 
     Returns:
         ERI_SO (array): Electron repulsion integrals in SO basis
 
     """
+    
+    timer("Molecular orbital transformation", 0)
 
-    ERI_SO = np.einsum("mi,nj,mkln,ka,lb->ijab", C_1, C_2, ERI_AO, C_1, C_2, optimize=True)       
+    # The stepwise transformation is faster, since NumPy doesn't have to look for the best contraction order
+    
+    log("\n Transforming integrals step 1 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    
+    # The stepwise transformation is faster, since NumPy doesn't have to look for the best contraction order
+
+    temp_mnks = np.einsum("mknl,ls->mnks", ERI_AO, C_1, optimize=True)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    log(" Transforming integrals step 2 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    temp_mnrs = np.einsum("mnks,kr->mnrs", temp_mnks, C_2, optimize=True)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    log(" Transforming integrals step 3 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    temp_mqrs = np.einsum("mnrs,nq->mqrs", temp_mnrs, C_1, optimize=True)
+    
+    log("[Done]", calculation, 1, silent=silent)
+    
+    # The spin orbital two-electron integrals are in physicists' notation <pq|rs>
+
+    log(" Transforming integrals step 4 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    ERI_SO = np.einsum("mqrs,mp->pqrs", temp_mqrs, C_2, optimize=True)
+    
+    log("[Done]\n", calculation, 1, silent=silent)
+
+    timer("Molecular orbital transformation", 1)
 
     return ERI_SO
 
@@ -167,7 +201,7 @@ def transform_ERI_AO_to_SO(ERI_AO: ndarray, C_1: ndarray, C_2: ndarray) -> ndarr
 
 
 
-def transform_ERI_AO_to_MO(ERI_AO: ndarray, C: ndarray) -> ndarray:
+def transform_ERI_AO_to_MO(ERI_AO: ndarray, C: ndarray, calculation: Calculation, silent: bool) -> ndarray:
 
     """
 
@@ -176,14 +210,47 @@ def transform_ERI_AO_to_MO(ERI_AO: ndarray, C: ndarray) -> ndarray:
     Args:   
         ERI_AO (array): Electron repulsion integrals in AO basis
         C (array): Molecular orbitals in AO basis
+        calculation (Calculation): Calculation object
+        silent (bool): Cancel logging
 
     Returns:
         ERI_MO (array): Electron repulsion integrals in MO basis
 
     """
 
-    ERI_MO = np.einsum("mi,nj,mnkl,ka,lb->ijab", C, C, ERI_AO, C, C, optimize=True)       
+    timer("Molecular orbital transformation", 0)
 
+    # The stepwise transformation is faster, since NumPy doesn't have to look for the best contraction order
+    
+    log("\n Transforming integrals step 1 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    # The atomic orbital two-electron integrals are in interleaved chemists' notation (mn|kl)
+
+    temp_mnks = np.einsum("mknl,ls->mnks", ERI_AO, C, optimize=True)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    log(" Transforming integrals step 2 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    temp_mnrs = np.einsum("mnks,kr->mnrs", temp_mnks, C, optimize=True)
+
+    log("[Done]", calculation, 1, silent=silent)
+
+    log(" Transforming integrals step 3 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    temp_mqrs = np.einsum("mnrs,nq->mqrs", temp_mnrs, C, optimize=True)
+    
+    log("[Done]", calculation, 1, silent=silent)
+    
+    log(" Transforming integrals step 4 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+
+    # The spatial orbital two-electron integrals are in interleaved chemists' notation (pr|qs)
+
+    ERI_MO = np.einsum("mqrs,mp->prqs", temp_mqrs, C, optimize=True)
+    
+    log("[Done]", calculation, 1, silent=silent)
+
+    timer("Molecular orbital transformation", 1)
 
     return ERI_MO
 
@@ -495,12 +562,8 @@ def begin_spin_orbital_calculation(molecule: Molecule, ERI_AO: ndarray, SCF_outp
     # Spin-blocks molecular orbitals and transforms electron repulsion integrals
 
     C_spin_block = spin_block_molecular_orbitals(SCF_output.molecular_orbitals_alpha, SCF_output.molecular_orbitals_beta, epsilons_combined)
-
-    log("\n Transforming two-electron integrals...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-    ERI_SO = transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block)
-
-    log("[Done]", calculation, 1, silent=silent)
+    
+    ERI_SO = transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block, calculation, silent)
 
     log(" Antisymmetrising two-electron integrals...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
 
@@ -516,7 +579,7 @@ def begin_spin_orbital_calculation(molecule: Molecule, ERI_AO: ndarray, SCF_outp
 
     # Tracks the spin state of each epsilon
 
-    spin_labels = ['a'] * len(SCF_output.molecular_orbitals_alpha) + ['b'] * len(SCF_output.molecular_orbitals_beta)
+    spin_labels = ["a"] * len(SCF_output.molecular_orbitals_alpha) + ["b"] * len(SCF_output.molecular_orbitals_beta)
     spin_labels_sorted = [spin_labels[i] for i in np.argsort(epsilons_combined)]
 
     def prefix_counts(seq):
@@ -604,11 +667,8 @@ def begin_spatial_orbital_calculation(molecule: Molecule, ERI_AO: ndarray, SCF_o
 
     log("\n Preparing transformation to spatial orbital basis...", calculation, 1, silent=silent)
 
-    log("\n Transforming two-electron integrals...      ", calculation, 1, end="", silent=silent); sys.stdout.flush()
-
-    g = transform_ERI_AO_to_MO(ERI_AO, molecular_orbitals)
-
-    log("[Done]", calculation, 1, silent=silent)
+    g = transform_ERI_AO_to_MO(ERI_AO, molecular_orbitals, calculation, silent)
+    
 
     # Logs information about freezing orbitals
 
@@ -1223,6 +1283,8 @@ def run_CIS(ERI_AO: ndarray, n_occ: int, n_virt: int, n_SO: int, calculation: Ca
 
     """
     
+    timer("Configuration interaction singles", 0)
+    
     # Converting into computer counting from human counting
 
     root = calculation.root - 1
@@ -1306,5 +1368,106 @@ def run_CIS(ERI_AO: ndarray, n_occ: int, n_virt: int, n_SO: int, calculation: Ca
 
     E_CIS = SCF_output.energy + E_transition
 
+    timer("Configuration interaction singles", 1)
 
     return E_CIS, E_transition, P_CIS, P_CIS_a, P_CIS_b, P_transition, P_transition_alpha, P_transition_beta
+
+
+
+
+
+
+
+
+def build_excitations_list(n_occ: int, n_virt: int) -> ndarray:
+
+    excitations = []
+
+    for i in range(n_occ):
+        for a in range(n_occ, n_occ + n_virt):
+
+            excitations.append((i, a))
+
+    excitations = np.array(excitations)
+
+    return excitations
+
+
+
+
+def build_A_matrix(g, epsilons, excitations, n_occ, n_virt):
+
+    # Note this does not contain exchange, assumes g is not antisymmetrised
+
+    # RPA is TDHF without exchange
+
+    A_ia_jb = np.zeros((n_occ * n_virt, n_occ * n_virt))
+
+    for p, (i, a) in enumerate(excitations):
+
+        for q, (j, b) in enumerate(excitations):
+        
+            A_ia_jb[p, q] = (epsilons[a] - epsilons[i]) * (i == j) * (a == b) + g[a, j, i, b]
+
+
+    return A_ia_jb
+
+
+
+def build_B_matrix(g, excitations, n_occ, n_virt):
+
+    B_ia_jb = np.zeros((n_occ * n_virt, n_occ * n_virt))
+
+    for p, (i, a) in enumerate(excitations):
+
+        for q, (j, b) in enumerate(excitations):
+        
+            B_ia_jb[p, q] = g[a, b, i, j]
+
+
+    return B_ia_jb
+
+
+
+def build_TDHF_Hamiltonian(A, B):
+
+    n = A.shape[0]
+
+    H_TDHF = np.zeros((2 * n, 2 * n))
+
+    H_TDHF[:n, :n] = A
+    H_TDHF[:n, n:] = B
+    H_TDHF[n:, :n] = -B
+    H_TDHF[n:, n:] = -A
+
+    return H_TDHF
+
+
+def diagonalise_TDHF_Hamiltonian(H_TDHF):
+
+    eigenvalues, eigenvectors = np.linalg.eig(H_TDHF)
+
+    # Only takes positive eigenvalues and corresponding eigenvectors
+
+    positive_indices = np.where(eigenvalues > 0)[0]
+
+    excitation_energies = eigenvalues[positive_indices]
+    weights = eigenvectors[:len(excitation_energies), :][:, positive_indices]
+
+    return excitation_energies, weights
+
+
+
+def run_TDHF(g, epsilons, n_occ, n_virt):
+
+    excitations = build_excitations_list(n_occ, n_virt)
+
+    A = build_A_matrix(g, epsilons, excitations, n_occ, n_virt)
+    B = build_B_matrix(g, excitations, n_occ, n_virt)
+
+    H_TDHF = build_TDHF_Hamiltonian(A, B)
+    excitation_energies, weights = diagonalise_TDHF_Hamiltonian(H_TDHF)
+
+    print(excitation_energies)
+
+    return

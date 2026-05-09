@@ -1,21 +1,60 @@
 # Changelog
 
-## TUNA 0.11.0  — XX/07/2026
+## TUNA 0.11.0 — XX/06/2026
 
 ### Added
 
-- Do for one electron first, spherical harmonic transformation, get that working with large basis sets, then worry about 2E. H atom
-- Do in python, numpy badly first, then port to cython one program has infrastructure or scipy sparse?
-- Then need to sort out DFT, should be faster overall as fewer functions to loop over, but need to form linear combinations - bit awkward
-- Clean up the list of functionals, to only be restricted versions - handle unrestricted generally
+- Truncated configuration interaction methods CISD (spin-orbital and spin-adapted) and CISDT (spin-orbital) 
+- New (meta-)GGA functionals: B97-D, revPBE, RPBE, revTPSS, SCAN, rSCAN, r2SCAN
+- New hybrid functionals: revPBE0, revPBE38, SCAN0, r2SCANh, r2SCAN0, r2SCAN50, B97
+- New double-hybrid functionals: r2SCAN0-DH, r2SCAN-CIDH, r2SCAN-QIDH, r2SCAN0-2, Pr2SCAN50, Pr2SCAN69
+- Non-local dispersion energy with VV10 with density functional-optimised parameters with `NL` keyword
+- Calculations now take place with spherical harmonics by default, leading to 30-200% speedups and smoother convergence
+- Go back to Cartesian harmonics with the `CARTHARM` keyword
+- Molecular integrals are 3-15x faster due to better memory allocation, cacheing and OpenMP parallelisation
+- Choose a number of OpenMP threads with the `THREADS` keyword (4 by default)
+- Basis set extrapolation between quintuple- and sextuple-zeta basis sets
+- Calculate energy in an applied electric field gradient with `EGX`, `EGY` and `EGZ`
+- Change the number of molecular orbitals to print with `PRINTMOS`
+- The `PRINTMOS` keyword will print molecular orbital information, regardless of `P` being used
+- Keywords for precise SCF convergence control: `ECONV`, `MAXDP`, `RMSDP` and `DIISERR`
+- Keywords for time-dependent calculations, `TD` and to use the Tamm-Dancoff approximation `TDA`
+
+
+- Extrapolation basis not working with NL
 - Sort out being able to use "DIPOLE" with harmonic intensities
-- Look at parallelism of Cython and other speedups, compiler flags
-- Generalise basis set extrapolation, add 5->6 extrapolation
-CARTHARMONICS keyword
+- Muliken weirdness for damping with TZ
+- Sort out printing MOs
+- Need to sort out printing MOs, partitioning presumably wrong too for mulliken stuff including damping
+- Sort out revTPSS correlation derivatives
+- SCAN functionals derivatives
+- Add B97M-V
+- Relaxed MP2 density
+
+- Stability analysis
+- Orbital Hessian, CIS, TDHF, unrestricted and restricted, RPA keyword
+- Restricted CIS(D)
+- DLPNO-MP2
 
 ### Changed
 
+- SCF basis set extrapolation QZ/5Z and 5Z/6Z parameters optimised to reproduce the hydrogen atom energy 
+- The DFT module has been split off into tuna_xc, housing the exchange-correlation functionals
+- The `ECONV` keyword now also affects SCF energy convergence, not just correlated calculations
+- Modules are now easily timed and with `P`, a sorted output for used modules is printed
+- The transformation of two-electron integrals to the molecular orbital basis is now 20% faster
+- Molecular orbital output now tells you the type of orbital (2px, 3dz^2, 4dxy etc.)
+- First-order vibrational perturbation theory can now be enabled with `VPT1`
+- An error will now prevent trying to calculate two-electron integrals without enough memory
+- Gaussian basis sets now only support up to "H" shells
+- Core guess is now default for calculations on first-row diatomics
+
+
 ### Fixed
+
+- Some errors were printing referencing deprecated keywords
+- `SADGUESS` and `SCFGUESS` were not working for atomic calculations
+- False printing of using previous density matrix for `SCFGUESS` calciulations
 
 <br>
 

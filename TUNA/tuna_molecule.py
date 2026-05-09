@@ -57,7 +57,7 @@ class Atom:
 
     real_vdw_radius: float  
     
-    # Atomic symbol
+    # Atomic symbol in capitals
 
     symbol: str  
 
@@ -174,6 +174,7 @@ class Molecule:
         # Builds a list of Atom objects
 
         self.atoms = build_atom_list(self)
+        self.n_atoms = len(self.atoms)
 
         # Creates arrays of atomic data for molecule
 
@@ -189,18 +190,22 @@ class Molecule:
 
         # If two types of atom are present, generate data for both and combine them into one dictionary
 
-        if len(self.atoms) == 2 and self.basis_charges[0] != self.basis_charges[1]: 
+        if self.n_atoms == 2 and self.basis_charges[0] != self.basis_charges[1]: 
             
             self.basis_data = self.basis_data | bas.generate_basis(self.basis, self.basis_charges[1], calculation)
 
         # Number of, and list of, basis functions accounting for "DECONTRACT"
 
-        self.n_basis, self.basis_functions = form_basis(self.atoms, self.basis_data, calculation.decontract)
+        self.n_cartesian_basis, self.cartesian_basis_functions = form_basis(self.atoms, self.basis_data, calculation.decontract)
+        
+        # Linear map from Cartesian to spherical harmonics
+
+        self.spherical_harmonic_transformation_matrix = np.eye(self.n_cartesian_basis)
 
         # Builds a list of all the primitive Gaussians
         
-        self.primitive_Gaussians = [basis_function.num_exps for basis_function in self.basis_functions]
-        self.angular_momentum_list = generate_angular_momentum_list(self.basis_functions)
+        self.primitive_Gaussians = [basis_function.num_exps for basis_function in self.cartesian_basis_functions]
+        self.angular_momentum_list = generate_angular_momentum_list(self.cartesian_basis_functions)
         
         # Initialises the centre of mass to the origin for now
 
@@ -225,7 +230,6 @@ class Molecule:
         elif self.n_electrons == 0: 
             
             error("Zero electrons specified!")
-
 
         # Checks if there are any X-prefixed ghost atoms present, as a boolean
 
@@ -266,7 +270,8 @@ class Molecule:
 
         # The partitioning of the basis set into atoms is done here, by checking which basis functions are located on which atoms
 
-        self.partitioned_basis_functions = [[bf for bf in self.basis_functions if np.allclose(bf.origin, atom.origin)] for atom in self.atoms]
+        self.partitioned_basis_functions = [[bf for bf in self.cartesian_basis_functions if np.allclose(bf.origin, atom.origin)] for atom in self.atoms]
+              
         self.partition_ranges = [len(group) for group in self.partitioned_basis_functions]
 
         # If multiplicity not specified but molecule has an odd number of electrons, set it to a doublet
@@ -276,6 +281,12 @@ class Molecule:
         # Set the reference determinant to be used
 
         calculation.reference = "RHF" if self.multiplicity == 1 and not calculation.method.unrestricted else "UHF"
+
+        # Currently, CISDT is only avaiable for spin-orbitals
+
+        if calculation.method.name == "CISDT": 
+            
+            calculation.reference = "UHF"
 
         # Sets information about alpha and beta electrons and occupied and virtual orbitals
 
@@ -374,7 +385,7 @@ class Molecule:
             
             error("Too many electrons for size of basis set!")
 
-        if calculation.reference == "UHF" and self.n_electrons > len(self.basis_functions) and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons: 
+        if calculation.reference == "UHF" and self.n_electrons > self.n_basis and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons: 
             
             error("Too many electrons for size of basis set!")
 
@@ -454,14 +465,14 @@ def build_atom_list(molecule: Molecule) -> list[Atom]:
 
 
 
-def generate_angular_momentum_list(basis_functions: list) -> list:
+def generate_angular_momentum_list(cartesian_basis_functions: list) -> list:
 
     """
     
     Generates a list of angular momentum letters for the subshells in a basis set.
 
     Args:
-        basis_functions (list): Array of basis functions
+        cartesian_basis_functions (list): Array of basis functions
     
     Returns:
         angular_momentum_list (list): List of angular momentum letters
@@ -472,13 +483,15 @@ def generate_angular_momentum_list(basis_functions: list) -> list:
 
     angular_momentum_list = []
 
-    for basis_function in basis_functions:
+    for basis_function in cartesian_basis_functions:
 
-        # Contracts all primitives with same value of L to one letter
+        # Contracts all primitives with same value of Ll to one letter
 
-        l = sum(basis_function.shell)
+        L = sum(basis_function.shell)
 
-        angular_momentum_list.append(angular_momentum_to_letter[l])
+        angular_momentum_list.append(angular_momentum_to_letter[L])
+
+
 
     return angular_momentum_list
 
@@ -504,11 +517,11 @@ def form_basis(atoms: list, basis_data: dict, decontract: bool) -> tuple:
 
     Returns:
         n_basis (int): Number of basis functions
-        basis_functions (list): List of Basis objects
+        cartesian_basis_functions (list): List of Basis objects
 
     """
 
-    basis_functions = []
+    cartesian_basis_functions = []
 
     try:
 
@@ -529,11 +542,11 @@ def form_basis(atoms: list, basis_data: dict, decontract: bool) -> tuple:
 
                             # Coefficients of 1, length of 1 exponent per basis function
 
-                            basis_functions.append(ints.Basis(atom.origin, shell, 1, [e], [1.0]))
+                            cartesian_basis_functions.append(ints.Basis(atom.origin, shell, 1, [e], [1.0]))
                             
                     else: 
                         
-                        basis_functions.append(ints.Basis(atom.origin, shell, len(exps), exps, coeffs))
+                        cartesian_basis_functions.append(ints.Basis(atom.origin, shell, len(exps), exps, coeffs))
     
     except:
 
@@ -541,10 +554,10 @@ def form_basis(atoms: list, basis_data: dict, decontract: bool) -> tuple:
 
     # Determines number of basis functions
 
-    n_basis = len(basis_functions)
+    n_cartesian_basis = len(cartesian_basis_functions)
 
 
-    return n_basis, basis_functions
+    return n_cartesian_basis, cartesian_basis_functions
 
 
 
@@ -571,13 +584,13 @@ def convert_angular_momentum_to_subshell(angular_momentum_string: str) -> list:
 
     # These are the exponents on each Cartesian Gaussian x, y, z for each atomic orbital within each subshell
 
-    shells = "SPDFGHI"
+    shells = "SPDFGH"
 
     L = shells.find(angular_momentum_string.upper())
 
     if L == -1:
     
-        error("Only up to \"I\" type basis functions are implemented!")
+        error("Only up to \"H\" type basis functions are implemented!")
 
     # This orders exponents as x^n, ..., y^n, ... z^n
 

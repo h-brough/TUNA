@@ -1,6 +1,7 @@
 # cython: boundscheck=False, wraparound=False, nonecheck=False, cdivision=True
 
 cimport cython
+from cython.parallel cimport prange
 import numpy as np
 from numpy import ndarray
 cimport numpy as np
@@ -10,6 +11,68 @@ from scipy.special.cython_special cimport hyp1f1
 
 
 cdef double PI = 3.141592653589793238462643383279
+cdef double PI32 = 5.5683279968317078452848179821188357
+
+
+
+ctypedef struct BasisRaw:
+
+    double* origin
+
+    int l
+    int m
+    int n
+
+    long num_exps
+
+    double* exps
+    double* coefs
+    double* norm
+
+
+
+
+ctypedef struct PrimitivePairERI:
+
+    double coefficient
+    double exponent_sum
+    double product_centre_z
+    double centre_distance_z
+
+    double hermite_x[20]
+    double hermite_y[20]
+    double hermite_z[20]
+
+
+
+
+ctypedef struct AOPairERI:
+
+    long i
+    long j
+
+    int nx
+    int ny
+    int nz
+
+    int lx_sum
+    int ly_sum
+    int lz_sum
+
+    int t_start
+    int u_start
+
+    int n_primitive_pairs
+
+    PrimitivePairERI* primitive_pairs
+
+
+
+
+
+
+
+
 
 
 cdef class Basis:
@@ -78,7 +141,7 @@ cdef class Basis:
 
 
 
-    def __cinit__(self, origin, shell, num_exps, exps, coefs):
+    def __cinit__(self, origin: ndarray, shell: ndarray, num_exps: int, exps: ndarray, coefs: ndarray):
 
         """
         
@@ -111,6 +174,7 @@ cdef class Basis:
     def normalize(self):
 
         """
+
         Normalises the primitives, then normalises the contracted functions.
 
         """
@@ -145,14 +209,29 @@ cdef class Basis:
 
             self.coefs[i] *= N
 
+    # Deallocate memory for class parameters
 
     def __dealloc__(self):
 
-        if self.origin != NULL: free(self.origin)
-        if self.shell != NULL: free(self.shell)
-        if self.exps != NULL: free(self.exps)
-        if self.coefs != NULL: free(self.coefs)
-        if self.norm != NULL: free(self.norm)
+        if self.origin != NULL: 
+        
+            free(self.origin)
+        
+        if self.shell != NULL: 
+            
+            free(self.shell)
+        
+        if self.exps != NULL: 
+        
+            free(self.exps)
+        
+        if self.coefs != NULL: 
+            
+            free(self.coefs)
+        
+        if self.norm != NULL: 
+        
+            free(self.norm)
 
 
 
@@ -161,17 +240,19 @@ cdef class Basis:
 
 
 
-cdef inline double double_fact(int n):
+
+
+cdef inline double double_fact(int n) noexcept nogil:
 
     """
     
-    Calculates a dobule factorial.
+    Calculates a double factorial.
 
     Args:
         n (int): Integer input
     
     Returns:
-        result (float): double_factled integer
+        result (float): Double factorialed integer
     
     """
 
@@ -184,7 +265,8 @@ cdef inline double double_fact(int n):
     while n > 1:
 
         result *= n
-        n -= 2
+
+        n = n - 2
 
     return result
 
@@ -197,35 +279,162 @@ cdef inline double double_fact(int n):
 
 
 
-cpdef double calculate_dipole_integral(object bf_1, object bf_2, dipole_origin, str direction):
+cpdef tuple calculate_one_electron_integrals(long n_basis, list basis_functions, long n_atoms, list atoms, double[:] dipole_origin, int num_threads):
 
     """
     
-    Calculates a dipole integral between basis functions, <1| r - dipole_origin |2>.
+    Calculates the one-electron integral matrices in Cartesian harmonics.
     
     Args:
-        bf_1 (Basis): First basis function
-        bf_2 (Basis): Second basis function
-        dipole_origin (array): Coordinates of electric field gauge origin
-        direction (str): Either "x", "y" or "z"
+        n_basis (int): Number of Cartesian basis functions
+        basis_functions (list): List of Cartesian basis functions
+        n_atoms (int): Number of atoms
+        atoms (list): List of atom objects
+        dipole_origin (array): Dipole and quadrupole electric origin
+        num_threads (int): Number of OpenMP threads for parallelisation
 
     Returns:
-        integral (float): Dipole integral between contracted Gaussians
+        S_cart (array): Filled overlap matrix in AO basis
+        T_cart (array): Filled kinetic matrix in AO basis
+        V_cart (array): Filled nuclear matrix in AO basis
+        D_cart (array): Filled dipole matrices in AO basis
+        Q_cart (array): Filled quadrupole matrices in AO basis
+    
+    """
+
+    S_cart = np.empty((n_basis, n_basis))
+    T_cart = np.empty((n_basis, n_basis))
+    V_cart = np.empty((n_basis, n_basis))
+    D_cart = np.empty((3, n_basis, n_basis))
+    Q_cart = np.empty((3, n_basis, n_basis))
+
+    cdef:
+
+        double[:, :] S = S_cart
+        double[:, :] T = T_cart
+        double[:, :] V = V_cart
+        double[:, :, :] D = D_cart
+        double[:, :, :] Q = Q_cart
+
+        long i, j, a
+        double s_ij, t_ij, v_ij
+        double d_ij_x, d_ij_y, d_ij_z
+        double q_ij_xx, q_ij_yy, q_ij_zz
+
+        double origin[3]
+
+        Basis bf
+        object atom
+
+        BasisRaw* bfs = <BasisRaw*>malloc(n_basis * sizeof(BasisRaw))
+        double* atom_coords = <double*>malloc(3 * n_atoms * sizeof(double))
+        double* atom_charges = <double*>malloc(n_atoms * sizeof(double))
+
+    try:
         
-    """
+        origin[0] = <double>dipole_origin[0]
+        origin[1] = <double>dipole_origin[1]
+        origin[2] = <double>dipole_origin[2]
 
-    cdef double integral = 0.0
+        # Pure Python loop to map onto BasisRaw objects
 
-    for ia, ca in enumerate(bf_1.coefs):
+        for i in range(n_basis):
 
-        for ib, cb in enumerate(bf_2.coefs):
+            bf = <Basis>basis_functions[i]
 
-            # Applies coefficients and norms to integrals between primitive Gaussians
+            bfs[i].origin = bf.origin
 
-            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * dipole(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, dipole_origin, direction)
+            bfs[i].l = <int>bf.shell[0]
+            bfs[i].m = <int>bf.shell[1]
+            bfs[i].n = <int>bf.shell[2]
+
+            bfs[i].num_exps = bf.num_exps
+            bfs[i].exps = bf.exps
+            bfs[i].coefs = bf.coefs
+            bfs[i].norm = bf.norm
+
+        # Pure Python loop to copy atom coordinates into raw C memory
+
+        for a in range(n_atoms):
+
+            atom = atoms[a]
+
+            atom_coords[3 * a + 0] = <double>atom.origin[0]
+            atom_coords[3 * a + 1] = <double>atom.origin[1]
+            atom_coords[3 * a + 2] = <double>atom.origin[2]
+
+            atom_charges[a] = <double>atom.charge
+
+        # Loops over unique basis function pairs, OpenMP parallel, guided dynamic scheduling to spread workload efficiently
+
+        for i in prange(n_basis, schedule = "guided", nogil = True, num_threads = num_threads):
+
+            for j in range(i + 1):
+
+                # Calculates all the one-electron integrals for this basis function pair
+                
+                s_ij = 0.0
+                t_ij = 0.0
+
+                d_ij_x = 0.0
+                d_ij_y = 0.0
+                d_ij_z = 0.0
+
+                q_ij_xx = 0.0
+                q_ij_yy = 0.0
+                q_ij_zz = 0.0
+
+                calculate_contracted_local_integrals(&bfs[i], &bfs[j], origin, &s_ij, &t_ij, &d_ij_x, &d_ij_y, &d_ij_z, &q_ij_xx, &q_ij_yy, &q_ij_zz)
+
+                # The nuclear-electron integrals require a loop over atomic centres
+
+                v_ij = 0.0
+
+                for a in range(n_atoms):
+
+                    v_ij = v_ij - calculate_contracted_nuclear_integral(&bfs[i], &bfs[j], &atom_coords[3 * a]) * atom_charges[a]
+
+                # Assigns the integrals to the corresponding matrices
+
+                S[i, j] = s_ij
+                T[i, j] = t_ij
+                V[i, j] = v_ij
+
+                D[0, i, j] = d_ij_x
+                D[1, i, j] = d_ij_y
+                D[2, i, j] = d_ij_z
+
+                Q[0, i, j] = q_ij_xx
+                Q[1, i, j] = q_ij_yy
+                Q[2, i, j] = q_ij_zz
+
+                # Avoids assignment for the same index, as it's already been done
+
+                if i != j:
+
+                    S[j, i] = s_ij
+                    T[j, i] = t_ij
+                    V[j, i] = v_ij
+
+                    D[0, j, i] = d_ij_x
+                    D[1, j, i] = d_ij_y
+                    D[2, j, i] = d_ij_z
+
+                    Q[0, j, i] = q_ij_xx
+                    Q[1, j, i] = q_ij_yy
+                    Q[2, j, i] = q_ij_zz
+
+    finally:
+
+        # No matter what, deallocate the memory for basis functions
+
+        free(bfs)
+        free(atom_coords)
+        free(atom_charges)
+
+    return S_cart, T_cart, V_cart, D_cart, Q_cart
 
 
-    return integral
 
 
 
@@ -234,207 +443,331 @@ cpdef double calculate_dipole_integral(object bf_1, object bf_2, dipole_origin, 
 
 
 
-
-def dipole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, dipole_origin: ndarray, direction: str) -> float:
-   
+cdef inline void calculate_contracted_local_integrals(BasisRaw* bf_1, BasisRaw* bf_2, double* origin, double* s_ij, double* t_ij, double* d_ij_x, double* d_ij_y, double* d_ij_z, double* q_ij_xx, double* q_ij_yy, double* q_ij_zz) noexcept nogil:
+    
     """
     
-    Calculates a Cartesian component of a dipole integral between primitive Gaussians, <1| r - dipole_origin |2>.
-    
+    Calculates a local one-electron integrals between a pair of contracted Gaussian functions.
+
     Args:
-        exponent_1 (float): Gaussian exponent on first centre
-        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
-        centre_1 (array): Coordinates of first centre
-        exponent_2 (float): Gaussian exponent on second centre
-        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
-        centre_2 (array): Coordinates of second centre
-        dipole_origin (array): Electric field origin
-        direction (str): Either "x", "y" or "z"
+        bf_1 (Basis, in): First cartesian contracted basis function
+        bf_2 (Basis, in): Second cartesian contracted basis function
+        origin (array, in): Dipole and quadrupole origin
+        s_ij (float, out): Overlap integral for ij pair
+        t_ij (float, out): Kinetic integral for ij pair
+        d_ij_x (float, out): Dipole x integral for ij pair
+        d_ij_y (float, out): Dipole y integral for ij pair
+        d_ij_z (float, out): Dipole z integral for ij pair
+        q_ij_xx (float, out): Quadrupole xx integral for ij pair
+        q_ij_yy (float, out): Quadrupole yy integral for ij pair
+        q_ij_zz (float, out): Quadrupole zz integral for ij pair
+    
+    """
+
+    cdef:
+
+        long i, j
+
+        int l_1 = bf_1.l
+        int m_1 = bf_1.m
+        int n_1 = bf_1.n
+
+        int l_2 = bf_2.l
+        int m_2 = bf_2.m
+        int n_2 = bf_2.n
+
+        long n_prim_1 = bf_1.num_exps
+        long n_prim_2 = bf_2.num_exps
+
+        double* exps_1 = bf_1.exps
+        double* coefs_1 = bf_1.coefs
+        double* norms_1 = bf_1.norm
+
+        double* exps_2 = bf_2.exps
+        double* coefs_2 = bf_2.coefs
+        double* norms_2 = bf_2.norm
+
+        double dx = bf_1.origin[0] - bf_2.origin[0]
+        double dy = bf_1.origin[1] - bf_2.origin[1]
+        double dz = bf_1.origin[2] - bf_2.origin[2]
+
+        double exponent_sum
+        double exponent_1, exponent_2
+        double prefactor_1, prefactor_2, primitive_prefactor
+
+        double Ex_1, Ey_1, Ez_1
+        double Ex_2, Ey_2, Ez_2
+
+        double Sx, Sy, Sz
+        double Tx, Ty, Tz
+        double Ax, Ay, Az
+        double Bx, By, Bz
+        double Px, Py, Pz
+        double Dx, Dy, Dz
+        double Qx, Qy, Qz
+
+        double s_integral = 0.0
+        double t_integral = 0.0
+
+        double d_integral_x = 0.0
+        double d_integral_y = 0.0
+        double d_integral_z = 0.0
+
+        double q_integral_xx = 0.0
+        double q_integral_yy = 0.0
+        double q_integral_zz = 0.0
+
+    # Loops over primitives
+
+    for i in range(n_prim_1):
+
+        exponent_1 = exps_1[i]
+
+        prefactor_1 = norms_1[i] * coefs_1[i]
+
+        for j in range(n_prim_2):
+
+            exponent_2 = exps_2[j]
+
+            prefactor_2 = norms_2[j] * coefs_2[j]
+
+            exponent_sum = exponent_1 + exponent_2
+
+            # Calculates the common prefactor, square root is quicker than the "pow" function
+
+            primitive_prefactor = prefactor_1 * prefactor_2 * PI32 / (exponent_sum * sqrt(exponent_sum))
+
+            # Calculates the Hermite coefficients needed for overlap
+
+            Sx = hermite_coeff(l_1, l_2, 0, dx, exponent_1, exponent_2)
+            Sy = hermite_coeff(m_1, m_2, 0, dy, exponent_1, exponent_2)
+            Sz = hermite_coeff(n_1, n_2, 0, dz, exponent_1, exponent_2)
+
+            # Calculates the Hermite coefficients needed for dipoles and quadrupoles
+
+            Ex_1 = hermite_coeff(l_1, l_2, 1, dx, exponent_1, exponent_2)
+            Ey_1 = hermite_coeff(m_1, m_2, 1, dy, exponent_1, exponent_2)
+            Ez_1 = hermite_coeff(n_1, n_2, 1, dz, exponent_1, exponent_2)
+
+            Ex_2 = hermite_coeff(l_1, l_2, 2, dx, exponent_1, exponent_2)
+            Ey_2 = hermite_coeff(m_1, m_2, 2, dy, exponent_1, exponent_2)
+            Ez_2 = hermite_coeff(n_1, n_2, 2, dz, exponent_1, exponent_2)
+
+            # Calculates the kinetic integral
+
+            Ax = (2 * l_2 + 1) * exponent_2
+            Ay = (2 * m_2 + 1) * exponent_2
+            Az = (2 * n_2 + 1) * exponent_2
+
+            Bx = -0.5 * l_2 * (l_2 - 1)
+            By = -0.5 * m_2 * (m_2 - 1)
+            Bz = -0.5 * n_2 * (n_2 - 1)
+
+            Tx = Ax * Sx - 2.0 * exponent_2 * exponent_2 * hermite_coeff(l_1, l_2 + 2, 0, dx, exponent_1, exponent_2) + Bx * hermite_coeff(l_1, l_2 - 2, 0, dx, exponent_1, exponent_2)
+            Ty = Ay * Sy - 2.0 * exponent_2 * exponent_2 * hermite_coeff(m_1, m_2 + 2, 0, dy, exponent_1, exponent_2) + By * hermite_coeff(m_1, m_2 - 2, 0, dy, exponent_1, exponent_2)
+            Tz = Az * Sz - 2.0 * exponent_2 * exponent_2 * hermite_coeff(n_1, n_2 + 2, 0, dz, exponent_1, exponent_2) + Bz * hermite_coeff(n_1, n_2 - 2, 0, dz, exponent_1, exponent_2)
+
+            # Calculates the product centre relative to the electric origin
+
+            Px = (exponent_1 * bf_1.origin[0] + exponent_2 * bf_2.origin[0]) / exponent_sum - origin[0]
+            Py = (exponent_1 * bf_1.origin[1] + exponent_2 * bf_2.origin[1]) / exponent_sum - origin[1]
+            Pz = (exponent_1 * bf_1.origin[2] + exponent_2 * bf_2.origin[2]) / exponent_sum - origin[2]
+
+            # Calculates the dipole integrals
+
+            Dx = Ex_1 + Px * Sx
+            Dy = Ey_1 + Py * Sy
+            Dz = Ez_1 + Pz * Sz
+
+            # Calculates the diagonal quadrupole integrals
+
+            Qx = 2.0 * Ex_2 + 2.0 * Px * Ex_1 + (Px * Px + 1.0 / (2.0 * exponent_sum)) * Sx
+            Qy = 2.0 * Ey_2 + 2.0 * Py * Ey_1 + (Py * Py + 1.0 / (2.0 * exponent_sum)) * Sy
+            Qz = 2.0 * Ez_2 + 2.0 * Pz * Ez_1 + (Pz * Pz + 1.0 / (2.0 * exponent_sum)) * Sz
+            
+            # Adds up the various one-electron integrals
+
+            s_integral += primitive_prefactor * Sx * Sy * Sz
+
+            t_integral += primitive_prefactor * (Tx * Sy * Sz + Sx * Ty * Sz + Sx * Sy * Tz)
+
+            d_integral_x += primitive_prefactor * Dx * Sy * Sz
+            d_integral_y += primitive_prefactor * Sx * Dy * Sz
+            d_integral_z += primitive_prefactor * Sx * Sy * Dz
+
+            q_integral_xx += primitive_prefactor * Qx * Sy * Sz
+            q_integral_yy += primitive_prefactor * Sx * Qy * Sz
+            q_integral_zz += primitive_prefactor * Sx * Sy * Qz
+
+    # Assigns the integrals to the output arrays
+
+    s_ij[0] = s_integral
+    t_ij[0] = t_integral
+
+    d_ij_x[0] = d_integral_x
+    d_ij_y[0] = d_integral_y
+    d_ij_z[0] = d_integral_z
+
+    q_ij_xx[0] = q_integral_xx
+    q_ij_yy[0] = q_integral_yy
+    q_ij_zz[0] = q_integral_zz
+
+    return
+
+
+
+
+
+
+
+
+
+
+cpdef double[:, :] calculate_cross_basis_overlap_matrix(long n_basis_1, long n_basis_2, list basis_functions_1, list basis_functions_2, int num_threads):
+
+    """
+    
+    Calculates the overlap matrix between two different basis sets.
+
+    Args:
+        n_basis_1 (int): Number of basis functions in first basis set
+        n_basis_2 (int): Number of basis functions in second basis set
+        bfs_1 (list): List of basis functions in first basis set
+        bfs_2 (list): List of basis functions in second basis set
+        num_threads (int): Number of OpenMP threads
     
     Returns:
-        integral (float): Dipole integral between primitive Gaussians
-
+        S_cross (array): Cross basis overlap matrix
+    
     """
 
-    l_1, m_1, n_1 = angmom_1
-    l_2, m_2, n_2 = angmom_2
+    S_cross = np.empty((n_basis_1, n_basis_2))
 
-    R_12 = centre_1 - centre_2
+    cdef:
 
-    exponent_sum = exponent_1 + exponent_2
-    prefactor = pow(PI / exponent_sum, 1.5)
+        double[:, :] S = S_cross
 
-    P = (exponent_1 * centre_1 + exponent_2 * centre_2) / exponent_sum - dipole_origin
+        long i, j, k, l
+        double s_ij
 
-    # Calculates the overlap integrals between primitive Gaussians
-    
-    Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
-    Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
-    Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
+        int l_1, l_2
+        int m_1, m_2
+        int n_1, n_2
 
-    # Only calculates one component of the dipole integrals
+        double dx, dy, dz
 
-    if direction.lower() == "x":
+        double exponent_sum
+        double exponent_1, exponent_2
+        double prefactor_1, prefactor_2, primitive_prefactor
 
-        Dx = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2) + P[0] * Sx
+        double Sx, Sy, Sz
 
-        integral = prefactor * Dx * Sy * Sz
+        Basis bf
 
-    elif direction.lower() == "y":
+        BasisRaw* bfs_1 = <BasisRaw*>malloc(n_basis_1 * sizeof(BasisRaw))
+        BasisRaw* bfs_2 = <BasisRaw*>malloc(n_basis_2 * sizeof(BasisRaw))
 
-        Dy = hermite_coeff(m_1, m_2, 1, R_12[1], exponent_1, exponent_2) + P[1] * Sy
-
-        integral = prefactor * Sx * Dy * Sz
-
-    elif direction.lower() == "z":
-
-        Dz = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2) + P[2] * Sz
-
-        integral = prefactor * Sx * Sy * Dz
-
-
-    return integral
-
-
-
-
-
-
-
-
-
-
-cpdef double calculate_quadrupole_integral(object bf_1, object bf_2, quadrupole_origin, str direction):
-
-    """
-    
-    Calculates a raw quadrupole second-moment integral between basis functions, <1| (r - quadrupole_origin)^2 |2>, for a direction.
-    
-    Args:
-        bf_1 (Basis): First basis function
-        bf_2 (Basis): Second basis function
-        quadrupole_origin (array): Coordinates of quadrupole origin
-        direction (str): Either "xx" or "zz"
-
-    Returns:
-        integral (float): Quadrupole integral between contracted Gaussians
+    try:
         
-    """
+        # Pure Python loop to map onto BasisRaw objects
 
-    cdef double integral = 0.0
+        for i in range(n_basis_1):
 
-    for ia, ca in enumerate(bf_1.coefs):
+            bf = <Basis>basis_functions_1[i]
 
-        for ib, cb in enumerate(bf_2.coefs):
+            bfs_1[i].origin = bf.origin
 
-            # Applies coefficients and norms to integrals between primitive Gaussians
+            bfs_1[i].l = <int>bf.shell[0]
+            bfs_1[i].m = <int>bf.shell[1]
+            bfs_1[i].n = <int>bf.shell[2]
 
-            integral += (bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * quadrupole(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, quadrupole_origin, direction))
+            bfs_1[i].num_exps = bf.num_exps
+            bfs_1[i].exps = bf.exps
+            bfs_1[i].coefs = bf.coefs
 
-    return integral
-
-
-
-
-
-
-
-
-
-
-def quadrupole(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, quadrupole_origin: ndarray, direction: str) -> float:
-   
-    """
-    
-    Calculates a Cartesian raw quadrupole second-moment integral between primitive Gaussians, <1| (r - quadrupole_origin)^2 |2>.
-    
-    Args:
-        exponent_1 (float): Gaussian exponent on first centre
-        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
-        centre_1 (array): Coordinates of first centre
-        exponent_2 (float): Gaussian exponent on second centre
-        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
-        centre_2 (array): Coordinates of second centre
-        quadrupole_origin (array): Quadrupole origin
-        direction (str): Either "xx" or "zz"
-    
-    Returns:
-        integral (float): Quadrupole integral between primitive Gaussians
-
-    """
-
-    l_1, m_1, n_1 = angmom_1
-    l_2, m_2, n_2 = angmom_2
-
-    R_12 = centre_1 - centre_2
-
-    exponent_sum = exponent_1 + exponent_2
-    prefactor = pow(PI / exponent_sum, 1.5)
-
-    P = (exponent_1 * centre_1 + exponent_2 * centre_2) / exponent_sum - quadrupole_origin
-
-    # Calculates the overlap integrals between primitive Gaussians
-    
-    Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
-    Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
-    Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
-
-    # Only calculates one component of the quadrupole integrals
-
-    if direction.lower() == "xx":
-
-        Ex1 = hermite_coeff(l_1, l_2, 1, R_12[0], exponent_1, exponent_2)
-        Ex2 = hermite_coeff(l_1, l_2, 2, R_12[0], exponent_1, exponent_2)
-
-        Qx = 2.0 * Ex2 + 2.0 * P[0] * Ex1 + (P[0] * P[0] + 1.0 / (2.0 * exponent_sum)) * Sx
-
-        integral = prefactor * Qx * Sy * Sz
-
-    elif direction.lower() == "zz":
-
-        Ez1 = hermite_coeff(n_1, n_2, 1, R_12[2], exponent_1, exponent_2)
-        Ez2 = hermite_coeff(n_1, n_2, 2, R_12[2], exponent_1, exponent_2)
-
-        Qz = 2.0 * Ez2 + 2.0 * P[2] * Ez1 + (P[2] * P[2] + 1.0 / (2.0 * exponent_sum)) * Sz
-
-        integral = prefactor * Sx * Sy * Qz
-
-
-    return integral
-
-
-
-
-
-
-cpdef double calculate_nuclear_electron_integral(object bf_1, object bf_2, double[:] nucleus):
-
-    """
-    
-    Calculates a nuclear-electron integral between basis functions, <1| 1/(r-R_N) |2>.
-    
-    Args:
-        bf_1 (Basis): First basis function
-        bf_2 (Basis): Second basis function
-        nucleus (array): Coordinates of nucleus
-
-    Returns:
-        integral (float): Nuclear-electron integral between contracted Gaussians
+            bfs_1[i].norm = bf.norm
         
-    """
+        for j in range(n_basis_2):
 
-    cdef double integral = 0.0
+            bf = <Basis>basis_functions_2[j]
 
-    for ia, ca in enumerate(bf_1.coefs):
+            bfs_2[j].origin = bf.origin
 
-        for ib, cb in enumerate(bf_2.coefs):
+            bfs_2[j].l = <int>bf.shell[0]
+            bfs_2[j].m = <int>bf.shell[1]
+            bfs_2[j].n = <int>bf.shell[2]
 
-            # Applies coefficients and norms to integrals between primitive Gaussians
+            bfs_2[j].num_exps = bf.num_exps
+            bfs_2[j].exps = bf.exps
+            bfs_2[j].coefs = bf.coefs
+            bfs_2[j].norm = bf.norm
+        
+        # Loops over all basis function pairs, OpenMP parallel, static scheduling as we are looping over all pairs
 
-            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * nuclear_attraction(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin, nucleus)
+        for i in prange(n_basis_1, schedule = "static", nogil = True, num_threads = num_threads):
+
+            # Assign the anggular momenta for the first basis function here
+
+            l_1 = bfs_1[i].l
+            m_1 = bfs_1[i].m
+            n_1 = bfs_1[i].n
+
+            for j in range(n_basis_2):
+
+                # The difference in position of the basis functions
+
+                dx = bfs_1[i].origin[0] - bfs_2[j].origin[0]
+                dy = bfs_1[i].origin[1] - bfs_2[j].origin[1]
+                dz = bfs_1[i].origin[2] - bfs_2[j].origin[2]
+
+                l_2 = bfs_2[j].l
+                m_2 = bfs_2[j].m
+                n_2 = bfs_2[j].n
+
+                s_ij = 0.0
+
+                # Loop over primitives in each basis function
+
+                for k in range(bfs_1[i].num_exps):
+
+                    exponent_1 = bfs_1[i].exps[k]
+                    
+                    prefactor_1 = bfs_1[i].norm[k] * bfs_1[i].coefs[k]
+
+                    for l in range(bfs_2[j].num_exps):
+
+                        exponent_2 = bfs_2[j].exps[l]
+
+                        prefactor_2 = bfs_2[j].norm[l] * bfs_2[j].coefs[l]
+
+                        exponent_sum = exponent_1 + exponent_2
+
+                        # Calculates the common prefactor, square root is quicker than the "pow" function
+
+                        primitive_prefactor = prefactor_1 * prefactor_2 * PI32 / (exponent_sum * sqrt(exponent_sum))
+
+                        # Calculates the Hermite coefficients
+
+                        Sx = hermite_coeff(l_1, l_2, 0, dx, exponent_1, exponent_2)
+                        Sy = hermite_coeff(m_1, m_2, 0, dy, exponent_1, exponent_2)
+                        Sz = hermite_coeff(n_1, n_2, 0, dz, exponent_1, exponent_2)
+
+                        # Build up the overlap matrix element before assigning when all primitives are looped over
+
+                        s_ij = s_ij + primitive_prefactor * Sx * Sy * Sz
+
+                S[i, j] = s_ij
+
+    finally:
+
+        # No matter what, deallocate the memory for basis functions
+
+        free(bfs_1)
+        free(bfs_2)
+
+    return S_cross
 
 
-    return integral
 
 
 
@@ -443,198 +776,118 @@ cpdef double calculate_nuclear_electron_integral(object bf_1, object bf_2, doubl
 
 
 
-
-
-def nuclear_attraction(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray, nucleus: ndarray) -> float:
+cdef inline double calculate_contracted_nuclear_integral(BasisRaw* bf_1, BasisRaw* bf_2, double* atom_coord) noexcept nogil:
 
     """
     
-    Calculates a nuclear-electron integral between primitive Gaussians, <1| 1/(r-R_N) |2>.
-    
+    Calculates a nuclear-electron integral between contracted Gaussians, <1| Z/r |2>.
+
+    This is only correct for atoms aligned on the z axis!
+
     Args:
-        exponent_1 (float): Gaussian exponent on first centre
-        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
-        centre_1 (array): Coordinates of first centre
-        exponent_2 (float): Gaussian exponent on second centre
-        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
-        centre_2 (array): Coordinates of second centre
-        nucleus (array): Coordinates of nucleus
+        bf_1 (Basis): First cartesian contracted basis function
+        bf_2 (Basis): Second cartesian contracted basis function
+        atom_coord (array): Atomic coordinates
     
     Returns:
-        integral (float): Nuclear-electron integral between primitive Gaussian
-
+        integral (float): Integral between basis functions
+    
     """
 
-    l_1, m_1, n_1 = angmom_1
-    l_2, m_2, n_2 = angmom_2
+    cdef:
 
-    cdef double exponent_sum = exponent_1 + exponent_2
-    cdef double PCz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum - nucleus[2]
-    cdef double Rz_12 = centre_1[2] - centre_2[2]
+        long i, j
+        int t, u, v
 
-    cdef int Vmax = n_1 + n_2
-    cdef int Nmax = l_1 + l_2 + m_1 + m_2 + n_1 + n_2
-    cdef int stride = Nmax + 1
+        int l_1 = bf_1.l
+        int m_1 = bf_1.m
+        int n_1 = bf_1.n
 
-    cdef double *boys_tab = <double*>malloc((Nmax + 1) * sizeof(double))
-    cdef double *pow_tab = <double*>malloc((Nmax + 1) * sizeof(double))
-    cdef double *Rz = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
+        int l_2 = bf_2.l
+        int m_2 = bf_2.m
+        int n_2 = bf_2.n
 
-    cdef double integral = 0.0
-    cdef double Ex, Ey, Ez
-    cdef int t, u, v, nxy
+        long n_prim_1 = bf_1.num_exps
+        long n_prim_2 = bf_2.num_exps
 
-    fill_boys_table(Nmax, exponent_sum * PCz * PCz, boys_tab)
-    fill_pow_table(Nmax, exponent_sum, pow_tab)
-    fill_Rz_linear_table(Vmax, Nmax, PCz, boys_tab, pow_tab, Rz)
+        double* exps_1 = bf_1.exps
+        double* coefs_1 = bf_1.coefs
+        double* norms_1 = bf_1.norm
 
+        double* exps_2 = bf_2.exps
+        double* coefs_2 = bf_2.coefs
+        double* norms_2 = bf_2.norm
 
-    for t in range(0, l_1 + l_2 + 1, 2):
+        double z_1 = bf_1.origin[2]
+        double z_2 = bf_2.origin[2]
+        double z_nucleus = atom_coord[2]
+        double Rz_12 = z_1 - z_2
 
-        Ex = hermite_coeff(l_1, l_2, t, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(t)
+        int Vmax = n_1 + n_2
+        int Nmax = l_1 + l_2 + m_1 + m_2 + n_1 + n_2
+        int stride = Nmax + 1
 
-        for u in range(0, m_1 + m_2 + 1, 2):
+        double* boys_tab = <double*>malloc((Nmax + 1) * sizeof(double))
+        double* pow_tab = <double*>malloc((Nmax + 1) * sizeof(double))
+        double* Rz = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
 
-            Ey = hermite_coeff(m_1, m_2, u, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(u)
+        double exponent_1, exponent_2, exponent_sum
+        double prefactor_1, prefactor_2
+        double PCz
+        double Ex, Ey, Ez
+        double primitive_integral
+        double integral = 0.0
 
-            for v in range(n_1 + n_2 + 1):
+    # Loops over primitive Gaussians in the contraction
 
-                Ez = hermite_coeff(n_1, n_2, v, Rz_12, exponent_1, exponent_2)
+    for i in range(n_prim_1):
 
-                integral += Ex * Ey * Ez * Rz[v * stride + (t + u) // 2]
+        exponent_1 = exps_1[i]
 
+        prefactor_1 = norms_1[i] * coefs_1[i]
+
+        for j in range(n_prim_2):
+
+            exponent_2 = exps_2[j]
+
+            prefactor_2 = norms_2[j] * coefs_2[j]
+
+            exponent_sum = exponent_1 + exponent_2
+
+            PCz = (exponent_1 * z_1 + exponent_2 * z_2) / exponent_sum - z_nucleus
+
+            # Prepares the hash tables for efficient lookups
+
+            fill_boys_table(Nmax, exponent_sum * PCz * PCz, boys_tab)
+
+            fill_pow_table(Nmax, exponent_sum, pow_tab)
+            
+            fill_Rz_linear_table(Vmax, Nmax, PCz, boys_tab, pow_tab, Rz)
+
+            primitive_integral = 0.0
+
+            for t in range(0, l_1 + l_2 + 1, 2):
+
+                Ex = hermite_coeff(l_1, l_2, t, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(t)
+
+                for u in range(0, m_1 + m_2 + 1, 2):
+
+                    Ey = hermite_coeff(m_1, m_2, u, 0.0, exponent_1, exponent_2) * odd_double_double_fact_from_even(u)
+
+                    for v in range(n_1 + n_2 + 1):
+
+                        Ez = hermite_coeff(n_1, n_2, v, Rz_12, exponent_1, exponent_2)
+
+                        primitive_integral += Ex * Ey * Ez * Rz[v * stride + (t + u) // 2]
+
+            # Builds up the total contribution to the contracted integral
+
+            integral += prefactor_1 * prefactor_2 * primitive_integral * 2.0 * PI / exponent_sum
 
     free(boys_tab)
     free(pow_tab)
     free(Rz)
 
-    integral *= 2.0 * PI / exponent_sum
-
-    return integral
-
-
-
-
-
-
-
-
-
-cpdef double calculate_kinetic_integral(object bf_1, object bf_2):
-
-    """
-    
-    Calculates a kinetic integral between basis functions, <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.
-    
-    Args:
-        bf_1 (Basis): First basis function
-        bf_2 (Basis): Second basis function
-
-    Returns:
-        integral (float): Kinetic integral between contracted Gaussians
-        
-    """
-
-    cdef double integral = 0.0
-
-    for ia, ca in enumerate(bf_1.coefs):
-
-        for ib, cb in enumerate(bf_2.coefs):
-
-            # Applies coefficients and norms to integrals between primitive Gaussians
-
-            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * kinetic(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin)
-
-
-    return integral
-
-
-
-
-
-
-
-
-
-def kinetic(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:
-
-    """
-    
-    Calculates a kinetic integral between primitive Gaussians, -1/2 * <1| d^2/dx^2 + d^2/dy^2 + d^2/dz^2 |2>.
-    
-    Args:
-        exponent_1 (float): Gaussian exponent on first centre
-        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
-        centre_1 (array): Coordinates of first centre
-        exponent_2 (float): Gaussian exponent on second centre
-        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
-        centre_2 (array): Coordinates of second centre
-    
-    Returns:
-        integral (float): Kinetic integral between primitive Gaussian
-
-    """
-
-    l_1, m_1, n_1 = angmom_1
-    l_2, m_2, n_2 = angmom_2
-
-    R_12 = centre_1 - centre_2
-
-    A = (2 * angmom_2 + 1) * exponent_2
-    B = -2 * exponent_2 * exponent_2
-    C = -0.5 * angmom_2 * (angmom_2 - 1)
-
-    # Overlap integrals for each Cartesian component
-
-    Sx = hermite_coeff(l_1, l_2, 0, R_12[0], exponent_1, exponent_2)
-    Sy = hermite_coeff(m_1, m_2, 0, R_12[1], exponent_1, exponent_2)
-    Sz = hermite_coeff(n_1, n_2, 0, R_12[2], exponent_1, exponent_2)
-
-    # For each Cartesian component, calculate the second derivative then multiply by overlaps of other two components
-
-    Tx = A[0] * Sx + B * hermite_coeff(l_1, l_2 + 2, 0, R_12[0], exponent_1, exponent_2) + C[0] * hermite_coeff(l_1, l_2 - 2, 0, R_12[0], exponent_1, exponent_2)
-    Ty = A[1] * Sy + B * hermite_coeff(m_1, m_2 + 2, 0, R_12[1], exponent_1, exponent_2) + C[1] * hermite_coeff(m_1, m_2 - 2, 0, R_12[1], exponent_1, exponent_2)
-    Tz = A[2] * Sz + B * hermite_coeff(n_1, n_2 + 2, 0, R_12[2], exponent_1, exponent_2) + C[2] * hermite_coeff(n_1, n_2 - 2, 0, R_12[2], exponent_1, exponent_2)
-
-    # Combines the three Cartesian components into the integral
-
-    integral = (Tx * Sy * Sz + Sx * Ty * Sz + Sx * Sy * Tz) * pow(PI / (exponent_1 + exponent_2), 1.5)
-
-    return integral
-
-
-
-
-
-
-
-    
-cpdef double calculate_overlap_integral(object bf_1, object bf_2):
-
-    """
-    
-    Calculates an overlap integral between basis functions, <1|2>.
-    
-    Args:
-        bf_1 (Basis): First basis function
-        bf_2 (Basis): Second basis function
-
-    Returns:
-        integral (float): Overlap integral between contracted Gaussians
-        
-    """
-
-    cdef double integral = 0.0
-
-    for ia, ca in enumerate(bf_1.coefs):
-
-        for ib, cb in enumerate(bf_2.coefs):
-            
-            # Applies coefficients and norms to integrals between primitive Gaussians
-
-            integral += bf_1.norm[ia] * bf_2.norm[ib] * ca * cb * overlap(bf_1.exps[ia], bf_1.shell, bf_1.origin, bf_2.exps[ib], bf_2.shell, bf_2.origin)
-
-
     return integral
 
 
@@ -646,101 +899,438 @@ cpdef double calculate_overlap_integral(object bf_1, object bf_2):
 
 
 
-def overlap(exponent_1: float, angmom_1: ndarray, centre_1: ndarray, exponent_2: float, angmom_2: ndarray, centre_2: ndarray) -> float:
 
-    """
-    
-    Calculates an overlap integral between primitive Gaussians, <1|2>.
-    
-    Args:
-        exponent_1 (float): Gaussian exponent on first centre
-        angmom_1 (ndarray): Angular momenta of primitive Gaussian of first centre
-        centre_1 (array): Coordinates of first centre
-        exponent_2 (float): Gaussian exponent on second centre
-        angmom_2 (ndarray): Angular momenta of primitive Gaussian of second centre
-        centre_2 (array): Coordinates of second centre
-    
-    Returns:
-        integral (float): Overlap integral between primitive Gaussian
+
+
+
+
+
+
+
+
+
+
+
+cdef inline double odd_double_fact_even_argument_fast(int n_even) noexcept nogil:
 
     """
 
-    l_1, m_1, n_1 = angmom_1
-    l_2, m_2, n_2 = angmom_2
-
-    # Calculates the Cartesian components of the overlap integral
-
-    Sx = hermite_coeff(l_1, l_2, 0, centre_1[0] - centre_2[0], exponent_1, exponent_2) 
-    Sy = hermite_coeff(m_1, m_2, 0, centre_1[1] - centre_2[1], exponent_1, exponent_2) 
-    Sz = hermite_coeff(n_1, n_2, 0, centre_1[2] - centre_2[2], exponent_1, exponent_2)
- 
-    integral = Sx * Sy * Sz * pow(PI / (exponent_1 + exponent_2), 1.5)
-
-    return integral
-
-
-
-
-
-
-
-
-
-cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, double[:, :, :, :] ERI_AO, list bfs):
+    Returns (n_even - 1)!! for even n_even values encountered in the x/y
+    contractions. The lookup avoids repeated tiny recursive/loop calls in the
+    primitive ERI hot path.
 
     """
-    
-    Calculates the electron repulsion integrals array between basis functions, <12(r)| 1/(r-r') |34(r')>.
-    
-    Args:
-        n_basis (int): Number of basis functions
-        ERI_AO (array): Electron repulsion integrals zeroed array
-        bfs (list): List of basis functions
 
-    Returns:
-        ERI_AO (array): Electron repulsion integrals
-        
+    if n_even <= 0:
+        return 1.0
+    elif n_even == 2:
+        return 1.0
+    elif n_even == 4:
+        return 3.0
+    elif n_even == 6:
+        return 15.0
+    elif n_even == 8:
+        return 105.0
+    elif n_even == 10:
+        return 945.0
+    elif n_even == 12:
+        return 10395.0
+    elif n_even == 14:
+        return 135135.0
+    elif n_even == 16:
+        return 2027025.0
+    elif n_even == 18:
+        return 34459425.0
+    elif n_even == 20:
+        return 654729075.0
+    else:
+        return odd_double_double_fact_from_even(n_even)
+
+
+
+
+
+
+
+
+
+
+
+
+
+cdef inline void fill_hermite_table_iter_eri(int l_1, int l_2, double R_12, double exponent_1, double exponent_2, double* hermite_table, bint use_parity):
+
+    """
+
+    Iterative Hermite coefficient table used by ERIs only. This replaces many
+    repeated recursive hermite_coeff calls in the primitive-quartet hot path.
+
     """
 
     cdef:
-        long i, j, k, l, l_stop
+        int i, j, t, idx
+        int n_l2 = l_2 + 1
+        int n_terms = l_1 + l_2 + 1
+        int stride = n_terms + 1
+        int total = (l_1 + 1) * (l_2 + 1) * stride
+        int base_idx, prev_idx
+        int t_start
+        double exponent_sum = exponent_1 + exponent_2
+        double reduced_exponent = exponent_1 * exponent_2 / exponent_sum
+        double prefactor = 1.0 / (2.0 * exponent_sum)
+        double shift_1 = -reduced_exponent * R_12 / exponent_1
+        double shift_2 = reduced_exponent * R_12 / exponent_2
+        double E[8400]
+
+    for idx in range(total):
+        E[idx] = 0.0
+
+    E[0] = exp(-reduced_exponent * R_12 * R_12)
+
+    for i in range(l_1 + 1):
+
+        for j in range(l_2 + 1):
+
+            if i == 0 and j == 0:
+                continue
+
+            base_idx = (i * n_l2 + j) * stride
+
+            if j == 0:
+
+                prev_idx = ((i - 1) * n_l2 + j) * stride
+
+                for t in range(i + j + 1):
+
+                    E[base_idx + t] = shift_1 * E[prev_idx + t] + (t + 1) * E[prev_idx + t + 1]
+
+                    if t > 0:
+                        E[base_idx + t] += prefactor * E[prev_idx + t - 1]
+
+            else:
+
+                prev_idx = (i * n_l2 + j - 1) * stride
+
+                for t in range(i + j + 1):
+
+                    E[base_idx + t] = shift_2 * E[prev_idx + t] + (t + 1) * E[prev_idx + t + 1]
+
+                    if t > 0:
+                        E[base_idx + t] += prefactor * E[prev_idx + t - 1]
+
+    base_idx = (l_1 * n_l2 + l_2) * stride
+
+    if use_parity:
+
+        for t in range(n_terms):
+            hermite_table[t] = 0.0
+
+        t_start = (l_1 + l_2) & 1
+
+        for t in range(t_start, n_terms, 2):
+            hermite_table[t] = E[base_idx + t]
+
+    else:
+
+        for t in range(n_terms):
+            hermite_table[t] = E[base_idx + t]
+
+
+
+
+
+
+
+
+
+
+
+
+
+cdef inline void build_primitive_pair_eri(Basis bf_1, Basis bf_2, long i, long j, PrimitivePairERI* pair):
+
+    """
+
+    Builds all primitive-pair quantities that depend only on two basis
+    functions. These are reused for every partner AO pair in the ERI build.
+
+    """
+
+    cdef:
+        double exponent_1 = bf_1.exps[i]
+        double exponent_2 = bf_2.exps[j]
+        double exponent_sum = exponent_1 + exponent_2
+        int l_1 = <int>bf_1.shell[0]
+        int m_1 = <int>bf_1.shell[1]
+        int n_1 = <int>bf_1.shell[2]
+        int l_2 = <int>bf_2.shell[0]
+        int m_2 = <int>bf_2.shell[1]
+        int n_2 = <int>bf_2.shell[2]
+
+    pair.coefficient = bf_1.norm[i] * bf_2.norm[j] * bf_1.coefs[i] * bf_2.coefs[j]
+    pair.exponent_sum = exponent_sum
+    pair.product_centre_z = (exponent_1 * bf_1.origin[2] + exponent_2 * bf_2.origin[2]) / exponent_sum
+    pair.centre_distance_z = bf_1.origin[2] - bf_2.origin[2]
+
+    fill_hermite_table_iter_eri(l_1, l_2, 0.0, exponent_1, exponent_2, pair.hermite_x, True)
+    fill_hermite_table_iter_eri(m_1, m_2, 0.0, exponent_1, exponent_2, pair.hermite_y, True)
+    fill_hermite_table_iter_eri(n_1, n_2, pair.centre_distance_z, exponent_1, exponent_2, pair.hermite_z, False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+cdef inline void build_ao_pair_eri(AOPairERI* pair, long i, long j, Basis bf_1, Basis bf_2):
+
+    """
+
+    Builds an AO-pair cache for all primitive pairs in the contracted pair.
+
+    """
+
+    cdef:
+        long a, b
+        int primitive_pair_index = 0
+
+    pair.i = i
+    pair.j = j
+
+    pair.lx_sum = <int>(bf_1.shell[0] + bf_2.shell[0])
+    pair.ly_sum = <int>(bf_1.shell[1] + bf_2.shell[1])
+    pair.lz_sum = <int>(bf_1.shell[2] + bf_2.shell[2])
+
+    pair.nx = pair.lx_sum + 1
+    pair.ny = pair.ly_sum + 1
+    pair.nz = pair.lz_sum + 1
+
+    pair.t_start = pair.lx_sum & 1
+    pair.u_start = pair.ly_sum & 1
+
+    pair.n_primitive_pairs = <int>(bf_1.num_exps * bf_2.num_exps)
+    pair.primitive_pairs = <PrimitivePairERI*>malloc(pair.n_primitive_pairs * sizeof(PrimitivePairERI))
+
+    if pair.primitive_pairs == NULL:
+        raise MemoryError()
+
+    for a in range(bf_1.num_exps):
+
+        for b in range(bf_2.num_exps):
+
+            build_primitive_pair_eri(bf_1, bf_2, a, b, &pair.primitive_pairs[primitive_pair_index])
+            primitive_pair_index += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+cdef inline double primitive_pair_eri(AOPairERI* pair_12, PrimitivePairERI* primitive_pair_12,
+                                     AOPairERI* pair_34, PrimitivePairERI* primitive_pair_34) noexcept nogil:
+
+    """
+
+    Primitive-pair contraction for a diatomic on the z axis.
+
+    """
+
+    cdef:
+        double exponent_sum_12 = primitive_pair_12.exponent_sum
+        double exponent_sum_34 = primitive_pair_34.exponent_sum
+        double exponent_sum_total = exponent_sum_12 + exponent_sum_34
+        double reduced_exponent = exponent_sum_12 * exponent_sum_34 / exponent_sum_total
+        double PQz = primitive_pair_12.product_centre_z - primitive_pair_34.product_centre_z
+
+        int Vmax = pair_12.lz_sum + pair_34.lz_sum
+        int Nmax = pair_12.lx_sum + pair_12.ly_sum + pair_12.lz_sum + pair_34.lx_sum + pair_34.ly_sum + pair_34.lz_sum
+        int stride = Nmax + 1
+
+        int t, u, v, tau, nu, phi
+        int n_xy
+
+        double integral = 0.0
+        double prefactor
+        double coefficient_x_12, coefficient_y_12, coefficient_z_12
+        double coefficient_x_34, coefficient_y_34, coefficient_z_34
+        double x_factor, xy_factor
+        double sign
+        double boys_table[64]
+        double pow_table[64]
+        double Rz_table[1024]
+
+    fill_boys_table(Nmax, reduced_exponent * PQz * PQz, boys_table)
+    fill_pow_table(Nmax, reduced_exponent, pow_table)
+    fill_Rz_linear_table(Vmax, Nmax, PQz, boys_table, pow_table, Rz_table)
+
+    for t in range(pair_12.t_start, pair_12.nx, 2):
+
+        coefficient_x_12 = primitive_pair_12.hermite_x[t]
+
+        for tau in range(pair_34.t_start, pair_34.nx, 2):
+
+            coefficient_x_34 = primitive_pair_34.hermite_x[tau]
+            x_factor = coefficient_x_12 * coefficient_x_34 * odd_double_fact_even_argument_fast(t + tau)
+
+            for u in range(pair_12.u_start, pair_12.ny, 2):
+
+                coefficient_y_12 = primitive_pair_12.hermite_y[u]
+
+                for nu in range(pair_34.u_start, pair_34.ny, 2):
+
+                    coefficient_y_34 = primitive_pair_34.hermite_y[nu]
+                    xy_factor = x_factor * coefficient_y_12 * coefficient_y_34 * odd_double_fact_even_argument_fast(u + nu)
+                    n_xy = ((t + tau) >> 1) + ((u + nu) >> 1)
+
+                    for v in range(pair_12.nz):
+
+                        coefficient_z_12 = primitive_pair_12.hermite_z[v]
+
+                        if coefficient_z_12 == 0.0:
+                            continue
+
+                        for phi in range(pair_34.nz):
+
+                            coefficient_z_34 = primitive_pair_34.hermite_z[phi]
+
+                            if coefficient_z_34 == 0.0:
+                                continue
+
+                            if ((tau + nu + phi) & 1):
+                                sign = -1.0
+                            else:
+                                sign = 1.0
+
+                            integral += xy_factor * coefficient_z_12 * coefficient_z_34 * sign * Rz_table[(v + phi) * stride + n_xy]
+
+    prefactor = 34.986836655249725 / (exponent_sum_12 * exponent_sum_34 * sqrt(exponent_sum_total))
+
+    return primitive_pair_12.coefficient * primitive_pair_34.coefficient * prefactor * integral
+
+
+
+
+
+
+
+
+
+
+
+
+
+cdef inline double calculate_electron_repulsion_integral_cached(AOPairERI* pair_12, AOPairERI* pair_34) noexcept nogil:
+
+    """
+
+    Contracted ERI from two cached AO pairs.
+
+    """
+
+    cdef:
+        int p, q
+        double integral = 0.0
+
+    for p in range(pair_12.n_primitive_pairs):
+
+        for q in range(pair_34.n_primitive_pairs):
+
+            integral += primitive_pair_eri(pair_12, &pair_12.primitive_pairs[p], pair_34, &pair_34.primitive_pairs[q])
+
+    return integral
+
+
+
+
+
+
+
+
+
+
+
+
+
+cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, double[:, :, :, :] ERI_AO, list bfs, int num_threads):
+
+    """
+
+    Calculates the electron repulsion integrals array between basis functions, <12(r)| 1/(r-r') |34(r')>.
+
+    This version uses AO-pair primitive caches. For a contracted AO pair (i,j),
+    the primitive-pair Hermite data are built once, then reused against every
+    partner AO pair.
+
+    """
+
+    cdef:
+        long i, j, k, l
+        long pair_index_12, pair_index_34, pair_count, pair_build_index
         double integral
-        Basis bf_1, bf_2, bf_3, bf_4
+        AOPairERI* ao_pairs = NULL
+        Basis bf_1, bf_2
+        bint initialized = False
 
-    for i in range(n_basis):
+    pair_count = n_basis * (n_basis + 1) // 2
+    ao_pairs = <AOPairERI*>malloc(pair_count * sizeof(AOPairERI))
 
-        bf_1 = <Basis>bfs[i]
+    if ao_pairs == NULL:
+        raise MemoryError()
 
-        for j in range(i + 1):
+    for pair_build_index in range(pair_count):
+        ao_pairs[pair_build_index].primitive_pairs = NULL
 
-            bf_2 = <Basis>bfs[j]
+    try:
 
-            for k in range(i + 1):
+        pair_build_index = 0
 
-                bf_3 = <Basis>bfs[k]
+        for i in range(n_basis):
 
-                # Enforces (k,l) <= (i,j) in pair-index ordering
+            bf_1 = <Basis>bfs[i]
 
-                l_stop = j + 1 if k == i else k + 1
+            for j in range(i + 1):
 
-                for l in range(l_stop):
+                bf_2 = <Basis>bfs[j]
+                build_ao_pair_eri(&ao_pairs[pair_build_index], i, j, bf_1, bf_2)
+                pair_build_index += 1
 
-                    bf_4 = <Basis>bfs[l]
+        initialized = True
 
-                    # Checks if the sum of angular momenta is odd, in which case, for a diatomic, the integral is zero
+        with nogil:
 
-                    if (
-                        ((bf_1.shell[0] + bf_2.shell[0] + bf_3.shell[0] + bf_4.shell[0]) & 1) or
-                        ((bf_1.shell[1] + bf_2.shell[1] + bf_3.shell[1] + bf_4.shell[1]) & 1)
-                    ):
+            for pair_index_12 in prange(pair_count, schedule="dynamic", num_threads = num_threads):
+
+                i = ao_pairs[pair_index_12].i
+                j = ao_pairs[pair_index_12].j
+
+                for pair_index_34 in range(pair_index_12 + 1):
+
+                    k = ao_pairs[pair_index_34].i
+                    l = ao_pairs[pair_index_34].j
+
+                    if (((ao_pairs[pair_index_12].lx_sum + ao_pairs[pair_index_34].lx_sum) & 1) or
+                        ((ao_pairs[pair_index_12].ly_sum + ao_pairs[pair_index_34].ly_sum) & 1)):
 
                         integral = 0.0
 
                     else:
 
-                        integral = calculate_electron_repulsion_integral(bf_1, bf_2, bf_3, bf_4)
+                        integral = calculate_electron_repulsion_integral_cached(&ao_pairs[pair_index_12], &ao_pairs[pair_index_34])
 
-                    # Enforces the eightfold symmetry of two-electron integrals, saving lots of time
+                    # Enforces the eightfold symmetry of two-electron integrals.
 
                     ERI_AO[i, j, k, l] = integral
                     ERI_AO[k, l, i, j] = integral
@@ -751,8 +1341,29 @@ cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, do
                     ERI_AO[i, j, l, k] = integral
                     ERI_AO[k, l, j, i] = integral
 
+    finally:
+
+        if ao_pairs != NULL:
+
+            for pair_build_index in range(pair_count):
+
+                if ao_pairs[pair_build_index].primitive_pairs != NULL:
+                    free(ao_pairs[pair_build_index].primitive_pairs)
+
+            free(ao_pairs)
 
     return ERI_AO
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -765,41 +1376,40 @@ cpdef double[:, :, :, :] calculate_electron_repulsion_integrals(long n_basis, do
 cpdef double calculate_electron_repulsion_integral(Basis bf_1, Basis bf_2, Basis bf_3, Basis bf_4):
 
     """
-    
-    Calculates an electron repulsion integral between basis functions, <12(r)| 1/(r-r') |34(r')>.
-    
-    Args:
-        bf_1 (Basis): First basis function
-        bf_2 (Basis): Second basis function
-        bf_3 (Basis): Third basis function
-        bf_4 (Basis): Fourth basis function
 
-    Returns:
-        integral (float): Electron repulsion integral between contracted Gaussians
-        
+    Calculates an electron repulsion integral between basis functions, <12(r)| 1/(r-r') |34(r')>.
+
     """
 
-    cdef double integral = 0.0
-    cdef double primitive_value
-    cdef long i, j, k, l
-    cdef double contraction_prefactor
+    cdef:
+        AOPairERI pair_12
+        AOPairERI pair_34
+        double integral
 
-    for i in range(bf_1.num_exps):
+    pair_12.primitive_pairs = NULL
+    pair_34.primitive_pairs = NULL
 
-        for j in range(bf_2.num_exps):
+    try:
 
-            for k in range(bf_3.num_exps):
+        build_ao_pair_eri(&pair_12, 0, 0, bf_1, bf_2)
+        build_ao_pair_eri(&pair_34, 0, 0, bf_3, bf_4)
 
-                for l in range(bf_4.num_exps):
+        if (((pair_12.lx_sum + pair_34.lx_sum) & 1) or
+            ((pair_12.ly_sum + pair_34.ly_sum) & 1)):
 
-                    # Applies coefficients and norms to integrals between primitive Gaussians
+            integral = 0.0
 
-                    contraction_prefactor = bf_1.norm[i] * bf_2.norm[j] * bf_3.norm[k] * bf_4.norm[l] * bf_1.coefs[i] * bf_2.coefs[j] * bf_3.coefs[k] * bf_4.coefs[l]
-        
-                    primitive_value = electron_repulsion(bf_1.exps[i], bf_1.shell, bf_1.origin, bf_2.exps[j], bf_2.shell, bf_2.origin, bf_3.exps[k], bf_3.shell, bf_3.origin, bf_4.exps[l], bf_4.shell, bf_4.origin)
+        else:
 
-                    integral += contraction_prefactor * primitive_value
+            integral = calculate_electron_repulsion_integral_cached(&pair_12, &pair_34)
 
+    finally:
+
+        if pair_12.primitive_pairs != NULL:
+            free(pair_12.primitive_pairs)
+
+        if pair_34.primitive_pairs != NULL:
+            free(pair_34.primitive_pairs)
 
     return integral
 
@@ -812,7 +1422,10 @@ cpdef double calculate_electron_repulsion_integral(Basis bf_1, Basis bf_2, Basis
 
 
 
-cdef inline double hermite_coeff(int l_1, int l_2, int t, double R_12, double exponent_1, double exponent_2):
+
+
+
+cdef inline double hermite_coeff(int l_1, int l_2, int t, double R_12, double exponent_1, double exponent_2) noexcept nogil:
 
     """
     
@@ -874,7 +1487,7 @@ cdef inline double hermite_coeff(int l_1, int l_2, int t, double R_12, double ex
 
 
 
-cdef inline double boys(int m, double T):
+cdef inline double boys(int m, double T) noexcept nogil:
 
     """
     
@@ -899,7 +1512,7 @@ cdef inline double boys(int m, double T):
 
 
 
-cdef inline double odd_double_double_fact_from_even(int n_even):
+cdef inline double odd_double_double_fact_from_even(int n_even) noexcept nogil:
 
     """
     
@@ -924,7 +1537,7 @@ cdef inline double odd_double_double_fact_from_even(int n_even):
 
 
 
-cdef inline void fill_boys_table(int M, double T, double* boys_table):
+cdef inline void fill_boys_table(int M, double T, double* boys_table) noexcept nogil:
 
     """
     
@@ -966,7 +1579,7 @@ cdef inline void fill_boys_table(int M, double T, double* boys_table):
 
 
 
-cdef inline void fill_pow_table(int M, double scale, double* pow_table):
+cdef inline void fill_pow_table(int M, double scale, double* pow_table) noexcept nogil:
 
     """
     
@@ -996,7 +1609,7 @@ cdef inline void fill_pow_table(int M, double scale, double* pow_table):
 
 
 
-cdef inline void fill_Rz_linear_table(int Vmax, int Nmax, double PCz, double* boys_table, double* pow_table, double* Rz_table):
+cdef inline void fill_Rz_linear_table(int Vmax, int Nmax, double PCz, double* boys_table, double* pow_table, double* Rz_table) noexcept nogil:
 
     """
     
@@ -1084,205 +1697,4 @@ cdef inline void fill_hermite_table(int l_1, int l_2, double R_12, double expone
 
             hermite_table[t] = hermite_coeff(l_1, l_2, t, R_12, exponent_1, exponent_2)
 
-
-
-
-
-
-
-
-
-
-cdef double electron_repulsion(double exponent_1, long *angmom_1, double *centre_1, double exponent_2, long *angmom_2, double *centre_2,
-                               double exponent_3, long *angmom_3, double *centre_3, double exponent_4, long *angmom_4, double *centre_4):
-
-    """
-    
-    Calculates an electron repulsion integral between primitive Gaussians, <12(r)| 1/(r-r') |34(r')>.
-    
-    Args:
-        exponent_1 (float): Gaussian exponent on first centre
-        angmom_1 (array): Angular momenta of primitive Gaussian of first centre
-        centre_1 (array): Coordinates of first centre
-        exponent_2 (float): Gaussian exponent on second centre
-        angmom_2 (array): Angular momenta of primitive Gaussian of second centre
-        centre_2 (array): Coordinates of second centre
-        exponent_3 (float): Gaussian exponent on third centre
-        angmom_3 (array): Angular momenta of primitive Gaussian of third centre
-        centre_3 (array): Coordinates of third centre
-        exponent_4 (float): Gaussian exponent on fourth centre
-        angmom_4 (array): Angular momenta of primitive Gaussian of fourth centre
-        centre_4 (array): Coordinates of fourth centre
-    
-    Returns:
-        integral (float): Electron repulsion integral between primitive Gaussians
-        
-    """
-
-    cdef:
-        long l_1 = angmom_1[0]
-        long m_1 = angmom_1[1]
-        long n_1 = angmom_1[2]
-        long l_2 = angmom_2[0]
-        long m_2 = angmom_2[1]
-        long n_2 = angmom_2[2]
-        long l_3 = angmom_3[0]
-        long m_3 = angmom_3[1]
-        long n_3 = angmom_3[2]
-        long l_4 = angmom_4[0]
-        long m_4 = angmom_4[1]
-        long n_4 = angmom_4[2]
-
-        double exponent_sum_12 = exponent_1 + exponent_2
-        double exponent_sum_34 = exponent_3 + exponent_4
-        double reduced_exponent = exponent_sum_12 * exponent_sum_34 / (exponent_sum_12 + exponent_sum_34)
-
-        double Rz_12 = centre_1[2] - centre_2[2]
-        double Rz_34 = centre_3[2] - centre_4[2]
-
-        double Pz = (exponent_1 * centre_1[2] + exponent_2 * centre_2[2]) / exponent_sum_12
-        double Qz = (exponent_3 * centre_3[2] + exponent_4 * centre_4[2]) / exponent_sum_34
-        double PQz = Pz - Qz
-
-        int n_hermite_x_12 = <int>(l_1 + l_2 + 1)
-        int n_hermite_y_12 = <int>(m_1 + m_2 + 1)
-        int n_hermite_z_12 = <int>(n_1 + n_2 + 1)
-        int n_hermite_x_34 = <int>(l_3 + l_4 + 1)
-        int n_hermite_y_34 = <int>(m_3 + m_4 + 1)
-        int n_hermite_z_34 = <int>(n_3 + n_4 + 1)
-
-        int Vmax = <int>(n_1 + n_2 + n_3 + n_4)
-        int Nmax = <int>((l_1 + m_1 + n_1) + (l_2 + m_2 + n_2) + (l_3 + m_3 + n_3) + (l_4 + m_4 + n_4))
-        int stride = Nmax + 1
-
-        int t, u, v, tau, nu, phi
-        int t_start = <int>((l_1 + l_2) & 1)
-        int u_start = <int>((m_1 + m_2) & 1)
-        int tau_start = <int>((l_3 + l_4) & 1)
-        int nu_start = <int>((m_3 + m_4) & 1)
-        int n_xy
-
-        double integral = 0.0
-        double prefactor
-        double coefficient_x_12, coefficient_y_12, coefficient_z_12
-        double coefficient_x_34, coefficient_y_34, coefficient_z_34
-        double x_factor, xy_factor
-        double sign
-
-        double *hermite_x_12 = NULL
-        double *hermite_y_12 = NULL
-        double *hermite_z_12 = NULL
-        double *hermite_x_34 = NULL
-        double *hermite_y_34 = NULL
-        double *hermite_z_34 = NULL
-
-        double *boys_table = NULL
-        double *pow_table = NULL
-        double *Rz_table = NULL
-
-    # If the sum of angular momenta is odd, by parity the integral is zero
-
-    if ((l_1 + l_2 + l_3 + l_4) & 1) or ((m_1 + m_2 + m_3 + m_4) & 1):
-
-        return 0.0
-
-
-    hermite_x_12 = <double*>malloc(n_hermite_x_12 * sizeof(double))
-    hermite_y_12 = <double*>malloc(n_hermite_y_12 * sizeof(double))
-    hermite_z_12 = <double*>malloc(n_hermite_z_12 * sizeof(double))
-    hermite_x_34 = <double*>malloc(n_hermite_x_34 * sizeof(double))
-    hermite_y_34 = <double*>malloc(n_hermite_y_34 * sizeof(double))
-    hermite_z_34 = <double*>malloc(n_hermite_z_34 * sizeof(double))
-
-    boys_table = <double*>malloc((Nmax + 1) * sizeof(double))
-    pow_table = <double*>malloc((Nmax + 1) * sizeof(double))
-    Rz_table = <double*>malloc((Vmax + 1) * (Nmax + 1) * sizeof(double))
-
-    if (hermite_x_12 == NULL or hermite_y_12 == NULL or hermite_z_12 == NULL or
-        hermite_x_34 == NULL or hermite_y_34 == NULL or hermite_z_34 == NULL or
-        boys_table == NULL or pow_table == NULL or Rz_table == NULL):
-
-        free(hermite_x_12)
-        free(hermite_y_12)
-        free(hermite_z_12)
-        free(hermite_x_34)
-        free(hermite_y_34)
-        free(hermite_z_34)
-        free(boys_table)
-        free(pow_table)
-        free(Rz_table)
-
-        return 0.0
-
-    fill_hermite_table(l_1, l_2, 0.0, exponent_1, exponent_2, hermite_x_12, True)
-    fill_hermite_table(m_1, m_2, 0.0, exponent_1, exponent_2, hermite_y_12, True)
-    fill_hermite_table(n_1, n_2, Rz_12, exponent_1, exponent_2, hermite_z_12, False)
-
-    fill_hermite_table(l_3, l_4, 0.0, exponent_3, exponent_4, hermite_x_34, True)
-    fill_hermite_table(m_3, m_4, 0.0, exponent_3, exponent_4, hermite_y_34, True)
-    fill_hermite_table(n_3, n_4, Rz_34, exponent_3, exponent_4, hermite_z_34, False)
-
-    fill_boys_table(Nmax, reduced_exponent * PQz * PQz, boys_table)
-    fill_pow_table(Nmax, reduced_exponent, pow_table)
-    fill_Rz_linear_table(Vmax, Nmax, PQz, boys_table, pow_table, Rz_table)
-
-    for t in range(t_start, n_hermite_x_12, 2):
-
-        coefficient_x_12 = hermite_x_12[t]
-
-        for tau in range(tau_start, n_hermite_x_34, 2):
-
-            coefficient_x_34 = hermite_x_34[tau]
-            x_factor = coefficient_x_12 * coefficient_x_34 * odd_double_double_fact_from_even(t + tau)
-
-            for u in range(u_start, n_hermite_y_12, 2):
-
-                coefficient_y_12 = hermite_y_12[u]
-
-                for nu in range(nu_start, n_hermite_y_34, 2):
-
-                    coefficient_y_34 = hermite_y_34[nu]
-                    xy_factor = x_factor * coefficient_y_12 * coefficient_y_34 * odd_double_double_fact_from_even(u + nu)
-                    n_xy = ((t + tau) >> 1) + ((u + nu) >> 1)
-
-                    for v in range(n_hermite_z_12):
-
-                        coefficient_z_12 = hermite_z_12[v]
-
-                        if coefficient_z_12 == 0.0:
-
-                            continue
-
-                        for phi in range(n_hermite_z_34):
-
-                            coefficient_z_34 = hermite_z_34[phi]
-
-                            if coefficient_z_34 == 0.0:
-
-                                continue
-
-                            if ((tau + nu + phi) & 1):
-
-                                sign = -1.0
-
-                            else:
-
-                                sign = 1.0
-
-                            integral += xy_factor * coefficient_z_12 * coefficient_z_34 * sign * Rz_table[(v + phi) * stride + n_xy]
-
-
-    prefactor = 2.0 * pow(PI, 2.5) / (exponent_sum_12 * exponent_sum_34 * sqrt(exponent_sum_12 + exponent_sum_34))
-    integral *= prefactor
-
-    free(hermite_x_12)
-    free(hermite_y_12)
-    free(hermite_z_12)
-    free(hermite_x_34)
-    free(hermite_y_34)
-    free(hermite_z_34)
-    free(boys_table)
-    free(pow_table)
-    free(Rz_table)
-
-    return integral
+    return

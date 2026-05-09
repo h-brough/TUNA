@@ -92,9 +92,9 @@ KEYWORDS = [
     Keyword("EXTRAPOLATE", "extrapolate"),
 
     Keyword("NOROTATE", "no_rotate_guess"),
-    Keyword("COREGUESS", "core_guess"),
-    Keyword("SADGUESS", "superposition_guess"),
-    Keyword("SCFGUESS", "self_consistent_guess", default = True),
+    Keyword("COREGUESS", "core_guess_requested"),
+    Keyword("SADGUESS", "superposition_guess_requested"),
+    Keyword("SCFGUESS", "self_consistent_guess_requested"),
     Keyword("SLOWCONV", "slow_conv"),
     Keyword("VERYSLOWCONV", "very_slow_conv"),
     Keyword("NODIIS", "no_DIIS"),
@@ -114,6 +114,9 @@ KEYWORDS = [
     Keyword(("NORMALPNO", "MEDIUMPNO"), "medium_DLPNO_criteria"),
     Keyword("TIGHTPNO", "tight_DLPNO_criteria"),
     Keyword("EXTREMEPNO", "extreme_DLPNO_criteria"),
+    Keyword("TD", "time_dependent"),
+    Keyword("TDA", "tamm_dancoff_approximation"),
+    Keyword("NL", "VV10"),
 
     Keyword("SCANPLOT", "scan_plot"),
     Keyword("DASH", "plot_dashed_lines"),
@@ -133,7 +136,8 @@ KEYWORDS = [
     Keyword(("POLAR", "POLARISABILITY", "POLARIZABILITY"), "polarisability"),
     Keyword(("HYPER", "HYPERPOLARISABILITY", "HYPERPOLARIZABILITY"), "hyperpolarisability"),
     Keyword("VERTICAL", "vertical"),
-    Keyword("VPT2", "perturbative_anharmonic"),
+    Keyword("VPT2", "second_order_vpt"),
+    Keyword("VPT1", "first_order_vpt"),
     Keyword("NOCP", "no_counterpoise_correction"),
     Keyword("ZPE", "do_ZPE_correction"),
 
@@ -143,6 +147,7 @@ KEYWORDS = [
     Keyword(("CH", "CHARGE"), "charge", "V", 0, int),
     Keyword(("ML", "MULTIPLICITY"), "multiplicity", "V", 1, int),
     Keyword("BASIS", "custom_basis_file", "V", None, str),
+    Keyword("THREADS", "number_of_threads", "V", 4, int),
 
     Keyword("XA", "X_alpha", "V", 2 / 3, float),
     Keyword("STHRESH", "S_eigenvalue_threshold", "V", 1e-7, float),
@@ -151,6 +156,9 @@ KEYWORDS = [
     Keyword("EX", "electric_field_x", "V", 0, float),
     Keyword("EY", "electric_field_y", "V", 0, float),
     Keyword("EZ", "electric_field_z", "V", 0, float),
+    Keyword("EGX", "electric_field_gradient_x", "V", 0, float),
+    Keyword("EGY", "electric_field_gradient_y", "V", 0, float),
+    Keyword("EGZ", "electric_field_gradient_z", "V", 0, float),
     Keyword("NELEC", "n_electrons_for_ip_or_ea", "V", 1, int),
     Keyword("ROOT", "root", "V", 1, int),
     Keyword("CISTHRESH", "CIS_contribution_threshold", "V", 1, float),
@@ -171,7 +179,10 @@ KEYWORDS = [
     Keyword("AMPCONV", "amp_conv", "V", 1e-8, float),
     Keyword("PRINTAMPS", "print_n_amplitudes", "V", 10, int),
     Keyword("MPGRID", "n_MP2_grid_points", "V", 20, int),
-    Keyword("ECONV", "correlated_energy_convergence", "V", 1e-9, float),
+    Keyword("ECONV", "energy_convergence", "V", 1e-9, float),
+    Keyword("RMSDP", "rms_density_change_convergence", "V", 1e-9, float),
+    Keyword("MAXDP", "max_density_change_convergence", "V", 1e-9, float),
+    Keyword("DIISERR", "commutator_convergence", "V", 1e-9, float),
     Keyword("CORRMAXITER", "correlated_max_iter", "V", 100, int),
     Keyword("TCUTDO", "TCutDO", "V", 1e-2, float),
     Keyword("TCUTPNO", "TCutPNO", "V", 1e-8, float),
@@ -184,6 +195,7 @@ KEYWORDS = [
     # These keywords give two attributes, one boolean for "is this keyword requested", another for the value given
     
     Keyword("ROTATE", "rotate_guess", "B+V", False, float, 45, "theta"),
+    Keyword("PRINTMOS", "print_molecular_orbitals", "B+V", False, int, 10, "n_orbitals_to_print"),
     Keyword("DIIS", "DIIS", "B+V", True, int, 6, "max_DIIS_matrices"),
     Keyword("DAMP", "damping", "B+V", True, float, None, "damping_factor"),
     Keyword("FREEZECORE", "freeze_core", "B+V", False, int, None, "freeze_n_orbitals"),
@@ -390,16 +402,34 @@ def process_complex_keywords(self: Calculation) -> None:
     self.monatomic = len(self.atomic_symbols) == 1 or self.ghost_atom_present
     self.diatomic = not self.monatomic
 
-    # A core guess should be activated for atomic calculations, a SCF guess is disabled for BDE calculations where atoms are involved in the same Calculation object
+    # Core guess is default for atomic and first row diatomic calculations, otherwise SCF guesss
 
-    self.core_guess = True if self.monatomic else self.core_guess
+    guess = "core" if self.monatomic or all(symbol in ["H", "HE"] for symbol in self.atomic_symbols) else "scf"
 
-    self.self_consistent_guess = False if (self.core_guess or self.superposition_guess or self.calculation_type == "BDE") else self.self_consistent_guess
+    # Allows overwriting of defaults with keywords
 
+    if self.core_guess_requested:
+        
+        guess = "core"
+
+    if self.superposition_guess_requested:
+        
+        guess = "superposition"
+
+    if self.self_consistent_guess_requested:
+        
+        guess = "scf"
+
+    # Set mutually exclusive guess options
+
+    self.core_guess = guess == "core"
+    self.superposition_guess = guess == "superposition"
+    self.self_consistent_guess = guess == "scf"
+    
     # The full three-dimensional electric field vector
 
     self.electric_field = np.array([self.electric_field_x, self.electric_field_y, self.electric_field_z])
-    self.electric_field_gradient = np.zeros(3)
+    self.electric_field_gradient = np.array([self.electric_field_gradient_x, self.electric_field_gradient_y, self.electric_field_gradient_z])
 
     # Does anything need to be plotted at the end of the calculation
     
@@ -434,7 +464,7 @@ def process_complex_keywords(self: Calculation) -> None:
 
     # Determines the level of numerical derivative to be calculated
 
-    self.third_derivative_requested = self.perturbative_anharmonic or self.hyperpolarisability
+    self.third_derivative_requested = self.second_order_vpt or self.hyperpolarisability
     self.second_derivative_requested = self.calculation_type in ["FREQ", "OPTFREQ", "ANHARM"] or self.polarisability or self.do_ZPE_correction or self.third_derivative_requested
     self.first_derivative_requested = self.calculation_type in ["OPT", "IP", "EA", "BDE", "MD"] or self.dipole or self.quadrupole or self.second_derivative_requested
 
@@ -450,6 +480,13 @@ def process_complex_keywords(self: Calculation) -> None:
     self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "TIGHT" in self.params or "TIGHTSCF" in self.params else self.SCF_conv
     self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if "EXTREME" in self.params or "EXTREMESCF" in self.params else self.SCF_conv
     
+    # The "ECONV" keyword can overwrite all the others, the values here are only relevant if the keyword is used
+
+    self.SCF_conv["delta_E"] = self.SCF_conv["delta_E"] if "ECONV" not in self.params else self.energy_convergence
+    self.SCF_conv["max_DP"] = self.SCF_conv["max_DP"] if "MAXDP" not in self.params else self.max_density_change_convergence
+    self.SCF_conv["RMS_DP"] = self.SCF_conv["RMS_DP"] if "RMSDP" not in self.params else self.rms_density_change_convergence
+    self.SCF_conv["commutator"] = self.SCF_conv["commutator"] if "DIISERR" not in self.params else self.commutator_convergence
+
     # Convergence criteria for geometry optimisation
 
     self.geom_conv = constants.convergence_criteria_optimisation["medium"] 
@@ -472,7 +509,7 @@ def process_complex_keywords(self: Calculation) -> None:
 
     # The default energy convergence for correlated calculations is the same as the SCF convergence by default
 
-    self.correlated_energy_convergence = self.SCF_conv.get("delta_E") if "ECONV" not in self.params else self.correlated_energy_convergence
+    self.energy_convergence = self.SCF_conv.get("delta_E") if "ECONV" not in self.params else self.energy_convergence
 
 
     return

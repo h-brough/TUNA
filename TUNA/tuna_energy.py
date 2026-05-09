@@ -7,6 +7,7 @@ import tuna_props as props
 from numpy import ndarray
 from tuna_molecule import Molecule
 import tuna_dft as dft
+import tuna_integral as ints
 import tuna_guess as guess
 import tuna_kernel as kern
 import tuna_out as out
@@ -17,12 +18,13 @@ import tuna_out as out
 
 This is the TUNA module for calculating molecular energies, written first for version 0.1.0 and rewritten in version 0.10.0.
 
-Any mathematical functions that don't call calculate_energy should be in tuna_kernel -- this is for wrappers only. Energy evaluations may
+Any mathematical functions that don't call calculate_energy should be in tuna_kernel - this is for wrappers only. Energy evaluations may
 use extrapolation of the basis set, and begin by building the molecule then calculating the molecular integrals. The self-consistent field
 cycle is then entered within tuna_scf before correlated or excited state calculations are performed. Finally, properties are calculated
 in tuna_prop or numerical derivatives of the energy are calculated and the energy evaluation process is repeated.
 
 Updated in version 0.10.1 to include numerical quadrupole moment calculations.
+Updated in version 0.11.0 to allow energy evaluations in a finite electric field gradient and VV10 energy evaluation.
 
 This module contains:
 
@@ -106,14 +108,16 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     """
 
-    double_zeta_bases = ["CC-PVDZ", "AUG-CC-PVDZ", "D-AUG-CC-PVDZ", "T-AUG-CC-PVDZ", "PC-1", "DEF2-SVP", "DEF2-SVPD", "ANO-PVDZ", "AUG-ANO-PVDZ"]
+    double_zeta_bases   = ["CC-PVDZ", "AUG-CC-PVDZ", "D-AUG-CC-PVDZ", "T-AUG-CC-PVDZ", "PC-1", "DEF2-SVP", "DEF2-SVPD", "ANO-PVDZ", "AUG-ANO-PVDZ"]
     quadruple_zeta_bases = ["CC-PVQZ", "AUG-CC-PVQZ", "D-AUG-CC-PVQZ", "T-AUG-CC-PVQZ", "PC-3", "ANO-PVQZ", "AUG-ANO-PVQZ"]
+    quintuple_zeta_bases = ["CC-PV5Z", "AUG-CC-PV5Z", "D-AUG-CC-PV5Z", "T-AUG-CC-PV5Z"]
 
     basis_pairs = {
 
         "CC-PVDZ" : "CC-PVTZ",
         "CC-PVTZ" : "CC-PVQZ",
         "CC-PVQZ" : "CC-PV5Z",
+        "CC-PV5Z" : "CC-PV6Z",
         "AUG-CC-PVDZ" : "AUG-CC-PVTZ",
         "D-AUG-CC-PVDZ" : "D-AUG-CC-PVTZ",
         "T-AUG-CC-PVDZ" : "T-AUG-CC-PVTZ",
@@ -123,6 +127,9 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
         "AUG-CC-PVQZ" : "AUG-CC-PV5Z",
         "D-AUG-CC-PVQZ" : "D-AUG-CC-PV5Z",
         "T-AUG-CC-PVQZ" : "T-AUG-CC-PV5Z",
+        "AUG-CC-PV5Z" : "AUG-CC-PV6Z",
+        "D-AUG-CC-PV5Z" : "D-AUG-CC-PV6Z",
+        "T-AUG-CC-PV5Z" : "T-AUG-CC-PV6Z",
         "PC-1": "PC-2",
         "PC-2": "PC-3",
         "PC-3": "PC-4",
@@ -140,62 +147,50 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
         "AUG-ANO-PVQZ" : "AUG-ANO-PV5Z"
     }
 
+    zeta_info = {
+
+        "double":    ("Double",    "Triple",    "               Double-zeta Calculation", "               Triple-zeta Calculation"),
+        "triple":    ("Triple",    "Quadruple", "               Triple-zeta Calculation", "             Quadruple-zeta Calculation"),
+        "quadruple": ("Quadruple", "Quintuple", "              Quadruple-zeta Calculation", "              Quintuple-zeta Calculation"),
+        "quintuple": ("Quintuple", "Sextuple",  "              Quintuple-zeta Calculation", "              Sextuple-zeta Calculation"),
+    
+    }
+
     # Takes out original and larger basis set
 
     small_basis = calculation.original_basis
     large_basis = basis_pairs.get(small_basis)
 
-    small_basis_zeta = "double" if small_basis in double_zeta_bases else "quadruple" if small_basis in quadruple_zeta_bases else "triple"
+    small_basis_zeta = "double" if small_basis in double_zeta_bases else "quadruple" if small_basis in quadruple_zeta_bases else "quintuple" if small_basis in quintuple_zeta_bases else "triple"
 
-    if not large_basis: 
+    if not large_basis:
         
         error(f"Basis set extrapolation is not available for \"{small_basis}\". Check the manual for compatible basis sets!")
 
-    if small_basis_zeta == "double":
+    small_name, large_name, small_header, large_header = zeta_info[small_basis_zeta]
 
-        log(f"\nBeginning basis set extrapolation with double- and triple-zeta basis sets...", calculation, 1, silent=silent)
-        log(f"Double-zeta basis is {basis_types.get(small_basis)}, triple-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
+    log(f"\nBeginning basis set extrapolation with {small_name.lower()}- and {large_name.lower()}-zeta basis sets...", calculation, 1, silent=silent)
+    log(f"{small_name}-zeta basis is {basis_types.get(small_basis)}, {large_name.lower()}-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
 
-        log_spacer(calculation, silent=silent, start="\n")
-        log(f"               Double-zeta Calculation", calculation, 1, silent=silent, colour="white")
-        log_spacer(calculation, silent=silent)
-    
-    elif small_basis_zeta == "triple":
-
-        log(f"\nBeginning basis set extrapolation with triple- and quadruple-zeta basis sets...", calculation, 1, silent=silent)
-        log(f"Triple-zeta basis is {basis_types.get(small_basis)}, quadruple-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
-
-        log_spacer(calculation, silent=silent, start="\n")
-        log(f"               Triple-zeta Calculation", calculation, 1, silent=silent, colour="white")
-        log_spacer(calculation, silent=silent)
-
-    else:
-
-        log(f"\nBeginning basis set extrapolation with quadruple- and quintuple-zeta basis sets...", calculation, 1, silent=silent)
-        log(f"Quadruple-zeta basis is {basis_types.get(small_basis)}, quintuple-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
-
-        log_spacer(calculation, silent=silent, start="\n")
-        log(f"              Quadruple-zeta Calculation", calculation, 1, silent=silent, colour="white")
-        log_spacer(calculation, silent=silent)
-
+    log_spacer(calculation, silent=silent, start="\n")
+    log(small_header, calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation, silent=silent)
 
     calculation.basis = small_basis
 
     # Calculates the energy with the first basis
 
-    SCF_output_small, molecule_small, E_total_small, P_small  = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, do_correlation=do_correlation, terse=terse, integrals=integrals)
+    SCF_output_small, molecule_small, E_total_small, P_small = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, do_correlation=do_correlation, terse=terse, integrals=integrals)
 
     calculation.basis = large_basis
-    
-    header = "               Triple-zeta Calculation" if small_basis_zeta == "double" else "             Quadruple-zeta Calculation" if small_basis_zeta == "triple" else "              Quintuple-zeta Calculation" 
 
     log_spacer(calculation, silent=silent, start="\n")
-    log(header, calculation, 1, silent=silent, colour="white")
+    log(large_header, calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
     # Calculates the energy with the second basis
 
-    SCF_output_large, _, E_total_large, _  = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, do_correlation=do_correlation, silent=silent)
+    SCF_output_large, _, E_total_large, _ = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, do_correlation=do_correlation, silent=silent)
 
     E_SCF_small = SCF_output_small.energy
     E_SCF_large = SCF_output_large.energy
@@ -206,7 +201,7 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
     # Extrapolates the energies
 
     E_extrapolated = kern.calculate_extrapolated_energy(small_basis, E_SCF_small, E_SCF_large, E_corr_small, E_corr_large, calculation, silent, small_basis_zeta)
-    
+
     # Uses the extrapolated energy as the central point in a polarisability calculation
 
     if not silent and calculation.dipole:
@@ -221,15 +216,14 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
         calculate_polarisability(molecule_small, calculation, E_extrapolated, silent, atomic_symbols, coordinates, None)
     
-    if not silent and calculation.hyperpolarisability :
+    if not silent and calculation.hyperpolarisability:
 
         calculate_hyperpolarisability(molecule_small, calculation, silent, atomic_symbols, coordinates, None)
-        
-        
+
     calculation.basis = small_basis
     
     return SCF_output_small, molecule_small, E_extrapolated, P_small
-    
+
 
 
 
@@ -260,6 +254,8 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
         guess_energy (float): Energy guess
 
     """
+    
+    timer("Initial guess", 0)
 
     log("\n Calculating self-consistent density for guess...  ", calculation, end="", silent=silent); sys.stdout.flush()
 
@@ -277,20 +273,21 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
 
     calculation.basis = old_basis
 
-    S_cross = guess.calculate_cross_basis_overlap_matrix(molecule, molecule_minimal)
+    S_cross = ints.calculate_cross_basis_overlap_matrix(molecule.n_cartesian_basis, molecule_minimal.n_cartesian_basis, molecule.cartesian_basis_functions, molecule_minimal.cartesian_basis_functions, calculation.number_of_threads)
 
     P_guess_alpha_minimal = SCF_output.P_alpha
     P_guess_beta_minimal = SCF_output.P_beta
 
     # Projects minimal density matrices onto larger basis with cross overlap matrix
 
-    P_guess_alpha = guess.project_density_matrix(P_guess_alpha_minimal, S_cross, S_inverse)
-    P_guess_beta = guess.project_density_matrix(P_guess_beta_minimal, S_cross, S_inverse)
+    P_guess_alpha = guess.project_density_matrix(P_guess_alpha_minimal, S_cross, S_inverse, molecule.spherical_harmonic_transformation_matrix)
+    P_guess_beta = guess.project_density_matrix(P_guess_beta_minimal, S_cross, S_inverse, molecule.spherical_harmonic_transformation_matrix)
 
     P_guess = P_guess_alpha + P_guess_beta
 
     log("[Done]", calculation, silent=silent)
 
+    timer("Initial guess", 1)
 
     return P_guess, P_guess_alpha, P_guess_beta, guess_energy
 
@@ -324,6 +321,8 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
         isotropic_polarisability (float): Isotropic polarisability
 
     """
+    
+    timer("Polarisability", 0)
 
     original_electric_field = calculation.electric_field.copy()
 
@@ -408,6 +407,8 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
     log(f"  Isotropic polarisability:              {isotropic_polarisability:10.4f}", calculation, 1, silent=silent)
 
     log_spacer(calculation, 1, silent=silent)
+    
+    timer("Polarisability", 1)
 
     return isotropic_polarisability
 
@@ -441,6 +442,8 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
         perpendicular_hyperpolarisability (float): Perpendicular component of hyperpolarisability
 
     """
+    
+    timer("Hyperpolarisability", 0)
 
     # For atoms, the numerical derivative displacement is better being higher
 
@@ -549,6 +552,8 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
     log(f"  Perpendicular hyperpolarisability:     {perpendicular_hyperpolarisability:10.4f}", calculation, 1, silent=silent)
 
     log_spacer(calculation, 1, silent=silent)
+    
+    timer("Hyperpolarisability", 1)
 
     return parallel_hyperpolarisability, perpendicular_hyperpolarisability
 
@@ -581,6 +586,8 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
         total_dipole_moment (float): Total dipole moment
 
     """
+    
+    timer("Dipole moment", 0)
 
     original_electric_field = calculation.electric_field.copy()
 
@@ -627,6 +634,8 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
     log(f"\n  Total dipole moment:                   {total_dipole_moment:10.5f}", calculation, 1, silent=silent)
 
     log_spacer(calculation, 1, silent=silent)
+    
+    timer("Dipole moment", 1)
 
 
     return total_dipole_moment
@@ -660,6 +669,10 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
         isotropic_quadrupole (float): Isotropic quadrupole moment
 
     """
+    
+    timer("Quadrupole moment", 0)
+
+    original_electric_field_gradient = calculation.electric_field_gradient.copy()
 
     electric_field_gradient_x = np.array([constants.FIRST_ELEC_DERIVATIVE_PROD, 0.0, 0.0])
     electric_field_gradient_z = np.array([0.0, 0.0, constants.FIRST_ELEC_DERIVATIVE_PROD])
@@ -676,11 +689,11 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
 
     # Performs first derivative of energy with respect to electric field gradient along the z-axis
 
-    calculation.electric_field_gradient = electric_field_gradient_z
+    calculation.electric_field_gradient = original_electric_field_gradient + electric_field_gradient_z
 
     _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
     
-    calculation.electric_field_gradient = -electric_field_gradient_z
+    calculation.electric_field_gradient = original_electric_field_gradient - electric_field_gradient_z
 
     _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
     
@@ -694,11 +707,11 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
 
     # Performs first derivative of energy with respect to electric field gradient along the x-axis
 
-    calculation.electric_field_gradient = electric_field_gradient_x
+    calculation.electric_field_gradient = original_electric_field_gradient + electric_field_gradient_x
 
     _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
     
-    calculation.electric_field_gradient = -electric_field_gradient_x
+    calculation.electric_field_gradient = original_electric_field_gradient - electric_field_gradient_x
 
     _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
     
@@ -707,6 +720,8 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     electronic_quadrupole_moment_x = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_PROD)
     
     log(f"[Done]", calculation, 1, silent=silent)
+    
+    calculation.electric_field_gradient = original_electric_field_gradient
 
     nuclear_quadrupole_moment = props.calculate_nuclear_quadrupole_moment(molecule.centre_of_mass, molecule.charges, coordinates)
 
@@ -724,6 +739,8 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     log(f"  Isotropic quadrupole moment:           {isotropic_quadrupole:10.5f}", calculation, 1, silent=silent)
 
     log_spacer(calculation, 1, silent=silent)
+    
+    timer("Quadrupole moment", 1)
 
 
     return isotropic_quadrupole
@@ -758,13 +775,9 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
         grid_container (tuple): Tuple containing the basis functions on the grid, the grid weights and the basis function gradients on the grid
         X (array): Fock transformation matrix
         V_NN (float): Nuclear repulsion energy
-        E_D2 (float): D2 dispersion energy
+        E_dispersion (float): Dispersion energy
 
     """
-
-    # Prints "Beginning RHF/UHF/KS calculation..."
-
-    kern.print_reference_type(calculation.method, calculation, silent)
 
     log("\n Setting up molecule...     ", calculation, 1, silent=silent, end="")
 
@@ -773,7 +786,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
     molecule = Molecule(atomic_symbols, coordinates, calculation, do_correlation = do_correlation)
 
     log("[Done]\n", calculation, 1, silent=silent)
-    
+
     # Calculates the integrals between Gaussian basis functions
 
     integrals = kern.calculate_analytical_integrals(molecule, calculation, silent) if integrals is None else integrals
@@ -786,13 +799,17 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     kern.print_molecule_information(molecule, calculation, silent)
     
+    # Prints "Beginning RHF/UHF/KS calculation..."
+
+    kern.print_reference_type(calculation.method, calculation, silent)
+    
     # Calculates nuclear repulsion energy
 
     V_NN = kern.calculate_nuclear_repulsion_energy(molecule.charges, coordinates, calculation, silent) if calculation.diatomic else 0
     
-    # Calculates D2 dispersion energy if requested
+    # Calculates dispersion energy if requested
 
-    E_D2 = kern.calculate_D2_dispersion_energy(molecule, calculation, silent) if calculation.diatomic and calculation.D2 else 0
+    E_dispersion = kern.calculate_dispersion_energy(molecule, calculation, silent) 
     
     # Calculates Fock transformation matrix from overlap matrix
 
@@ -805,15 +822,15 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
     P_guess, P_guess_alpha, P_guess_beta, E_guess = guess_container
 
     # Calls a minimal SCF calculation to get a self-consistent guess density
-
+    
     if calculation.self_consistent_guess and do_correlation and P_guess is None and P_guess_alpha is None and P_guess_beta is None:
 
         P_guess, P_guess_alpha, P_guess_beta, E_guess = calculate_self_consistent_guess(calculation, atomic_symbols, coordinates, molecule, S_inverse, silent=silent)
-    
+
     # Calculates initial guess
 
     E_guess, P_guess, P_guess_alpha, P_guess_beta = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, integrals, X, calculation, molecule, S_inverse, atomic_symbols, silent=silent)
-
+    
     # Force the trace of the guess density to be correct
 
     P_guess, P_guess_alpha, P_guess_beta = kern.enforce_density_matrix_idempotency(P_guess_alpha, P_guess_beta, integrals.S, molecule.n_alpha, molecule.n_beta, calculation, silent)
@@ -822,12 +839,12 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     # Sets up the integration grid for DFT calculations
 
-    bfs_on_grid, weights, bf_gradients_on_grid = dft.set_up_integration_grid(molecule.basis_functions, molecule.atoms, molecule.bond_length, molecule.n_electrons, P_guess_alpha, P_guess_beta, calculation, silent=silent) if calculation.DFT_calculation else (None, None, None)
+    bfs_on_grid, weights, bf_gradients_on_grid, points = dft.set_up_integration_grid(molecule, P_guess_alpha, P_guess_beta, calculation, silent) if calculation.DFT_calculation else (None, None, None, None)
 
-    grid_container = bfs_on_grid, weights, bf_gradients_on_grid
+    grid_container = bfs_on_grid, weights, bf_gradients_on_grid, points
 
 
-    return molecule, integrals, guess_container, grid_container, X, V_NN, E_D2
+    return molecule, integrals, guess_container, grid_container, X, V_NN, E_dispersion
 
 
 
@@ -866,6 +883,8 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
     
     """
 
+    timer("Energy evaluation", 0)
+
     guess_container = P_guess, P_guess_alpha, P_guess_beta, E_guess
     
     # Ensures the molecule is aligned on the z-axis
@@ -874,7 +893,7 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
     # Builds the molecule, calculates molecular integrals and prepares the guess density
 
-    molecule, integrals, guess_container, grid_container, X, V_NN, E_D2 = build_molecule_and_integrals(calculation, atomic_symbols, coordinates, silent, guess_container, do_correlation, integrals=integrals)
+    molecule, integrals, guess_container, grid_container, X, V_NN, E_dispersion = build_molecule_and_integrals(calculation, atomic_symbols, coordinates, silent, guess_container, do_correlation, integrals=integrals)
 
     # Updates the integral matrices if an electric field is applied
 
@@ -882,15 +901,15 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
     # Updates the integral matrices if an electric field gradient is applied
 
-    integrals.F = kern.apply_electric_field_gradient(integrals.Q, calculation.electric_field_gradient)  if np.linalg.norm(calculation.electric_field_gradient) > 0 else integrals.F
+    integrals.G = kern.apply_electric_field_gradient(integrals.Q, calculation.electric_field_gradient) if np.linalg.norm(calculation.electric_field_gradient) > 0 else np.zeros_like(integrals.S)
 
     # Runs the self-consistent field cycle, returning an Output object with the results
 
     SCF_output = scf.run_self_consistent_field_cycle(molecule, calculation, integrals, V_NN, X, guess_container, grid_container, silent)
     
-    calculation.SCF_time = time.perf_counter()
+    # Calculate the non-local dispersion energy with VV10, if the "NL" keyword is used
 
-    log(f" Time taken for SCF iterations:  {calculation.SCF_time - calculation.integrals_time:.2f} seconds\n", calculation, 3, silent=silent)
+    E_dispersion = dft.calculate_VV10_energy(SCF_output.P, grid_container, calculation) if calculation.VV10 and not silent else 0
 
     if not do_correlation:
 
@@ -898,7 +917,7 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
     # Performs correlated calculations and prints the energy calculation output
 
-    final_energy, P = kern.run_post_SCF_energy_calculation(molecule, integrals, SCF_output, grid_container, calculation, X, E_D2, V_NN, silent, terse)
+    final_energy, P = kern.run_post_SCF_energy_calculation(molecule, integrals, SCF_output, grid_container, calculation, X, E_dispersion, V_NN, silent, terse)
     
     # Checking if "not silent" here ensures these functions only run once, not when multiple energy evaluations are needed for silent derivatives
 
@@ -907,7 +926,7 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
         # Electric properties are calculated here
 
         if calculation.dipole:
-
+            
             calculate_numerical_dipole_moment(molecule, calculation, False, atomic_symbols, coordinates, integrals)
         
         if calculation.quadrupole:
@@ -922,6 +941,7 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
             calculate_hyperpolarisability(molecule, calculation, False, atomic_symbols, coordinates, integrals)
         
+    timer("Energy evaluation", 1)
 
     return SCF_output, molecule, final_energy, P
 
@@ -953,6 +973,8 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
         dipole_moments (list): Dipole moments at each scan step 
 
     """
+    
+    timer("Coordinate scan", 0)
 
     coordinates = starting_coordinates
     bond_length = calculate_bond_length(coordinates)
@@ -1041,6 +1063,8 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
         out.delete_saved_plot()
         
     # If "SCANPLOT" keyword is used, plots and shows a Matplotlib graph of the data
+    
+    timer("Coordinate scan", 1)
 
     if calculation.scan_plot: 
         
