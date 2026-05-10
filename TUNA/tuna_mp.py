@@ -15,7 +15,7 @@ This is the TUNA module for many-body perturbation theory, written first for ver
 
 Functions for many-body perturbation theory, including MP2, MP3 and MP4 are found here.
 
-Updated in version 0.11.0 to add the relaxed density matrix.
+Updated in version 0.11.0 to add the MP2 relaxed density matrix.
 
 The module contains:
 
@@ -174,36 +174,57 @@ def calculate_unrestricted_MP2_energy(t_ijab: ndarray, g_oovv: ndarray) -> float
 
 
 
+def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab: ndarray, g: ndarray, epsilons: ndarray, o: slice, v: slice) -> ndarray:
 
+    """
+    
+    Calculates the relaxed MP2 density matrix contribution for restricted references.
 
-def calculate_unrestricted_relaxed_MP2_density_matrix(t_ijab, P_unrelaxed, g, o, v, n_occ, n_virt):
+    Args:
+        P_unrelaxed (array): Unrelaxed OS or SS MP2 density correction in the MO basis
+        w_ijab (array): Orbital-gradient weight dE_component / d g_ijab
+        g (array): Two-electron integrals in physicists' MO notation, g[p,q,r,s] = <pq|rs> = (pr|qs)
+        epsilons (array): Molecular orbital energies
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
 
-    # These are for spin orbitals
+    Returns:
+        P_relaxed (array): Relaxed OS or SS MP2 density correction in the MO basis
+    
+    """
 
-    P_relaxed = P_unrelaxed
+    n_basis = g.shape[0]
+    n_occ = o.stop - o.start
+    n_virt = n_basis - v.start if v.stop is None else v.stop - v.start
 
-    A_ia_jb = ci.calculate_A_matrix()
+    P_relaxed = P_unrelaxed.copy()
 
-    def calculate_unrestricted_MP2_lagrangian():
+    A_ia_jb = ci.calculate_restricted_A_matrix(g, epsilons, o, v, n_occ, n_virt)
 
-        L_ia = np.einsum("jk,jaki->ia", P_unrelaxed[o, o], g[o, v, o, o], optimize=True) 
-        L_ia += np.einsum("bc,baci->ia", P_unrelaxed[v, v], g[v, v, v, o], optimize=True)
+    L_ia = np.zeros((n_occ, n_virt))
 
-        L_ia += np.einsum("ijbc,abcj->ia", t_ijab, g[v, v, v, o], optimize=True) 
-        L_ia -= np.einsum("jkac,ijkc->ia", t_ijab, g[o, o, o, v], optimize=True)
+    # Explicit derivative of the OS/SS MP2 energy with respect to occupied-virtual orbital rotations.
+    #
+    # For a rotation i -> a:
+    #
+    #   d g_ijbc = + g_ajbc
+    #   d g_jibc = + g_jabc
+    #   d g_jkab = - g_jkib
+    #   d g_jkba = - g_jkbi
 
-        return L_ia
+    L_ia += np.einsum("ijbc,ajbc->ia", w_ijab, g[v, o, v, v], optimize=True)
+    L_ia += np.einsum("jibc,jabc->ia", w_ijab, g[o, v, v, v], optimize=True)
+    L_ia -= np.einsum("jkab,jkib->ia", w_ijab, g[o, o, o, v], optimize=True)
+    L_ia -= np.einsum("jkba,jkbi->ia", w_ijab, g[o, o, v, o], optimize=True)
 
-    L_ia = calculate_unrestricted_MP2_lagrangian()
-
-    z_ia = np.linalg.solve(A_ia_jb, -L_ia)
-
+    z_ia = np.linalg.solve(A_ia_jb, -L_ia.ravel())
     z_ia = z_ia.reshape(n_occ, n_virt)
 
+    # The property contraction uses Tr[P h].
+    # Since P_ia and P_ai are both present, each block gets half the Z-vector contribution.
 
-    P_relaxed[o, v] = z_ia
-    P_relaxed[v, o] = z_ia.T
-
+    P_relaxed[o, v] = 0.5 * z_ia
+    P_relaxed[v, o] = 0.5 * z_ia.T
 
     return P_relaxed
 
@@ -708,7 +729,13 @@ def run_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_orbitals: n
     log(f"  Opposite spin contribution:         {E_MP2_OS:13.10f}", calculation, 1, silent=silent)
     log(f"\n  MP2 correlation energy:             {E_MP2:13.10f}", calculation, 1, silent=silent)
 
-    log("\n  Constructing MP2 unrelaxed density... ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    if calculation.MP2_relaxed_density:
+        
+        log("\n  Constructing MP2 relaxed density...   ", calculation, 1, end="", silent=silent)
+    
+    else:
+
+        log("\n  Constructing MP2 unrelaxed density... ", calculation, 1, end="", silent=silent)
     
     # Opposite and same-spin t-amplitudes
 
@@ -730,6 +757,18 @@ def run_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_orbitals: n
     P_MP2_SS[o, o] += -1 * np.einsum('kiab,kjab->ij', t_ijab_SS, t_ijab_SS, optimize=True)
     P_MP2_SS[v, v] += np.einsum('ijbc,ijac->ab', t_ijab_SS, t_ijab_SS, optimize=True)
 
+    # If the "RELAXED" keyword is used, calculates the relaxed MP2 density matrix
+    
+    if calculation.MP2_relaxed_density:
+
+            w_ijab_OS = 2 * ERI_MO_ijab * e_ijab
+            w_ijab_SS = 2 * ERI_MO_ijab_ansym * e_ijab
+
+            P_MP2_OS = calculate_restricted_relaxed_MP2_density_matrix(P_MP2_OS, w_ijab_OS, ERI_MO, epsilons, o, v)
+            P_MP2_SS = calculate_restricted_relaxed_MP2_density_matrix(P_MP2_SS, w_ijab_SS, ERI_MO, epsilons, o, v)
+            
+
+    print(P_MP2_OS)
     # Optionally applies spin scaling to density
 
     if do_spin_component_scaling:

@@ -840,8 +840,13 @@ def apply_damping(P_before_damping: ndarray, P_old_damp: ndarray, commutator: fl
 
                 # Sets up the lists for atomic_ranges
 
-                if atom == 0: atomic_ranges = list(range(partition_ranges[0]))
-                elif atom == 1: atomic_ranges = list(range(partition_ranges[0], partition_ranges[0] + partition_ranges[1]))
+                if atom == 0: 
+                    
+                    atomic_ranges = list(range(partition_ranges[0]))
+                
+                elif atom == 1: 
+                    
+                    atomic_ranges = list(range(partition_ranges[0], partition_ranges[0] + partition_ranges[1]))
 
                 for i in atomic_ranges:
                     

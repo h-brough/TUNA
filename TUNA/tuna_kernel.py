@@ -149,7 +149,7 @@ def enforce_density_matrix_idempotency(P_guess_alpha: ndarray, P_guess_beta: nda
 
 
 
-def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_large: float, E_corr_small: float, E_corr_large: float, calculation: Calculation, silent: bool, small_basis_zeta: str) -> float:
+def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_large: float, E_corr_small: float, E_corr_large: float, calculation: Calculation, silent: bool, small_basis_zeta: str, dispersion_energy: float) -> float:
 
     """
     
@@ -164,6 +164,7 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
         small_basis_zeta (str): Small basis zeta type
+        dispersion_energy (float): Semi-empirical dispersion energy
     
     Returns:
         E_extrapolated (float): Extrapolated energy
@@ -236,6 +237,10 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
         log(f"  Extrapolated correlation energy: {E_corr_extrapolated:16.10f}", calculation, 1, silent=silent)
 
     log(f"  Extrapolated total energy:       {E_extrapolated:16.10f}", calculation, 1, silent=silent)
+    
+    if dispersion_energy != 0:
+
+        log(f"\n  Dispersion-corrected total energy:{E_extrapolated + dispersion_energy:15.10f}", calculation, 1, silent=silent)
 
     log_spacer(calculation, silent=silent)
 
@@ -1014,7 +1019,7 @@ def calculate_D2_dispersion_energy(molecule: Molecule, calculation: Calculation,
 
 
 
-def calculate_dispersion_energy(molecule: Molecule, calculation: Calculation, silent: bool) -> float:
+def calculate_additive_dispersion_energy(molecule: Molecule, calculation: Calculation, silent: bool) -> float:
 
     """
 
@@ -1056,7 +1061,7 @@ def calculate_dispersion_energy(molecule: Molecule, calculation: Calculation, si
 
 
 
-def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SCF_output: Output, grid_container: tuple, calculation: Calculation, X: ndarray, E_dispersion: float, V_NN: float, silent: bool, terse: bool) -> tuple:
+def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SCF_output: Output, grid_container: tuple, calculation: Calculation, X: ndarray, V_NN: float, silent: bool, terse: bool) -> tuple:
 
     """
     
@@ -1069,7 +1074,6 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         grid_container (tuple): Grid information for DFT
         calculation (Calculation): Calculation
         X (array): Fock transformation matrix
-        E_dispersion (float): Dispersion energy
         V_NN (float): Nuclear repulsion energy
         silent (bool): Cancel logging
         terse (bool): Cancel post-SCF output
@@ -1288,11 +1292,11 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # Adds on dispersion energy, and prints this as dispersion-corrected final energy
 
-    if calculation.D2 or calculation.VV10:
+    if SCF_output.dispersion_energy != 0:
     
-        final_energy += E_dispersion
+        final_energy += SCF_output.dispersion_energy
 
-        log("\n Semi-empirical dispersion energy: " + f"{E_dispersion:16.10f}", calculation, 1, silent=silent)
+        log("\n Semi-empirical dispersion energy: " + f"{SCF_output.dispersion_energy:16.10f}", calculation, 1, silent=silent)
         log(" Dispersion-corrected final energy:" + f"{final_energy:16.10f}", calculation, 1, silent=silent)
 
     # If plotting has been requested, send the density and orbital information to the plotting module

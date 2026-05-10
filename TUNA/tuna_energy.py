@@ -161,6 +161,10 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
     small_basis = calculation.original_basis
     large_basis = basis_pairs.get(small_basis)
 
+    # Saves the requested VV10 dispersion correction
+
+    do_VV10_dispersion = calculation.VV10
+
     small_basis_zeta = "double" if small_basis in double_zeta_bases else "quadruple" if small_basis in quadruple_zeta_bases else "quintuple" if small_basis in quintuple_zeta_bases else "triple"
 
     if not large_basis:
@@ -178,11 +182,16 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     calculation.basis = small_basis
 
+    # Turns off VV10 dispersion for the small basis calculation
+
+    calculation.VV10 = False
+
     # Calculates the energy with the first basis
 
     SCF_output_small, molecule_small, E_total_small, P_small = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, do_correlation=do_correlation, terse=terse, integrals=integrals)
 
     calculation.basis = large_basis
+    calculation.VV10 = do_VV10_dispersion
 
     log_spacer(calculation, silent=silent, start="\n")
     log(large_header, calculation, 1, silent=silent, colour="white")
@@ -200,7 +209,7 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     # Extrapolates the energies
 
-    E_extrapolated = kern.calculate_extrapolated_energy(small_basis, E_SCF_small, E_SCF_large, E_corr_small, E_corr_large, calculation, silent, small_basis_zeta)
+    E_extrapolated = kern.calculate_extrapolated_energy(small_basis, E_SCF_small, E_SCF_large, E_corr_small, E_corr_large, calculation, silent, small_basis_zeta, SCF_output_large.dispersion_energy)
 
     # Uses the extrapolated energy as the central point in a polarisability calculation
 
@@ -221,7 +230,11 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
         calculate_hyperpolarisability(molecule_small, calculation, silent, atomic_symbols, coordinates, None)
 
     calculation.basis = small_basis
-    
+
+    # Adds on the semi-empirical dispersion energy once to the final energy
+
+    E_extrapolated += SCF_output_large.dispersion_energy
+
     return SCF_output_small, molecule_small, E_extrapolated, P_small
 
 
@@ -809,7 +822,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
     
     # Calculates dispersion energy if requested
 
-    E_dispersion = kern.calculate_dispersion_energy(molecule, calculation, silent) 
+    E_dispersion = kern.calculate_additive_dispersion_energy(molecule, calculation, silent) 
     
     # Calculates Fock transformation matrix from overlap matrix
 
@@ -830,7 +843,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
     # Calculates initial guess
 
     E_guess, P_guess, P_guess_alpha, P_guess_beta = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, integrals, X, calculation, molecule, S_inverse, atomic_symbols, silent=silent)
-    
+
     # Force the trace of the guess density to be correct
 
     P_guess, P_guess_alpha, P_guess_beta = kern.enforce_density_matrix_idempotency(P_guess_alpha, P_guess_beta, integrals.S, molecule.n_alpha, molecule.n_beta, calculation, silent)
@@ -909,7 +922,11 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
     
     # Calculate the non-local dispersion energy with VV10, if the "NL" keyword is used
 
-    E_dispersion = dft.calculate_VV10_energy(SCF_output.P, grid_container, calculation) if calculation.VV10 and not silent else 0
+    E_dispersion = dft.calculate_VV10_energy(SCF_output.P, grid_container, calculation) if calculation.VV10 and not silent else E_dispersion
+
+    # Stores the dispersion energy in the output object
+
+    SCF_output.set_dispersion_energy(E_dispersion)
 
     if not do_correlation:
 
@@ -917,7 +934,7 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
     # Performs correlated calculations and prints the energy calculation output
 
-    final_energy, P = kern.run_post_SCF_energy_calculation(molecule, integrals, SCF_output, grid_container, calculation, X, E_dispersion, V_NN, silent, terse)
+    final_energy, P = kern.run_post_SCF_energy_calculation(molecule, integrals, SCF_output, grid_container, calculation, X, V_NN, silent, terse)
     
     # Checking if "not silent" here ensures these functions only run once, not when multiple energy evaluations are needed for silent derivatives
 

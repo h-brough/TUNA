@@ -271,8 +271,32 @@ class Molecule:
         # The partitioning of the basis set into atoms is done here, by checking which basis functions are located on which atoms
 
         self.partitioned_basis_functions = [[bf for bf in self.cartesian_basis_functions if np.allclose(bf.origin, atom.origin)] for atom in self.atoms]
-              
-        self.partition_ranges = [len(group) for group in self.partitioned_basis_functions]
+        
+        # Builds the partition ranges for spherical harmonics, as long as Cartesian harmonics aren't requested
+
+        if calculation.cartesian_harmonics:
+
+            self.partition_ranges = [len(group) for group in self.partitioned_basis_functions]
+
+        else:
+
+            self.partition_ranges = []
+
+            for group in self.partitioned_basis_functions:
+
+                n_spherical = 0
+                i = 0
+
+                while i < len(group):
+
+                    l = np.sum(group[i].shell)
+
+                    n_cartesian = (l + 1) * (l + 2) // 2
+                    n_spherical += 2 * l + 1
+
+                    i += n_cartesian
+
+                self.partition_ranges.append(n_spherical)
 
         # If multiplicity not specified but molecule has an odd number of electrons, set it to a doublet
 
@@ -282,9 +306,9 @@ class Molecule:
 
         calculation.reference = "RHF" if self.multiplicity == 1 and not calculation.method.unrestricted else "UHF"
 
-        # Currently, CISDT is only avaiable for spin-orbitals
+        # Some methods are only available for spin-orbitals
 
-        if calculation.method.name == "CISDT": 
+        if not calculation.method.restricted_available: 
             
             calculation.reference = "UHF"
 

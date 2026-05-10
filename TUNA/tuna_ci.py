@@ -1394,6 +1394,47 @@ def build_excitations_list(n_occ: int, n_virt: int) -> ndarray:
 
 
 
+def calculate_restricted_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int) -> ndarray:
+
+    """
+    
+    Calculates the orbital Hessian for a spin-restricted reference.
+
+    Args:
+        g (array): Two-electron integrals in physicists' MO notation, g[p,q,r,s] = <pq|rs> = (pr|qs)
+        epsilons (array): Molecular orbital eigenvalues
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
+
+    Returns:
+        A_ia_jb (array): Restricted singlet orbital Hessian matrix
+
+    """
+
+    # A_ia,jb = (eps_a - eps_i) delta_ij delta_ab
+    #         + 4 (ia|jb) - (ij|ab) - (ib|ja)
+    #
+    # Since g[p,q,r,s] = <pq|rs> = (pr|qs):
+    #
+    #   (ia|jb) = g[i,j,a,b]
+    #   (ij|ab) = g[i,a,j,b]
+    #   (ib|ja) = g[i,j,b,a]
+
+    A = 4.0 * g[o, o, v, v].transpose(0, 2, 1, 3)
+    A -= g[o, v, o, v]
+    A -= g[o, o, v, v].transpose(0, 3, 1, 2)
+
+    A_ia_jb = A.reshape(n_occ * n_virt, n_occ * n_virt)
+
+    A_ia_jb[np.diag_indices_from(A_ia_jb)] += (
+        epsilons[v][None, :] - epsilons[o][:, None]
+    ).ravel()
+
+    return A_ia_jb
+
+
 
 def build_A_matrix(g, epsilons, excitations, n_occ, n_virt):
 

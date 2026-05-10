@@ -117,6 +117,8 @@ KEYWORDS = [
     Keyword("TD", "time_dependent"),
     Keyword("TDA", "tamm_dancoff_approximation"),
     Keyword("NL", "VV10"),
+    Keyword("RELAXED", "MP2_relaxed_density"),
+    Keyword("UNRELAXED", "MP2_unrelaxed_density"),
 
     Keyword("SCANPLOT", "scan_plot"),
     Keyword("DASH", "plot_dashed_lines"),
@@ -142,7 +144,7 @@ KEYWORDS = [
     Keyword("ZPE", "do_ZPE_correction"),
 
 
-    # These keywords give an attrribute for the value after the keyword
+    # These keywords give an attribute for the value after the keyword
 
     Keyword(("CH", "CHARGE"), "charge", "V", 0, int),
     Keyword(("ML", "MULTIPLICITY"), "multiplicity", "V", 1, int),
@@ -402,13 +404,13 @@ def process_complex_keywords(self: Calculation) -> None:
     self.monatomic = len(self.atomic_symbols) == 1 or self.ghost_atom_present
     self.diatomic = not self.monatomic
 
-    # Core guess is default for atomic and first row diatomic calculations, otherwise SCF guesss
+    # Guess is SCF guess by default
 
-    guess = "core" if self.monatomic or all(symbol in ["H", "HE"] for symbol in self.atomic_symbols) else "scf"
+    guess = "scf"
 
     # Allows overwriting of defaults with keywords
 
-    if self.core_guess_requested:
+    if self.core_guess_requested or self.monatomic:
         
         guess = "core"
 
@@ -425,7 +427,7 @@ def process_complex_keywords(self: Calculation) -> None:
     self.core_guess = guess == "core"
     self.superposition_guess = guess == "superposition"
     self.self_consistent_guess = guess == "scf"
-    
+
     # The full three-dimensional electric field vector
 
     self.electric_field = np.array([self.electric_field_x, self.electric_field_y, self.electric_field_z])

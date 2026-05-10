@@ -254,6 +254,10 @@ class Output:
 
     integrals: Integrals
 
+    # Semi-empirical dispersion energy
+
+    dispersion_energy: float = 0
+
     @property 
     def epsilons_combined(self):
         
@@ -268,6 +272,14 @@ class Output:
     def exchange_correlation_energy(self):
 
         return self.exchange_energy + self.correlation_energy
+
+    # Sets the dispersion energy safely
+
+    def set_dispersion_energy(self, dispersion_energy: float) -> None:
+
+        self.dispersion_energy = dispersion_energy
+
+        return
 
 
 
@@ -298,6 +310,10 @@ class Method:
     # Can this method be used with an unrestricted reference?
 
     unrestricted_available: bool = True
+
+    # Does a spin-adapted version of this method exist?
+
+    restricted_available: bool = True
 
     # What kind of electronic structure method is this?
     
@@ -1242,7 +1258,7 @@ electronic_structure_methods = [
     Method("CIS", "configuration interaction singles", excited_state_method = True),
     Method("CIS[D]", "configuration interaction singles with perturbative doubles", excited_state_method = True),
     Method("CISD", "configuration interaction singles and doubles", method_base = "CC"),
-    Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC"),
+    Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", restricted_available = False),
 
     Method("CCD", "coupled cluster doubles", method_base = "CC"),
     Method("CEPA", "coupled electron pair approximation", method_base = "CC"),

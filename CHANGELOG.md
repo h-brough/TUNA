@@ -21,11 +21,8 @@
 - Keywords for time-dependent calculations, `TD` and to use the Tamm-Dancoff approximation `TDA`
 
 
-- Extrapolation basis not working with NL
 - Sort out being able to use "DIPOLE" with harmonic intensities
-- Muliken weirdness for damping with TZ
 - Sort out printing MOs
-- Need to sort out printing MOs, partitioning presumably wrong too for mulliken stuff including damping
 - Sort out revTPSS correlation derivatives
 - SCAN functionals derivatives
 - Add B97M-V
@@ -47,7 +44,6 @@
 - First-order vibrational perturbation theory can now be enabled with `VPT1`
 - An error will now prevent trying to calculate two-electron integrals without enough memory
 - Gaussian basis sets now only support up to "H" shells
-- Core guess is now default for calculations on first-row diatomics
 
 
 ### Fixed
@@ -55,6 +51,8 @@
 - Some errors were printing referencing deprecated keywords
 - `SADGUESS` and `SCFGUESS` were not working for atomic calculations
 - False printing of using previous density matrix for `SCFGUESS` calciulations
+- A too old version of SciPy was being installed on installing TUNA
+- Basis set extrapolation was not working with semi-empirical dispersion
 
 <br>
 

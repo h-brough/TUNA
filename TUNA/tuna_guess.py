@@ -433,16 +433,14 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
 
     rotate_guess_mos = True if molecule.multiplicity == 1 and not calculation.no_rotate_guess and calculation.reference == "UHF" else False 
     
-    if calculation.calculation_type != "SPE":
-
-        if calculation.reference == "RHF" and P_guess is not None:
-                
-            log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent=silent)
-
-
-        elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None: 
+    if calculation.reference == "RHF" and P_guess is not None and calculation.calculation_type != "SPE":
             
-            log("\n Using density matrices from previous step for guess. \n", calculation, silent=silent)
+        log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent=silent)
+
+
+    elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None and calculation.calculation_type != "SPE": 
+        
+        log("\n Using density matrices from previous step for guess. \n", calculation, silent=silent)
 
 
     elif calculation.core_guess:
