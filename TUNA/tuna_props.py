@@ -432,8 +432,7 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
     log(f"  {kind} S^2 expectation value:  {space2}{s_squared:9.6f}", calculation, priority, silent=silent)
     log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, priority, silent=silent)
 
-    log_spacer(calculation, silent=silent, priority=priority)
-
+    log_spacer(calculation, silent=silent, priority=priority, end="\n")
 
     return
 
@@ -562,7 +561,7 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
             log("\n    Alpha Eigenvalues           Beta Eigenvalues\n", calculation, priority=priority)
             
             log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority=priority)
-            log("   N    Occ.   Epsilon         N    Occ.   Epsilon  ", calculation, priority=priority)
+            log("   N    Occ.    Energy        N    Occ.    Energy  ", calculation, priority=priority)
             log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority=priority)
             
             # Occupied orbitals are alpha electrons only
@@ -582,7 +581,7 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
             log("\n  Alpha eigenvalues:\n", calculation, priority=priority)
             
             log("  ~~~~~~~~~~~~~~~~~~~~~~~  ", calculation, priority=priority)
-            log("    N    Occ.   Epsilon     ", calculation, priority=priority)
+            log("    N    Occ.    Energy     ", calculation, priority=priority)
             log("  ~~~~~~~~~~~~~~~~~~~~~~~   ", calculation, priority=priority)
             
             # Occupied orbitals are alpha electrons only
@@ -598,7 +597,7 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
     elif calculation.reference == "RHF":
 
-        log("    N            Occupation             Epsilon ", calculation, priority=priority)
+        log("    N            Occupation              Energy ", calculation, priority=priority)
         log_spacer(calculation, priority=priority)
 
         # Occupied orbitals (doubly occupied) depend on number electron pairs
@@ -609,6 +608,8 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
             log(f"   {(i + 1):2.0f}                {occupancies[i]}                {epsilon:10.6f}", calculation, priority=priority)
 
+
+        log_spacer(calculation, priority = priority)
 
     return
 
@@ -879,12 +880,14 @@ def print_density_information(calculation: Calculation) -> None:
 
     method = calculation.method
 
+    density_type = "relaxed" if calculation.MP2_relaxed_density else "unrelaxed"
+
     # Specifies which density matrix is used for the property calculations
     
-    if method.name in ["MP2", "SCS-MP2"]: log("\n Using the MP2 unrelaxed density for property calculations.", calculation, 1)
+    if method.name in ["MP2", "SCS-MP2"]: log(f"\n Using the MP2 {density_type} density for property calculations.", calculation, 1)
     elif method.name == "OMP2": log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
     elif method.name == "LMP2": warning("Using the Hartree-Fock density, not the MP2 density, for property calculations.")
-    elif method.method_base == "MP3" or method.method_base == "MP4": warning("Using the unrelaxed MP2 density for property calculations.")
+    elif method.method_base == "MP3" or method.method_base == "MP4": warning(f"Using the {density_type} MP2 density for property calculations.")
     
     if method.method_base == "CC": log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
     if method.name == "CCSD[T]": warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")

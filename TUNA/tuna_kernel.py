@@ -475,15 +475,11 @@ def transform_to_spherical_harmonics(S_cart: ndarray, T_cart: ndarray, V_NE_cart
     
     timer("Spherical harmonic transformation", 0)
 
-    log("\n Transforming to spherical harmonics...    ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log("\n Transforming to spherical harmonics...    ", calculation, 1, end="", silent=silent)
 
     # Builds the Cartesian to spherical transformation matrix
 
-    U = build_spherical_harmonic_transformation_matrix(molecule)
-    
-    # Stores in the Molecule object
-
-    molecule.spherical_harmonic_transformation_matrix = U
+    U = molecule.spherical_harmonic_transformation_matrix
 
     # Transforms the one-electron integrals
 
@@ -640,6 +636,7 @@ def build_spherical_harmonic_transformation_matrix(molecule: Molecule) -> ndarra
         i += n_cart 
 
 
+
     return spherical_harmonic_transformation_matrix
 
 
@@ -767,7 +764,7 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
     
     timer("Fock transformation matrix", 0)
 
-    log(" Constructing Fock transformation matrix...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Constructing Fock transformation matrix...   ", calculation, 1, end="", silent=silent)
 
     # Symmetrise the overlap matrix
 
@@ -1088,7 +1085,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
     method = calculation.method
     do_DFT = calculation.DFT_calculation
 
-    _, weights, _, _ = grid_container
+    bfs_on_grid, weights, _, _ = grid_container
 
     molecular_orbitals = SCF_output.molecular_orbitals
     P = SCF_output.P
@@ -1097,7 +1094,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
     final_energy = SCF_output.energy
 
     E_CC, E_CC_perturbative = 0, 0
-    E_CIS, E_transition = 0, 0
+    E_excited_state, E_transition = 0, 0
 
     natural_orbitals = None
     SCF_output.D = integrals.D
@@ -1129,6 +1126,11 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         
         dft.integrate_final_density(SCF_output.alpha_density, SCF_output.beta_density, SCF_output.density, weights, calculation, silent)
 
+    # Performs a stability analysis if "STAB" is used
+
+    if calculation.stability_analysis:
+
+        ci.calculate_self_consistent_field_stability(molecule, calculation, integrals.ERI_AO, SCF_output, silent)
 
     # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
 
@@ -1155,9 +1157,9 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         props.calculate_molecular_properties(molecule, calculation, P, integrals.S, SCF_output, P_alpha, P_beta)
     
 
-    if method.excited_state_method:
+    if method.excited_state_method or calculation.time_dependent:
 
-        log("\n\n Beginning excited state calculation...", calculation, 1, silent=silent)
+        log("\n Beginning excited state calculation...", calculation, 1, silent = silent)
 
         if molecule.n_virt <= 0: 
             
@@ -1165,18 +1167,17 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         # Calculates the CIS excited states energy and density
 
-        E_CIS, E_transition, P, P_alpha, P_beta, P_transition, P_transition_alpha, P_transition_beta = ci.run_CIS(integrals.ERI_AO, molecule.n_occ, molecule.n_virt, molecule.n_SO, calculation, SCF_output, molecule, silent=silent)
-
+        E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_excited_state_calculation(molecule, calculation, SCF_output, bfs_on_grid, weights, silent)
 
         if calculation.additional_print: 
            
-           # Optionally uses CIS density for dipole moment and population analysis
+           # Optionally uses excited state density for dipole moment and population analysis
 
            props.calculate_molecular_properties(molecule, calculation, P, integrals.S, SCF_output, P_alpha, P_beta)
 
     else:
         
-        P_transition = P_transition_alpha = P_transition_beta = None
+        P_diff = P_diff_alpha = P_diff_beta = None
 
 
     # Prints Hartree-Fock or Kohn-Sham energy
@@ -1271,12 +1272,11 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         method.name = method.name.replace("(", "[").replace(")", "]")
 
 
-
     # Prints CIS energy of state of interest
 
-    elif method.excited_state_method:
+    elif method.excited_state_method or calculation.time_dependent:
 
-        final_energy = E_CIS
+        final_energy = E_excited_state
 
         method.name = method.name.replace("[", "(").replace("]", ")")
         space = " " * max(0, 8 - len(method.name))
@@ -1284,7 +1284,6 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         log(f"\n Excitation energy is the energy difference to excited state {calculation.root}.", calculation, 1, silent=silent)
         
         log(f"\n Excitation energy from {method.name}:  {space}" + f"{E_transition:16.10f}", calculation, 1, silent=silent)
-    
     
     # This is the total final energy
 
@@ -1303,7 +1302,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     if not silent and calculation.plot_something:
 
-        out.show_two_dimensional_plot(calculation, molecule, P, P_alpha, P_beta, P_transition_alpha, P_transition_beta, P_transition, molecular_orbitals, natural_orbitals)
+        out.show_two_dimensional_plot(calculation, molecule, P, P_alpha, P_beta, P_diff_alpha, P_diff_beta, P_diff, molecular_orbitals, natural_orbitals)
 
 
     return final_energy, P

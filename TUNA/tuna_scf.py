@@ -1,5 +1,5 @@
 import numpy as np
-from tuna_util import log, error, symmetrise, log_big_spacer, Output, DFT_methods, Integrals, timer
+from tuna_util import log, error, symmetrise, log_big_spacer, Output, exchange_correlation_functionals, Integrals, timer
 from tuna_molecule import Molecule
 from tuna_calc import Calculation
 from numpy import ndarray
@@ -209,45 +209,6 @@ def construct_density_matrix(molecular_orbitals: ndarray, n_occ: int, n_electron
     P = symmetrise(P)
 
     return P
-    
-
-
-
-
-
-
-
-
-
-def construct_hole_density_matrix(molecular_orbitals: ndarray, n_occ: int, n_electrons_per_orbital: int) -> ndarray:
-
-    """
-
-    Builds the hole density matrix from molecular orbitals.
-
-    Args:
-        molecular_orbitals (array): Molecular orbitals in AO basis
-        n_occ (int): Number of occupied molecular orbitals
-        n_electrons_per_orbital (int): Number of electrons per molecular orbital (1 for UHF, 2 for RHF)
-    
-    Returns:
-        Q (array): Hole density matrix in AO basis
-
-    """
-
-    # Slices out unoccupied molecular orbitals
-
-    unoccupied_mos = molecular_orbitals[:, n_occ:]
-
-    # Builds hole density matrix
-
-    Q = n_electrons_per_orbital * unoccupied_mos @ unoccupied_mos.T
-
-    # Symmetrises hole density matrix
-
-    Q = symmetrise(Q)
-
-    return Q
     
 
 
@@ -1380,13 +1341,14 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
 
         # The functionals from the method strings
 
-        exchange_functional = xc.exchange_functionals.get(DFT_methods.get(calculation.method.name).x_functional)
-        correlation_functional = xc.correlation_functionals.get(DFT_methods.get(calculation.method.name).c_functional)
+        exchange_functional = xc.exchange_functionals.get(exchange_correlation_functionals.get(calculation.method.name).x_functional)
+        correlation_functional = xc.correlation_functionals.get(exchange_correlation_functionals.get(calculation.method.name).c_functional)
 
         # Selects the unrestricted correlation functional if the reference is unrestricted, otherwise the restricted one
 
-        correlation_functional = correlation_functional if reference == "RHF" else getattr(xc, correlation_functional.__name__.replace("restricted", "unrestricted"))
+        if reference == "UHF":
 
+            correlation_functional = getattr(xc, correlation_functional.__name__.replace("restricted", "unrestricted")) if correlation_functional is not None else None
 
     else:
         

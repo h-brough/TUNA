@@ -321,6 +321,7 @@ class Molecule:
         self.n_occ = self.n_alpha + self.n_beta
         self.n_SO = 2 * self.n_basis
         self.n_virt = self.n_SO - self.n_occ
+        self.n_doubly_virt = self.n_basis - self.n_doubly_occ
 
         # This variable can be used for either RHF or UHF references
 

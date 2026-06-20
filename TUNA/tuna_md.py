@@ -226,6 +226,7 @@ def rotate_coordinates_to_z_axis(difference_vector: ndarray) -> tuple[ndarray, n
     # Calculate the axis of rotation by the cross product
 
     rotation_axis = np.cross(normalised_vector, z_axis)
+    
     axis_norm = np.linalg.norm(rotation_axis)
     
     if axis_norm < 1e-10:

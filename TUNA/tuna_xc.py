@@ -1,6 +1,5 @@
 import numpy as np
 from numpy import ndarray
-from sympy import zeta
 from tuna_calc import Calculation
 from tuna_util import constants
 
@@ -15,6 +14,8 @@ np.cbrt() for cube rooting - this inconsistency is on purpose, asthese options s
 counterparts. We also cube via x * x * x rather than x ** 3 for the same reason, although higher powers do not benefit as much. Optimising all 
 of these low level operations makes quite a big difference to the speed; I observed about a factor of two increase for DFT functionals generally 
 by optimising the cubing and cube rooting.
+
+Updated in version 0.11.0 to add SCAN- and B97-based functionals.
 
 The module contains:
 
@@ -1364,6 +1365,97 @@ def calculate_B97_exchange(density: ndarray, sigma: ndarray, tau: ndarray, calcu
 
 
 
+def calculate_B97M_exchange(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
+
+    """
+    
+    Calculates the B97M exchange energy density and derivatives with respect to the density, square gradient, and kinetic energy density.
+
+    An efficient implementation of the equations in 10.1063/1.4907719.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient
+        tau (array): Non-interacting kinetic energy density
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        df_dn (array): Derivative of f = n * e_X with respect to density
+        df_ds (array): Derivative of f = n * e_X with respect to sigma
+        df_dt (array): Derivative of f = n * e_X with respect to tau
+        e_X (array): B97M exchange energy density per particle
+    
+    """
+
+    # The empirical parameters for Head-Gordon's meta-GGA
+
+    c_x = [1, 0.416, 1.308, 3.07, 1.901]
+
+    gamma = 0.004
+
+    df_dn_LDA, _, _, e_X_LDA = calculate_Slater_exchange(density, sigma, tau, calculation)
+
+    # The cube root four makes the equations in Becke's paper match the TUNA treatment of exchange spin scaling
+
+    cbrt_density = np.cbrt(density)
+
+    s_squared = np.cbrt(4) * sigma / cbrt_density ** 8
+
+    x = gamma * s_squared / (1 + gamma * s_squared)
+    
+    # Kinetic energy density of the uniform electron gas
+
+    tau_U = (3 / 10) * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 5
+
+    t = tau_U / tau
+
+    w = (t - 1) / (t + 1)
+
+    F_X = c_x[0] + c_x[1] * w + (c_x[2] + c_x[3] * w + c_x[4] * x) * x
+
+    # Energy density per particle
+
+    e_X = e_X_LDA * F_X
+
+    # Derivatives of the exchange enhancement factor
+
+    dF_dx = c_x[2] + c_x[3] * w + 2 * c_x[4] * x
+
+    dF_dw = c_x[1] + c_x[3] * x
+    
+    # These are the numerators of dx and dw after applying the quotient rule
+    
+    x_term = x * (1 - x)
+
+    w_term = 2 * t / (1 + t) ** 2
+
+    # Chain rule derivatives
+
+    dx_dn = -8 / (3 * density)
+
+    dw_dn = 5 / (3 * density)
+
+    dw_dt = -1 / tau
+
+    df_dx_times_x_term = density * e_X_LDA * dF_dx * x_term
+
+    df_dw_times_w_term = density * e_X_LDA * dF_dw * w_term
+
+    df_dn = df_dx_times_x_term * dx_dn + df_dw_times_w_term * dw_dn + df_dn_LDA * F_X
+    df_ds = df_dx_times_x_term / sigma
+    df_dt = df_dw_times_w_term * dw_dt
+
+    return df_dn, df_ds, df_dt, e_X
+
+
+
+
+
+
+
+
+
+
 def calculate_B3_exchange(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
 
     """
@@ -1865,14 +1957,22 @@ def calculate_restricted_PBE_correlation(density: ndarray, sigma: ndarray, tau: 
     gamma = (1 - np.log(2)) / np.pi ** 2
     beta = 0.066725
 
+    dbeta_dn = np.zeros_like(density)
+
     # If we are in this function due to revised TPSS, use a different definition of beta
 
     if calculation.functional.c_functional == "REVTPSS":
 
         r_s, _ = calculate_seitz_radius(density)
 
-        beta = 0.066725 * (1 + 0.1 * r_s) / (1 + 0.1778 * r_s)
+        beta_numerator = 1 + 0.1 * r_s
+        beta_denominator = 1 + 0.1778 * r_s
+        beta = 0.066725 * beta_numerator / beta_denominator
 
+        # The r_s-dependent beta also contributes to the density derivative
+
+        dbeta_dr_s = 0.066725 * (0.1 * beta_denominator - 0.1778 * beta_numerator) / (beta_denominator * beta_denominator)
+        dbeta_dn = dbeta_dr_s * (-r_s / (3 * density))
 
     k_F = calculate_Fermi_wavevector(density=density)
 
@@ -1897,14 +1997,14 @@ def calculate_restricted_PBE_correlation(density: ndarray, sigma: ndarray, tau: 
 
     e_C = e_C_LDA + H
 
-    dA_dn = (A * A / beta) * exp_factor * de_C_LDA_dn
+    dA_dn = (A * A / beta) * exp_factor * de_C_LDA_dn + (A / beta) * dbeta_dn
 
     pref = 1 / ((1 + X) * D * D)
     common = beta * (1 + 2 * A * t_squared)
 
     # Derivatives with respect to the density, n, and sigma, s
 
-    dH_dn = pref * (common * -(7 / 3) * t_squared / density - beta * A * t_fourth * t_squared * (A * t_squared + 2) * dA_dn)
+    dH_dn = pref * (common * -(7 / 3) * t_squared / density - beta * A * t_fourth * t_squared * (A * t_squared + 2) * dA_dn) + gamma * X / (beta * (1 + X)) * dbeta_dn
     dH_ds = pref * common * t_squared / sigma
 
     df_dn = e_C + density * (de_C_LDA_dn + dH_dn)
@@ -1953,6 +2053,7 @@ def calculate_unrestricted_PBE_correlation(alpha_density: ndarray, beta_density:
 
     gamma = (1 - np.log(2)) / np.pi ** 2
     beta = 0.066725
+    dbeta_dn = np.zeros_like(density)
 
     # If we are in this function due to revised TPSS, use a different definition of beta
 
@@ -1960,7 +2061,14 @@ def calculate_unrestricted_PBE_correlation(alpha_density: ndarray, beta_density:
 
         r_s, _ = calculate_seitz_radius(density)
 
-        beta = 0.066725 * (1 + 0.1 * r_s) / (1 + 0.1778 * r_s)
+        beta_numerator = 1 + 0.1 * r_s
+        beta_denominator = 1 + 0.1778 * r_s
+        beta = 0.066725 * beta_numerator / beta_denominator
+
+        # The r_s-dependent beta also contributes to the density derivative
+
+        dbeta_dr_s = 0.066725 * (0.1 * beta_denominator - 0.1778 * beta_numerator) / (beta_denominator * beta_denominator)
+        dbeta_dn = dbeta_dr_s * (-r_s / (3 * density))
 
     B = beta / gamma
 
@@ -2039,8 +2147,8 @@ def calculate_unrestricted_PBE_correlation(alpha_density: ndarray, beta_density:
 
     # Derivatives of A with respect to densities
 
-    dA_dn_alpha = dA_dE * de_C_LDA_dn_alpha + dA_dphi * dphi_dn_alpha
-    dA_dn_beta = dA_dE * de_C_LDA_dn_beta + dA_dphi * dphi_dn_beta
+    dA_dn_alpha = dA_dE * de_C_LDA_dn_alpha + dA_dphi * dphi_dn_alpha + (A / beta) * dbeta_dn
+    dA_dn_beta = dA_dE * de_C_LDA_dn_beta + dA_dphi * dphi_dn_beta + (A / beta) * dbeta_dn
 
     dD_dT = A + 2 * A_squared * T
     dX_dT = (B * (1 + 2 * A * T) * D - N * dD_dT) / D_squared
@@ -2055,8 +2163,8 @@ def calculate_unrestricted_PBE_correlation(alpha_density: ndarray, beta_density:
 
     # Derivatives of GGA correction to LDA correlation
 
-    dH_dn_alpha = C1 * dphi_dn_alpha + C2 * (dX_dT * dT_dn_alpha + dX_dA * dA_dn_alpha)
-    dH_dn_beta = C1 * dphi_dn_beta + C2 * (dX_dT * dT_dn_beta + dX_dA * dA_dn_beta)
+    dH_dn_alpha = C1 * dphi_dn_alpha + C2 * (dX_dT * dT_dn_alpha + dX_dA * dA_dn_alpha) + C2 * X / beta * dbeta_dn
+    dH_dn_beta = C1 * dphi_dn_beta + C2 * (dX_dT * dT_dn_beta + dX_dA * dA_dn_beta) + C2 * X / beta * dbeta_dn
 
     # Derivatives with respect to densities
 
@@ -3328,12 +3436,12 @@ def calculate_unrestricted_revTPSS_correlation(alpha_density: ndarray, beta_dens
 
     # PBE correlation (spin-polarised)
 
-    df_dna_PBE, df_dnb_PBE, df_dsaa_PBE, df_dsbb_PBE, df_dsab_PBE, _, _, e_C_PBE = calculate_unrestricted_PBE_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, None, None, None)
+    df_dna_PBE, df_dnb_PBE, df_dsaa_PBE, df_dsbb_PBE, df_dsab_PBE, _, _, e_C_PBE = calculate_unrestricted_PBE_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, None, None, calculation=calculation)
 
     # one-spin limits for the max construction in TPSS
 
-    df_dna_a0, _, df_dsaa_a0, _, _, _, _, e_C_a0 = calculate_unrestricted_PBE_correlation(alpha_density, zeros, alpha_density, sigma_aa, zeros, zeros, None, None, None)
-    _, df_dnb_0b, _, df_dsbb_0b, _, _, _, e_C_0b = calculate_unrestricted_PBE_correlation(zeros, beta_density, beta_density, zeros, sigma_bb, zeros, None, None, None)
+    df_dna_a0, _, df_dsaa_a0, _, _, _, _, e_C_a0 = calculate_unrestricted_PBE_correlation(alpha_density, zeros, alpha_density, sigma_aa, zeros, zeros, None, None, calculation=calculation)
+    _, df_dnb_0b, _, df_dsbb_0b, _, _, _, e_C_0b = calculate_unrestricted_PBE_correlation(zeros, beta_density, beta_density, zeros, sigma_bb, zeros, None, None, calculation=calculation)
 
     inv_n = 1 / density
 
@@ -3447,9 +3555,9 @@ def calculate_unrestricted_revTPSS_correlation(alpha_density: ndarray, beta_dens
 
     # C(zeta,xi) from TPSS
 
-    C_0 = 0.59 + 0.9269 * zeta_squared + 0.6225 * zeta_squared * zeta_squared + 2.1540 * zeta_squared * zeta_squared * zeta_squared
+    C_0 = 0.53 + 0.9269 * zeta_squared + 0.6225 * zeta_squared * zeta_squared + 2.1540 * zeta_squared * zeta_squared * zeta_squared
 
-    dC0_dzeta = 1.74 * zeta + 2 * zeta * zeta_squared + 13.56 * zeta * zeta_squared * zeta_squared
+    dC0_dzeta = 1.8538 * zeta + 2.49 * zeta * zeta_squared + 12.924 * zeta * zeta_squared * zeta_squared
     dC0_dna = dC0_dzeta * dzeta_dna
     dC0_dnb = dC0_dzeta * dzeta_dnb
 
@@ -3569,9 +3677,33 @@ def calculate_unrestricted_revTPSS_correlation(alpha_density: ndarray, beta_dens
 
 
 
+
+
+
+
+
 def calculate_restricted_SCAN_correlation(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
+
+    """
     
+    Calculates the restricted SCAN correlation energy density and derivative with respect to the density, square gradient and kinetic energy density.
+
+    A reasonably efficient implementation of equations in 10.1103/PhysRevLett.115.036402.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient
+        tau (array): Non-interacting kinetic energy density
+        calculation (Calculation): Calculation object
     
+    Returns:
+        df_dn (array): Derivative of f = n * e_C with respect to density
+        df_ds (array): Derivative of f = n * e_C with respect to sigma
+        df_dt (array): Derivative of f = n * e_C with respect to tau
+        e_C (array): Restricted SCAN correlation energy density per particle
+    
+    """
+
     b_1c = 0.0285764
     b_2c = 0.0889
     b_3c = 0.125541
@@ -3580,63 +3712,155 @@ def calculate_restricted_SCAN_correlation(density: ndarray, sigma: ndarray, tau:
     c_2c = 1.5
     d_c = 0.7
 
+    chi_inf_zeta_0 = 0.128026
+    gamma = 0.031091
 
     r_s, inv_density = calculate_seitz_radius(density)
-
+    sqrt_r_s = r_s ** (1 / 2)
     cbrt_density = clean(np.cbrt(density))
 
-    s_squared = sigma / (4 * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 8)
-
-    tau_w = sigma / (8 * density)
+    dtau_w_ds = inv_density / 8
+    tau_w = sigma * dtau_w_ds
     tau_u = (3 / 10) * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 5
 
-    alpha = (tau - tau_w) / tau_u
+    tau_minus_tau_w = tau - tau_w
+
+    inv_tau_u = 1 / tau_u
+    inv_tau_u_squared = inv_tau_u * inv_tau_u
+    alpha = tau_minus_tau_w * inv_tau_u
     one_minus_alpha = 1 - alpha
+    inv_one_minus_alpha = 1 / one_minus_alpha
+    inv_one_minus_alpha_squared = inv_one_minus_alpha * inv_one_minus_alpha
 
-    f_c = np.zeros_like(alpha) 
+    # Switching function with the original SCAN exponential forms
 
-    if np.any(alpha < 1):
+    small_alpha_exponent_term = np.exp(np.clip(-c_1c * alpha * inv_one_minus_alpha, None, constants.exponent_ceiling))
+    large_alpha_exponent_term = -d_c * np.exp(np.clip(c_2c * inv_one_minus_alpha, None, constants.exponent_ceiling))
 
-        f_c[alpha < 1] = np.exp(-c_1c * alpha[alpha < 1] / one_minus_alpha[alpha < 1])
+    f_c = np.zeros_like(alpha)
+    f_c = np.where(alpha < 1, small_alpha_exponent_term, f_c)
+    f_c = np.where(alpha > 1, large_alpha_exponent_term, f_c)
 
-    if np.any(alpha > 1):
+    df_dn_LSDA, _, _, e_C_LSDA = calculate_restricted_PW_correlation(density, sigma, tau, calculation)
 
-        f_c[alpha > 1] = -d_c * np.exp(c_2c / one_minus_alpha[alpha > 1])
-
-
-    e_C_LDA_0 = -b_1c / (1 + b_2c * r_s ** (1 / 2) + b_3c * r_s)
+    e_C_LDA_0 = -b_1c / (1 + b_2c * sqrt_r_s + b_3c * r_s)
 
     w_0 = np.exp(-e_C_LDA_0 / b_1c) - 1
+    w_1 = np.exp(-e_C_LSDA / gamma) - 1
 
-    chi_inf_zeta_0 = 0.128026
+    beta_denominator = 1 + 0.1778 * r_s
+    beta_numerator = 1 + 0.1 * r_s
+    beta = 0.066725 * beta_numerator / beta_denominator
 
-    g_inf = 1 / (1 + 4 * chi_inf_zeta_0 * s_squared) ** (1 / 4)
+    k_F = calculate_Fermi_wavevector(cbrt_density=cbrt_density)
+    k_F_squared = k_F * k_F
+    density_squared = density * density
 
-    H_0 = b_1c * np.log(1 + w_0 * (1 - g_inf))
+    s_squared = sigma / (4 * density_squared * k_F_squared)
+    g_inf = (1 + 4 * chi_inf_zeta_0 * s_squared) ** (-1 / 4)
 
-    gamma = 0.031091
-    beta = 0.066725 * (1 + 0.1 * r_s) / (1 + 0.1778 * r_s)
-    
-    df_dn_alpha_LDA, df_dn_beta_LDA, _, _, _, _, _, e_C_LDA_1 = calculate_unrestricted_PW_correlation(density / 2, density / 2, density, None, None, None, None, None, None)
+    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / r_s
+    beta_over_gamma_w_1 = beta / (gamma * w_1)
+    y = beta_over_gamma_w_1 * t_squared
 
-    w_1 = np.exp(-e_C_LDA_1 / (gamma)) - 1
+    g = (1 + 4 * y) ** (-1 / 4)
 
-    A = beta / (gamma * w_1)
-
-    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / (r_s)
-
-    g = 1 / (1 + 4 * A * t_squared) ** (1 / 4)
-
-    H_1 = gamma * np.log(1 + w_1 * (1 - g))
+    H_1 = gamma * np.log1p(w_1 * (1 - g))
+    H_0 = b_1c * np.log1p(w_0 * (1 - g_inf))
 
     e_C_0 = e_C_LDA_0 + H_0
-    e_C_1 = e_C_LDA_1 + H_1
+    e_C_1 = e_C_LSDA + H_1
 
     e_C = e_C_1 + f_c * (e_C_0 - e_C_1)
 
-    df_dn = np.zeros_like(e_C)
-    df_ds = np.zeros_like(e_C)
-    df_dt = np.zeros_like(e_C)
+    # Derivatives of the switching function
+
+    df_c_dalpha_small = -c_1c * inv_one_minus_alpha_squared * small_alpha_exponent_term
+    df_c_dalpha_large = c_2c * inv_one_minus_alpha_squared * large_alpha_exponent_term
+
+    df_c_dalpha = np.zeros_like(alpha)
+    df_c_dalpha = np.where(alpha < 1, df_c_dalpha_small, df_c_dalpha)
+    df_c_dalpha = np.where(alpha > 1, df_c_dalpha_large, df_c_dalpha)
+
+    # Derivatives of the iso-orbital indicator
+
+    dalpha_dt = inv_tau_u
+    dalpha_ds = -dtau_w_ds * inv_tau_u
+
+    dnum_dn = tau_w * inv_density
+    ddenom_dn = (5 / 3) * tau_u * inv_density
+    dalpha_dn = (dnum_dn * tau_u - tau_minus_tau_w * ddenom_dn) * inv_tau_u_squared
+
+    dr_s_dn = -r_s / (3 * density)
+
+    # Derivatives of the LDA0 and LSDA correlation energies
+
+    derivative_denominator = 1 + b_2c * sqrt_r_s + b_3c * r_s
+    derivative_numerator = 0.5 * b_2c / sqrt_r_s + b_3c
+    de_C_LDA_0_dr_s = b_1c * derivative_numerator / (derivative_denominator * derivative_denominator)
+
+    de_C_LDA_0_dn = de_C_LDA_0_dr_s * dr_s_dn
+    de_C_LSDA_dn = (df_dn_LSDA - e_C_LSDA) * inv_density
+
+    w_0_plus_1 = w_0 + 1
+    w_1_plus_1 = w_1 + 1
+
+    dw_0_dn = w_0_plus_1 * (-1 / b_1c) * de_C_LDA_0_dn
+    dw_1_dn = w_1_plus_1 * (-1 / gamma) * de_C_LSDA_dn
+
+    # Derivative of beta
+
+    dbeta_dr_s = 0.066725 * (0.1 * beta_denominator - 0.1778 * beta_numerator) / (beta_denominator * beta_denominator)
+    dbeta_dn = dbeta_dr_s * dr_s_dn
+
+    ds_squared_ds = s_squared / sigma
+    ds_squared_dn = -(8 / 3) * s_squared * inv_density
+    dt_squared_ds = t_squared / sigma
+    dt_squared_dn = -(7 / 3) * t_squared * inv_density
+
+    dg_inf_ds_squared = -chi_inf_zeta_0 * g_inf ** 5
+
+    # Derivatives of y
+
+    dy_ds = beta_over_gamma_w_1 * dt_squared_ds
+    dy_dn = (dbeta_dn * t_squared + beta * dt_squared_dn) / (gamma * w_1) - y * dw_1_dn / w_1
+
+    dg_du = -g ** 5
+    dg_dn = dg_du * dy_dn
+    dg_ds = dg_du * dy_ds
+
+    # Derivatives of H_0 and H_1
+
+    arg_H1 = 1 + w_1 * (1 - g)
+    dH1_dn = gamma * (dw_1_dn * (1 - g) - w_1 * dg_dn) / arg_H1
+    dH1_ds = gamma * (-w_1 * dg_ds) / arg_H1
+
+    arg_H0 = 1 + w_0 * (1 - g_inf)
+    dg_inf_dn = dg_inf_ds_squared * ds_squared_dn
+    dg_inf_ds = dg_inf_ds_squared * ds_squared_ds
+    dH0_dn = b_1c * (dw_0_dn * (1 - g_inf) - w_0 * dg_inf_dn) / arg_H0
+    dH0_ds = b_1c * w_0 * (-dg_inf_ds) / arg_H0
+
+    # Derivatives of e_C_0 and e_C_1
+
+    de_C_0_dn = de_C_LDA_0_dn + dH0_dn
+    de_C_0_ds = dH0_ds
+    de_C_1_dn = de_C_LSDA_dn + dH1_dn
+    de_C_1_ds = dH1_ds
+
+    e_C_0_minus_e_C_1 = e_C_0 - e_C_1
+
+    df_c_dn = df_c_dalpha * dalpha_dn
+    df_c_ds = df_c_dalpha * dalpha_ds
+    df_c_dt = df_c_dalpha * dalpha_dt
+
+    de_C_dn = de_C_1_dn + df_c_dn * e_C_0_minus_e_C_1 + f_c * (de_C_0_dn - de_C_1_dn)
+    de_C_ds = de_C_1_ds + df_c_ds * e_C_0_minus_e_C_1 + f_c * (de_C_0_ds - de_C_1_ds)
+    de_C_dt = df_c_dt * e_C_0_minus_e_C_1
+
+    df_dn = e_C + density * de_C_dn
+    df_ds = density * de_C_ds
+    df_dt = density * de_C_dt
 
     return df_dn, df_ds, df_dt, e_C
 
@@ -3650,33 +3874,36 @@ def calculate_restricted_SCAN_correlation(density: ndarray, sigma: ndarray, tau:
 
 
 def calculate_unrestricted_SCAN_correlation(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
-    
+
     """
     
-    Calculates the unrestricted SCAN correlation energy density and derivative with respect to the density, square gradient and kinetic energy density.
+    Calculates the unrestricted SCAN correlation energy density and derivatives with respect to the spin densities, square gradients and kinetic energy densities.
+
+    A reasonably efficient implementation of equations in 10.1103/PhysRevLett.115.036402.
 
     Args:
-        alpha_density (array): Alpha electron density on integration grid
-        beta_density (array): Beta electron density on integration grid
-        density (array): Electron density on integration grid
-        sigma_aa (array): Alpha-alpha square density gradient
-        sigma_bb (array): Beta-beta square density gradient
-        sigma_ab (array): Alpha-beta square density gradient
-        tau_alpha (array): Alpha kinetic energy density
-        tau_beta (array): Beta kinetic energy density
+        alpha_density (array): Spin-up electron density on integration grid
+        beta_density (array): Spin-down electron density on integration grid
+        density (array): Total electron density on integration grid
+        sigma_aa (array): Spin-up square density gradient
+        sigma_bb (array): Spin-down square density gradient
+        sigma_ab (array): Mixed spin square density gradient
+        tau_alpha (array): Spin-up non-interacting kinetic energy density
+        tau_beta (array): Spin-down non-interacting kinetic energy density
+        calculation (Calculation): Calculation object
     
     Returns:
-        df_dn_alpha (array): Derivative of f = n * e_C with respect to alpha density
-        df_dn_beta (array): Derivative of f = n * e_C with respect to beta density
-        df_ds_aa (array): Derivative of f = n * e_C with respect to sigma alpha-alpha
-        df_ds_bb (array): Derivative of f = n * e_C with respect to sigma beta-beta
-        df_ds_ab (array): Derivative of f = n * e_C with respect to sigma alpha-beta
-        df_dt_alpha (array): Derivative of f = n * e_C with respect to tau alpha
-        df_dt_beta (array): Derivative of f = n * e_C with respect to tau beta
+        df_dn_alpha (array): Derivative of f = n * e_C with respect to spin-up density
+        df_dn_beta (array): Derivative of f = n * e_C with respect to spin-down density
+        df_ds_aa (array): Derivative of f = n * e_C with respect to sigma_aa
+        df_ds_bb (array): Derivative of f = n * e_C with respect to sigma_bb
+        df_ds_ab (array): Derivative of f = n * e_C with respect to sigma_ab
+        df_dt_alpha (array): Derivative of f = n * e_C with respect to spin-up tau
+        df_dt_beta (array): Derivative of f = n * e_C with respect to spin-down tau
         e_C (array): Unrestricted SCAN correlation energy density per particle
     
     """
-    
+
     b_1c = 0.0285764
     b_2c = 0.0889
     b_3c = 0.125541
@@ -3685,7 +3912,8 @@ def calculate_unrestricted_SCAN_correlation(alpha_density: ndarray, beta_density
     c_2c = 1.5
     d_c = 0.7
 
-    # Forms total density, cleaned total sigma and total tau
+    chi_inf_zeta_0 = 0.128026
+    gamma = 0.031091
 
     density = alpha_density + beta_density
     sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=constants.sigma_floor)
@@ -3696,82 +3924,192 @@ def calculate_unrestricted_SCAN_correlation(alpha_density: ndarray, beta_density
     cbrt_plus = np.cbrt(clean(1 + zeta))
     cbrt_minus = np.cbrt(clean(1 - zeta))
 
-    phi = (1 / 2) * (cbrt_plus * cbrt_plus + cbrt_minus * cbrt_minus)
+    cbrt_plus_squared = cbrt_plus * cbrt_plus
+    cbrt_minus_squared = cbrt_minus * cbrt_minus
+
+    d_s = (cbrt_plus * cbrt_plus_squared * cbrt_plus_squared + cbrt_minus * cbrt_minus_squared * cbrt_minus_squared) / 2
+    d_x = (cbrt_plus_squared * cbrt_plus_squared + cbrt_minus_squared * cbrt_minus_squared) / 2
+    phi = (cbrt_plus_squared + cbrt_minus_squared) / 2
+
+    r_s, inv_density = calculate_seitz_radius(density)
+    sqrt_r_s = r_s ** (1 / 2)
+    cbrt_density = clean(np.cbrt(density))
+
     phi_squared = phi * phi
     phi_cubed = phi_squared * phi
 
-    r_s, inv_density = calculate_seitz_radius(density)
-
-    d_x = (np.cbrt(1 + zeta) ** 4 + np.cbrt(1 - zeta) ** 4) / 2
-
-    cbrt_density = clean(np.cbrt(density))
-
-    s_squared = sigma / (4 * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 8)
-
-    d_s = (1 / 2) * (cbrt_plus ** 5 + cbrt_minus ** 5)
-
-    tau_w = sigma / (8 * density)
+    dtau_w_ds = inv_density / 8
+    tau_w = sigma * dtau_w_ds
     tau_u = (3 / 10) * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 5 * d_s
 
-    alpha = (tau - tau_w) / tau_u
+    tau_minus_tau_w = tau - tau_w
+
+    inv_tau_u = 1 / tau_u
+    inv_tau_u_squared = inv_tau_u * inv_tau_u
+    alpha = tau_minus_tau_w * inv_tau_u
     one_minus_alpha = 1 - alpha
+    inv_one_minus_alpha = 1 / one_minus_alpha
+    inv_one_minus_alpha_squared = inv_one_minus_alpha * inv_one_minus_alpha
 
-    f_c = np.zeros_like(alpha) 
+    small_alpha_exponent_term = np.exp(np.clip(-c_1c * alpha * inv_one_minus_alpha, None, constants.exponent_ceiling))
+    large_alpha_exponent_term = -d_c * np.exp(np.clip(c_2c * inv_one_minus_alpha, None, constants.exponent_ceiling))
 
-    if np.any(alpha < 1):
-
-        f_c[alpha < 1] = np.exp(-c_1c * alpha[alpha < 1] / one_minus_alpha[alpha < 1])
-
-    if np.any(alpha > 1):
-
-        f_c[alpha > 1] = -d_c * np.exp(c_2c / one_minus_alpha[alpha > 1])
+    f_c = np.zeros_like(alpha)
+    f_c = np.where(alpha < 1, small_alpha_exponent_term, f_c)
+    f_c = np.where(alpha > 1, large_alpha_exponent_term, f_c)
 
     G_c = (1 - 2.3631 * (d_x - 1)) * (1 - zeta ** 12)
 
-    e_C_LDA_0 = -b_1c / (1 + b_2c * r_s ** (1 / 2) + b_3c * r_s)
+    df_dn_alpha_LSDA, df_dn_beta_LSDA, _, _, _, _, _, e_C_LSDA = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, None, None, None, None, None, None)
+
+    e_C_LDA_0 = -b_1c / (1 + b_2c * sqrt_r_s + b_3c * r_s)
 
     w_0 = np.exp(-e_C_LDA_0 / b_1c) - 1
+    w_1 = np.exp(-e_C_LSDA / (gamma * phi_cubed)) - 1
 
-    f_0 = -0.9
-    c_x = -3 / (4 * np.pi) * np.cbrt(9 * np.pi / 4) * d_x
+    beta_denominator = 1 + 0.1778 * r_s
+    beta_numerator = 1 + 0.1 * r_s
+    beta = 0.066725 * beta_numerator / beta_denominator
 
-    chi_inf = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * (0.066725 * (0.1 / 0.1778)) * phi / (c_x - f_0)
+    k_F = calculate_Fermi_wavevector(cbrt_density=cbrt_density)
+    k_F_squared = k_F * k_F
+    density_squared = density * density
 
-    chi_inf_zeta_0 = 0.128026
+    s_squared = sigma / (4 * density_squared * k_F_squared)
+    g_inf = (1 + 4 * chi_inf_zeta_0 * s_squared) ** (-1 / 4)
 
-    g_inf = 1 / np.sqrt(np.sqrt((1 + 4 * chi_inf_zeta_0 * s_squared)))
+    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / (phi_squared * r_s)
+    beta_over_gamma_w_1 = beta / (gamma * w_1)
+    y = beta_over_gamma_w_1 * t_squared
 
-    H_0 = b_1c * np.log(1 + w_0 * (1 - g_inf))
+    g = (1 + 4 * y) ** (-1 / 4)
 
-    gamma = 0.031091
-    beta = 0.066725 * (1 + 0.1 * r_s) / (1 + 0.1778 * r_s)
-    
-    df_dn_alpha_LDA, df_dn_beta_LDA, _, _, _, _, _, e_C_LDA_1 = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, None, None, None, None, None, None)
-
-    w_1 = np.exp(-e_C_LDA_1 / (gamma * phi_cubed)) - 1
-
-    A = beta / (gamma * w_1)
-
-    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / (phi * phi * r_s)
-
-    g = 1 / np.sqrt(np.sqrt((1 + 4 * A * t_squared)))
-
-    H_1 = gamma * phi_cubed * np.log(1 + w_1 * (1 - g))
+    H_1 = gamma * phi_cubed * np.log1p(w_1 * (1 - g))
+    H_0 = b_1c * np.log1p(w_0 * (1 - g_inf))
 
     e_C_0 = (e_C_LDA_0 + H_0) * G_c
-    e_C_1 = e_C_LDA_1 + H_1
-
+    e_C_1 = e_C_LSDA + H_1
 
     e_C = e_C_1 + f_c * (e_C_0 - e_C_1)
 
-    df_dn_alpha = np.zeros_like(e_C)
-    df_dn_beta = np.zeros_like(e_C)
-    df_ds_aa = np.zeros_like(e_C)
-    df_ds_bb = np.zeros_like(e_C)
-    df_ds_ab = np.zeros_like(e_C)
-    df_dt_alpha = np.zeros_like(e_C)
-    df_dt_beta = np.zeros_like(e_C)
+    dzeta_dn_alpha = (1 - zeta) * inv_density
+    dzeta_dn_beta = -(1 + zeta) * inv_density
 
+    inv_cbrt_plus = 1 / cbrt_plus
+    inv_cbrt_minus = 1 / cbrt_minus
+
+    dphi_dzeta = (1 / 3) * (inv_cbrt_plus - inv_cbrt_minus)
+    dd_s_dzeta = (5 / 6) * (cbrt_plus_squared - cbrt_minus_squared)
+    dd_x_dzeta = (2 / 3) * (cbrt_plus - cbrt_minus)
+    dphi_cubed_dzeta = 3 * phi_squared * dphi_dzeta
+
+    G_c_factor_1 = 1 - 2.3631 * (d_x - 1)
+    G_c_factor_2 = 1 - zeta ** 12
+    dG_c_dzeta = -2.3631 * dd_x_dzeta * G_c_factor_2 - 12 * zeta ** 11 * G_c_factor_1
+
+    # Switching-function derivative
+
+    df_c_dalpha_small = -c_1c * inv_one_minus_alpha_squared * small_alpha_exponent_term
+    df_c_dalpha_large = c_2c * inv_one_minus_alpha_squared * large_alpha_exponent_term
+
+    df_c_dalpha = np.zeros_like(alpha)
+    df_c_dalpha = np.where(alpha < 1, df_c_dalpha_small, df_c_dalpha)
+    df_c_dalpha = np.where(alpha > 1, df_c_dalpha_large, df_c_dalpha)
+
+    dtau_u_dzeta = tau_u * dd_s_dzeta / d_s
+
+    dnum_dn = tau_w * inv_density
+    ddenom_dn = (5 / 3) * tau_u * inv_density
+    dalpha_dn = (dnum_dn * tau_u - tau_minus_tau_w * ddenom_dn) * inv_tau_u_squared
+    dalpha_dzeta = -tau_minus_tau_w * dtau_u_dzeta * inv_tau_u_squared
+    dalpha_ds = -dtau_w_ds * inv_tau_u
+    dalpha_dt = inv_tau_u
+
+    df_c_dn = df_c_dalpha * dalpha_dn
+    df_c_dzeta = df_c_dalpha * dalpha_dzeta
+    df_c_ds = df_c_dalpha * dalpha_ds
+    df_c_dt = df_c_dalpha * dalpha_dt
+
+    dr_s_dn = -r_s / (3 * density)
+
+    de_C_LSDA_dn_alpha = (df_dn_alpha_LSDA - e_C_LSDA) * inv_density
+    de_C_LSDA_dn_beta = (df_dn_beta_LSDA - e_C_LSDA) * inv_density
+    de_C_LSDA_dn = 0.5 * (1 + zeta) * de_C_LSDA_dn_alpha + 0.5 * (1 - zeta) * de_C_LSDA_dn_beta
+    de_C_LSDA_dzeta = 0.5 * (df_dn_alpha_LSDA - df_dn_beta_LSDA)
+
+    derivative_denominator = 1 + b_2c * sqrt_r_s + b_3c * r_s
+    derivative_numerator = 0.5 * b_2c / sqrt_r_s + b_3c
+    de_C_LDA_0_dr_s = b_1c * derivative_numerator / (derivative_denominator * derivative_denominator)
+    de_C_LDA_0_dn = de_C_LDA_0_dr_s * dr_s_dn
+
+    w_0_plus_1 = w_0 + 1
+    w_1_plus_1 = w_1 + 1
+
+    dw_0_dn = w_0_plus_1 * (-1 / b_1c) * de_C_LDA_0_dn
+
+    inv_gamma_phi_cubed = 1 / (gamma * phi_cubed)
+    dw_1_dn = w_1_plus_1 * (-inv_gamma_phi_cubed) * de_C_LSDA_dn
+    dw_1_dzeta = w_1_plus_1 * (-inv_gamma_phi_cubed) * (de_C_LSDA_dzeta - e_C_LSDA * dphi_cubed_dzeta / phi_cubed)
+
+    dbeta_dr_s = 0.066725 * (0.1 * beta_denominator - 0.1778 * beta_numerator) / (beta_denominator * beta_denominator)
+    dbeta_dn = dbeta_dr_s * dr_s_dn
+
+    ds_squared_ds = s_squared / sigma
+    ds_squared_dn = -(8 / 3) * s_squared * inv_density
+    dt_squared_ds = t_squared / sigma
+    dt_squared_dn = -(7 / 3) * t_squared * inv_density
+    dt_squared_dzeta = -2 * t_squared * dphi_dzeta / phi
+
+    dg_inf_ds_squared = -chi_inf_zeta_0 * g_inf ** 5
+
+    dy_ds = beta_over_gamma_w_1 * dt_squared_ds
+    dy_dn = (dbeta_dn * t_squared + beta * dt_squared_dn) / (gamma * w_1) - y * dw_1_dn / w_1
+    dy_dzeta = beta * dt_squared_dzeta / (gamma * w_1) - y * dw_1_dzeta / w_1
+
+    dg_du = -g ** 5
+    dg_dn = dg_du * dy_dn
+    dg_dzeta = dg_du * dy_dzeta
+    dg_ds = dg_du * dy_ds
+
+    arg_H1 = 1 + w_1 * (1 - g)
+    log_arg_H1 = np.log1p(w_1 * (1 - g))
+    dH1_dn = gamma * phi_cubed * (dw_1_dn * (1 - g) - w_1 * dg_dn) / arg_H1
+    dH1_dzeta = dphi_cubed_dzeta * gamma * log_arg_H1 + gamma * phi_cubed * (dw_1_dzeta * (1 - g) - w_1 * dg_dzeta) / arg_H1
+    dH1_ds = gamma * phi_cubed * (-w_1 * dg_ds) / arg_H1
+
+    arg_H0 = 1 + w_0 * (1 - g_inf)
+    dg_inf_dn = dg_inf_ds_squared * ds_squared_dn
+    dg_inf_ds = dg_inf_ds_squared * ds_squared_ds
+    dH0_dn = b_1c * (dw_0_dn * (1 - g_inf) - w_0 * dg_inf_dn) / arg_H0
+    dH0_ds = b_1c * w_0 * (-dg_inf_ds) / arg_H0
+
+    de_C_0_dn = (de_C_LDA_0_dn + dH0_dn) * G_c
+    de_C_0_dzeta = (e_C_LDA_0 + H_0) * dG_c_dzeta
+    de_C_0_ds = dH0_ds * G_c
+
+    de_C_1_dn = de_C_LSDA_dn + dH1_dn
+    de_C_1_dzeta = de_C_LSDA_dzeta + dH1_dzeta
+    de_C_1_ds = dH1_ds
+
+    e_C_0_minus_e_C_1 = e_C_0 - e_C_1
+
+    de_C_dn = de_C_1_dn + df_c_dn * e_C_0_minus_e_C_1 + f_c * (de_C_0_dn - de_C_1_dn)
+    de_C_dzeta = de_C_1_dzeta + df_c_dzeta * e_C_0_minus_e_C_1 + f_c * (de_C_0_dzeta - de_C_1_dzeta)
+    de_C_ds = de_C_1_ds + df_c_ds * e_C_0_minus_e_C_1 + f_c * (de_C_0_ds - de_C_1_ds)
+    de_C_dt = df_c_dt * e_C_0_minus_e_C_1
+
+    de_C_dn_alpha = de_C_dn + de_C_dzeta * dzeta_dn_alpha
+    de_C_dn_beta = de_C_dn + de_C_dzeta * dzeta_dn_beta
+
+    df_dn_alpha = e_C + density * de_C_dn_alpha
+    df_dn_beta = e_C + density * de_C_dn_beta
+
+    df_ds_aa = density * de_C_ds
+    df_ds_bb = df_ds_aa
+    df_ds_ab = 2 * df_ds_aa
+
+    df_dt_alpha = density * de_C_dt
+    df_dt_beta = df_dt_alpha
 
     return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, df_dt_alpha, df_dt_beta, e_C
 
@@ -3785,8 +4123,27 @@ def calculate_unrestricted_SCAN_correlation(alpha_density: ndarray, beta_density
 
 
 def calculate_restricted_rSCAN_correlation(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
+
+    """
     
+    Calculates the restricted rSCAN correlation energy density and derivative with respect to the density, square gradient and kinetic energy density.
+
+    A reasonably efficient implementation of equations in 10.1063/1.5094646.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient
+        tau (array): Non-interacting kinetic energy density
+        calculation (Calculation): Calculation object
     
+    Returns:
+        df_dn (array): Derivative of f = n * e_C with respect to density
+        df_ds (array): Derivative of f = n * e_C with respect to sigma
+        df_dt (array): Derivative of f = n * e_C with respect to tau
+        e_C (array): Restricted rSCAN correlation energy density per particle
+    
+    """
+
     b_1c = 0.0285764
     b_2c = 0.0889
     b_3c = 0.125541
@@ -3795,63 +4152,165 @@ def calculate_restricted_rSCAN_correlation(density: ndarray, sigma: ndarray, tau
     c_2c = 1.5
     d_c = 0.7
 
-
-    r_s, inv_density = calculate_seitz_radius(density)
-
-    cbrt_density = clean(np.cbrt(density))
-
-    s_squared = sigma / (4 * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 8)
-
-    tau_w = sigma / (8 * density)
-    tau_u = (3 / 10) * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 5
-
-    alpha = (tau - tau_w) / tau_u
-    one_minus_alpha = 1 - alpha
-
-    f_c = np.zeros_like(alpha) 
-
-    if np.any(alpha < 1):
-
-        f_c[alpha < 1] = np.exp(-c_1c * alpha[alpha < 1] / one_minus_alpha[alpha < 1])
-
-    if np.any(alpha > 1):
-
-        f_c[alpha > 1] = -d_c * np.exp(c_2c / one_minus_alpha[alpha > 1])
-
-
-    e_C_LDA_0 = -b_1c / (1 + b_2c * r_s ** (1 / 2) + b_3c * r_s)
-
-    w_0 = np.exp(-e_C_LDA_0 / b_1c) - 1
+    eta = 0.0001
+    alpha_r = 0.001
 
     chi_inf_zeta_0 = 0.128026
-
-    g_inf = 1 / (1 + 4 * chi_inf_zeta_0 * s_squared) ** (1 / 4)
-
-    H_0 = b_1c * np.log(1 + w_0 * (1 - g_inf))
-
     gamma = 0.031091
-    beta = 0.066725 * (1 + 0.1 * r_s) / (1 + 0.1778 * r_s)
-    
-    df_dn_alpha_LDA, df_dn_beta_LDA, _, _, _, _, _, e_C_LDA_1 = calculate_unrestricted_PW_correlation(density / 2, density / 2, density, None, None, None, None, None, None)
 
-    w_1 = np.exp(-e_C_LDA_1 / (gamma)) - 1
+    c_c = [1, -0.64, -0.4352, -1.535685604549, 3.061560252175, -1.915710236206, 0.516884468372, -0.051848879792]
 
-    A = beta / (gamma * w_1)
+    r_s, inv_density = calculate_seitz_radius(density)
+    sqrt_r_s = r_s ** (1 / 2)
+    cbrt_density = clean(np.cbrt(density))
 
-    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / (r_s)
+    dtau_w_ds = inv_density / 8
+    tau_w = sigma * dtau_w_ds
+    tau_u = (3 / 10) * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 5
 
-    g = 1 / (1 + 4 * A * t_squared) ** (1 / 4)
+    tau_minus_tau_w = tau - tau_w
 
-    H_1 = gamma * np.log(1 + w_1 * (1 - g))
+    # The regularised iso-orbital indicator, exactly as in rSCAN exchange
+
+    alpha_denominator = tau_u + eta
+    inv_alpha_denominator = 1 / alpha_denominator
+    inv_alpha_denominator_squared = inv_alpha_denominator * inv_alpha_denominator
+
+    alpha = tau_minus_tau_w * inv_alpha_denominator
+    alpha_squared = alpha * alpha
+    inv_alpha_prime_denominator = 1 / (alpha_squared + alpha_r)
+    alpha_prime = alpha_squared * alpha * inv_alpha_prime_denominator
+
+    one_minus_alpha_prime = 1 - alpha_prime
+    inv_one_minus_alpha_prime = 1 / one_minus_alpha_prime
+    inv_one_minus_alpha_prime_squared = inv_one_minus_alpha_prime * inv_one_minus_alpha_prime
+
+    # Smoother polynomial switching function
+
+    f_c = ((((((c_c[7] * alpha_prime + c_c[6]) * alpha_prime + c_c[5]) * alpha_prime + c_c[4]) * alpha_prime + c_c[3]) * alpha_prime + c_c[2]) * alpha_prime + c_c[1]) * alpha_prime + c_c[0]
+
+    small_alpha_exponent_term = np.exp(np.clip(-c_1c * alpha_prime * inv_one_minus_alpha_prime, None, constants.exponent_ceiling))
+    large_alpha_exponent_term = -d_c * np.exp(np.clip(c_2c * inv_one_minus_alpha_prime, None, constants.exponent_ceiling))
+
+    f_c = np.where(alpha_prime < 0, small_alpha_exponent_term, f_c)
+    f_c = np.where(alpha_prime > 2.5, large_alpha_exponent_term, f_c)
+
+    df_dn_LSDA, _, _, e_C_LSDA = calculate_restricted_PW_correlation(density, sigma, tau, calculation)
+
+    e_C_LDA_0 = -b_1c / (1 + b_2c * sqrt_r_s + b_3c * r_s)
+
+    w_0 = np.exp(-e_C_LDA_0 / b_1c) - 1
+    w_1 = np.exp(-e_C_LSDA / gamma) - 1
+
+    beta_denominator = 1 + 0.1778 * r_s
+    beta_numerator = 1 + 0.1 * r_s
+    beta = 0.066725 * beta_numerator / beta_denominator
+
+    k_F = calculate_Fermi_wavevector(cbrt_density=cbrt_density)
+    k_F_squared = k_F * k_F
+    density_squared = density * density
+
+    s_squared = sigma / (4 * density_squared * k_F_squared)
+    g_inf = (1 + 4 * chi_inf_zeta_0 * s_squared) ** (-1 / 4)
+
+    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / r_s
+    beta_over_gamma_w_1 = beta / (gamma * w_1)
+    y = beta_over_gamma_w_1 * t_squared
+
+    g = (1 + 4 * y) ** (-1 / 4)
+
+    H_1 = gamma * np.log1p(w_1 * (1 - g))
+    H_0 = b_1c * np.log1p(w_0 * (1 - g_inf))
 
     e_C_0 = e_C_LDA_0 + H_0
-    e_C_1 = e_C_LDA_1 + H_1
+    e_C_1 = e_C_LSDA + H_1
 
     e_C = e_C_1 + f_c * (e_C_0 - e_C_1)
 
-    df_dn = np.zeros_like(e_C)
-    df_ds = np.zeros_like(e_C)
-    df_dt = np.zeros_like(e_C)
+    # Derivatives of the switching function, including of the degree-seven polynomial
+
+    df_c_dalpha_prime_poly = (((((7 * c_c[7] * alpha_prime + 6 * c_c[6]) * alpha_prime + 5 * c_c[5]) * alpha_prime + 4 * c_c[4]) * alpha_prime + 3 * c_c[3]) * alpha_prime + 2 * c_c[2]) * alpha_prime + c_c[1]
+    df_c_dalpha_prime_small = -c_1c * inv_one_minus_alpha_prime_squared * small_alpha_exponent_term
+    df_c_dalpha_prime_large = c_2c * inv_one_minus_alpha_prime_squared * large_alpha_exponent_term
+
+    df_c_dalpha_prime = np.where(alpha_prime < 0, df_c_dalpha_prime_small, df_c_dalpha_prime_poly)
+    df_c_dalpha_prime = np.where(alpha_prime > 2.5, df_c_dalpha_prime_large, df_c_dalpha_prime)
+
+    # Derivatives of the iso-orbital indicator and its regularisation
+
+    d_alpha_prime_d_alpha = alpha_squared * (alpha_squared + 3 * alpha_r) * inv_alpha_prime_denominator * inv_alpha_prime_denominator
+
+    dalpha_dt = inv_alpha_denominator
+    dalpha_ds = -dtau_w_ds * inv_alpha_denominator
+
+    dnum_dn = tau_w * inv_density
+    ddenom_dn = (5 / 3) * tau_u * inv_density
+    dalpha_dn = (dnum_dn * alpha_denominator - tau_minus_tau_w * ddenom_dn) * inv_alpha_denominator_squared
+
+    dalpha_prime_dt = d_alpha_prime_d_alpha * dalpha_dt
+    dalpha_prime_ds = d_alpha_prime_d_alpha * dalpha_ds
+    dalpha_prime_dn = d_alpha_prime_d_alpha * dalpha_dn
+
+    dr_s_dn = -r_s / (3 * density)
+
+    derivative_denominator = 1 + b_2c * sqrt_r_s + b_3c * r_s
+    derivative_numerator = 0.5 * b_2c / sqrt_r_s + b_3c
+    de_C_LDA_0_dr_s = b_1c * derivative_numerator / (derivative_denominator * derivative_denominator)
+
+    de_C_LDA_0_dn = de_C_LDA_0_dr_s * dr_s_dn
+    de_C_LSDA_dn = (df_dn_LSDA - e_C_LSDA) * inv_density
+
+    w_0_plus_1 = w_0 + 1
+    w_1_plus_1 = w_1 + 1
+
+    dw_0_dn = w_0_plus_1 * (-1 / b_1c) * de_C_LDA_0_dn
+    dw_1_dn = w_1_plus_1 * (-1 / gamma) * de_C_LSDA_dn
+
+    dbeta_dr_s = 0.066725 * (0.1 * beta_denominator - 0.1778 * beta_numerator) / (beta_denominator * beta_denominator)
+    dbeta_dn = dbeta_dr_s * dr_s_dn
+
+    ds_squared_ds = s_squared / sigma
+    ds_squared_dn = -(8 / 3) * s_squared * inv_density
+    dt_squared_ds = t_squared / sigma
+    dt_squared_dn = -(7 / 3) * t_squared * inv_density
+
+    dg_inf_ds_squared = -chi_inf_zeta_0 * g_inf ** 5
+
+    dy_ds = beta_over_gamma_w_1 * dt_squared_ds
+    dy_dn = (dbeta_dn * t_squared + beta * dt_squared_dn) / (gamma * w_1) - y * dw_1_dn / w_1
+
+    dg_du = -g ** 5
+    dg_dn = dg_du * dy_dn
+    dg_ds = dg_du * dy_ds
+
+    arg_H1 = 1 + w_1 * (1 - g)
+    dH1_dn = gamma * (dw_1_dn * (1 - g) - w_1 * dg_dn) / arg_H1
+    dH1_ds = gamma * (-w_1 * dg_ds) / arg_H1
+
+    arg_H0 = 1 + w_0 * (1 - g_inf)
+    dg_inf_dn = dg_inf_ds_squared * ds_squared_dn
+    dg_inf_ds = dg_inf_ds_squared * ds_squared_ds
+    dH0_dn = b_1c * (dw_0_dn * (1 - g_inf) - w_0 * dg_inf_dn) / arg_H0
+    dH0_ds = b_1c * w_0 * (-dg_inf_ds) / arg_H0
+
+    de_C_0_dn = de_C_LDA_0_dn + dH0_dn
+    de_C_0_ds = dH0_ds
+    de_C_1_dn = de_C_LSDA_dn + dH1_dn
+    de_C_1_ds = dH1_ds
+
+    e_C_0_minus_e_C_1 = e_C_0 - e_C_1
+
+    df_c_dn = df_c_dalpha_prime * dalpha_prime_dn
+    df_c_ds = df_c_dalpha_prime * dalpha_prime_ds
+    df_c_dt = df_c_dalpha_prime * dalpha_prime_dt
+
+    de_C_dn = de_C_1_dn + df_c_dn * e_C_0_minus_e_C_1 + f_c * (de_C_0_dn - de_C_1_dn)
+    de_C_ds = de_C_1_ds + df_c_ds * e_C_0_minus_e_C_1 + f_c * (de_C_0_ds - de_C_1_ds)
+    de_C_dt = df_c_dt * e_C_0_minus_e_C_1
+
+    df_dn = e_C + density * de_C_dn
+    df_ds = density * de_C_ds
+    df_dt = density * de_C_dt
 
     return df_dn, df_ds, df_dt, e_C
 
@@ -3865,33 +4324,36 @@ def calculate_restricted_rSCAN_correlation(density: ndarray, sigma: ndarray, tau
 
 
 def calculate_unrestricted_rSCAN_correlation(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
-    
+
     """
     
-    Calculates the unrestricted rSCAN correlation energy density and derivative with respect to the density, square gradient and kinetic energy density.
+    Calculates the unrestricted rSCAN correlation energy density and derivatives with respect to the spin densities, square gradients and kinetic energy densities.
+
+    A reasonably efficient implementation of equations in 10.1063/1.5094646.
 
     Args:
-        alpha_density (array): Alpha electron density on integration grid
-        beta_density (array): Beta electron density on integration grid
-        density (array): Electron density on integration grid
-        sigma_aa (array): Alpha-alpha square density gradient
-        sigma_bb (array): Beta-beta square density gradient
-        sigma_ab (array): Alpha-beta square density gradient
-        tau_alpha (array): Alpha kinetic energy density
-        tau_beta (array): Beta kinetic energy density
+        alpha_density (array): Spin-up electron density on integration grid
+        beta_density (array): Spin-down electron density on integration grid
+        density (array): Total electron density on integration grid
+        sigma_aa (array): Spin-up square density gradient
+        sigma_bb (array): Spin-down square density gradient
+        sigma_ab (array): Mixed spin square density gradient
+        tau_alpha (array): Spin-up non-interacting kinetic energy density
+        tau_beta (array): Spin-down non-interacting kinetic energy density
+        calculation (Calculation): Calculation object
     
     Returns:
-        df_dn_alpha (array): Derivative of f = n * e_C with respect to alpha density
-        df_dn_beta (array): Derivative of f = n * e_C with respect to beta density
-        df_ds_aa (array): Derivative of f = n * e_C with respect to sigma alpha-alpha
-        df_ds_bb (array): Derivative of f = n * e_C with respect to sigma beta-beta
-        df_ds_ab (array): Derivative of f = n * e_C with respect to sigma alpha-beta
-        df_dt_alpha (array): Derivative of f = n * e_C with respect to tau alpha
-        df_dt_beta (array): Derivative of f = n * e_C with respect to tau beta
+        df_dn_alpha (array): Derivative of f = n * e_C with respect to spin-up density
+        df_dn_beta (array): Derivative of f = n * e_C with respect to spin-down density
+        df_ds_aa (array): Derivative of f = n * e_C with respect to sigma_aa
+        df_ds_bb (array): Derivative of f = n * e_C with respect to sigma_bb
+        df_ds_ab (array): Derivative of f = n * e_C with respect to sigma_ab
+        df_dt_alpha (array): Derivative of f = n * e_C with respect to spin-up tau
+        df_dt_beta (array): Derivative of f = n * e_C with respect to spin-down tau
         e_C (array): Unrestricted rSCAN correlation energy density per particle
     
     """
-    
+
     b_1c = 0.0285764
     b_2c = 0.0889
     b_3c = 0.125541
@@ -3900,7 +4362,13 @@ def calculate_unrestricted_rSCAN_correlation(alpha_density: ndarray, beta_densit
     c_2c = 1.5
     d_c = 0.7
 
-    # Forms total density, cleaned total sigma and total tau
+    eta = 0.0001
+    alpha_r = 0.001
+
+    chi_inf_zeta_0 = 0.128026
+    gamma = 0.031091
+
+    c_c = [1, -0.64, -0.4352, -1.535685604549, 3.061560252175, -1.915710236206, 0.516884468372, -0.051848879792]
 
     density = alpha_density + beta_density
     sigma = clean(sigma_aa + sigma_bb + 2 * sigma_ab, floor=constants.sigma_floor)
@@ -3911,83 +4379,204 @@ def calculate_unrestricted_rSCAN_correlation(alpha_density: ndarray, beta_densit
     cbrt_plus = np.cbrt(clean(1 + zeta))
     cbrt_minus = np.cbrt(clean(1 - zeta))
 
-    phi = (1 / 2) * (cbrt_plus * cbrt_plus + cbrt_minus * cbrt_minus)
+    cbrt_plus_squared = cbrt_plus * cbrt_plus
+    cbrt_minus_squared = cbrt_minus * cbrt_minus
+
+    d_s = (cbrt_plus * cbrt_plus_squared * cbrt_plus_squared + cbrt_minus * cbrt_minus_squared * cbrt_minus_squared) / 2
+    d_x = (cbrt_plus_squared * cbrt_plus_squared + cbrt_minus_squared * cbrt_minus_squared) / 2
+    phi = (cbrt_plus_squared + cbrt_minus_squared) / 2
+
+    r_s, inv_density = calculate_seitz_radius(density)
+    sqrt_r_s = r_s ** (1 / 2)
+    cbrt_density = clean(np.cbrt(density))
+
     phi_squared = phi * phi
     phi_cubed = phi_squared * phi
 
-    r_s, inv_density = calculate_seitz_radius(density)
-
-    d_x = (np.cbrt(1 + zeta) ** 4 + np.cbrt(1 - zeta) ** 4) / 2
-
-    cbrt_density = clean(np.cbrt(density))
-
-    s_squared = sigma / (4 * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 8)
-
-    d_s = (1 / 2) * (cbrt_plus ** 5 + cbrt_minus ** 5)
-
-    tau_w = sigma / (8 * density)
+    dtau_w_ds = inv_density / 8
+    tau_w = sigma * dtau_w_ds
     tau_u = (3 / 10) * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 5 * d_s
 
-    alpha = (tau - tau_w) / tau_u
-    one_minus_alpha = 1 - alpha
+    tau_minus_tau_w = tau - tau_w
 
-    f_c = np.zeros_like(alpha) 
+    alpha_denominator = tau_u + eta * d_s
+    inv_alpha_denominator = 1 / alpha_denominator
+    inv_alpha_denominator_squared = inv_alpha_denominator * inv_alpha_denominator
 
-    if np.any(alpha < 1):
+    alpha = tau_minus_tau_w * inv_alpha_denominator
+    alpha_squared = alpha * alpha
+    inv_alpha_prime_denominator = 1 / (alpha_squared + alpha_r)
+    alpha_prime = alpha_squared * alpha * inv_alpha_prime_denominator
 
-        f_c[alpha < 1] = np.exp(-c_1c * alpha[alpha < 1] / one_minus_alpha[alpha < 1])
+    one_minus_alpha_prime = 1 - alpha_prime
+    inv_one_minus_alpha_prime = 1 / one_minus_alpha_prime
+    inv_one_minus_alpha_prime_squared = inv_one_minus_alpha_prime * inv_one_minus_alpha_prime
 
-    if np.any(alpha > 1):
+    f_c = ((((((c_c[7] * alpha_prime + c_c[6]) * alpha_prime + c_c[5]) * alpha_prime + c_c[4]) * alpha_prime + c_c[3]) * alpha_prime + c_c[2]) * alpha_prime + c_c[1]) * alpha_prime + c_c[0]
 
-        f_c[alpha > 1] = -d_c * np.exp(c_2c / one_minus_alpha[alpha > 1])
+    small_alpha_exponent_term = np.exp(np.clip(-c_1c * alpha_prime * inv_one_minus_alpha_prime, None, constants.exponent_ceiling))
+    large_alpha_exponent_term = -d_c * np.exp(np.clip(c_2c * inv_one_minus_alpha_prime, None, constants.exponent_ceiling))
+
+    f_c = np.where(alpha_prime < 0, small_alpha_exponent_term, f_c)
+    f_c = np.where(alpha_prime > 2.5, large_alpha_exponent_term, f_c)
 
     G_c = (1 - 2.3631 * (d_x - 1)) * (1 - zeta ** 12)
 
-    e_C_LDA_0 = -b_1c / (1 + b_2c * r_s ** (1 / 2) + b_3c * r_s)
+    df_dn_alpha_LSDA, df_dn_beta_LSDA, _, _, _, _, _, e_C_LSDA = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, None, None, None, None, None, None)
+
+    e_C_LDA_0 = -b_1c / (1 + b_2c * sqrt_r_s + b_3c * r_s)
 
     w_0 = np.exp(-e_C_LDA_0 / b_1c) - 1
+    w_1 = np.exp(-e_C_LSDA / (gamma * phi_cubed)) - 1
 
-    f_0 = -0.9
-    c_x = -3 / (4 * np.pi) * np.cbrt(9 * np.pi / 4) * d_x
+    beta_denominator = 1 + 0.1778 * r_s
+    beta_numerator = 1 + 0.1 * r_s
+    beta = 0.066725 * beta_numerator / beta_denominator
 
-    chi_inf = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * (0.066725 * (0.1 / 0.1778)) * phi / (c_x - f_0)
+    k_F = calculate_Fermi_wavevector(cbrt_density=cbrt_density)
+    k_F_squared = k_F * k_F
+    density_squared = density * density
 
-    chi_inf_zeta_0 = 0.128026
+    s_squared = sigma / (4 * density_squared * k_F_squared)
+    g_inf = (1 + 4 * chi_inf_zeta_0 * s_squared) ** (-1 / 4)
 
-    g_inf = 1 / (1 + 4 * chi_inf_zeta_0 * s_squared) ** (1 / 4)
+    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / (phi_squared * r_s)
+    beta_over_gamma_w_1 = beta / (gamma * w_1)
+    y = beta_over_gamma_w_1 * t_squared
 
-    H_0 = b_1c * np.log(1 + w_0 * (1 - g_inf))
+    g = (1 + 4 * y) ** (-1 / 4)
 
-    gamma = 0.031091
-    beta = 0.066725 * (1 + 0.1 * r_s) / (1 + 0.1778 * r_s)
-    
-    df_dn_alpha_LDA, df_dn_beta_LDA, _, _, _, _, _, e_C_LDA_1 = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, None, None, None, None, None, None)
-    #_, e_C_LDA_1, de1_dr = calculate_PW_potential(density, 0.01554535, 0.20548, 14.1189, 6.1977, 3.3662, 0.62517, 1)
-
-    w_1 = np.exp(-e_C_LDA_1 / (gamma * phi_cubed)) - 1
-
-    A = beta / (gamma * w_1)
-
-    t_squared = np.cbrt(3 * np.pi ** 2 / 16) ** 2 * s_squared / (phi * phi * r_s)
-
-    g = 1 / (1 + 4 * A * t_squared) ** (1 / 4)
-
-    H_1 = gamma * phi_cubed * np.log(1 + w_1 * (1 - g))
+    H_1 = gamma * phi_cubed * np.log1p(w_1 * (1 - g))
+    H_0 = b_1c * np.log1p(w_0 * (1 - g_inf))
 
     e_C_0 = (e_C_LDA_0 + H_0) * G_c
-    e_C_1 = e_C_LDA_1 + H_1
-
+    e_C_1 = e_C_LSDA + H_1
 
     e_C = e_C_1 + f_c * (e_C_0 - e_C_1)
 
-    df_dn_alpha = np.zeros_like(e_C)
-    df_dn_beta = np.zeros_like(e_C)
-    df_ds_aa = np.zeros_like(e_C)
-    df_ds_bb = np.zeros_like(e_C)
-    df_ds_ab = np.zeros_like(e_C)
-    df_dt_alpha = np.zeros_like(e_C)
-    df_dt_beta = np.zeros_like(e_C)
+    dzeta_dn_alpha = (1 - zeta) * inv_density
+    dzeta_dn_beta = -(1 + zeta) * inv_density
 
+    inv_cbrt_plus = 1 / cbrt_plus
+    inv_cbrt_minus = 1 / cbrt_minus
+
+    dphi_dzeta = (1 / 3) * (inv_cbrt_plus - inv_cbrt_minus)
+    dd_s_dzeta = (5 / 6) * (cbrt_plus_squared - cbrt_minus_squared)
+    dd_x_dzeta = (2 / 3) * (cbrt_plus - cbrt_minus)
+    dphi_cubed_dzeta = 3 * phi_squared * dphi_dzeta
+
+    G_c_factor_1 = 1 - 2.3631 * (d_x - 1)
+    G_c_factor_2 = 1 - zeta ** 12
+    dG_c_dzeta = -2.3631 * dd_x_dzeta * G_c_factor_2 - 12 * zeta ** 11 * G_c_factor_1
+
+    df_c_dalpha_prime_poly = (((((7 * c_c[7] * alpha_prime + 6 * c_c[6]) * alpha_prime + 5 * c_c[5]) * alpha_prime + 4 * c_c[4]) * alpha_prime + 3 * c_c[3]) * alpha_prime + 2 * c_c[2]) * alpha_prime + c_c[1]
+    df_c_dalpha_prime_small = -c_1c * inv_one_minus_alpha_prime_squared * small_alpha_exponent_term
+    df_c_dalpha_prime_large = c_2c * inv_one_minus_alpha_prime_squared * large_alpha_exponent_term
+
+    df_c_dalpha_prime = np.where(alpha_prime < 0, df_c_dalpha_prime_small, df_c_dalpha_prime_poly)
+    df_c_dalpha_prime = np.where(alpha_prime > 2.5, df_c_dalpha_prime_large, df_c_dalpha_prime)
+
+    d_alpha_prime_d_alpha = alpha_squared * (alpha_squared + 3 * alpha_r) * inv_alpha_prime_denominator * inv_alpha_prime_denominator
+
+    d_alpha_denominator_dzeta = alpha_denominator * dd_s_dzeta / d_s
+
+    dnum_dn = tau_w * inv_density
+    ddenom_dn = (5 / 3) * tau_u * inv_density
+    dalpha_dn = (dnum_dn * alpha_denominator - tau_minus_tau_w * ddenom_dn) * inv_alpha_denominator_squared
+    dalpha_dzeta = -tau_minus_tau_w * d_alpha_denominator_dzeta * inv_alpha_denominator_squared
+    dalpha_ds = -dtau_w_ds * inv_alpha_denominator
+    dalpha_dt = inv_alpha_denominator
+
+    dalpha_prime_dn = d_alpha_prime_d_alpha * dalpha_dn
+    dalpha_prime_dzeta = d_alpha_prime_d_alpha * dalpha_dzeta
+    dalpha_prime_ds = d_alpha_prime_d_alpha * dalpha_ds
+    dalpha_prime_dt = d_alpha_prime_d_alpha * dalpha_dt
+
+    df_c_dn = df_c_dalpha_prime * dalpha_prime_dn
+    df_c_dzeta = df_c_dalpha_prime * dalpha_prime_dzeta
+    df_c_ds = df_c_dalpha_prime * dalpha_prime_ds
+    df_c_dt = df_c_dalpha_prime * dalpha_prime_dt
+
+    dr_s_dn = -r_s / (3 * density)
+
+    de_C_LSDA_dn_alpha = (df_dn_alpha_LSDA - e_C_LSDA) * inv_density
+    de_C_LSDA_dn_beta = (df_dn_beta_LSDA - e_C_LSDA) * inv_density
+    de_C_LSDA_dn = 0.5 * (1 + zeta) * de_C_LSDA_dn_alpha + 0.5 * (1 - zeta) * de_C_LSDA_dn_beta
+    de_C_LSDA_dzeta = 0.5 * (df_dn_alpha_LSDA - df_dn_beta_LSDA)
+
+    derivative_denominator = 1 + b_2c * sqrt_r_s + b_3c * r_s
+    derivative_numerator = 0.5 * b_2c / sqrt_r_s + b_3c
+    de_C_LDA_0_dr_s = b_1c * derivative_numerator / (derivative_denominator * derivative_denominator)
+    de_C_LDA_0_dn = de_C_LDA_0_dr_s * dr_s_dn
+
+    w_0_plus_1 = w_0 + 1
+    w_1_plus_1 = w_1 + 1
+
+    dw_0_dn = w_0_plus_1 * (-1 / b_1c) * de_C_LDA_0_dn
+
+    inv_gamma_phi_cubed = 1 / (gamma * phi_cubed)
+    dw_1_dn = w_1_plus_1 * (-inv_gamma_phi_cubed) * de_C_LSDA_dn
+    dw_1_dzeta = w_1_plus_1 * (-inv_gamma_phi_cubed) * (de_C_LSDA_dzeta - e_C_LSDA * dphi_cubed_dzeta / phi_cubed)
+
+    dbeta_dr_s = 0.066725 * (0.1 * beta_denominator - 0.1778 * beta_numerator) / (beta_denominator * beta_denominator)
+    dbeta_dn = dbeta_dr_s * dr_s_dn
+
+    ds_squared_ds = s_squared / sigma
+    ds_squared_dn = -(8 / 3) * s_squared * inv_density
+    dt_squared_ds = t_squared / sigma
+    dt_squared_dn = -(7 / 3) * t_squared * inv_density
+    dt_squared_dzeta = -2 * t_squared * dphi_dzeta / phi
+
+    dg_inf_ds_squared = -chi_inf_zeta_0 * g_inf ** 5
+
+    dy_ds = beta_over_gamma_w_1 * dt_squared_ds
+    dy_dn = (dbeta_dn * t_squared + beta * dt_squared_dn) / (gamma * w_1) - y * dw_1_dn / w_1
+    dy_dzeta = beta * dt_squared_dzeta / (gamma * w_1) - y * dw_1_dzeta / w_1
+
+    dg_du = -g ** 5
+    dg_dn = dg_du * dy_dn
+    dg_dzeta = dg_du * dy_dzeta
+    dg_ds = dg_du * dy_ds
+
+    arg_H1 = 1 + w_1 * (1 - g)
+    log_arg_H1 = np.log1p(w_1 * (1 - g))
+    dH1_dn = gamma * phi_cubed * (dw_1_dn * (1 - g) - w_1 * dg_dn) / arg_H1
+    dH1_dzeta = dphi_cubed_dzeta * gamma * log_arg_H1 + gamma * phi_cubed * (dw_1_dzeta * (1 - g) - w_1 * dg_dzeta) / arg_H1
+    dH1_ds = gamma * phi_cubed * (-w_1 * dg_ds) / arg_H1
+
+    arg_H0 = 1 + w_0 * (1 - g_inf)
+    dg_inf_dn = dg_inf_ds_squared * ds_squared_dn
+    dg_inf_ds = dg_inf_ds_squared * ds_squared_ds
+    dH0_dn = b_1c * (dw_0_dn * (1 - g_inf) - w_0 * dg_inf_dn) / arg_H0
+    dH0_ds = b_1c * w_0 * (-dg_inf_ds) / arg_H0
+
+    de_C_0_dn = (de_C_LDA_0_dn + dH0_dn) * G_c
+    de_C_0_dzeta = (e_C_LDA_0 + H_0) * dG_c_dzeta
+    de_C_0_ds = dH0_ds * G_c
+
+    de_C_1_dn = de_C_LSDA_dn + dH1_dn
+    de_C_1_dzeta = de_C_LSDA_dzeta + dH1_dzeta
+    de_C_1_ds = dH1_ds
+
+    e_C_0_minus_e_C_1 = e_C_0 - e_C_1
+
+    de_C_dn = de_C_1_dn + df_c_dn * e_C_0_minus_e_C_1 + f_c * (de_C_0_dn - de_C_1_dn)
+    de_C_dzeta = de_C_1_dzeta + df_c_dzeta * e_C_0_minus_e_C_1 + f_c * (de_C_0_dzeta - de_C_1_dzeta)
+    de_C_ds = de_C_1_ds + df_c_ds * e_C_0_minus_e_C_1 + f_c * (de_C_0_ds - de_C_1_ds)
+    de_C_dt = df_c_dt * e_C_0_minus_e_C_1
+
+    de_C_dn_alpha = de_C_dn + de_C_dzeta * dzeta_dn_alpha
+    de_C_dn_beta = de_C_dn + de_C_dzeta * dzeta_dn_beta
+
+    df_dn_alpha = e_C + density * de_C_dn_alpha
+    df_dn_beta = e_C + density * de_C_dn_beta
+
+    df_ds_aa = density * de_C_ds
+    df_ds_bb = df_ds_aa
+    df_ds_ab = 2 * df_ds_aa
+
+    df_dt_alpha = density * de_C_dt
+    df_dt_beta = df_dt_alpha
 
     return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, df_dt_alpha, df_dt_beta, e_C
 
@@ -4810,6 +5399,8 @@ def calculate_unrestricted_B97_correlation(alpha_density: ndarray, beta_density:
 
     s_squared_average = (1 / 2) * (s_squared_alpha + s_squared_beta)
 
+    # Enhancement functions for spin chanels
+
     x_alpha = gamma_ss * s_squared_alpha / (1 + gamma_ss * s_squared_alpha)
     x_beta = gamma_ss * s_squared_beta / (1 + gamma_ss * s_squared_beta)
 
@@ -4820,6 +5411,8 @@ def calculate_unrestricted_B97_correlation(alpha_density: ndarray, beta_density:
 
     g_alpha_beta = c_ab[0] + (c_ab[1] + c_ab[2] * x_alpha_beta) * x_alpha_beta
 
+    # Local spin density approximation correlation energy density and derivatives
+
     df_dn_alpha_LSDA, df_dn_beta_LSDA, _, _, _, _, _, e_C_LSDA = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
     
     df_dn_alpha_LSDA_alpha, df_dn_beta_LSDA_alpha, _, _, _, _, _, e_C_LSDA_alpha = calculate_unrestricted_PW_correlation(alpha_density, zeros, alpha_density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
@@ -4829,46 +5422,406 @@ def calculate_unrestricted_B97_correlation(alpha_density: ndarray, beta_density:
 
     e_C_per_volume = g_alpha * e_C_LSDA_alpha * alpha_density + g_beta * e_C_LSDA_beta * beta_density + g_alpha_beta * e_C_LSDA_ab 
 
+    # Final correlation energy density
+
     e_C = e_C_per_volume * inv_density
+
+    # Fundamental derivatives of the spin-scaling functions
 
     dg_alpha_dx_alpha = c_ss[1] + 2 * c_ss[2] * x_alpha
     dg_beta_dx_beta = c_ss[1] + 2 * c_ss[2] * x_beta
+    dg_alpha_beta_dx_alpha_beta = c_ab[1] + 2 * c_ab[2] * x_alpha_beta
 
-    dg_alpha_dx_alpha_beta = c_ab[1] + 2 * c_ab[2] * x_alpha_beta
+    # Derivatives of the reduced gradient variables with respect to density
 
-    ds_squared_alpha_ds_aa = s_squared_alpha / sigma_aa
-    ds_squared_beta_ds_bb = s_squared_beta / sigma_bb
+    ds_squared_alpha_dn_alpha = -(8 / 3) * s_squared_alpha / alpha_density
+    ds_squared_beta_dn_beta = -(8 / 3) * s_squared_beta / beta_density
+
+    # Derivatives of the reduced gradient variables with respect to sigma
+
+    ds_squared_alpha_ds_aa = 1 / cbrt_alpha_density ** 8
+    ds_squared_beta_ds_bb = 1 / cbrt_beta_density ** 8
+
+    # Derivatives of x with respect to the reduced gradient variables
 
     dx_alpha_ds_squared_alpha = gamma_ss / ((1 + gamma_ss * s_squared_alpha) * (1 + gamma_ss * s_squared_alpha))
     dx_beta_ds_squared_beta = gamma_ss / ((1 + gamma_ss * s_squared_beta) * (1 + gamma_ss * s_squared_beta))
     dx_alpha_beta_ds_squared_average = gamma_ab / ((1 + gamma_ab * s_squared_average) * (1 + gamma_ab * s_squared_average))
 
-    dx_alpha_ds_aa = dx_alpha_ds_squared_alpha * ds_squared_alpha_ds_aa
-    dx_beta_ds_bb = dx_beta_ds_squared_beta * ds_squared_beta_ds_bb
+    # Derivatives of the spin-scaling functions with respect to density
 
-    dx_alpha_beta_ds_aa = dx_alpha_beta_ds_squared_average * (1 / 2) * ds_squared_alpha_ds_aa
-    dx_alpha_beta_ds_bb = dx_alpha_beta_ds_squared_average * (1 / 2) * ds_squared_beta_ds_bb
+    dg_alpha_dn_alpha = dg_alpha_dx_alpha * dx_alpha_ds_squared_alpha * ds_squared_alpha_dn_alpha
+    dg_beta_dn_beta = dg_beta_dx_beta * dx_beta_ds_squared_beta * ds_squared_beta_dn_beta
 
-    dg_alpha_ds_aa = dg_alpha_dx_alpha * dx_alpha_ds_aa
-    dg_beta_ds_bb = dg_beta_dx_beta * dx_beta_ds_bb
+    dg_alpha_beta_dn_alpha = dg_alpha_beta_dx_alpha_beta * dx_alpha_beta_ds_squared_average * (1 / 2) * ds_squared_alpha_dn_alpha
+    dg_alpha_beta_dn_beta = dg_alpha_beta_dx_alpha_beta * dx_alpha_beta_ds_squared_average * (1 / 2) * ds_squared_beta_dn_beta
 
-    dg_alpha_beta_ds_aa = dg_alpha_dx_alpha_beta * dx_alpha_beta_ds_aa
-    dg_alpha_beta_ds_bb = dg_alpha_dx_alpha_beta * dx_alpha_beta_ds_bb
+    # Derivatives of the spin-scaling functions with respect to sigma
 
-    de_C_per_volume_ds_aa = e_C_LSDA_alpha * alpha_density * dg_alpha_ds_aa + e_C_LSDA_ab * dg_alpha_beta_ds_aa
-    de_C_per_volume_ds_bb = e_C_LSDA_beta * beta_density * dg_beta_ds_bb + e_C_LSDA_ab * dg_alpha_beta_ds_bb
+    dg_alpha_ds_aa = dg_alpha_dx_alpha * dx_alpha_ds_squared_alpha * ds_squared_alpha_ds_aa
+    dg_beta_ds_bb = dg_beta_dx_beta * dx_beta_ds_squared_beta * ds_squared_beta_ds_bb
 
-    df_ds_aa = de_C_per_volume_ds_aa
-    df_ds_bb = de_C_per_volume_ds_bb
+    dg_alpha_beta_ds_aa = dg_alpha_beta_dx_alpha_beta * dx_alpha_beta_ds_squared_average * (1 / 2) * ds_squared_alpha_ds_aa
+    dg_alpha_beta_ds_bb = dg_alpha_beta_dx_alpha_beta * dx_alpha_beta_ds_squared_average * (1 / 2) * ds_squared_beta_ds_bb
+
+    # Derivatives of the opposite-spin LSDA correlation contribution
+
+    de_C_LSDA_ab_dn_alpha = df_dn_alpha_LSDA - df_dn_alpha_LSDA_alpha
+    de_C_LSDA_ab_dn_beta = df_dn_beta_LSDA - df_dn_beta_LSDA_beta
+
+    # Final density derivatives
+
+    df_dn_alpha = (g_alpha * df_dn_alpha_LSDA_alpha + alpha_density * e_C_LSDA_alpha * dg_alpha_dn_alpha + g_alpha_beta * de_C_LSDA_ab_dn_alpha + e_C_LSDA_ab * dg_alpha_beta_dn_alpha)
+
+    df_dn_beta = ( g_beta * df_dn_beta_LSDA_beta + beta_density * e_C_LSDA_beta * dg_beta_dn_beta + g_alpha_beta * de_C_LSDA_ab_dn_beta + e_C_LSDA_ab * dg_alpha_beta_dn_beta)
+
+    # Final gradient derivatives
+
+    df_ds_aa = (alpha_density * e_C_LSDA_alpha * dg_alpha_ds_aa + e_C_LSDA_ab * dg_alpha_beta_ds_aa)
+
+    df_ds_bb = (beta_density * e_C_LSDA_beta * dg_beta_ds_bb + e_C_LSDA_ab * dg_alpha_beta_ds_bb)
+
     df_ds_ab = np.zeros_like(e_C)
 
-
-    df_dn_alpha = np.zeros_like(e_C)
-    df_dn_beta = np.zeros_like(e_C)
-
-
-
     return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, None, None, e_C
+
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_B97M_correlation(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
+    
+    """
+    
+    Calculates the restricted B97M correlation energy density and derivative with respect to the density, square gradient and kinetic energy density.
+    
+    A fairly efficient implementation of the equations in 10.1063/1.4907719.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient
+        tau (array): Non-interacting kinetic energy density
+    
+    Returns:
+        df_dn (array): Derivative of f = n * e_C with respect to density
+        df_ds (array): Derivative of f = n * e_C with respect to sigma
+        df_dt (array): Derivative of f = n * e_C with respect to tau
+        e_C (array): Restricted B97M correlation energy density per particle
+    
+    """
+
+    # B97M correlation parameters
+
+    c_ss = [1, -5.668, -1.855, -20.497, -20.364]
+    c_ab = [1, 2.535, 1.573, -6.427, -6.298]
+
+    gamma_ss = 0.2
+    gamma_ab = 0.006
+
+    # Closed-shell spin quantities
+
+    spin_density = density / 2
+    spin_sigma = sigma / 4
+    spin_tau = tau / 2
+
+    zeros = np.zeros_like(density)
+
+    cbrt_density = np.cbrt(density)
+    cbrt_spin_density = np.cbrt(spin_density)
+
+    inv_density = 1 / density
+
+    s_squared = spin_sigma / cbrt_spin_density ** 8
+
+    tau_U = (3 / 10) * np.cbrt(3 * np.pi ** 2) ** 2 * cbrt_density ** 5
+
+    t = tau_U / tau
+    w = (t - 1) / (t + 1)
+
+    # Finite-range gradient variables
+
+    inv_ss_denominator_term = 1 / (1 + gamma_ss * s_squared)
+    inv_ab_denominator_term = 1 / (1 + gamma_ab * s_squared)
+
+    u_ss = gamma_ss * s_squared * inv_ss_denominator_term
+    u_ab = gamma_ab * s_squared * inv_ab_denominator_term
+
+    u_ss_squared = u_ss * u_ss
+    u_ab_squared = u_ab * u_ab
+
+    w_squared = w * w
+    w_cubed = w_squared * w
+    w_fourth = w_squared * w_squared
+
+    # Same-spin and opposite-spin B97M inhomogeneity correction factors
+
+    g_ss = c_ss[0] + c_ss[1] * w + c_ss[2] * u_ss_squared + c_ss[3] * w_cubed * u_ss_squared + c_ss[4] * w_fourth * u_ss_squared
+
+    g_ab = c_ab[0] + c_ab[1] * w + c_ab[2] * u_ab + c_ab[3] * w_cubed * u_ab_squared + c_ab[4] * u_ab_squared * u_ab
+
+    # PW92 correlation: unpolarised and fully polarised limits
+
+    df_dn_LSDA, _, _, e_C_LSDA = calculate_restricted_PW_correlation(density, sigma, tau, calculation)
+
+    df_dn_LSDA_same_spin, _, _, _, _, _, _, e_C_LSDA_same_spin = calculate_unrestricted_PW_correlation(spin_density, zeros, spin_density, spin_sigma, zeros, zeros,spin_tau, zeros, calculation)
+
+    # Stoll same-spin/opposite-spin decomposition, simplified for closed shell
+
+    g_diff = g_ss - g_ab
+
+    e_C = g_diff * e_C_LSDA_same_spin + g_ab * e_C_LSDA
+
+    # Fundamental derivatives, reused often
+
+    d_s_squared_ds = np.cbrt(4) / cbrt_density ** 8
+    d_s_squared_dn = -(8 / 3) * s_squared * inv_density
+
+    w_term = 2 * t / (1 + t) ** 2
+
+    dw_dn = (5 / 3) * inv_density
+    dw_dt = -1 / tau
+
+    dx_ss_d_s_squared = gamma_ss * inv_ss_denominator_term * inv_ss_denominator_term
+    dx_ab_d_s_squared = gamma_ab * inv_ab_denominator_term * inv_ab_denominator_term
+
+    # Derivatives of the B97M spin-scaling functions
+
+    dg_ss_du_ss = 2 * u_ss * (c_ss[2] + c_ss[3] * w_cubed + c_ss[4] * w_fourth)
+    dg_ab_du_ab = c_ab[2] + 2 * c_ab[3] * w_cubed * u_ab + 3 * c_ab[4] * u_ab_squared
+
+    dg_ss_dw = c_ss[1] + (3 * c_ss[3] * w_squared + 4 * c_ss[4] * w_cubed) * u_ss_squared
+    dg_ab_dw = c_ab[1] + 3 * c_ab[3] * w_squared * u_ab_squared
+
+    dg_ss_dn = dg_ss_du_ss * dx_ss_d_s_squared * d_s_squared_dn + dg_ss_dw * w_term * dw_dn
+    dg_ab_dn = dg_ab_du_ab * dx_ab_d_s_squared * d_s_squared_dn + dg_ab_dw * w_term * dw_dn
+
+    dg_ss_ds = dg_ss_du_ss * dx_ss_d_s_squared * d_s_squared_ds
+    dg_ab_ds = dg_ab_du_ab * dx_ab_d_s_squared * d_s_squared_ds
+
+    dg_ss_dt = dg_ss_dw * w_term * dw_dt
+    dg_ab_dt = dg_ab_dw * w_term * dw_dt
+
+    # Derivatives of the LSDA correlation energy density
+
+    de_dn_LSDA_same_spin = (df_dn_LSDA_same_spin - e_C_LSDA_same_spin) * inv_density
+    de_dn_LSDA = (df_dn_LSDA - e_C_LSDA) * inv_density
+
+    dg_dn_diff = dg_ss_dn - dg_ab_dn
+    dg_ds_diff = dg_ss_ds - dg_ab_ds
+    dg_dt_diff = dg_ss_dt - dg_ab_dt
+
+    # Final derivatives
+
+    df_dn = e_C + density * (de_dn_LSDA_same_spin * g_diff + g_ab * de_dn_LSDA + e_C_LSDA_same_spin * dg_dn_diff + e_C_LSDA * dg_ab_dn)
+
+    df_ds = density * (e_C_LSDA_same_spin * dg_ds_diff + e_C_LSDA * dg_ab_ds)
+
+    df_dt = density * (e_C_LSDA_same_spin * dg_dt_diff + e_C_LSDA * dg_ab_dt)
+
+    return df_dn, df_ds, df_dt, e_C
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_B97M_correlation(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
+    
+    """
+    
+    Calculates the unrestricted B97M correlation energy density and derivative with respect to the density, square gradient and kinetic energy density.
+
+    Args:
+        alpha_density (array): Alpha electron density on integration grid
+        beta_density (array): Beta electron density on integration grid
+        density (array): Electron density on integration grid
+        sigma_aa (array): Alpha-alpha square density gradient
+        sigma_bb (array): Beta-beta square density gradient
+        sigma_ab (array): Alpha-beta square density gradient
+        tau_alpha (array): Alpha kinetic energy density
+        tau_beta (array): Beta kinetic energy density
+    
+    Returns:
+        df_dn_alpha (array): Derivative of f = n * e_C with respect to alpha density
+        df_dn_beta (array): Derivative of f = n * e_C with respect to beta density
+        df_ds_aa (array): Derivative of f = n * e_C with respect to sigma alpha-alpha
+        df_ds_bb (array): Derivative of f = n * e_C with respect to sigma beta-beta
+        df_ds_ab (array): Derivative of f = n * e_C with respect to sigma alpha-beta
+        df_dt_alpha (array): Derivative of f = n * e_C with respect to tau alpha
+        df_dt_beta (array): Derivative of f = n * e_C with respect to tau beta
+        e_C (array): Unrestricted B97M correlation energy density per particle
+    
+    """
+
+    # Empirical coefficients for same-spin and opposite-spin corrections
+
+    c_ss = [1, -5.668, -1.855, -20.497, -20.364]
+    c_ab = [1, 2.535, 1.573, -6.427, -6.298]
+
+    gamma_ss = 0.2
+    gamma_ab = 0.006
+
+    zeros = np.zeros_like(density)
+
+    inv_density = 1 / density
+
+    cbrt_alpha_density = np.cbrt(alpha_density)
+    cbrt_beta_density = np.cbrt(beta_density)
+
+    cbrt_alpha_density_eighth = cbrt_alpha_density ** 8
+    cbrt_beta_density_eighth = cbrt_beta_density ** 8
+
+    # Useful intermediate variables
+
+    s_squared_a = sigma_aa / cbrt_alpha_density_eighth
+    s_squared_b = sigma_bb / cbrt_beta_density_eighth
+
+    tau_U_a = (3 / 10) * (6 * np.pi ** 2) ** (2 / 3) * cbrt_alpha_density ** 5
+    tau_U_b = (3 / 10) * (6 * np.pi ** 2) ** (2 / 3) * cbrt_beta_density ** 5
+
+    t_a = tau_U_a / tau_alpha
+    t_b = tau_U_b / tau_beta
+
+    t_ab = (1 / 2) * (t_a + t_b)
+
+    s_squared_ab = (1 / 2) * (s_squared_a + s_squared_b)
+
+    # Functions from B97M paper, depending on kinetic energy density or density gradient
+
+    w_aa = (t_a - 1) / (t_a + 1)
+    w_bb = (t_b - 1) / (t_b + 1)
+    w_ab = (t_ab - 1) / (t_ab + 1)
+
+    inv_ss_denominator_term_aa = 1 / (1 + gamma_ss * s_squared_a)
+    inv_ss_denominator_term_bb = 1 / (1 + gamma_ss * s_squared_b)
+    inv_ab_denominator_term = 1 / (1 + gamma_ab * s_squared_ab)
+
+    u_aa = gamma_ss * s_squared_a * inv_ss_denominator_term_aa
+    u_bb = gamma_ss * s_squared_b * inv_ss_denominator_term_bb
+    u_ab = gamma_ab * s_squared_ab * inv_ab_denominator_term
+
+    # Frequently used powers of the functions
+
+    u_aa_squared = u_aa * u_aa
+    u_bb_squared = u_bb * u_bb
+    u_ab_squared = u_ab * u_ab
+
+    w_aa_squared = w_aa * w_aa
+    w_bb_squared = w_bb * w_bb
+    w_ab_squared = w_ab * w_ab
+
+    w_aa_cubed = w_aa_squared * w_aa
+    w_bb_cubed = w_bb_squared * w_bb
+    w_ab_cubed = w_ab_squared * w_ab
+
+    w_aa_fourth = w_aa_squared * w_aa_squared
+    w_bb_fourth = w_bb_squared * w_bb_squared
+
+    # Spin enhancement functions
+
+    g_aa = c_ss[0] + c_ss[1] * w_aa + c_ss[2] * u_aa_squared + c_ss[3] * w_aa_cubed * u_aa_squared + c_ss[4] * w_aa_fourth * u_aa_squared
+    g_bb = c_ss[0] + c_ss[1] * w_bb + c_ss[2] * u_bb_squared + c_ss[3] * w_bb_cubed * u_bb_squared + c_ss[4] * w_bb_fourth * u_bb_squared
+    g_ab = c_ab[0] + c_ab[1] * w_ab + c_ab[2] * u_ab + c_ab[3] * w_ab_cubed * u_ab_squared + c_ab[4] * u_ab_squared * u_ab
+
+    # Local density approximation energies
+
+    df_dn_alpha_LSDA, df_dn_beta_LSDA, _, _, _, _, _, e_C_LSDA = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta,calculation)
+    
+    df_dn_alpha_LSDA_alpha, _, _, _, _, _, _, e_C_LSDA_alpha = calculate_unrestricted_PW_correlation(alpha_density, zeros, alpha_density, sigma_aa, zeros, zeros, tau_alpha, zeros, calculation)
+
+    _, df_dn_beta_LSDA_beta, _, _, _, _, _, e_C_LSDA_beta = calculate_unrestricted_PW_correlation(zeros, beta_density, beta_density, zeros, sigma_bb, zeros, zeros, tau_beta, calculation)
+
+    # Finding the total correlation energy density
+
+    e_C_LSDA_aa = e_C_LSDA_alpha * alpha_density
+    e_C_LSDA_bb = e_C_LSDA_beta * beta_density
+
+    e_C_LSDA_ab = e_C_LSDA * density - e_C_LSDA_aa - e_C_LSDA_bb
+
+    e_C_per_volume = g_aa * e_C_LSDA_aa + g_bb * e_C_LSDA_bb + g_ab * e_C_LSDA_ab 
+
+    e_C = e_C_per_volume * inv_density
+
+    # Fundamental derivatives, reused often
+
+    d_s_squared_a_dn_alpha = -(8 / 3) * s_squared_a / alpha_density
+    d_s_squared_b_dn_beta = -(8 / 3) * s_squared_b / beta_density
+
+    d_s_squared_a_ds_aa = 1 / cbrt_alpha_density_eighth
+    d_s_squared_b_ds_bb = 1 / cbrt_beta_density_eighth
+
+    d_s_squared_ab_dn_alpha = (1 / 2) * d_s_squared_a_dn_alpha
+    d_s_squared_ab_dn_beta = (1 / 2) * d_s_squared_b_dn_beta
+
+    d_s_squared_ab_ds_aa = (1 / 2) * d_s_squared_a_ds_aa
+    d_s_squared_ab_ds_bb = (1 / 2) * d_s_squared_b_ds_bb
+
+    w_term_aa = 2 * t_a / (1 + t_a) ** 2
+    w_term_bb = 2 * t_b / (1 + t_b) ** 2
+
+    w_term_ab_alpha = t_a / (1 + t_ab) ** 2
+    w_term_ab_beta = t_b / (1 + t_ab) ** 2
+
+    dx_aa_d_s_squared_a = gamma_ss * inv_ss_denominator_term_aa * inv_ss_denominator_term_aa
+    dx_bb_d_s_squared_b = gamma_ss * inv_ss_denominator_term_bb * inv_ss_denominator_term_bb
+    dx_ab_d_s_squared_ab = gamma_ab * inv_ab_denominator_term * inv_ab_denominator_term
+
+    # Derivatives of the B97M spin-scaling functions
+
+    dg_aa_du_aa = 2 * u_aa * (c_ss[2] + c_ss[3] * w_aa_cubed + c_ss[4] * w_aa_fourth)
+    dg_bb_du_bb = 2 * u_bb * (c_ss[2] + c_ss[3] * w_bb_cubed + c_ss[4] * w_bb_fourth)
+    dg_ab_du_ab = c_ab[2] + 2 * c_ab[3] * w_ab_cubed * u_ab + 3 * c_ab[4] * u_ab_squared
+
+    dg_aa_dw_aa = c_ss[1] + (3 * c_ss[3] * w_aa_squared + 4 * c_ss[4] * w_aa_cubed) * u_aa_squared
+    dg_bb_dw_bb = c_ss[1] + (3 * c_ss[3] * w_bb_squared + 4 * c_ss[4] * w_bb_cubed) * u_bb_squared
+    dg_ab_dw_ab = c_ab[1] + 3 * c_ab[3] * w_ab_squared * u_ab_squared
+
+    dg_aa_dn_alpha = dg_aa_du_aa * dx_aa_d_s_squared_a * d_s_squared_a_dn_alpha + dg_aa_dw_aa * w_term_aa * 5 / (3 * alpha_density)
+    dg_bb_dn_beta = dg_bb_du_bb * dx_bb_d_s_squared_b * d_s_squared_b_dn_beta + dg_bb_dw_bb * w_term_bb * 5 / (3 * beta_density)
+
+    dg_ab_dn_alpha = dg_ab_du_ab * dx_ab_d_s_squared_ab * d_s_squared_ab_dn_alpha + dg_ab_dw_ab * w_term_ab_alpha * 5 / (3 * alpha_density)
+    dg_ab_dn_beta = dg_ab_du_ab * dx_ab_d_s_squared_ab * d_s_squared_ab_dn_beta + dg_ab_dw_ab * w_term_ab_beta * 5 / (3 * beta_density)
+
+    dg_aa_ds_aa = dg_aa_du_aa * dx_aa_d_s_squared_a * d_s_squared_a_ds_aa
+    dg_bb_ds_bb = dg_bb_du_bb * dx_bb_d_s_squared_b * d_s_squared_b_ds_bb
+
+    dg_ab_ds_aa = dg_ab_du_ab * dx_ab_d_s_squared_ab * d_s_squared_ab_ds_aa
+    dg_ab_ds_bb = dg_ab_du_ab * dx_ab_d_s_squared_ab * d_s_squared_ab_ds_bb
+
+    dg_aa_dt_alpha = -dg_aa_dw_aa * w_term_aa / tau_alpha
+    dg_bb_dt_beta = -dg_bb_dw_bb * w_term_bb / tau_beta
+
+    dg_ab_dt_alpha = -dg_ab_dw_ab * w_term_ab_alpha / tau_alpha
+    dg_ab_dt_beta = -dg_ab_dw_ab * w_term_ab_beta / tau_beta
+
+    # Derivatives of the opposite-spin LSDA correlation energy density
+
+    df_dn_alpha_LSDA_ab = df_dn_alpha_LSDA - df_dn_alpha_LSDA_alpha
+    df_dn_beta_LSDA_ab = df_dn_beta_LSDA - df_dn_beta_LSDA_beta
+
+    # Final derivatives
+
+    df_dn_alpha = g_aa * df_dn_alpha_LSDA_alpha + g_ab * df_dn_alpha_LSDA_ab + e_C_LSDA_aa * dg_aa_dn_alpha + e_C_LSDA_ab * dg_ab_dn_alpha
+    df_dn_beta = g_bb * df_dn_beta_LSDA_beta + g_ab * df_dn_beta_LSDA_ab + e_C_LSDA_bb * dg_bb_dn_beta + e_C_LSDA_ab * dg_ab_dn_beta
+
+    df_ds_aa = e_C_LSDA_aa * dg_aa_ds_aa + e_C_LSDA_ab * dg_ab_ds_aa
+    df_ds_bb = e_C_LSDA_bb * dg_bb_ds_bb + e_C_LSDA_ab * dg_ab_ds_bb
+    df_ds_ab = zeros
+
+    df_dt_alpha = e_C_LSDA_aa * dg_aa_dt_alpha + e_C_LSDA_ab * dg_ab_dt_alpha
+    df_dt_beta = e_C_LSDA_bb * dg_bb_dt_beta + e_C_LSDA_ab * dg_ab_dt_beta
+
+    return df_dn_alpha, df_dn_beta, df_ds_aa, df_ds_bb, df_ds_ab, df_dt_alpha, df_dt_beta, e_C
 
 
 
@@ -4991,6 +5944,141 @@ def calculate_unrestricted_3P_correlation(alpha_density: ndarray, beta_density: 
 
 
 
+
+def calculate_Slater_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+
+    """
+    
+    Calculates the Slater exchange kernel.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient
+        tau (array): Non-interacting kinetic energy density
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
+    
+    """
+
+    # Modifiable with "XA" keyword
+
+    alpha = calculation.X_alpha
+
+    inv_cbrt_density = 1 / np.cbrt(density)
+
+    # Calculates the kernel
+
+    d2f_dn2 = - (alpha / 2) * np.cbrt(3 / np.pi) * inv_cbrt_density * inv_cbrt_density
+
+    return d2f_dn2
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_VWN5_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+
+    """
+    
+    Calculates the restricted VWN-V correlation kernel.
+
+    Args:
+        density (array): Electron density on integration grid
+    
+    Returns:
+        d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
+    
+    """
+
+    x_0 = -0.10498
+    b = 3.72744
+    c = 12.9352
+    A = 0.0310907
+
+    # Useful intermediate constants for VWN
+
+    Q = (4 * c - b ** 2) ** (1 / 2)
+    X_0 = x_0 ** 2 + b * x_0 + c
+    c_1 = -b * x_0 / X_0
+    c_2 = 2 * b * (c - x_0 ** 2) / (Q * X_0)
+
+    # Seitz radius as a function of density
+
+    r_s, _ = calculate_seitz_radius(density)
+    x = r_s ** (1 / 2)
+    x_minus_x_0 = x - x_0
+
+    # Useful intermediate quantities
+
+    X = r_s + b * x + c
+
+    # First derivative term 
+
+    combo = (2 / x + 2 * c_1 / x_minus_x_0 - (2 * x + b) * (1 + c_1) / X - (1 / 2) * c_2 * Q / X)
+
+    # Derivative of the 'combo' term with respect to x
+
+    dcombo_dx = (- 2 / (x ** 2) - 2 * c_1 / (x_minus_x_0 ** 2) - 2 * (1 + c_1) / X + ((2 * x + b) ** 2) * (1 + c_1) / (X ** 2) + (1 / 2) * c_2 * Q * (2 * x + b) / (X ** 2))
+
+    # Second derivative of f = n * e_C with respect to density
+
+    d2f_dn2 = (x * A) / (36 * density) * (x * dcombo_dx - 5 * combo)
+
+    return d2f_dn2
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_VWN5_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+
+    """
+    
+    Calculates the restricted VWN-V spin correlation kernel for triplet excitations.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient (unused for LDA)
+        tau (array): Non-interacting kinetic energy density (unused for LDA)
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        f_mm (array): Spin correlation kernel evaluated on the grid
+    
+    """
+
+    # Calculates the spin stiffness
+
+    _, minus_alpha, _ = calculate_VWN_potential(density, -0.0047584, 1.13107, 13.0045, 1 / (6 * np.pi ** 2))
+
+    # The spin stiffness alpha is the negative of minus_alpha
+    
+    f_mm = - minus_alpha / density
+
+    return f_mm
+
+
+
+
+
+
+
+
+
+
+
 exchange_functionals = {
 
     "S": calculate_Slater_exchange,
@@ -5007,6 +6095,7 @@ exchange_functionals = {
     "PW": calculate_PW91_exchange,
     "MPW": calculate_mPW91_exchange,
     "B97": calculate_B97_exchange,
+    "B97M": calculate_B97M_exchange,
 
 }
 
@@ -5049,5 +6138,52 @@ correlation_functionals = {
     "UR2SCAN": calculate_unrestricted_r2SCAN_correlation,
     "B97": calculate_restricted_B97_correlation,
     "UB97": calculate_unrestricted_B97_correlation,
+    "B97M": calculate_restricted_B97M_correlation,
+    "UB97M": calculate_unrestricted_B97M_correlation,
+
+}
+
+
+
+
+
+
+
+
+
+
+exchange_kernels = {
+
+    "S": calculate_Slater_exchange_kernel,
+
+}
+
+
+
+
+
+
+
+
+
+
+correlation_density_kernels = {
+
+    "VWN5": calculate_restricted_VWN5_correlation_kernel,
+
+}
+
+
+
+
+
+
+
+
+
+
+correlation_spin_kernels = {
+
+    "VWN5": calculate_restricted_VWN5_spin_correlation_kernel,
 
 }

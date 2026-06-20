@@ -39,7 +39,7 @@ print(colored("Importing required libraries...  ", "light_grey", force_color=Tru
 import numpy as np
 from numpy import ndarray
 import time
-from tuna_util import error, Method, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation, log, log_spacer
+from tuna_util import error, Method, timer, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation, log, log_spacer
 from tuna_calc import Calculation
 import tuna_energy as energ
 import tuna_opt as opt
@@ -234,7 +234,13 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
         case "SPE": 
             
+            # The timer has to live here and not in the function, because the function recursively calls itself for multiple iterations
+
+            timer("Energy evaluation", 0)
+
             energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
+            
+            timer("Energy evaluation", 1)
 
         # Ionisation energy
 
@@ -280,7 +286,6 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
             multiple_iterations = False if calculation_type == "FORCE" else True
 
             opt.optimise_geometry(calculation, atomic_symbols, coordinates, multiple_iterations = multiple_iterations)
-            
 
         # Harmonic frequency
 

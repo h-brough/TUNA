@@ -56,13 +56,13 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
 
-    log(" Calculating energy on displaced geometry 1 of 2...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 1 of 2...   ", calculation, 1, end="", silent=silent)
     
     _, _, energy_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent=True)
 
     log("[Done]", calculation, 1, silent=silent)
 
-    log(" Calculating energy on displaced geometry 2 of 2...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 2 of 2...   ", calculation, 1, end="", silent=silent)
 
     _, _, energy_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, backward_coords, silent=True)
 
@@ -394,8 +394,12 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
         terse = not calculation.additional_print
 
         # Evaluates the energy and density
+        
+        timer("Energy evaluation", 0)
 
         SCF_output, molecule, energy, P = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse)
+        
+        timer("Energy evaluation", 1)
 
         # By default, reads in the density from the last step as a guess - can be turned off with "NOMOREAD"
 

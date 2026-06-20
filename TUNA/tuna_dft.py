@@ -19,7 +19,7 @@ correlation matrices can be calculated for LDA, GGA and meta-GGA functionals, an
 functionals are found in the SCF module, not here.
 
 Updated in version 0.10.1 to allow expressing molecular orbitals on grid, and calculating the differential overlap integrals.
-Updated in version 0.11.0 to rotate Cartesian basis functions expressed on a grid onto spherical harmonics and add VV10 energy.
+Updated in version 0.11.0 to rotate Cartesian basis functions expressed on a grid onto spherical harmonics, add VV10 energy and exchange-correlation kernel matrix.
 
 The module contains:
 
@@ -113,7 +113,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
     
     timer("Integration grid setup", 0)
 
-    log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end="", silent=silent)
 
     # Reads the integration grid parameters from the requested convergence criteria
     
@@ -151,7 +151,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
     log(f"\n Integration grid has {n_radial} radial and {points.shape[2]} angular points, a Lebedev order of {Lebedev_order}.", calculation, 1, silent=silent)
     log(f" In total there are {total_points} grid points, {points_per_atom} per atom.", calculation, 1, silent=silent)
 
-    log("\n Building guess density on grid...  ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log("\n Building guess density on grid...  ", calculation, 1, end="", silent=silent)
 
     # Calculates the basis functions expressed on the integration grid
 
@@ -632,7 +632,6 @@ def construct_basis_function_gradients_on_grid(basis_functions: list, points: nd
 
         bf_gradients_on_grid[i] = np.einsum("i,i,aijk->ajk", bf.coefs, bf.norm, primitives, optimize=True)
 
-
     # Transforms from Cartesian harmonics to spherical harmonics
 
     bf_gradients_on_grid = np.einsum("pq,qajk->apjk", spherical_harmonic_transformation_matrix, bf_gradients_on_grid, optimize=True) 
@@ -674,7 +673,6 @@ def construct_density_on_grid(P: ndarray, bfs_on_grid: ndarray, clean_density: b
         
         density = xc.clean(density)
 
-
     return density
 
 
@@ -711,10 +709,9 @@ def calculate_density_gradient(P: ndarray, bfs_on_grid: ndarray, bf_gradients_on
 
     sigma = np.einsum("akl->kl", density_gradient * density_gradient, optimize=True)
 
-    # It is important that this is cleaned at the square of the floor that the density and kinetic energy density are cleaned
-    # Quantities that rely on ratios between the density and its gradient will break if they're cleaned equally
+    # It is important that this is cleaned at the *square* of the floor that the density and kinetic energy density are cleaned
 
-    sigma = xc.clean(sigma, floor=constants.sigma_floor)
+    sigma = xc.clean(sigma, floor = constants.sigma_floor)
 
     return sigma, density_gradient
 
@@ -874,35 +871,78 @@ def calculate_V_C(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
 
 
 
-def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarray, rho_w: ndarray, chunk: int = 192) -> ndarray:
+def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarray, density: ndarray, chunk: int = 192) -> ndarray:
 
-    # Unfortunately this can't be done as a NumPy operation as the arrays are four-dimensional, which is too big for grids
+    """
+    
+    Calculates the inner integral by looping over blocks for the VV10 energy.
 
-    # We have to loop over blocks and assimilate, so we suffer the slowness of Python loops
+    Args:
+        points (array): Integration grid points
+        omega (array): Omega values
+        kappa (array): Kappa values
+        density (array): Electron density on grid
+        chunk (int, optional): Chunk size
+    
+    Returns:
+        inner_integral (array): Inner VV10 integral
+    
+    """
 
-    N        = points.shape[0]
-    inner    = np.zeros(N)
-    n_blocks = (N + chunk - 1) // chunk
+    inner_integral = np.zeros(points.shape[0])
+
+    # The number of blocks over which we loop
+
+    n_blocks = (points.shape[0] + chunk - 1) // chunk
+
     GJ = np.empty((chunk, chunk))
     SM = np.empty((chunk, chunk))
+    
+    # Unfortunately this can't be done as a NumPy operation as the arrays are four-dimensional, which is too big for grids
 
-    for ic in range(n_blocks):
-        i0, i1 = ic*chunk, min((ic+1)*chunk, N); ci = i1 - i0
-        for jc in range(ic, n_blocks):
-            j0, j1 = jc*chunk, min((jc+1)*chunk, N); cj = j1 - j0
+    for block in range(n_blocks):
 
-            d2 = cdist(points[i0:i1], points[j0:j1], 'sqeuclidean')
+        i0, i1 = block * chunk, min((block + 1) * chunk, points.shape[0])
+
+        ci = i1 - i0
+        
+        for jc in range(block, n_blocks):
+
+            j0, j1 = jc * chunk, min((jc + 1) * chunk, points.shape[0])
+            
+            cj = j1 - j0
+
+            # Determines the distance between points
+
+            d2 = cdist(points[i0:i1], points[j0:j1], "sqeuclidean")
+
             gj, sm = GJ[:ci, :cj], SM[:ci, :cj]
 
-            np.multiply(d2, omega[j0:j1], out=gj); gj += kappa[j0:j1]
-            d2 *= omega[i0:i1, None];              d2 += kappa[i0:i1, None]
-            np.add(d2, gj, out=sm); d2 *= gj; d2 *= sm
-            np.divide(-1.5, d2, out=d2)
+            np.multiply(d2, omega[j0:j1], out = gj)
 
-            inner[i0:i1] += d2 @ rho_w[j0:j1]
-            if ic != jc:
-                inner[j0:j1] += rho_w[i0:i1] @ d2
-    return inner
+            gj += kappa[j0:j1]
+
+            d2 *= omega[i0:i1, None]
+            d2 += kappa[i0:i1, None]
+
+            # Kernel calculations
+
+            np.add(d2, gj, out=sm)
+            
+            d2 *= gj
+            d2 *= sm
+            
+            np.divide(-1.5, d2, out = d2)
+
+            inner_integral[i0:i1] += d2 @ density[j0:j1]
+
+            # Complete inner integration
+
+            if block != jc:
+
+                inner_integral[j0:j1] += density[i0:i1] @ d2
+
+    return inner_integral
 
 
 
@@ -935,7 +975,7 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
     b = calculation.functional.VV10_b if calculation.functional is not None else 3.9
 
-    C = 0.0093
+    C = calculation.functional.VV10_C if calculation.functional is not None else 0.0093
 
     timer("Non-local VV10 dispersion", 0)
 
@@ -945,14 +985,16 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
     log("  Calculating VV10 dispersion energy...      ", calculation, end = "")
 
-    rho_full      = construct_density_on_grid(P, bfs).ravel()
+    density_full = construct_density_on_grid(P, bfs).ravel()
     sigma_full, _ = calculate_density_gradient(P, bfs, bf_grads)
 
-    mask    = rho_full > 1e-10
-    density     = rho_full[mask]
+    # We mask out tiny densities for speed and stability
+
+    mask = density_full > 1e-10
+    density = density_full[mask]
     weights = weights.ravel()[mask]
-    sigma   = sigma_full.ravel()[mask]
-    points  = np.ascontiguousarray(points.reshape(3, -1).T[mask])
+    sigma = sigma_full.ravel()[mask]
+    points = np.ascontiguousarray(points.reshape(3, -1).T[mask])
 
     # We need these density-dependent quantities multiple times
 
@@ -989,3 +1031,57 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
     timer("Non-local VV10 dispersion", 1)
 
     return E_VV10
+
+
+
+
+
+
+
+
+
+
+def calculate_exchange_correlation_kernel_matrix(molecule: Molecule, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray) -> ndarray:
+
+    """
+    
+    Calculates the matrix elements of the exchange correlation kernel.
+
+    Args:
+        molecule (Molecule): Molecule object
+        density (array): Density on grid
+        bfs_on_grid (array): Basis functions on grid
+        molecular_orbitals (array): Molecular orbitals
+        calculation (Calculation): Calculation object
+        weights (array): Integration weights
+
+    Returns:
+        K_ia_jb (array): Exchange-correlation kernel matrix
+    
+    """
+
+    n_occ, n_virt = molecule.n_doubly_occ, molecule.n_doubly_virt
+
+    # Builds molecular orbitals on the integration grid
+
+    molecular_orbitals_on_grid = construct_molecular_orbitals_on_grid(bfs_on_grid, molecular_orbitals)
+
+    # Calculates the second derivative of the exchange-correlation energy wrt. the density
+
+    # Need the factor of two for restricted references
+
+    f_XC = 2 * xc.calculate_Slater_exchange_kernel(density, None, None, calculation)
+    #f_XC += 2 * xc.calculate_restricted_VWN5_correlation_kernel(density, None, None, calculation) # For singlets
+
+    f_XC += 2 * xc.calculate_restricted_VWN5_spin_correlation_kernel(density, None, None, calculation) # For triplets
+
+    # Slice out occupied and virtual orbitals on a grid
+
+    occupied_orbitals = molecular_orbitals_on_grid[:n_occ]
+    virtual_orbitals = molecular_orbitals_on_grid[n_occ : n_occ + n_virt]
+
+    # Calculate the matrix elements of the exchange-correlation kernel
+
+    K_XC = np.einsum("imn,amn,jmn,bmn,mn->iajb", occupied_orbitals, virtual_orbitals, occupied_orbitals, virtual_orbitals, f_XC * weights, optimize = True)
+    
+    return K_XC

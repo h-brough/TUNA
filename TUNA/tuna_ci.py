@@ -2,15 +2,16 @@ import numpy as np
 from tuna_util import *
 from tuna_calc import Calculation
 from tuna_molecule import Molecule
+from tuna_dft import calculate_exchange_correlation_kernel_matrix
 
 
 
 """
 
-This is the TUNA module for configuration interaction, written first for version 0.6.0 of TUNA.
+This is the TUNA module for configuration interaction, written first for version 0.6.0 of TUNA and largely rewritten for version 0.11.0.
 
 Methods needed to transform the atomic orbital basis molecular integrals to either the spatial orbital or spin orbital basis are stored here,
-as well as functions to calculate excited states with configuration interaction singles.
+as well as functions to calculate excited states with configuration interaction singles and time-dependent Hartree-Fock.
 
 The module contains:
 
@@ -87,7 +88,7 @@ def antisymmetrise_integrals(ERI: ndarray) -> ndarray:
     Antisymmetrises two-electron integrals.
 
     Args:   
-        ERI (array): Electron repulsion integrals
+        ERI (array): Electron repulsion integrals in physicists' notation.
 
     Returns:
         ERI_ansym (array): Antisymmetrised electron repulsion integrals
@@ -123,7 +124,8 @@ def spin_block_molecular_orbitals(molecular_orbitals_alpha: ndarray, molecular_o
 
     """
 
-    C_spin_block = np.block([[molecular_orbitals_alpha, np.zeros_like(molecular_orbitals_beta)], [np.zeros_like(molecular_orbitals_alpha), molecular_orbitals_beta]])
+    C_spin_block = np.block([[molecular_orbitals_alpha, np.zeros_like(molecular_orbitals_beta)], 
+                             [np.zeros_like(molecular_orbitals_alpha), molecular_orbitals_beta]])
     
     C_spin_block = C_spin_block[:, epsilons.argsort()] 
 
@@ -157,8 +159,6 @@ def transform_ERI_AO_to_SO(ERI_AO: ndarray, C_1: ndarray, C_2: ndarray, calculat
     """
     
     timer("Molecular orbital transformation", 0)
-
-    # The stepwise transformation is faster, since NumPy doesn't have to look for the best contraction order
     
     log("\n Transforming integrals step 1 of 4...       ", calculation, 1, end="", silent=silent); sys.stdout.flush()
     
@@ -446,7 +446,7 @@ def build_MP2_t_amplitudes(g_oovv: ndarray, e_ijab: ndarray) -> ndarray:
 
 
 
-def transform_matrix_AO_to_SO(M: ndarray, C: ndarray) -> ndarray:
+def transform_matrix_AO_to_SO(M: ndarray, molecular_orbitals: ndarray) -> ndarray:
 
     """
 
@@ -454,14 +454,14 @@ def transform_matrix_AO_to_SO(M: ndarray, C: ndarray) -> ndarray:
 
     Args:   
         M (array): Matrix in AO basis
-        C (array): Molecular orbitals in AO basis
+        molecular_orbitals (array): Molecular orbitals in AO basis
 
     Returns:
         M_SO (array): Matrix in SO basis
 
     """
 
-    M_SO = np.einsum("mi,mn,na->ia", C, M, C, optimize=True)
+    M_SO = np.einsum("mi,mn,na->ia", molecular_orbitals, M, molecular_orbitals, optimize = True)
 
     return M_SO
 
@@ -668,7 +668,6 @@ def begin_spatial_orbital_calculation(molecule: Molecule, ERI_AO: ndarray, SCF_o
     log("\n Preparing transformation to spatial orbital basis...", calculation, 1, silent=silent)
 
     g = transform_ERI_AO_to_MO(ERI_AO, molecular_orbitals, calculation, silent)
-    
 
     # Logs information about freezing orbitals
 
@@ -692,184 +691,6 @@ def begin_spatial_orbital_calculation(molecule: Molecule, ERI_AO: ndarray, SCF_o
 
 
 
-def build_CIS_Hamiltonian(n_occ: int, n_virt: int, n_SO: int, epsilons: ndarray, g: ndarray) -> tuple:
-    
-    """
-
-    Contructs array of excitations and CIS Hamiltonian matrix in determinantal basis.
-
-    Args:   
-        n_occ (int): Number of occupied spin orbitals
-        n_virt (int): Number of virtual spin orbitals
-        n_SO (int): Number of spin orbitals
-        epsilons (array): Fock matrix orbital eigenvalues
-        g (array): Antisymmetrised electron repulsion integrals in SO basis
-
-    Returns:
-        H_CIS (array): Shifted CIS Hamiltonian in determinantal basis
-        excitations (array): List of possible excitations between occupied and virtual spin orbitals
-
-    """
-    
-    excitations = []
-    H_CIS = np.zeros((n_occ * n_virt, n_occ * n_virt))
-
-    # Builds excitations list of every combination from occupied to virtual spin orbitals
-
-    for i in range(n_occ):
-        for a in range(n_occ, n_SO):
-
-            excitations.append((i, a))
-
-    # Builds shifted CIS Hamiltonian
-
-    for p, (i, a) in enumerate(excitations):
-        for q, (j, b) in enumerate(excitations):
-        
-            H_CIS[p, q] = (epsilons[a] - epsilons[i]) * (i == j) * (a == b) + g[a, j, i, b]
-
-
-    return H_CIS, np.array(excitations)
-
-
-
-
-
-
-
-
-
-
-def calculate_weights_matrix(weights_of_interest: ndarray, excitations: ndarray, n_occ: int, n_virt: int) -> ndarray:
-
-    """
-
-   Calculates the two index weight matrix for a state of interest.
-
-    Args:   
-        weights_of_interest (array): Weights array for state of interest
-        excitations (array): List of possible excitations
-        n_virt (int): Number of virtual spin orbitals
-
-    Returns:
-        b_ia (array): Two index weights matrix for state of interest
-
-    """
-
-    # Virtual indices shifted down to start counting the vertical indices from zero
-
-    i_indices = excitations[:, 0]
-    a_indices = excitations[:, 1] - n_occ
-
-    b_ia = np.zeros((n_occ, n_virt))
-
-    b_ia[i_indices, a_indices] = weights_of_interest
-
-    return b_ia
-
-
-
-
-
-
-
-
-
-
-def calculate_CIS_density_matrix(n_SO: int, n_occ: int, C_spin_block: ndarray, o: slice, v: slice, b_ia: ndarray) -> tuple:
-
-    """
-
-    Calculates the CIS density matrix for a state of interest.
-
-    Args:   
-        n_SO (int): Number of spin orbitals
-        n_occ (int): Number of occupied spin orbitals
-        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
-        o (slice): Occupied orbitals slice
-        v (slice): Virtual orbitals slice
-        b_ia (array): Weights matrix for state of interest
-
-    Returns:
-        P (array): Density matrix in AO basis
-        P_alpha (array): Density matrix for alpha orbitals in AO basis
-        P_beta (array): Density matrix for beta orbitals in AO basis
-        P_transition (array): Difference density matrix for in AO basis
-        P_transition_alpha (array): Difference density matrix for alpha orbitals in AO basis
-        P_transition_beta (array): Difference density matrix for beta orbitals in AO basis
-        
-    """
-    
-    # Equation from Foresman 1992 - this is the transition density, delta P_CIS
-
-    DP_ij = -1 * np.einsum("ia,ja->ij", b_ia, b_ia, optimize=True)
-    DP_ab = np.einsum("ia,ib->ab", b_ia, b_ia, optimize=True)
-
-    # Initialises HF density matrix in SO basis
-
-    P_transition = np.zeros((n_SO, n_SO))
-
-    # Adds on transition density blocks to form unrelaxed density matrix in SO basis
-
-    P_transition[v, v] = DP_ab
-    P_transition[o, o] = DP_ij
-
-    P_SO = P_transition.copy()
-
-    P_SO[o, o] += np.identity(n_occ)
-
-    P, P_alpha, P_beta = transform_P_SO_to_AO(P_SO, C_spin_block, n_SO)
-    P_transition, P_transition_alpha, P_transition_beta = transform_P_SO_to_AO(P_transition, C_spin_block, n_SO)
-
-    return P, P_alpha, P_beta, P_transition, P_transition_alpha, P_transition_beta
-
-
-
-
-
-
-
-
-
-
-def calculate_transition_dipoles(D: ndarray, weights: ndarray, excitations: ndarray, C_spin_block: ndarray) -> ndarray:
-
-    """
-
-    Calculates the transition dipoles (measure of intensity) from a CIS calculation.
-
-    Args:   
-        D (array): Dipole integrals
-        weights (array): Weights of each excitation (determinant) from CIS calculation
-        excitations (array): List of possible excitations
-        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
-
-    Returns:
-        transition_dipoles (array): Transition dipoles
-
-    """
-    
-    D_spin_block = np.kron(np.eye(2), D[2])
-    D_SO = transform_matrix_AO_to_SO(D_spin_block, C_spin_block)
-
-    # Left column is occupied, right column is virtual
-
-    i_indices = excitations[:, 0]
-    a_indices = excitations[:, 1]
-
-    transition_dipoles = weights.T @ D_SO[a_indices, i_indices]
-
-    return transition_dipoles
-
-
-
-
-
-
-
-
-
-
 def calculate_oscillator_strengths(transition_dipoles: ndarray, excitation_energies: ndarray) -> ndarray:
 
     """
@@ -877,8 +698,8 @@ def calculate_oscillator_strengths(transition_dipoles: ndarray, excitation_energ
     Calculates the oscillator strengths of all states at once.
 
     Args:   
-        transition_dipoles (array): Transition dipoles for each state
-        excitation_energies (array): Excitation energies for each state
+        transition_dipoles (array): Transition dipoles for all states
+        excitation_energies (array): Excitation energies for all states
 
     Returns:
         oscillator_strengths (array): Oscillator strengths for states
@@ -898,32 +719,766 @@ def calculate_oscillator_strengths(transition_dipoles: ndarray, excitation_energ
 
 
 
-def label_spin_orbital(index: int, calculation: Calculation) -> str:
+def calculate_restricted_singlet_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
+
+    """
+    
+    Calculates the singlet A matrix for a spin-restricted reference.
+
+    Args:
+        g (array): Two-electron integrals in physicists' spatial orbital notation
+        epsilons (array): Molecular orbital eigenvalues
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
+
+    Returns:
+        A_ia_jb (array): Restricted singlet orbital Hessian matrix
 
     """
 
-    Labels and formats the spin orbitals for logging.
+    # Builds the contributions to the A matrix
 
-    Args:   
-        index (int): Index of spin orbital
+    A = 2 * g[o, o, v, v].transpose(0, 2, 1, 3) - g[o, v, o, v] * calculation.HFX_prop 
+
+    if K_XC is not None:
+
+        A += K_XC * calculation.DFX_prop 
+
+    # Reshapes into a matrix of excitations
+
+    A_ia_jb = A.reshape(A.shape[0] * A.shape[1], -1)
+
+    # The diagonal elements also need the orbital energy differences, which are added on here
+
+    A_ia_jb[np.diag_indices_from(A_ia_jb)] += (epsilons[v][None, :] - epsilons[o][:, None]).ravel()
+
+    return A_ia_jb
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_triplet_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
+
+    """
+    
+    Calculates the triplet A matrix for a spin-restricted reference.
+
+    Args:
+        g (array): Two-electron integrals in physicists' spatial orbital notation
+        epsilons (array): Molecular orbital eigenvalues
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
+
+    Returns:
+        A_ia_jb (array): Restricted triplet orbital Hessian matrix
+
+    """
+
+    # Builds the contributions to the A matrix
+
+    A = - g[o, v, o, v] * calculation.HFX_prop
+
+    if K_XC is not None:
+
+        A += K_XC * calculation.DFX_prop 
+
+    # Reshapes into a matrix of excitations
+
+    A_ia_jb = A.reshape(A.shape[0] * A.shape[1], -1)
+
+    # The diagonal elements also need the orbital energy differences, which are added on here
+
+    A_ia_jb[np.diag_indices_from(A_ia_jb)] += (epsilons[v][None, :] - epsilons[o][:, None]).ravel()
+
+    return A_ia_jb
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, K_XC: ndarray = None) -> ndarray:
+
+    """
+    
+    Calculates the orbital Hessian for a spin-unrestricted reference.
+
+    Args:
+        g (array): Antisymmetrised spin-orbital two-electron integrals in physicists' notation
+        epsilons (array): Spin-orbital molecular orbital eigenvalues
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+
+    Returns:
+        A_ia_jb (array): Unrestricted spin-orbital Hessian matrix
+
+    """
+
+    # Builds the spin-orbital contribution to the orbital Hessian
+
+    A = g[v, o, o, v].transpose(2, 0, 1, 3) 
+
+    # Reshapes into a matrix of spin-orbital excitations
+
+    A_ia_jb = A.reshape(A.shape[0] * A.shape[1], -1)
+
+    # The diagonal elements also need the spin-orbital energy differences, which are added on here
+
+    A_ia_jb[np.diag_indices_from(A_ia_jb)] += (epsilons[v][None, :] - epsilons[o][:, None]).ravel()
+
+    return A_ia_jb
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_singlet_B_matrix(g: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
+
+    """
+    
+    Calculates the singlet B matrix for a spin-restricted reference.
+
+    Args:
+        g (array): Two-electron integrals in physicists' spatial orbital notation
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
+
+    Returns:
+        B_ia_jb (array): Restricted singlet B matrix
+
+    """
+
+    # Builds the contributions to the B matrix
+
+    B = 2 * g[o, o, v, v].transpose(0, 2, 1, 3) - g[o, o, v, v].transpose(0, 3, 1, 2) * calculation.HFX_prop
+    
+    if K_XC is not None:
+
+        B += K_XC * calculation.DFX_prop 
+
+    # Reshapes into a matrix of excitations
+
+    B_ia_jb = B.reshape(B.shape[0] * B.shape[1], -1)
+
+    return B_ia_jb
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_triplet_B_matrix(g: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
+
+    """
+    
+    Calculates the triplet B matrix for a spin-restricted reference.
+
+    Args:
+        g (array): Two-electron integrals in physicists' spatial orbital notation
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
+
+    Returns:
+        B_ia_jb (array): Restricted triplet B matrix
+
+    """
+
+    # Builds the contributions to the B matrix
+
+    B = - g[o, o, v, v].transpose(0, 3, 1, 2) * calculation.HFX_prop
+
+    if K_XC is not None:
+
+        B += K_XC * calculation.DFX_prop 
+
+    # Reshapes into a matrix of excitations
+
+    B_ia_jb = B.reshape(B.shape[0] * B.shape[1], -1)
+
+    return B_ia_jb
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_B_matrix(g: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, K_XC: ndarray = None) -> ndarray:
+
+    """
+    
+    Calculates the B matrix for a spin-unrestricted reference.
+
+    Args:
+        g (array): Antisymmetrised spin-orbital two-electron integrals in physicists' notation
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+
+    Returns:
+        B_ia_jb (array): Unrestricted spin-orbital B matrix
+
+    """
+
+    # Builds the spin-orbital contribution to the B matrix
+
+    B = g[v, v, o, o].transpose(2, 0, 3, 1)
+
+    # Reshapes into a matrix of spin-orbital excitations
+
+    B_ia_jb = B.reshape(B.shape[0] * B.shape[1], -1)
+
+    return B_ia_jb
+
+
+
+
+
+
+
+
+
+
+def build_restricted_orbital_Hessian(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation, hessian_type: str = "singlet") -> ndarray:
+
+    """
+    
+    Constructs the orbital Hessian for a spin-restricted reference.
+
+    Args:
+        g (array): Spatial orbital two-electron integrals 
+        epsilons (array): Spin-orbital molecular orbital eigenvalues
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+        hessian_type (str): Type of Hessian to construct ("singlet" or "triplet")
+    
+    Returns:
+        H (array): Orbital Hessian matrix
+    
+    """
+
+    timer("Orbital Hessian construction", 0)
+
+    # Calculate the components of the A and B matrices, depending on the specified Hessian type
+
+    if hessian_type == "singlet":
+
+        A = calculate_restricted_singlet_A_matrix(g, epsilons, o, v, n_occ, n_virt, calculation)
+
+        B = calculate_restricted_singlet_B_matrix(g, o, v, n_occ, n_virt, calculation)
+
+    elif hessian_type == "triplet":
+
+        A = calculate_restricted_triplet_A_matrix(g, epsilons, o, v, n_occ, n_virt, calculation)
+
+        B = calculate_restricted_triplet_B_matrix(g, o, v, n_occ, n_virt, calculation)
+
+    else:
+
+        error("Invalid Hessian type specified! Must be \"singlet\" or \"triplet\".")
+
+    # The Hessian is a block matrix with A and B submatrices
+
+    H = np.block([[A, B], [B, A]])
+
+    timer("Orbital Hessian construction", 1)
+
+    return H
+
+
+
+
+
+
+
+
+
+
+def build_unrestricted_orbital_Hessian(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int) -> ndarray:
+
+    """
+    
+    Constructs the orbital Hessian for a spin-unrestricted reference.
+
+    Args:
+        g (array): Antisymmetrised spin orbital two-electron integrals 
+        epsilons (array): Spin-orbital molecular orbital eigenvalues
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+    
+    Returns:
+        H (array): Orbital Hessian matrix
+    
+    """
+
+    timer("Orbital Hessian construction", 0)
+
+    # Calculate the components of the A and B matrices
+
+    A = calculate_unrestricted_A_matrix(g, epsilons, o, v, n_occ, n_virt)
+
+    B = calculate_unrestricted_B_matrix(g, o, v, n_occ, n_virt)
+
+    # The Hessian is a block matrix with A and B submatrices
+
+    H = np.block([[A, B], [B, A]])
+
+    timer("Orbital Hessian construction", 1)
+
+    return H
+
+
+
+
+
+
+
+
+
+
+def perform_restricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slice, v: slice, molecule: Molecule, calculation: Calculation, eigenvalue_threshold: float, silent: bool = False) -> None:
+    
+    """
+    
+    Performs a stability analysis for a spin-restricted reference.
+
+    Args:
+        g (array): Spatial orbital two-electron integrals 
+        epsilons (array): Spin-orbital molecular orbital eigenvalues
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        silent (bool): Whether to suppress output
+    
+    """
+
+    # Builds the singlet and triplet orbital Hessians for RHF/RHF and RHF/UHF stability checks, respectively
+
+    log("  Building singlet orbital Hessian...        ", calculation, 1, silent = silent, end = "")
+
+    H_singlet = build_restricted_orbital_Hessian(g, epsilons, o, v, molecule.n_doubly_occ, molecule.n_doubly_virt, calculation, "singlet")
+    
+    log("[Done]", calculation, 1, silent = silent)
+
+    log("  Building triplet orbital Hessian...        ", calculation, 1, silent = silent, end = "")
+
+    H_triplet = build_restricted_orbital_Hessian(g, epsilons, o, v, molecule.n_doubly_occ, molecule.n_doubly_virt, "triplet")
+    
+    log("[Done]", calculation, 1, silent = silent)
+    
+    log("\n  Diagonalising orbital Hessians...          ", calculation, 1, silent = silent, end = "")
+
+    # Finds the lowest eigenvalues and corresponding eigenvectors of the singlet and triplet Hessians
+
+    singlet_eigenvalues, singlet_eigenvectors = np.linalg.eigh(H_singlet)
+    
+    triplet_eigenvalues, triplet_eigenvectors = np.linalg.eigh(H_triplet)
+    
+    log("[Done]", calculation, 1, silent = silent)
+
+    log(f"\n  Lowest singlet eigenvalue:             {singlet_eigenvalues[0]:10.5f}", calculation, 1, silent = silent)
+    log(f"  Lowest triplet eigenvalue:             {triplet_eigenvalues[0]:10.5f}", calculation, 1, silent = silent)
+
+    if singlet_eigenvalues[0] < eigenvalue_threshold:
+
+        log("\n  The SCF is unstable wrt. restricted rotations.", calculation, 1, silent = silent)
+
+    if triplet_eigenvalues[0] < eigenvalue_threshold:
+
+        log("\n  The SCF is unstable wrt. unrestricted rotations.", calculation, 1, silent = silent)
+
+    if singlet_eigenvalues[0] > eigenvalue_threshold and triplet_eigenvalues[0] > eigenvalue_threshold:
+
+        log("\n  The self-consistent field solution is stable!", calculation, 1, silent = silent)
+
+    return
+
+
+
+
+
+
+
+
+
+
+def perform_unrestricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slice, v: slice, molecule: Molecule, calculation: Calculation, eigenvalue_threshold: float, silent: bool = False) -> None:
+    
+    """
+    
+    Performs a stability analysis for a spin-unrestricted reference.
+
+    Args:
+        g (array): Antisymmetrised spin orbital two-electron integrals 
+        epsilons (array): Spin-orbital molecular orbital eigenvalues
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        silent (bool): Whether to suppress output
+    
+    """
+
+    # Builds the orbital Hessian for UHF/UHF stability checks
+
+    log("  Building unrestricted orbital Hessian...   ", calculation, 1, silent = silent, end = "")
+
+    H = build_unrestricted_orbital_Hessian(g, epsilons, o, v, molecule.n_occ, molecule.n_virt)
+    
+    log("[Done]", calculation, 1, silent = silent)
+    
+    log("\n  Diagonalising orbital Hessian...           ", calculation, 1, silent = silent, end = "")
+
+    # Finds the lowest eigenvalues and corresponding eigenvectors of the orbital Hessian
+
+    hessian_eigenvalues, hessian_eigenvectors = np.linalg.eigh(H)
+    
+    log("[Done]", calculation, 1, silent = silent)
+
+    log(f"\n  Lowest Hessian eigenvalue:             {hessian_eigenvalues[0]:10.5f}", calculation, 1, silent = silent)
+
+    if hessian_eigenvalues[0] < eigenvalue_threshold:
+
+        log("\n  The SCF is unstable wrt. unrestricted rotations.", calculation, 1, silent = silent)
+
+    else:
+
+        log("\n  The self-consistent field solution is stable!", calculation, 1, silent = silent)
+
+    return
+
+
+
+
+
+
+
+
+
+
+def calculate_self_consistent_field_stability(molecule: Molecule, calculation: Calculation, ERI_AO: ndarray, SCF_output: Output, silent: bool = False) -> None:
+
+    """
+    
+    Performs the stability analysis for an SCF solution.
+
+    Args:
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        ERI_AO (array): Electron repulsion integrals in AO basis
+        SCF_output (Output): Output from SCF calculation
+        silent (bool, optional): Should output be silenced 
+
+    """
+
+    # The threshold for determine if an eigenvalue is truly negative
+
+    eigenvalue_threshold = -1e-5
+
+    if calculation.reference == "RHF":
+        
+        # Transforms the two-electron integrals to the spatial orbital basis
+
+        g, _, epsilons, o, v = begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, molecule.n_doubly_occ, calculation, silent)
+
+    elif calculation.reference == "UHF":
+        
+        # Transforms the two-electron integrals to the spin orbital basis
+
+        g, _, epsilons, _, o, v, _, _ = begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, molecule.n_occ, calculation, silent)
+    
+    if calculation.method.density_functional_method:
+
+        warning(" Stability analysis is not implemented correctly for DFT methods!")
+
+    log_spacer(calculation, start="\n")
+    log("                  Stability Analysis", calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation)
+    
+    if calculation.reference == "RHF":
+
+        perform_restricted_stability_analysis(g, epsilons, o, v, molecule, calculation, eigenvalue_threshold, silent)
+
+    elif calculation.reference == "UHF":
+
+        perform_unrestricted_stability_analysis(g, epsilons, o, v, molecule, calculation, eigenvalue_threshold, silent)
+
+    log_spacer(calculation)
+
+    log_spacer(calculation, silent)
+    
+    return
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_configuration_interaction_singles_states(A_singlet: ndarray, A_triplet: ndarray) -> tuple:
+
+    """
+    
+    Diagonalises the CIS Hamiltonian for a spin-restricted reference to obtain the excited states.
+
+    Args:
+        A_singlet (array): Singlet A matrix
+        A_triplet (array): Triplet A matrix
+    
+    Returns:
+        singlet_energies (array): Singlet excitation energies
+        triplet_energies (array): Triplet excitation energies
+        singlet_vectors (array): Singlet eigenvectors
+        triplet_vectors (array): Triplet eigenvectors
+
+    """
+
+    singlet_energies, triplet_energies = None, None
+    singlet_vectors, triplet_vectors = None, None
+
+    # Only the A matrix is needed for CIS, so we can just diagonalise that
+
+    if A_singlet is not None:
+
+        singlet_energies, singlet_vectors = np.linalg.eigh(A_singlet)
+    
+    if A_triplet is not None:
+
+        triplet_energies, triplet_vectors = np.linalg.eigh(A_triplet)
+
+    return singlet_energies, triplet_energies, singlet_vectors, triplet_vectors
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_time_dependent_hartree_fock_states(A_singlet: ndarray, A_triplet: ndarray, B_singlet: ndarray, B_triplet: ndarray) -> tuple:
+
+    """
+    
+    Diagonalises the TDHF Hamiltonian for a spin-restricted reference to obtain the excited states.
+
+    Args:
+        A_singlet (array): Singlet A matrix
+        A_triplet (array): Triplet A matrix
+        B_singlet (array): Singlet B matrix
+        B_triplet (array): Triplet B matrix
+
+    Returns:
+        singlet_energies (array): Singlet excitation energies
+        triplet_energies (array): Triplet excitation energies
+        singlet_vectors (array): Singlet eigenvectors
+        triplet_vectors (array): Triplet eigenvectors
+
+    """
+
+    singlet_energies, triplet_energies = None, None
+    singlet_vectors, triplet_vectors = None, None
+
+    # These Hamiltonians for TDHF are not Hermitian
+
+    if A_singlet is not None:
+
+        n_ia = A_singlet.shape[0]
+
+        H_singlet = np.block([[A_singlet, B_singlet], [-B_singlet, -A_singlet]])
+
+        singlet_energies, singlet_vectors = np.linalg.eig(H_singlet)
+        
+        if np.max(np.abs(singlet_energies.imag)) > 1e-6:
+
+            warning(" Diagonalisation gave complex excitation energies - the reference may be unstable!")
+       
+        # Avoids complex energies
+        
+        singlet_energies = singlet_energies.real
+        singlet_vectors = singlet_vectors.real 
+
+        X, Y = singlet_vectors[:n_ia], singlet_vectors[n_ia:]
+
+        metric_norm = np.einsum("in,in->n", X, X, optimize=True) - np.einsum("in,in->n", Y, Y, optimize=True)
+
+        singlet_vectors = singlet_vectors / np.sqrt(np.abs(metric_norm))
+
+        # Gets rid of negative eigenvalues and sorts the remaining states
+
+        singlet_energies, singlet_vectors = singlet_energies[singlet_energies > 0], singlet_vectors[:, singlet_energies > 0]
+        singlet_energies, singlet_vectors = singlet_energies[singlet_energies.argsort()], singlet_vectors[:, singlet_energies.argsort()]
+        
+    if A_triplet is not None:
+        
+        n_ia = A_triplet.shape[0]
+
+        H_triplet = np.block([[A_triplet, B_triplet], [-B_triplet, -A_triplet]])
+
+        triplet_energies, triplet_vectors = np.linalg.eig(H_triplet)
+        
+        if np.max(np.abs(triplet_energies.imag)) > 1e-6:
+
+            warning(" Diagonalisation gave complex excitation energies - the reference may be unstable!")
+
+        # Avoids complex energies
+
+        triplet_energies = triplet_energies.real
+        triplet_vectors = triplet_vectors.real 
+
+        X, Y = triplet_vectors[:n_ia], triplet_vectors[n_ia:]
+
+        metric_norm = np.einsum("in,in->n", X, X, optimize=True) - np.einsum("in,in->n", Y, Y, optimize=True)
+
+        triplet_vectors = triplet_vectors / np.sqrt(np.abs(metric_norm))
+
+        # Gets rid of negative eigenvalues and sorts the remaining states
+
+        triplet_energies, triplet_vectors = triplet_energies[triplet_energies > 0], triplet_vectors[:, triplet_energies > 0]
+        triplet_energies, triplet_vectors = triplet_energies[triplet_energies.argsort()], triplet_vectors[:, triplet_energies.argsort()]
+
+    return singlet_energies, triplet_energies, singlet_vectors, triplet_vectors
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_single_reference_excited_states(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation, silent: bool = False, K_XC: ndarray = None) -> tuple:
+
+    """
+    
+    Calculates the CIS or TDHF excited states for a spin-restricted reference.
+    
+    Args:
+        g (array): Two-electron integrals in physicists' spatial orbital notation
+        epsilons (array): Molecular orbital eigenvalues
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
         calculation (Calculation): Calculation object
 
-    Returns:
-        labelled_SO (string): Formatted spin orbital label
-
     """
+
+    calculation.tamm_dancoff_approximation = True if "CIS" in calculation.method.name else calculation.tamm_dancoff_approximation
+
+    log_spacer(calculation, start="\n")
+
+    if calculation.method.density_functional_method:
+
+        log("       Time-dependent Density Functional Theory", calculation, silent = silent, colour = "white")
+
+    else:
+
+        log("          Configuration Interaction Singles", calculation, silent = silent, colour = "white") if calculation.tamm_dancoff_approximation else log("             Time-dependent Hartree-Fock", calculation, silent = silent, colour = "white")
     
-    reduced_index = index // 2 + 1
+    log_spacer(calculation)
+    
+    log("  Using the Tamm-Dancoff approximation...", calculation, silent = silent, end="\n\n") if calculation.tamm_dancoff_approximation else log("  Not using the Tamm-Dancoff approximation...", calculation, silent = silent, end="\n\n")
+    
+    A_singlet, A_triplet = None, None
+    B_singlet, B_triplet = None, None
 
-    labelled_SO = str(reduced_index)
+    if not calculation.calculate_no_triplets:
 
-    # Adds an "a" for alpha and "b" for beta for UHF
-
-    if calculation.reference == "UHF":
+        log("  Only triplet states will be calculated.", calculation, silent = silent) if calculation.calculate_no_singlets else log("  Singlet and triplet states will be calculated.", calculation, silent = silent)
+            
+    else:
         
-        labelled_SO += "a" if index % 2 == 0 else "b"
+        log("  Only singlet states will be calculated.", calculation, silent = silent)
+
+    timer("Excited state calculation", 0)
+
+    # Convert two-electron integrals to physicists' notation
+
+    g = g.transpose(0, 2, 1, 3)
     
-    return labelled_SO
+    log("\n  Building excited state Hamiltonian...      ", calculation, silent = silent, end = "")
+
+    # Singlets are calculated by default unless "NOSINGLETS" is specified
+
+    if not calculation.calculate_no_singlets:
+
+        A_singlet = calculate_restricted_singlet_A_matrix(g, epsilons, o, v, n_occ, n_virt, calculation, K_XC)
+        
+        B_singlet = calculate_restricted_singlet_B_matrix(g, o, v, n_occ, n_virt, calculation, K_XC)
+
+    # Triplets are also calculated yb default unless "NOTRIPLETS" is specified
+
+    if not calculation.calculate_no_triplets:
+
+        A_triplet = calculate_restricted_triplet_A_matrix(g, epsilons, o, v, n_occ, n_virt, calculation, K_XC)
+        
+        B_triplet = calculate_restricted_triplet_B_matrix(g, o, v, n_occ, n_virt, calculation, K_XC) 
+    
+    log("[Done]", calculation, silent = silent)
+
+    log("  Diagonalising Hamiltonian...               ", calculation, silent = silent, end = "")
+
+    if calculation.tamm_dancoff_approximation:
+        
+        # Just run CIS, not TDHF if the "TDA" keyword is used
+
+        singlet_energies, triplet_energies, singlet_vectors, triplet_vectors = calculate_restricted_configuration_interaction_singles_states(A_singlet, A_triplet)
+
+    else:
+
+        # Run full TDHF otherwise
+
+        singlet_energies, triplet_energies, singlet_vectors, triplet_vectors = calculate_restricted_time_dependent_hartree_fock_states(A_singlet, A_triplet, B_singlet, B_triplet)
+    
+    log("[Done]", calculation, silent = silent)
+
+    timer("Excited state calculation", 1)
+
+    return singlet_energies, triplet_energies, singlet_vectors, triplet_vectors
 
 
 
@@ -934,104 +1489,253 @@ def label_spin_orbital(index: int, calculation: Calculation) -> str:
 
 
 
-def process_CIS_results(excitation_energies: ndarray, weights: ndarray) -> tuple:
+def calculate_unrestricted_configuration_interaction_singles_states(A: ndarray) -> tuple:
 
     """
-    Processes arrays from CIS calculation to group triplets.
 
-    Args:   
-        excitation_energies (array): Excitation energies
-        percent_contributions (array): Percent contributions to each state
-        transition_dipoles (array): Transition dipoles
-        oscillator_strengths (array): Oscillator strengths
+    Diagonalises the CIS Hamiltonian for a spin-unrestricted reference to obtain the excited states.
+
+    Args:
+        A (array): Unrestricted (spin-conserving) A matrix
 
     Returns:
-        new_excitation_energies (array): Excitation energies
-        new_percent_contributions (array): Percent contributions to each state
-        new_transition_dipoles (array): Transition dipoles
-        new_oscillator_strengths (array): Oscillator strengths
-        state_types (array): Either triplet or singlet for states
+        energies (array): Excitation energies
+        vectors (array): Eigenvectors
 
     """
 
-    threshold = 0.001  # Adjust this value as needed
+    # Only the A matrix is needed for CIS, so we can just diagonalise it
 
-    # Initialize variables to store the new excitation energies, contributions, transition dipoles, oscillator strengths, and state types
+    energies, vectors = np.linalg.eigh(A)
 
-    new_excitation_energies = []
-    new_percent_contributions = []
-    new_weights = []
-    state_types = []  # To store 'Singlet' or 'Triplet' for each state
+    return energies, vectors
 
-    n_states = len(excitation_energies)
-    used_indices = set()
 
-    i = 0
 
-    while i < n_states:
 
-        if i in used_indices:
 
-            i += 1
 
-            continue
 
-        # Start a new group with the current excitation energy
 
-        group_indices = [i]
-        current_energy = excitation_energies[i]
 
-        # Compare with subsequent excitation energies to find close ones
 
-        for j in range(i + 1, n_states):
+def calculate_unrestricted_time_dependent_hartree_fock_states(A: ndarray, B: ndarray) -> tuple:
 
-            if abs(excitation_energies[j] - current_energy) < threshold:
+    """
 
-                group_indices.append(j)
-                used_indices.add(j)
+    Diagonalises the TDHF Hamiltonian for a spin-unrestricted reference to obtain the excited states.
+
+    Args:
+        A (array): Unrestricted (spin-conserving) A matrix
+        B (array): Unrestricted (spin-conserving) B matrix
+
+    Returns:
+        energies (array): Excitation energies
+        vectors (array): Eigenvectors, stacked as [X, Y] along their first axis
+
+    """
+
+    n_ia = A.shape[0]
+
+    # This Hamiltonian for TDHF is not Hermitian
+
+    H = np.block([[A, B], [-B, -A]])
+
+    energies, vectors = np.linalg.eig(H)
+
+    if np.max(np.abs(energies.imag)) > 1e-6:
+
+        warning(" Diagonalisation gave complex excitation energies - the reference may be unstable!")
+
+    # Avoids complex energies
+
+    energies = energies.real
+    vectors = vectors.real
+
+    # Normalises the eigenvectors with the TDHF metric, X^2 - Y^2
+
+    X, Y = vectors[:n_ia], vectors[n_ia:]
+
+    metric_norm = np.einsum("in,in->n", X, X, optimize=True) - np.einsum("in,in->n", Y, Y, optimize=True)
+
+    vectors = vectors / np.sqrt(np.abs(metric_norm))
+
+    # Gets rid of negative eigenvalues and sorts the remaining states
+
+    energies, vectors = energies[energies > 0], vectors[:, energies > 0]
+    energies, vectors = energies[energies.argsort()], vectors[:, energies.argsort()]
+
+    return energies, vectors
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_single_reference_excited_states(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, spin_labels: list, calculation: Calculation, silent: bool = False) -> tuple:
+
+    """
+
+    Calculates the CIS or TDHF excited states for a spin-unrestricted reference.
+
+    The unrestricted spin-orbital Hessian is block diagonal in the change of spin: spin-conserving
+    (alpha to alpha, beta to beta) excitations do not couple to spin-flip (alpha to beta, beta to
+    alpha) excitations. Only the spin-conserving block is diagonalised, so that the excited states
+    match a standard unrestricted CIS/TDHF calculation, with the spin-flip states excluded.
+
+    Args:
+        g (array): Antisymmetrised spin-orbital two-electron integrals in physicists' notation
+        epsilons (array): Spin-orbital eigenvalues, sorted in ascending order
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+        spin_labels (list): Spin ("a" or "b") of each spin orbital, in ascending energy order
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        excitation_energies (array): Excitation energies
+        excitation_vectors (array): Weight vectors over the full occupied-virtual spin-orbital space
+
+    """
+
+    calculation.tamm_dancoff_approximation = True if "CIS" in calculation.method.name else calculation.tamm_dancoff_approximation
+
+    log_spacer(calculation, start="\n")
+
+    log("          Configuration Interaction Singles", calculation, silent=silent, colour="white") if calculation.tamm_dancoff_approximation else log("             Time-dependent Hartree-Fock", calculation, silent=silent, colour="white")
+
+    log_spacer(calculation)
+
+    log("  Using the Tamm-Dancoff approximation...", calculation, silent=silent, end="\n\n") if calculation.tamm_dancoff_approximation else log("  Not using the Tamm-Dancoff approximation...", calculation, silent=silent, end="\n\n")
+
+    timer("Excited state calculation", 0)
+
+    # Selects only spin-conserving excitations, where the occupied and virtual spin orbitals share a spin
+
+    spin_occupied = np.array(spin_labels)[o]
+    spin_virtual = np.array(spin_labels)[v]
+
+    spin_conserving = (spin_occupied[:, None] == spin_virtual[None, :]).ravel()
+
+    n_spin_conserving = int(np.sum(spin_conserving))
+
+    log("  Building excited state Hamiltonian...      ", calculation, silent=silent, end="")
+
+    # The unrestricted A matrix is built in the full spin-orbital basis, then restricted to spin-conserving excitations
+
+    A = calculate_unrestricted_A_matrix(g, epsilons, o, v, n_occ, n_virt)[np.ix_(spin_conserving, spin_conserving)]
+
+    log("[Done]", calculation, silent=silent)
+
+    log("  Diagonalising Hamiltonian...               ", calculation, silent=silent, end="")
+
+    if calculation.tamm_dancoff_approximation:
+
+        # Just run CIS, not TDHF, if the "TDA" keyword (or a CIS method) is used
+
+        excitation_energies, vectors = calculate_unrestricted_configuration_interaction_singles_states(A)
+
+        # Scatters the spin-conserving eigenvectors back into the full occupied-virtual space (spin-flip weights are zero)
+
+        excitation_vectors = np.zeros((n_occ * n_virt, len(excitation_energies)))
+        excitation_vectors[spin_conserving, :] = vectors
+
+    else:
+
+        # The B matrix is also restricted to spin-conserving excitations for full TDHF
+
+        B = calculate_unrestricted_B_matrix(g, o, v, n_occ, n_virt)[np.ix_(spin_conserving, spin_conserving)]
+
+        excitation_energies, vectors = calculate_unrestricted_time_dependent_hartree_fock_states(A, B)
+
+        # Scatters the X and Y blocks back into the full occupied-virtual space (spin-flip weights are zero)
+
+        excitation_vectors = np.zeros((2 * n_occ * n_virt, len(excitation_energies)))
+        excitation_vectors[:n_occ * n_virt][spin_conserving, :] = vectors[:n_spin_conserving]
+        excitation_vectors[n_occ * n_virt:][spin_conserving, :] = vectors[n_spin_conserving:]
+
+    log("[Done]", calculation, silent=silent)
+
+    timer("Excited state calculation", 1)
+
+    return excitation_energies, excitation_vectors
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_transition_dipoles(SCF_output: Output, singlet_vectors: ndarray, triplet_vectors: ndarray, n_occ: int, n_virt: int, o: slice, v: slice) -> ndarray:
+
+    """
+    
+    Calculates the transition dipole from the ground state to each excited state.
+
+    Args:
+        SCF_output (Output): Output from SCF calculation
+        singlet_vectors (array): Eigenvectors of singlet Hessian
+        triplet_vectors (array): Eigenvectors of triplet Hessian
+        n_occ (int): Number of doubly occupied orbitals
+        n_virt (int): Number of doubly virtual orbitals
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+
+    Returns:
+        transition_dipole (array): Transition dipoles
+    
+    """
+
+    transition_dipoles = []
+
+    # All three Cartesian dipole matrices in the MO basis
+
+    D_MO = [transform_matrix_AO_to_SO(M, SCF_output.molecular_orbitals) for M in SCF_output.D] 
+
+    # Number of possible transitions
+
+    n_ia = n_occ * n_virt
+
+    if singlet_vectors is not None:
+
+        for state in range(singlet_vectors.shape[1]):
+
+            column = singlet_vectors[:, state]
+
+            # In TDHF the X and Y vectors are stacked along their axes, the transition density is X + Y
+
+            if column.shape[0] == 2 * n_ia:
+
+                transitions_matrix = (column[:n_ia] + column[n_ia:]).reshape(n_occ, n_virt)
 
             else:
 
-                break
+                transitions_matrix = column.reshape((o.stop-o.start), n_virt)
 
-        num_in_group = len(group_indices)
+            # Appends the magnitude of the transition dipole moment vector
 
-        if num_in_group == 3:
+            transition_dipoles.append(np.linalg.norm([np.sum(M[o, v] * transitions_matrix) for M in D_MO]))
+        
+    # Singlet to triplet transitions are always zero
 
-            # Assume this is a triplet state
+    if triplet_vectors is not None:
 
-            state_types.append('Triplet')
+        transition_dipoles += [0] * triplet_vectors.shape[1]
 
-            # Average the excitation energies
+    # Normalises the transition dipoles array
 
-            avg_energy = np.mean(excitation_energies[group_indices])
-            new_excitation_energies.append(avg_energy)
+    transition_dipoles = np.array(transition_dipoles) * np.sqrt(2)
 
-            first_weights = weights[:, group_indices[1]]
-            new_weights.append(first_weights)
-
-
-        elif num_in_group == 1:
-
-            # Assume these are singlet states
-
-            for idx in group_indices:
-                state_types.append('Singlet')
-                new_excitation_energies.append(excitation_energies[idx])
-                new_weights.append(weights[:, idx])
-
-
-        i = group_indices[-1] + 1  # Move to the next unprocessed excitation energy
-
-    # Convert lists to numpy arrays
-
-    new_excitation_energies = np.array(new_excitation_energies)
-    new_weights = np.array(new_weights).T
-
-    new_percent_contributions = new_weights ** 2 * 100
-
-
-    return new_excitation_energies, new_weights, new_percent_contributions, state_types
+    return transition_dipoles
 
 
 
@@ -1042,123 +1746,303 @@ def process_CIS_results(excitation_energies: ndarray, weights: ndarray) -> tuple
 
 
 
-def print_excited_state_information(excitation_energies: ndarray, SCF_output: Output, contributions: ndarray, excitations_formatted: list, calculation: Calculation, state_types: list, weights: ndarray, silent: bool = False) -> tuple:
-      
+def calculate_unrestricted_transition_dipoles(SCF_output: Output, excitation_vectors: ndarray, n_occ: int, n_virt: int, o: slice, v: slice, C_spin_block: ndarray) -> ndarray:
+
     """
-    Prints information about each excited state.
+
+    Calculates the transition dipole from the ground state to each excited state, for a spin-unrestricted reference.
+
+    Args:
+        SCF_output (Output): Output from SCF calculation
+        excitation_vectors (array): Excitation weight vectors over the full occupied-virtual spin-orbital space
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
+
+    Returns:
+        transition_dipoles (array): Transition dipoles
+
+    """
+
+    transition_dipoles = []
+
+    # All three Cartesian dipole matrices in the spin-orbital MO basis (the AO dipole is spin-blocked first)
+
+    D_SO = [transform_matrix_AO_to_SO(np.kron(np.eye(2), M), C_spin_block) for M in SCF_output.D]
+
+    # Number of possible transitions
+
+    n_ia = n_occ * n_virt
+
+    for state in range(excitation_vectors.shape[1]):
+
+        column = excitation_vectors[:, state]
+
+        # In TDHF the X and Y vectors are stacked along their axes, the transition density is X + Y
+
+        if column.shape[0] == 2 * n_ia:
+
+            transitions_matrix = (column[:n_ia] + column[n_ia:]).reshape(n_occ, n_virt)
+
+        else:
+
+            transitions_matrix = column.reshape(o.stop - o.start, n_virt)
+
+        # Appends the magnitude of the transition dipole moment vector (no sqrt(2) factor, as both spins are summed explicitly)
+
+        transition_dipoles.append(np.linalg.norm([np.sum(M[o, v] * transitions_matrix) for M in D_SO]))
+
+    transition_dipoles = np.array(transition_dipoles)
+
+    return transition_dipoles
+
+
+
+
+
+
+
+
+
+
+def determine_restricted_excited_state_energy_and_density(excitation_energies: ndarray, excitation_vectors: ndarray, state: int, n_occ: int, n_virt: int, SCF_output: Output, o: slice, v: slice, molecular_orbitals: ndarray) -> tuple:
+
+    """
+    
+    Picks out the excited state energy, and forms the state's density matrices.
+
+    Args:
+        excitation_energies (array): Excitation energies
+        excitation_vectors (array): Weights of each determinant in each state
+        state (int): Chosen root
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
+        SCF_output (Output): Output object from SCF
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        molecular_orbitals (array): Molecular orbitals
+
+    Returns:
+        E_state (float): Energy of chosen state
+        E_transition (float): Transition energy to chosen state
+        P_state (array): Density matrix of chosen state
+        P_state_alpha (array): Alpha spin density matrix of chosen state
+        P_state_beta (array): Beta spin density matrix of chosen state
+        P_diff (array): Difference density matrix of chosen state
+        P_diff_alpha (array): Alpha spin difference density matrix of chosen state
+        P_diff_beta (array): Beta spin difference density matrix of chosen state   
+
+    """
+
+    # This is the transition energy to the chosen state
+
+    try:
+
+        E_transition = excitation_energies[state]
+    
+    except: 
+        
+        error(f"Specified root ({state + 1}) does not exist!")
+
+    # Picks out the weights for the selected state, for TDHF the unrelaxed density is X^2 + Y^2
+
+    column = excitation_vectors[:, state]
+
+    # Number of possible transitions
+
+    n_ia = n_occ * n_virt
+
+    if column.shape[0] == 2 * n_ia:
+
+        X = column[:n_ia].reshape(n_occ, n_virt)
+        Y = column[n_ia:].reshape(n_occ, n_virt)
+
+    else:
+
+        # When the TDA is active (eg. for CIS) the Y vector is zero
+
+        X = column.reshape((o.stop-o.start), n_virt)
+        Y = np.zeros_like(X)
+
+    # Builds up difference density matrix for chosen state in spatial MO basis
+
+    P_diff_MO = np.zeros_like(SCF_output.P)
+
+    P_diff_MO[v, v] = np.einsum("ia,ib->ab", X, X, optimize=True) + np.einsum("ia,ib->ab", Y, Y, optimize=True)
+    P_diff_MO[o, o] = -1 * (np.einsum("ia,ja->ij", X, X, optimize=True) + np.einsum("ia,ja->ij", Y, Y, optimize=True))
+
+    # Transforms the density matrix to the AO basis
+
+    P_diff = molecular_orbitals @ P_diff_MO @ molecular_orbitals.T
+
+    # The difference density is symmetric in alpha and beta spins for restricted references
+
+    P_diff_alpha = P_diff_beta = P_diff / 2
+
+    # Forms the energy and densities of the state, rather than the transition
+
+    E_state = SCF_output.energy + E_transition
+
+    P_state = SCF_output.P + P_diff
+    P_state_alpha = SCF_output.P_alpha + P_diff_alpha
+    P_state_beta = SCF_output.P_beta + P_diff_beta
+
+    return E_state, E_transition, P_state, P_state_alpha, P_state_beta, P_diff, P_diff_alpha, P_diff_beta
+
+
+
+
+
+
+
+
+
+
+def determine_unrestricted_excited_state_energy_and_density(excitation_energies: ndarray, excitation_vectors: ndarray, state: int, n_occ: int, n_virt: int, SCF_output: Output, o: slice, v: slice, C_spin_block: ndarray) -> tuple:
+
+    """
+
+    Picks out the excited state energy, and forms the state's density matrices, for a spin-unrestricted reference.
+
+    Args:
+        excitation_energies (array): Excitation energies
+        excitation_vectors (array): Weights of each determinant in each state, over the spin-orbital space
+        state (int): Chosen root
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+        SCF_output (Output): Output object from SCF
+        o (slice): Occupied spin-orbital slice
+        v (slice): Virtual spin-orbital slice
+        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
+
+    Returns:
+        E_state (float): Energy of chosen state
+        E_transition (float): Transition energy to chosen state
+        P_state (array): Density matrix of chosen state
+        P_state_alpha (array): Alpha spin density matrix of chosen state
+        P_state_beta (array): Beta spin density matrix of chosen state
+        P_diff (array): Difference density matrix of chosen state
+        P_diff_alpha (array): Alpha spin difference density matrix of chosen state
+        P_diff_beta (array): Beta spin difference density matrix of chosen state
+
+    """
+
+    # This is the transition energy to the chosen state
+
+    try:
+
+        E_transition = excitation_energies[state]
+
+    except:
+
+        error(f"Specified root ({state + 1}) does not exist!")
+
+    # Picks out the weights for the selected state, for TDHF the unrelaxed density is X^2 + Y^2
+
+    column = excitation_vectors[:, state]
+
+    # Number of possible transitions
+
+    n_ia = n_occ * n_virt
+
+    if column.shape[0] == 2 * n_ia:
+
+        X = column[:n_ia].reshape(n_occ, n_virt)
+        Y = column[n_ia:].reshape(n_occ, n_virt)
+
+    else:
+
+        # When the TDA is active (eg. for CIS) the Y vector is zero
+
+        X = column.reshape(o.stop - o.start, n_virt)
+        Y = np.zeros_like(X)
+
+    # Number of spin orbitals
+
+    n_SO = C_spin_block.shape[1]
+
+    # Builds up the difference density matrix for the chosen state in the spin-orbital MO basis
+
+    P_diff_MO = np.zeros((n_SO, n_SO))
+
+    P_diff_MO[v, v] = np.einsum("ia,ib->ab", X, X, optimize=True) + np.einsum("ia,ib->ab", Y, Y, optimize=True)
+    P_diff_MO[o, o] = -1 * (np.einsum("ia,ja->ij", X, X, optimize=True) + np.einsum("ia,ja->ij", Y, Y, optimize=True))
+
+    # Transforms the spin-orbital density matrix to the AO basis, splitting into alpha and beta spin densities
+
+    P_diff, P_diff_alpha, P_diff_beta = transform_P_SO_to_AO(P_diff_MO, C_spin_block, n_SO)
+
+    # Forms the energy and densities of the state, rather than the transition
+
+    E_state = SCF_output.energy + E_transition
+
+    P_state = SCF_output.P + P_diff
+    P_state_alpha = SCF_output.P_alpha + P_diff_alpha
+    P_state_beta = SCF_output.P_beta + P_diff_beta
+
+    return E_state, E_transition, P_state, P_state_alpha, P_state_beta, P_diff, P_diff_alpha, P_diff_beta
+
+
+
+
+
+
+
+
+
+
+def print_excited_state_absorption_spectrum(molecule: Molecule, excitation_energies: ndarray, calculation: Calculation, transition_dipoles: ndarray, oscillator_strengths: ndarray, state_types: ndarray, silent: bool = False) -> None:
+    
+    """
+
+    Prints excited state absorption spectrum information.
 
     Args:   
+        molecule (Molecule): Molecule object
         excitation_energies (array): Excitation energies
-        SCF_output (Output): Output from SCF calculation
-        contributions (array): Percent contributions to each state
-        excitations_formatted (list): Formatted excitations
         calculation (Calculation): Calculation object
-        state_types (list): List of 'Singlet' or 'Triplet' for each state
+        transition_dipoles (array): Transition dipoles
+        oscillator_strengths (array): Oscillator strengths
         silent (bool, optional): Should output be silenced
 
     """
+
+    # Converts sorted excitation energies to different units
+
+    wavelengths_nm = 1e7 / (excitation_energies * constants.per_cm_in_hartree)
+    excitation_energies_eV = constants.eV_in_hartree * excitation_energies
+
+    log_spacer(calculation, start = "\n")
+
+    log(f"\n Transition dipole moment origin is the centre of mass, {bohr_to_angstrom(molecule.centre_of_mass):.4f} angstroms from the first atom.", calculation, 1, silent=silent)
+    
+    log_big_spacer(calculation, silent = silent, start = "\n")
+
+    log("                                     Excited State Absorption Spectrum", calculation, 1, silent = silent, colour = "white")
+    
+    log_big_spacer(calculation, silent = silent)
+
+    log("   State         Energy          Energy (eV)     Wavelength (nm)    Osc. Strength     Transition Dipole", calculation, 1, silent = silent)
+    
+    log_big_spacer(calculation, silent = silent)
+
+    # Prints absorption frequency and intensity for each state
 
     for state in range(len(excitation_energies)):
 
         if state < calculation.n_states:
             
-            # Prints excitation energy and energy of each state
+            # Appends either "S" or "T" for singlet and triplet restricted reference states
 
-            if calculation.reference == "UHF":
-
-                state_type = ""
-
-            else:
-
-                state_type = state_types[state]
-
-            log(f"\n\n  ~~~~~ State {state + 1} ~~~~~  {state_type}", calculation, 2, silent=silent)
-
-            log(f"\n  Excitation energy:   {excitation_energies[state]:13.10f}", calculation, 2, silent=silent)
-            log(f"  Energy of state:     {(excitation_energies[state] + SCF_output.energy):13.10f}\n", calculation, 2, silent=silent)
-            
-            # Aggregate contributions for duplicate excitations
-
-            excitation_contributions = {}
-
-            for i, excitation in enumerate(excitations_formatted):
-                
-                # Collect all contributions without threshold check
-
-                excitation_key = (excitation[0], excitation[1])
-
-                if excitation_key not in excitation_contributions:
-
-                    excitation_contributions[excitation_key] = {'contribution': contributions[i, state], 'weight': weights[i, state]}
-
-                else:
-
-                    excitation_contributions[excitation_key]['contribution'] += contributions[i, state]
-                    excitation_contributions[excitation_key]['weight'] += weights[i, state] 
-
-            # Prints the aggregated contributions if they are above the threshold
-
-            for excitation_key, values in excitation_contributions.items():
-                
-                total_contribution = values['contribution']
-
-                if total_contribution > calculation.CIS_contribution_threshold:
-                    exc_from, exc_to = excitation_key
-
-                    if calculation.reference  == "UHF":
-                        log(f"    {exc_from} -> {exc_to}  :  {total_contribution:6.2f} %    ({values['weight']:8.5f})", calculation, 2, silent=silent)
-                    else:
-                        log(f"    {exc_from} -> {exc_to}  :  {total_contribution:6.2f} %   ", calculation, 2, silent=silent)
-
-
-    return
-
-
-
-
-
-
-
-
-
-
-def print_CIS_absorption_spectrum(molecule: Molecule, excitation_energies_eV: ndarray, calculation: Calculation, frequencies_per_cm: ndarray, wavelengths_nm: ndarray, transition_dipoles: ndarray, oscillator_strengths: ndarray, state_types: ndarray, silent: bool = False) -> None:
-    
-    """
-
-    Prints CIS absorption spectrum information.
-
-    Args:   
-        molecule (Molecule): Molecule object
-        excitation_energies_eV (array): Excitation energies in eV
-        calculation (Calculation): Calculation object
-        frequencies_per_cm (array): Frequencies in per cm
-        wavelengths_nm (array): Wavelengths in nm
-        transition_dipoles (array): Transition dipoles
-        oscillator_strengths (array): Oscillator strengths
-        silent (bool, optional): Should output be silenced
-
-    """
-   
-    log(f"\n\n Transition dipole moment origin is the centre of mass, {bohr_to_angstrom(molecule.centre_of_mass):.4f} angstroms from the first atom.", calculation, 1, silent=silent)
-    
-    log_big_spacer(calculation, silent=silent, start="\n")
-    log("                                          CIS Absorption Spectrum", calculation, 1, silent=silent, colour="white")
-    log_big_spacer(calculation, silent=silent)
-    log("   State     Energy (eV)     Freq. (per cm)     Wavelength (nm)     Osc. Strength     Transition Dipole", calculation, 1, silent=silent)
-    log_big_spacer(calculation, silent=silent)
-
-    for state in range(len(excitation_energies_eV)):
-
-        if state < calculation.n_states:
-            
             state_type = " - " + state_types[state][0] if calculation.reference == "RHF" else "  "
 
             gap = "" if calculation.reference == "RHF" else "  "
 
-            log(f"  {gap}{(state + 1):2}{state_type}       {excitation_energies_eV[state]:7.4f}          {frequencies_per_cm[state]:8.1f}            {wavelengths_nm[state]:5.1f}              {oscillator_strengths[state]:.6f}          {transition_dipoles[state]:10.7f}", calculation, 1, silent=silent)
+            log(f"  {gap}{(state + 1):2}{state_type}  {excitation_energies[state]:16.10f}  {excitation_energies_eV[state]:14.5f}   {wavelengths_nm[state]:16.5f}       {oscillator_strengths[state]:10.5f}          {transition_dipoles[state]:10.5f}", calculation, 1, silent = silent)
 
-    log_big_spacer(calculation, silent=silent)
+    log_big_spacer(calculation, silent = silent)
 
     return
 
@@ -1171,11 +2055,212 @@ def print_CIS_absorption_spectrum(molecule: Molecule, excitation_energies_eV: nd
 
 
 
-def calculate_CIS_doubles_correction(excitation_energy: ndarray, epsilons: ndarray, root: int, g: ndarray, o: slice, v: slice, b_ia: ndarray, calculation: Calculation, silent: bool = False) -> float:
+def print_excited_state_contributions(calculation: Calculation, silent: bool, excitation_energies: ndarray, excitation_vectors: ndarray, state_types: ndarray, n_occ: int, n_virt: int, o: slice, orbital_labels: ndarray = None) -> None:
+
+    """
+    
+    Prints the orbital transition contributions to each excited state.
+
+    Args:
+        calculation (Calculation): Calculation object
+        silent (bool): Cancel logging
+        excitation_energies (array): Excitation energies
+        excitation_vectors (array): Weights of excitations
+        state_types (array): Either "Triplet" or "Singlet" for restricted references
+        n_occ (int): Number of occupied orbitals
+        n_virt (int): Number of virtual orbitals
+    
+    """
+
+    # Results without TDA will not perfectly match ORCA weights just due to random degeneracies of eigenvectors
+
+    log("\n  Printing excited state information...", calculation, 2, silent = silent)
+
+    log(f"  Only printing contributions larger than {calculation.excited_state_contribution_threshold:.1f} %.", calculation, 2, silent = silent)
+
+    # Prints energies and transition weights of each excited state
+
+    for state in range(min(len(excitation_energies), calculation.n_states)):
+
+        log(f"\n  ~~~~~ State {state + 1} ~~~~~  {state_types[state]}", calculation, 2, silent = silent)
+
+        log(f"\n  Excitation energy: {excitation_energies[state]:16.10f}\n", calculation, 2, silent = silent)
+
+        # The contribution of each orbital transition is the square of its weight, as a percentage
+
+        column = excitation_vectors[:, state]
+
+        # Without TDA
+
+        if column.shape[0] == 2 * n_occ * n_virt:
+
+            X = column[:n_occ * n_virt].reshape(n_occ, n_virt)
+            Y = column[n_occ * n_virt:].reshape(n_occ, n_virt)
+
+        else:
+
+            # With TDA
+
+            X = column.reshape(o.stop - o.start, n_virt)
+            Y = np.zeros_like(X)
+
+        # This normalisation is necessary to match THDF
+
+        contributions = 100 * (X ** 2 - Y ** 2)
+
+        # Loops over the transitions from largest to smallest contribution
+
+        for index in np.argsort(contributions, axis = None)[::-1]:
+
+            i, a = divmod(index, n_virt)
+
+            # The list is sorted, so once one transition falls below the threshold the rest do too
+
+            if contributions[i, a] <= calculation.excited_state_contribution_threshold: break
+
+            # Prints occupied orbital i and virtual orbital a in one-indexed molecular orbital numbering
+
+            if orbital_labels is not None:
+
+                # Prints "a" or "b" for orbital transitions for UHF
+
+                occ_label, virt_label = orbital_labels[o.start + i], orbital_labels[o.stop + a]
+
+            else:                          
+
+                # Prints just the orbital number for RHF
+
+                occ_label, virt_label = f"{o.start + i + 1}", f"{o.stop + a + 1}"
+
+            log(f"    {occ_label:>4}  ->  {virt_label:<4}  {contributions[i, a]:7.2f} %", calculation, 2, silent=silent)
+    return
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_doubles_correction(excitation_energy: ndarray, epsilons: ndarray, root: int, g: ndarray, o: slice, v: slice, b_ia: ndarray, state_type: str, calculation: Calculation, silent: bool = False) -> float:
+ 
+    """
+ 
+    Calculates the doubles correction to the CIS excitation energy of one state, for a spin-restricted reference.
+ 
+    Args:
+        excitation_energy (float): CIS excitation energy of the state of interest
+        epsilons (array): Spatial molecular orbital eigenvalues
+        root (int): State of interest, in zero-indexed counting
+        g (array): Two-electron integrals in physicists' spatial orbital notation
+        o (slice): Occupied orbital slice
+        v (slice): Virtual orbital slice
+        b_ia (array): Normalised spatial CIS amplitudes for the state of interest
+        state_type (str): Spin of the excited state, "Singlet" or "Triplet"
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should output be silenced
+ 
+    Returns:
+        E_D (float): (D) correction to the TDA excitation energy
+ 
+    """
+ 
+    # Spin-adaptation of the spin-orbital equations of Head-Gordon, Rico, Oumi and Lee, Chem. Phys. Lett. 219, 21 (1994).
+  
+    log_spacer(calculation, silent=silent, start="\n")
+    log("          Perturbative Doubles Correction", calculation, 1, silent=silent, colour="white")
+    log_spacer(calculation, silent=silent)
+ 
+    log(f"  Applying doubles correction to state {root + 1} only.", calculation, 1, silent=silent)
+ 
+    log(f"\n  Building doubles amplitudes...           ", calculation, 1, silent=silent, end="")
+  
+    e_ijab = build_doubles_epsilons_tensor(epsilons, epsilons, o, o, v, v)
+ 
+    shifted_denominator = 1 / (1 / e_ijab + excitation_energy)
+ 
+    # First-order (opposite-spin) MP2 doubles amplitudes of the ground state
+ 
+    t_ijab = build_MP2_t_amplitudes(g[o, o, v, v], e_ijab)
+ 
+    log(f"  [Done]", calculation, 1, silent=silent)
+ 
+    log(f"\n  Calculating direct contribution...  ", calculation, 1, silent=silent, end="")
+ 
+    p_1 = np.einsum("abcj,ic->ijab", g[v, v, v, o], b_ia, optimize=True)
+    p_2 = np.einsum("abic,jc->ijab", g[v, v, o, v], b_ia, optimize=True)
+    h_1 = np.einsum("kaji,kb->ijab", g[o, v, o, o], b_ia, optimize=True)
+    h_2 = np.einsum("kbij,ka->ijab", g[o, v, o, o], b_ia, optimize=True)
+ 
+    u_S = p_1 + p_2 - h_1 - h_2
+    u_T = p_1 - p_2 + h_1 - h_2
+ 
+    u_S_exchange = u_S.transpose(1, 0, 2, 3)
+ 
+    if state_type == "Singlet":
+ 
+        E_direct = np.einsum("ijab,ijab,ijab->", shifted_denominator, u_S, u_S, optimize=True) - (1 / 2) * np.einsum("ijab,ijab,ijab->", shifted_denominator, u_S, u_S_exchange, optimize=True)
+ 
+    else:
+ 
+        E_direct = (1 / 2) * np.einsum("ijab,ijab,ijab->", shifted_denominator, u_S, u_S, optimize=True) - (1 / 2) * np.einsum("ijab,ijab,ijab->", shifted_denominator, u_S, u_S_exchange, optimize=True) + (1 / 2) * np.einsum("ijab,ijab,ijab->", shifted_denominator, u_T, u_T, optimize=True)
+ 
+    log(f"       [Done]", calculation, 1, silent=silent)
+ 
+    log(f"  Calculating indirect contribution...  ", calculation, 1, silent=silent, end="")
+ 
+    # Indirect contribution
+
+    J = g[o, o, v, v]
+    K = g[o, o, v, v].swapaxes(2, 3)
+ 
+    if state_type == "Singlet":
+ 
+        v_ia = np.einsum("jkbc,jb,ikac->ia", 2 * J - K, b_ia, 2 * t_ijab - t_ijab.transpose(0, 1, 3, 2), optimize=True)
+ 
+    else:
+ 
+        v_ia = np.einsum("jkbc,jb,ikac->ia", K, b_ia, t_ijab.transpose(0, 1, 3, 2), optimize=True)
+ 
+    v_ia += (1 / 2) * np.einsum("jkbc,ja,ikcb->ia", J, b_ia, t_ijab, optimize=True) - np.einsum("jkbc,ja,ikbc->ia", J, b_ia, t_ijab, optimize=True) - np.einsum("jkbc,ja,ikcb->ia", K, b_ia, t_ijab, optimize=True) + (1 / 2) * np.einsum("jkbc,ja,ikbc->ia", K, b_ia, t_ijab, optimize=True)
+ 
+    v_ia += (1 / 2) * np.einsum("jkbc,ib,jkca->ia", J, b_ia, t_ijab, optimize=True) - np.einsum("jkbc,ib,jkac->ia", J, b_ia, t_ijab, optimize=True) - np.einsum("jkbc,ib,jkca->ia", K, b_ia, t_ijab, optimize=True) + (1 / 2) * np.einsum("jkbc,ib,jkac->ia", K, b_ia, t_ijab, optimize=True)
+ 
+    log(f"     [Done]", calculation, 1, silent=silent)
+ 
+    log(f"\n  Calculating doubles correction...         ", calculation, 1, silent=silent, end="")
+ 
+    E_D = E_direct + np.einsum("ia,ia->", b_ia, v_ia, optimize=True)
+ 
+    log(f" [Done]", calculation, 1, silent=silent)
+ 
+    # Summary of the correction for the state of interest
+ 
+    log(f"\n  Original excitation energy:       {excitation_energy:15.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy from (D):       {E_D:15.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy (eV):           {(E_D * constants.eV_in_hartree):15.10f}", calculation, 3, silent=silent)
+    log(f"\n  Corrected excitation energy:      {(E_D + excitation_energy):15.10f}", calculation, 1, silent=silent)
+
+    log_spacer(calculation, silent=silent)
+ 
+    return E_D
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_doubles_correction(excitation_energy: ndarray, epsilons: ndarray, root: int, g: ndarray, o: slice, v: slice, b_ia: ndarray, calculation: Calculation, silent: bool = False) -> float:
 
     """
 
-    Calculates CIS(D) correction to CIS excitation energy of one state.
+    Calculate sdoubles correction to TDA excitation energy of one state.
 
     Args:   
         excitation_energy (float): Excitation energy of state of interest
@@ -1189,19 +2274,19 @@ def calculate_CIS_doubles_correction(excitation_energy: ndarray, epsilons: ndarr
         silent (bool, optional): Should output be silenced
 
     Returns:
-        E_CIS_D (float): CIS(D) correction to CIS excitation energy
+        E_D (float): Doubles correction to TDA excitation energy
 
     """
 
     # Equations taken from Head-Gordon paper
 
     log_spacer(calculation, silent=silent, start="\n")
-    log("          CIS(D) Perturbative Correction", calculation, 1, silent=silent, colour="white")
+    log("          Perturbative Doubles Correction", calculation, 1, silent=silent, colour="white")
     log_spacer(calculation, silent=silent)
 
     log(f"  Applying doubles correction to state {root + 1} only.", calculation, 1, silent=silent)
    
-    log(f"\n  Building doubles amplitudes...           ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"\n  Building doubles amplitudes...           ", calculation, 1, silent=silent, end="")
     
     # Builds and inverts inverse epsilons tensor, to upright e_ijab_inv
 
@@ -1212,7 +2297,7 @@ def calculate_CIS_doubles_correction(excitation_energy: ndarray, epsilons: ndarr
 
     log(f"  [Done]", calculation, 1, silent=silent)
 
-    log(f"\n  Calculating direct contribution...  ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"\n  Calculating direct contribution...  ", calculation, 1, silent=silent, end="")
     
     u_1 = np.einsum("abcj,ic->ijab", g[v, v, v, o], b_ia, optimize=True)
     u_2 = np.einsum("abci,jc->ijab", g[v, v, v, o], b_ia, optimize=True)
@@ -1223,7 +2308,7 @@ def calculate_CIS_doubles_correction(excitation_energy: ndarray, epsilons: ndarr
 
     log(f"       [Done]", calculation, 1, silent=silent)
 
-    log(f"  Calculating indirect contribution...  ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"  Calculating indirect contribution...  ", calculation, 1, silent=silent, end="")
     
     v_1 = (1 / 2) * np.einsum("jkbc,ib,jkca->ia", g[o, o, v, v], b_ia, t_ijab, optimize=True)
     v_2 = (1 / 2) * np.einsum("jkbc,ja,ikcb->ia", g[o, o, v, v], b_ia, t_ijab, optimize=True)
@@ -1233,21 +2318,21 @@ def calculate_CIS_doubles_correction(excitation_energy: ndarray, epsilons: ndarr
 
     log(f"     [Done]", calculation, 1, silent=silent)
 
-    log(f"\n  Calculating CIS(D) correction...      ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"\n  Calculating doubles correction...         ", calculation, 1, silent=silent, end="")
     
-    E_CIS_D = (1 / 4) * np.einsum("ijab,ijab,ijab->", u_ijab, u_ijab, e_ijab_inv_minus_w, optimize=True) + np.einsum("ia,ia->", b_ia, v_ia, optimize=True)
+    E_D = (1 / 4) * np.einsum("ijab,ijab,ijab->", u_ijab, u_ijab, e_ijab_inv_minus_w, optimize=True) + np.einsum("ia,ia->", b_ia, v_ia, optimize=True)
 
-    log(f"     [Done]", calculation, 1, silent=silent)
+    log(f" [Done]", calculation, 1, silent=silent)
     
     # Correction energy in eV prints if P used
 
-    log(f"\n  Excitation energy from CIS:       {excitation_energy:15.10f}", calculation, 1, silent=silent)
-    log(f"  Correction energy from CIS(D):    {E_CIS_D:15.10f}", calculation, 1, silent=silent)
-    log(f"  Correction energy (eV):           {(E_CIS_D * constants.eV_in_hartree):15.10f}", calculation, 3, silent=silent)
-    log(f"\n  Excitation energy from CIS(D):    {(E_CIS_D + excitation_energy):15.10f}", calculation, 1, silent=silent)
+    log(f"\n  Original excitation energy:       {excitation_energy:15.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy from (D):       {E_D:15.10f}", calculation, 1, silent=silent)
+    log(f"  Correction energy (eV):           {(E_D * constants.eV_in_hartree):15.10f}", calculation, 3, silent=silent)
+    log(f"\n  Corrected excitation energy:      {(E_D + excitation_energy):15.10f}", calculation, 1, silent=silent)
     log_spacer(calculation, silent=silent)
   
-    return E_CIS_D
+    return E_D
 
 
 
@@ -1258,257 +2343,169 @@ def calculate_CIS_doubles_correction(excitation_energy: ndarray, epsilons: ndarr
 
 
 
-def run_CIS(ERI_AO: ndarray, n_occ: int, n_virt: int, n_SO: int, calculation: Calculation, SCF_output: Output, molecule: Molecule, silent: bool = False) -> tuple:
-
-    """
-
-    Begins a configuration interaction singles calculation.
-
-    Args:   
-        ERI_AO (array): Electron repulsion integrals in AO basis
-        n_occ (int): Number of occupied spin orbitals
-        n_virt (int): Number of virtual spin orbitals
-        n_SO (int): Number of spin orbitals
-        calculation (Calculation): Calculation object
-        SCF_output (Output): SCF output object
-        molecule (Molecule): Molecule object
-        silent (bool, optional): Should output be silenced
-
-    Returns:
-        E_CIS (float): Energy of state of interest
-        E_transition (float): Transition energy to state of interest
-        P_transition (array): Density matrix of state of interest in AO basis      
-        P_transition_alpha (array): Density matrix of alpha orbitals of state of interest in AO basis
-        P_transition_beta (array): Density matrix of beta orbitals of state of interest in AO basis
-
+def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, SCF_output: Output, bfs_on_grid: ndarray = None, weights: ndarray = None, silent: bool = False) -> tuple:
+    
     """
     
-    timer("Configuration interaction singles", 0)
-    
-    # Converting into computer counting from human counting
-
-    root = calculation.root - 1
-
-    g, C_spin_block, epsilons_sorted, _, o, v, _, _ = begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, n_occ, calculation, silent=silent)
-
-    log_spacer(calculation, silent=silent, start="\n")
-    log("         Configuration Interaction Singles", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
-    
-    log("\n  Building CIS Hamiltonian...                ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
-
-    H_CIS, excitations = build_CIS_Hamiltonian(n_occ, n_virt, n_SO, epsilons_sorted, g)
-
-    log("[Done]", calculation, 1, silent=silent)
-
-    log("  Diagonalising CIS Hamiltonian...           ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
-
-    excitation_energies, weights = np.linalg.eigh(H_CIS)
-
-    excitation_energies, weights, percent_contributions, state_types = process_CIS_results(excitation_energies, weights)
-
-    log("[Done]", calculation, 1, silent=silent)
-
-
-    log("\n  Calculating transition dipoles...          ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
-
-    transition_dipoles = calculate_transition_dipoles(SCF_output.D, weights, excitations, C_spin_block)
-    oscillator_strengths = calculate_oscillator_strengths(transition_dipoles, excitation_energies)
-
-    log("[Done]", calculation, 1, silent=silent)
-
-
-    log(f"  Constructing density matrix...             ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
-    
-    try:
-
-        weights_of_interest = weights[:, root]
-        
-    except: 
-        
-        error("Specified root does not exist!")
-
-    # Calculates weight matrix for state of interest
-
-    b_ia = calculate_weights_matrix(weights_of_interest, excitations, n_occ, n_virt)
-    P_CIS, P_CIS_a, P_CIS_b, P_transition, P_transition_alpha, P_transition_beta = calculate_CIS_density_matrix(n_SO, n_occ, C_spin_block, o, v, b_ia)
-
-    log("[Done]", calculation, 1, silent=silent)
-
-    log("\n  Printing excited state information...  ", calculation, 2, silent=silent)
-    log(f"  Printing contributions larger than {calculation.CIS_contribution_threshold:.1f}%.  ", calculation, 2, silent=silent)
-
-    excitations_formatted = [(label_spin_orbital(i, calculation), label_spin_orbital(a, calculation)) for i, a in excitations]
-
-    frequencies_per_cm = excitation_energies * constants.per_cm_in_hartree
-    wavelengths_nm = 1e7 / frequencies_per_cm
-    excitation_energies_eV = constants.eV_in_hartree * excitation_energies
-
-    print_excited_state_information(excitation_energies, SCF_output, percent_contributions, excitations_formatted, calculation, state_types, weights, silent=silent)
-
-    print_CIS_absorption_spectrum(molecule, excitation_energies_eV, calculation, frequencies_per_cm, wavelengths_nm, transition_dipoles, oscillator_strengths, state_types, silent=silent)
-
-    # Energy of transition of state of interest
-
-    try:
-
-        E_transition = excitation_energies[root]
-    
-    except: 
-        
-        error("Specified root does not exist!")
-
-    # Optionally applies doubles correction to transition energy for a specified state
-
-    if "[D]" in calculation.method.name:
-            
-        E_CIS_D = calculate_CIS_doubles_correction(E_transition, epsilons_sorted, root, g, o, v, b_ia, calculation, silent=silent)
-
-        E_transition += E_CIS_D
-
-    E_CIS = SCF_output.energy + E_transition
-
-    timer("Configuration interaction singles", 1)
-
-    return E_CIS, E_transition, P_CIS, P_CIS_a, P_CIS_b, P_transition, P_transition_alpha, P_transition_beta
-
-
-
-
-
-
-
-
-def build_excitations_list(n_occ: int, n_virt: int) -> ndarray:
-
-    excitations = []
-
-    for i in range(n_occ):
-        for a in range(n_occ, n_occ + n_virt):
-
-            excitations.append((i, a))
-
-    excitations = np.array(excitations)
-
-    return excitations
-
-
-
-def calculate_restricted_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int) -> ndarray:
-
-    """
-    
-    Calculates the orbital Hessian for a spin-restricted reference.
+    Runs a single reference (TD-HF or TD-DFT) excited state calculation.
 
     Args:
-        g (array): Two-electron integrals in physicists' MO notation, g[p,q,r,s] = <pq|rs> = (pr|qs)
-        epsilons (array): Molecular orbital eigenvalues
-        o (slice): Occupied orbital slice
-        v (slice): Virtual orbital slice
-        n_occ (int): Number of occupied orbitals
-        n_virt (int): Number of virtual orbitals
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        SCF_output (Output): Output object
+        bfs_on_grid (array, optional): Basis functions on integration grid
+        weights (array, optional): Integration weights
+        silent (bool, optional): Supress logging
 
     Returns:
-        A_ia_jb (array): Restricted singlet orbital Hessian matrix
-
+        state_of_interest_energies_and_densities (tuple): Energy and densities for chosen state
+    
     """
 
-    # A_ia,jb = (eps_a - eps_i) delta_ij delta_ab
-    #         + 4 (ia|jb) - (ij|ab) - (ib|ja)
-    #
-    # Since g[p,q,r,s] = <pq|rs> = (pr|qs):
-    #
-    #   (ia|jb) = g[i,j,a,b]
-    #   (ij|ab) = g[i,a,j,b]
-    #   (ib|ja) = g[i,j,b,a]
+    if calculation.calculate_no_singlets and not calculation.calculate_triplets:
 
-    A = 4.0 * g[o, o, v, v].transpose(0, 2, 1, 3)
-    A -= g[o, v, o, v]
-    A -= g[o, o, v, v].transpose(0, 3, 1, 2)
+        error("There are no excited states to calculate! Did you forget to use the \"TRIPLETS\" keyword?")
 
-    A_ia_jb = A.reshape(n_occ * n_virt, n_occ * n_virt)
+    if calculation.method.density_functional_method and not calculation.functional.time_dependent_available:
 
-    A_ia_jb[np.diag_indices_from(A_ia_jb)] += (
-        epsilons[v][None, :] - epsilons[o][:, None]
-    ).ravel()
+        error("Time-dependent DFT is not yet available for this exchange-correlation functional!")
 
-    return A_ia_jb
+    K_XC = None
 
+    spin_orbital_labels = None
 
+    # Picks out the desired state, in zero-indexed computer counting
 
-def build_A_matrix(g, epsilons, excitations, n_occ, n_virt):
+    state = calculation.root - 1
 
-    # Note this does not contain exchange, assumes g is not antisymmetrised
-
-    # RPA is TDHF without exchange
-
-    A_ia_jb = np.zeros((n_occ * n_virt, n_occ * n_virt))
-
-    for p, (i, a) in enumerate(excitations):
-
-        for q, (j, b) in enumerate(excitations):
+    if calculation.reference == "RHF":
         
-            A_ia_jb[p, q] = (epsilons[a] - epsilons[i]) * (i == j) * (a == b) + g[a, j, i, b]
+        # Transforms integrals to the spatial MO basis
 
-
-    return A_ia_jb
-
-
-
-def build_B_matrix(g, excitations, n_occ, n_virt):
-
-    B_ia_jb = np.zeros((n_occ * n_virt, n_occ * n_virt))
-
-    for p, (i, a) in enumerate(excitations):
-
-        for q, (j, b) in enumerate(excitations):
+        g, molecular_orbitals, epsilons, o, v = begin_spatial_orbital_calculation(molecule, SCF_output.integrals.ERI_AO, SCF_output, molecule.n_doubly_occ, calculation, silent)
         
-            B_ia_jb[p, q] = g[a, b, i, j]
+        # Allows frozen core calculations
+
+        n_occ, n_virt = o.stop - o.start, molecule.n_doubly_virt
+        
+        # For TD-DFT calculation, determine the exchange-correlation kernel on a grid, then its MO matrix elements
+
+        if calculation.method.density_functional_method:
+            
+            log("\n Evaluating exchange-correlation kernel...   ", calculation, silent = silent, end = "")
+
+            K_XC = calculate_exchange_correlation_kernel_matrix(molecule, SCF_output.density, bfs_on_grid, molecular_orbitals, calculation, weights)
+
+            log("[Done]", calculation, silent = silent)
+            
+        # Calculates the singlet and triplet state energies and weight vectors
+
+        singlet_energies, triplet_energies, singlet_vectors, triplet_vectors = calculate_restricted_single_reference_excited_states(g, epsilons, o, v, n_occ, n_virt, calculation, silent, K_XC)
+        
+        # Combined array of all excitation energies and weight vectors
+
+        excitation_energies = np.concatenate([e for e in (singlet_energies, triplet_energies) if e is not None])
+
+        excitation_vectors = np.concatenate([v for v in (singlet_vectors, triplet_vectors) if v is not None], axis = 1)
+
+        state_types = np.concatenate([np.full(len(e), label) for e, label in ((singlet_energies, "Singlet"), (triplet_energies, "Triplet")) if e is not None])
+
+    elif calculation.reference == "UHF":
+        
+        # Transforms integrals to the spin orbital basis
+
+        g, C_spin_block, epsilons, ERI_spin_blocked, o, v, spin_labels, spin_orbital_labels = begin_spin_orbital_calculation(molecule, SCF_output.integrals.ERI_AO, SCF_output, molecule.n_occ, calculation, silent)
+        
+        # Allows frozen core calculations
+
+        n_occ, n_virt = o.stop - o.start, molecule.n_virt
+
+        # Calculates the state energies and weight vectors
+
+        excitation_energies, excitation_vectors = calculate_unrestricted_single_reference_excited_states(g, epsilons, o, v, n_occ, n_virt, spin_labels, calculation, silent)
+
+        # Unrestricted references do not separate states by spin multiplicity
+
+        state_types = np.array([""] * len(excitation_energies))
+    
+    log("\n  Calculating oscillator strengths...        ", calculation, silent = silent, end = "")
+
+    # Compute the transition dipoles between states
+
+    if calculation.reference == "RHF":
+
+        transition_dipoles = calculate_restricted_transition_dipoles(SCF_output, singlet_vectors, triplet_vectors, n_occ, n_virt, o, v)
+
+    else:
+
+        transition_dipoles = calculate_unrestricted_transition_dipoles(SCF_output, excitation_vectors, n_occ, n_virt, o, v, C_spin_block)
+
+    # Calculates the oscillator strengths for each transition
+
+    oscillator_strengths = calculate_oscillator_strengths(transition_dipoles, excitation_energies)
+    
+    log("[Done]", calculation, silent = silent)
+    
+    # Reorders the state arrays from smallest to largest excitation energy
+
+    order = np.argsort(excitation_energies)
+
+    excitation_vectors = excitation_vectors[:, order]
+
+    excitation_energies, state_types, transition_dipoles, oscillator_strengths = (arr[order] for arr in (excitation_energies, state_types, transition_dipoles, oscillator_strengths))
+    
+    log("  Constructing density matrix...             ", calculation, silent = silent, end = "")
+    
+    # Final energy and density matrix of state of interest
+
+    if calculation.reference == "RHF":
+
+        state_of_interest_energies_and_densities = determine_restricted_excited_state_energy_and_density(excitation_energies, excitation_vectors, state, n_occ, n_virt, SCF_output, o, v, molecular_orbitals)
+
+    else:
+
+        state_of_interest_energies_and_densities = determine_unrestricted_excited_state_energy_and_density(excitation_energies, excitation_vectors, state, n_occ, n_virt, SCF_output, o, v, C_spin_block)
+    
+    log("[Done]", calculation, silent = silent)
+
+    # Print excited state information
+
+    print_excited_state_contributions(calculation, silent, excitation_energies, excitation_vectors, state_types, n_occ, n_virt, o, spin_orbital_labels)
+
+    # Prints excited state absorption spectrum
+
+    print_excited_state_absorption_spectrum(molecule, excitation_energies, calculation, transition_dipoles, oscillator_strengths, state_types, silent)
+    
+    # Optional (D) correction
+
+    if calculation.do_perturbative_doubles or "[D]" in calculation.method.name:
+                
+        n_ia = n_occ * n_virt
+
+        column = excitation_vectors[:, state]
+
+        # For TDHF the eigenvector is [X; Y]; (D) takes the singles block, renormalised to unit weight
+
+        if column.shape[0] == 2 * n_ia:
+
+            X = column[:n_ia]
+            b_ia = (X / np.linalg.norm(X)).reshape(n_occ, n_virt)
+
+        else:
+
+            b_ia = column.reshape(n_occ, n_virt)       
+
+        if calculation.reference == "RHF":
+
+            E_CIS_D = calculate_restricted_doubles_correction(state_of_interest_energies_and_densities[1], epsilons, state, g.transpose(0, 2, 1, 3), o, v, b_ia, state_types[state], calculation, silent)
+
+        else:
+
+            E_CIS_D = calculate_unrestricted_doubles_correction(state_of_interest_energies_and_densities[1], epsilons, state, g, o, v, b_ia, calculation, silent)
+
+        A, B, C, D, E, F, G, H = state_of_interest_energies_and_densities
 
 
-    return B_ia_jb
+        state_of_interest_energies_and_densities = A + E_CIS_D, E_CIS_D + B, C, D, E, F, G, H
 
-
-
-def build_TDHF_Hamiltonian(A, B):
-
-    n = A.shape[0]
-
-    H_TDHF = np.zeros((2 * n, 2 * n))
-
-    H_TDHF[:n, :n] = A
-    H_TDHF[:n, n:] = B
-    H_TDHF[n:, :n] = -B
-    H_TDHF[n:, n:] = -A
-
-    return H_TDHF
-
-
-def diagonalise_TDHF_Hamiltonian(H_TDHF):
-
-    eigenvalues, eigenvectors = np.linalg.eig(H_TDHF)
-
-    # Only takes positive eigenvalues and corresponding eigenvectors
-
-    positive_indices = np.where(eigenvalues > 0)[0]
-
-    excitation_energies = eigenvalues[positive_indices]
-    weights = eigenvectors[:len(excitation_energies), :][:, positive_indices]
-
-    return excitation_energies, weights
-
-
-
-def run_TDHF(g, epsilons, n_occ, n_virt):
-
-    excitations = build_excitations_list(n_occ, n_virt)
-
-    A = build_A_matrix(g, epsilons, excitations, n_occ, n_virt)
-    B = build_B_matrix(g, excitations, n_occ, n_virt)
-
-    H_TDHF = build_TDHF_Hamiltonian(A, B)
-    excitation_energies, weights = diagonalise_TDHF_Hamiltonian(H_TDHF)
-
-    print(excitation_energies)
-
-    return
+    return state_of_interest_energies_and_densities

@@ -1,6 +1,5 @@
 import numpy as np
 import tuna_scf as scf
-import sys, time
 from tuna_util import *
 from tuna_calc import Calculation
 import tuna_props as props
@@ -163,7 +162,7 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     # Saves the requested VV10 dispersion correction
 
-    do_VV10_dispersion = calculation.VV10
+    do_VV10_dispersion = calculation.VV10 or calculation.method.name == "B97M-V"
 
     small_basis_zeta = "double" if small_basis in double_zeta_bases else "quadruple" if small_basis in quadruple_zeta_bases else "quintuple" if small_basis in quintuple_zeta_bases else "triple"
 
@@ -270,7 +269,7 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
     
     timer("Initial guess", 0)
 
-    log("\n Calculating self-consistent density for guess...  ", calculation, end="", silent=silent); sys.stdout.flush()
+    log("\n Calculating self-consistent density for guess...  ", calculation, end="", silent=silent)
 
     # Stores the full basis
 
@@ -800,6 +799,10 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     log("[Done]\n", calculation, 1, silent=silent)
 
+    # Store the harmonic transformation matrix if "CARTHARM" is not used 
+
+    molecule.spherical_harmonic_transformation_matrix = kern.build_spherical_harmonic_transformation_matrix(molecule) if not calculation.cartesian_harmonics else np.eye(molecule.n_cartesian_basis)
+    
     # Calculates the integrals between Gaussian basis functions
 
     integrals = kern.calculate_analytical_integrals(molecule, calculation, silent) if integrals is None else integrals
@@ -896,8 +899,6 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
     
     """
 
-    timer("Energy evaluation", 0)
-
     guess_container = P_guess, P_guess_alpha, P_guess_beta, E_guess
     
     # Ensures the molecule is aligned on the z-axis
@@ -919,10 +920,10 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
     # Runs the self-consistent field cycle, returning an Output object with the results
 
     SCF_output = scf.run_self_consistent_field_cycle(molecule, calculation, integrals, V_NN, X, guess_container, grid_container, silent)
-    
+
     # Calculate the non-local dispersion energy with VV10, if the "NL" keyword is used
 
-    E_dispersion = dft.calculate_VV10_energy(SCF_output.P, grid_container, calculation) if calculation.VV10 and not silent else E_dispersion
+    E_dispersion = dft.calculate_VV10_energy(SCF_output.P, grid_container, calculation) if (calculation.VV10 or calculation.method.name == "B97M-V") and not silent else E_dispersion
 
     # Stores the dispersion energy in the output object
 
@@ -958,7 +959,6 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
             calculate_hyperpolarisability(molecule, calculation, False, atomic_symbols, coordinates, integrals)
         
-    timer("Energy evaluation", 1)
 
     return SCF_output, molecule, final_energy, P
 

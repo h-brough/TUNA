@@ -4,12 +4,16 @@
 
 ### Added
 
+- Rewritten excited state module, with spin adapted and spin orbital CIS and TDHF/RPA
+- Spin-adapted perturbative doubles, CIS(D)
 - Truncated configuration interaction methods CISD (spin-orbital and spin-adapted) and CISDT (spin-orbital) 
-- New (meta-)GGA functionals: B97-D, revPBE, RPBE, revTPSS, SCAN, rSCAN, r2SCAN
+- New (meta-)GGA functionals: B97-D, B97M-V, revPBE, RPBE, revTPSS, SCAN, rSCAN, r2SCAN
 - New hybrid functionals: revPBE0, revPBE38, SCAN0, r2SCANh, r2SCAN0, r2SCAN50, B97
 - New double-hybrid functionals: r2SCAN0-DH, r2SCAN-CIDH, r2SCAN-QIDH, r2SCAN0-2, Pr2SCAN50, Pr2SCAN69
 - Non-local dispersion energy with VV10 with density functional-optimised parameters with `NL` keyword
-- Calculations now take place with spherical harmonics by default, leading to 30-200% speedups and smoother convergence
+- Request the relaxed MP2 response density matrix with the `RELAXED` keyword
+- Stability analysis for RHF or UHF SCF with `STAB` keyword
+- Calculations now take place with spherical harmonics by default, leading to 30-200% speedups and smoother SCF convergence
 - Go back to Cartesian harmonics with the `CARTHARM` keyword
 - Molecular integrals are 3-15x faster due to better memory allocation, cacheing and OpenMP parallelisation
 - Choose a number of OpenMP threads with the `THREADS` keyword (4 by default)
@@ -19,19 +23,17 @@
 - The `PRINTMOS` keyword will print molecular orbital information, regardless of `P` being used
 - Keywords for precise SCF convergence control: `ECONV`, `MAXDP`, `RMSDP` and `DIISERR`
 - Keywords for time-dependent calculations, `TD` and to use the Tamm-Dancoff approximation `TDA`
-
+- `[D]` keyword for perturbative doubles correction to excited state calculations
 
 - Sort out being able to use "DIPOLE" with harmonic intensities
-- Sort out printing MOs
-- Sort out revTPSS correlation derivatives
-- SCAN functionals derivatives
-- Add B97M-V
-- Relaxed MP2 density
+- Sort out printing MOs - make sure cartharm doesnt break everything
+- Relaxed unrestricted MP2 density
+! Triplets not right for TD-LSDA
+- Make sure P dosnt print orbiatl stuff again after TD
+- Make output for TD-UHF 6a -> 7a not 16-> 17 etc.
+- Freeze core not working for UHF
+- TDHF not working with (D)
 
-- Stability analysis
-- Orbital Hessian, CIS, TDHF, unrestricted and restricted, RPA keyword
-- Restricted CIS(D)
-- DLPNO-MP2
 
 ### Changed
 
@@ -41,9 +43,12 @@
 - Modules are now easily timed and with `P`, a sorted output for used modules is printed
 - The transformation of two-electron integrals to the molecular orbital basis is now 20% faster
 - Molecular orbital output now tells you the type of orbital (2px, 3dz^2, 4dxy etc.)
+- Speed of AO-MP2 (Laplace MP2) calculations is around 3x faster, with improved output
 - First-order vibrational perturbation theory can now be enabled with `VPT1`
 - An error will now prevent trying to calculate two-electron integrals without enough memory
 - Gaussian basis sets now only support up to "H" shells
+- The `CISTHRESH` keyword is now `EXTHRESH`
+- The `MPGRID` keyword now defaults to 10 quadrature points
 
 
 ### Fixed
@@ -53,6 +58,9 @@
 - False printing of using previous density matrix for `SCFGUESS` calciulations
 - A too old version of SciPy was being installed on installing TUNA
 - Basis set extrapolation was not working with semi-empirical dispersion
+- The MP2 unrelaxed density matrix was not correct with frozen core - check other density matrices!
+- Some excited states were missed with the previous CIS module
+
 
 <br>
 

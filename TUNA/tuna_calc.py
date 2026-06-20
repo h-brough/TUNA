@@ -1,5 +1,5 @@
 from __future__ import annotations
-from tuna_util import error, DFT_methods, constants, Method
+from tuna_util import error, exchange_correlation_functionals, constants, Method
 from dataclasses import dataclass
 import numpy as np
 
@@ -110,15 +110,15 @@ KEYWORDS = [
     Keyword("NOX", "no_DFT_exchange"),
     Keyword("NOC", "no_DFT_correlation"),
     Keyword("NOSINGLES", "no_singles"),
-    Keyword("LOOSEPNO", "loose_DLPNO_criteria"),
-    Keyword(("NORMALPNO", "MEDIUMPNO"), "medium_DLPNO_criteria"),
-    Keyword("TIGHTPNO", "tight_DLPNO_criteria"),
-    Keyword("EXTREMEPNO", "extreme_DLPNO_criteria"),
     Keyword("TD", "time_dependent"),
     Keyword("TDA", "tamm_dancoff_approximation"),
     Keyword("NL", "VV10"),
     Keyword("RELAXED", "MP2_relaxed_density"),
     Keyword("UNRELAXED", "MP2_unrelaxed_density"),
+    Keyword("STAB", "stability_analysis"),
+    Keyword("NOTRIPLETS", "calculate_no_triplets"),
+    Keyword("NOSINGLETS", "calculate_no_singlets"),
+    Keyword("[D]", "do_perturbative_doubles",),
 
     Keyword("SCANPLOT", "scan_plot"),
     Keyword("DASH", "plot_dashed_lines"),
@@ -162,8 +162,8 @@ KEYWORDS = [
     Keyword("EGY", "electric_field_gradient_y", "V", 0, float),
     Keyword("EGZ", "electric_field_gradient_z", "V", 0, float),
     Keyword("NELEC", "n_electrons_for_ip_or_ea", "V", 1, int),
-    Keyword("ROOT", "root", "V", 1, int),
-    Keyword("CISTHRESH", "CIS_contribution_threshold", "V", 1, float),
+    Keyword(("ROOT", "STATE"), "root", "V", 1, int),
+    Keyword("EXTHRESH", "excited_state_contribution_threshold", "V", 1, float),
     Keyword("NSTATES", "n_states", "V", 10, int),
 
     Keyword(("GEOMMAXITER", "MAXGEOMITER"), "geom_max_iter", "V", 30, int),
@@ -180,19 +180,12 @@ KEYWORDS = [
     Keyword(("MP3S", "MP3SCALING", "MP3SCAL"), "MP3_scaling", "V", 1 / 4, float),
     Keyword("AMPCONV", "amp_conv", "V", 1e-8, float),
     Keyword("PRINTAMPS", "print_n_amplitudes", "V", 10, int),
-    Keyword("MPGRID", "n_MP2_grid_points", "V", 20, int),
+    Keyword("MPGRID", "n_MP2_grid_points", "V", 10, int),
     Keyword("ECONV", "energy_convergence", "V", 1e-9, float),
     Keyword("RMSDP", "rms_density_change_convergence", "V", 1e-9, float),
     Keyword("MAXDP", "max_density_change_convergence", "V", 1e-9, float),
     Keyword("DIISERR", "commutator_convergence", "V", 1e-9, float),
     Keyword("CORRMAXITER", "correlated_max_iter", "V", 100, int),
-    Keyword("TCUTDO", "TCutDO", "V", 1e-2, float),
-    Keyword("TCUTPNO", "TCutPNO", "V", 1e-8, float),
-    Keyword("TSCALEPNOCORE", "TScalePNOCore", "V", 1e-2, float),
-    Keyword("FCUT", "FCut", "V", 1e-5, float),
-    Keyword("TCUTPRE", "TCutPre", "V", 1e-6, float),
-    Keyword("PAOSTHRESH", "PAOOverlapThresh", "V", 1e-8, float),
-
     
     # These keywords give two attributes, one boolean for "is this keyword requested", another for the value given
     
@@ -568,15 +561,8 @@ class Calculation:
         self.original_basis = self.basis
         self.reference = "Undefined"
 
-        self.functional = DFT_methods.get(self.method.name)
+        self.functional = exchange_correlation_functionals.get(self.method.name)
         self.DFT_calculation = self.method.density_functional_method
-
-        # Initialises the time for different parts of the calculation
-
-        self.SCF_time = 0.0
-        self.integrals_time = 0.0
-        self.correlation_time = 0.0
-        self.excited_state_time = 0.0
         
         # Interprets the keyword list and sets the calculation attributes
 

@@ -396,10 +396,15 @@ class Functional:
 
     functional_class: str = "LDA"
 
-    # Dispersion S6 value for D2 correction and b value for VV10 correction
+    # Has the exchange-correlation kernel been implemented for TD-DFT?
+
+    time_dependent_available: bool = False
+
+    # Dispersion S6 value for D2 correction and b and C values for VV10 correction
 
     D2_S6: float = 1.2
     VV10_b: float = 3.9
+    VV10_C: float = 0.0093
     VV10_scaling: float = 1.0
 
     @property
@@ -973,21 +978,31 @@ def log(message: str, calculation: any, priority: int = 1, end: str = "\n", sile
 
     if not silent:
 
-        if priority == 1: 
+        # All printing is blocked if "silent" is passed, such as in a gradient calculation
+
+        if priority == 1:
             
-            print(colored(message, colour), end=end, flush=True)
+            # For information that should always be printed
+            
+            print(colored(message, colour), end = end, flush = True)
         
         elif priority == 2 and not calculation.terse: 
             
-            print(colored(message, colour, force_color = True), end=end, flush=True)
+            # Print unless the "T" keyword is used
+
+            print(colored(message, colour, force_color = True), end = end, flush = True)
         
         elif priority == 3 and calculation.additional_print: 
             
-            print(colored(message, colour, force_color = True), end=end, flush=True)
-        
-        elif priority == 4 and calculation.debug: 
+            # Print only if the "P" keyword is used
             
-            print(colored(message, colour, force_color = True), end=end, flush=True)
+            print(colored(message, colour, force_color = True), end = end, flush = True)
+        
+        elif priority == 4 and calculation.debug:  
+            
+            # Print only if the "DEBUG" keyword is used
+
+            print(colored(message, colour, force_color = True), end = end, flush = True)
 
     return
 
@@ -1076,7 +1091,6 @@ def timer(name: str, state: int) -> None:
 
     """
 
-
     if state == 1:
         
         if name in active_timers:
@@ -1088,14 +1102,14 @@ def timer(name: str, state: int) -> None:
             # Adds the elapsed time into the "completed_timers" dictionary with the same name
 
             completed_timers[name] = completed_timers.get(name, 0) + elapsed
-
-        else:
-
-            warning(f"Tried to stop timer \"{name}\" but it was not running!")
     
-    else:
+    elif state == 0:
 
         active_timers[name] = time.perf_counter()
+
+    else:
+
+        error(f"Invalid state for timer \"{name}\". Must be 0 to start or 1 to stop.")
 
     return
 
@@ -1131,6 +1145,8 @@ def print_timer_information(calculation: any, total_time: float) -> None:
     flipped_completed_timers.sort()
 
     sorted_times = [(name, time) for time, name in flipped_completed_timers]
+
+    # Prints times from smallest to largest
 
     for name, duration in sorted_times:
 
@@ -1244,8 +1260,8 @@ electronic_structure_methods = [
     Method("OMP2", "orbital-optimised MP2 theory", method_base = "MP2"), 
     Method("IMP2", "iterative MP2 theory", unrestricted_available = False, method_base = "MP2"),
     Method("LMP2", "Laplace transform MP2 theory", unrestricted_available = False, method_base = "MP2"),
+    Method("AO-MP2", "Laplace transform MP2 theory", unrestricted_available = False, method_base = "MP2"),
     Method("SCS-MP2", "spin-component-scaled MP2 theory", method_base = "MP2"),
-    Method("DLPNO-MP2", "domain-based local pair natural orbital MP2 theory", method_base = "MP2"),
     
     Method("MP3", "MP3 theory", method_base = "MP3"),
     Method("SCS-MP3", "spin-component-scaled MP3 theory", method_base = "MP3"),
@@ -1259,6 +1275,8 @@ electronic_structure_methods = [
     Method("CIS[D]", "configuration interaction singles with perturbative doubles", excited_state_method = True),
     Method("CISD", "configuration interaction singles and doubles", method_base = "CC"),
     Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", restricted_available = False),
+    Method("TDHF", "time-dependent Hartree-Fock theory", excited_state_method = True),
+    Method("RPA", "random phase approximation", excited_state_method = True),
 
     Method("CCD", "coupled cluster doubles", method_base = "CC"),
     Method("CEPA", "coupled electron pair approximation", method_base = "CC"),
@@ -1306,6 +1324,7 @@ electronic_structure_methods = [
     Method("SCAN", "density functional theory with SCAN exchange and correlation", method_base = "DFT"),
     Method("RSCAN", "density functional theory with regularised SCAN exchange and correlation", method_base = "DFT"),
     Method("R2SCAN", "density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
+    Method("B97M-V", "density functional theory with B97M-V exchange and correlation", method_base = "DFT"),
     
     Method("PBE0", "hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
     Method("REVPBE0", "hybrid density functional theory with revised PBE exchange and correlation", method_base = "DFT"),
@@ -1358,14 +1377,14 @@ electronic_structure_methods = [
 
 
 
-DFT_methods = {
+exchange_correlation_functionals = {
 
-    "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9),
-    "SVWN"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "LSDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "LDA"          :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
+    "SVWN"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
+    "LSDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
+    "LDA"          :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
     "SVWN3"        :     Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
-    "SVWN5"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN5"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
     "SPW"          :     Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
     "PBE"          :     Functional("PBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75, VV10_b=6.4),
     "RPBE"         :     Functional("RPBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", VV10_b=4.0),
@@ -1424,6 +1443,7 @@ DFT_methods = {
     "PR2SCAN69"    :     Functional("R2SCAN", "R2SCAN", DFX=1 - 1/np.cbrt(3), HFX=1/np.cbrt(3), DFC=5/9, MPC=4/9, same_spin_scaling=0, opposite_spin_scaling=4/3, functional_class="meta-GGA", VV10_b=9.0691, VV10_scaling=0.5556),
     "B97"          :     Functional("B97", "B97", DFX=1, HFX=0.1943, DFC=1, MPC=0, functional_class="GGA"),
     "B97-D"        :     Functional("B97", "B97", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=1.25),
+    "B97M-V"       :     Functional("B97M", "B97M", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="meta-GGA", VV10_b=6, VV10_C=0.01),
 
 
 }

@@ -223,7 +223,6 @@ def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inv
 
     """
 
-
     # Transform target side to spherical harmonics
 
     S_cross = spherical_harmonic_transformation_matrix @ S_cross
