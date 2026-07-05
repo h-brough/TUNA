@@ -1,69 +1,68 @@
 # Changelog
 
-## TUNA 0.11.0 — XX/06/2026
+## TUNA 0.11.0 — 11/07/2026
 
 ### Added
 
-- Rewritten excited state module, with spin adapted and spin orbital CIS and TDHF/RPA
-- Spin-adapted perturbative doubles, CIS(D)
-- Truncated configuration interaction methods CISD (spin-orbital and spin-adapted) and CISDT (spin-orbital) 
-- New (meta-)GGA functionals: B97-D, B97M-V, revPBE, RPBE, revTPSS, SCAN, rSCAN, r2SCAN
-- New hybrid functionals: revPBE0, revPBE38, SCAN0, r2SCANh, r2SCAN0, r2SCAN50, B97
-- New double-hybrid functionals: r2SCAN0-DH, r2SCAN-CIDH, r2SCAN-QIDH, r2SCAN0-2, Pr2SCAN50, Pr2SCAN69
-- Non-local dispersion energy with VV10 with density functional-optimised parameters with `NL` keyword
-- Request the relaxed MP2 response density matrix with the `RELAXED` keyword
-- Stability analysis for RHF or UHF SCF with `STAB` keyword
-- Calculations now take place with spherical harmonics by default, leading to 30-200% speedups and smoother SCF convergence
+- Spin-adapted and unrestricted time-dependent Hartree-Fock and CIS
+- Time-dependent DFT with LSDA functionals with `TD` keyword, and optional `TDA`
+- Perturbative doubles for all TD methods with `[D]`
+- Configuration interaction methods CISD (spin-adapted and spin orbital) and CISDT (spin orbital)
+- Non-local dispersion energy with VV10 with functional-optimised parameters with `NL` keyword
+- Response density for (SCS-)MP2 and double-hybrids with `RELAXED` keyword
+- Stability analysis for restricted and unrestricted SCF with `STAB`
+- Calculations use spherical harmonics, leading to 30-200% speedups and smoother SCF convergence
 - Go back to Cartesian harmonics with the `CARTHARM` keyword
-- Molecular integrals are 3-15x faster due to better memory allocation, cacheing and OpenMP parallelisation
+- Molecular integrals are 3-15x faster due to better memory allocation and OpenMP parallelisation
 - Choose a number of OpenMP threads with the `THREADS` keyword (4 by default)
+- New (meta-)GGA functionals: B97-D, B97M-V, revPBE, RPBE, revTPSS, SCAN, rSCAN, and r2SCAN
+- New hybrid functionals: revPBE0, revPBE38, SCAN0, r2SCANh, r2SCAN0, r2SCAN50, and B97
+- New double-hybrid functionals: r2SCAN0-DH, r2SCAN-CIDH, r2SCAN-QIDH, r2SCAN0-2, Pr2SCAN50, and Pr2SCAN69
 - Basis set extrapolation between quintuple- and sextuple-zeta basis sets
-- Calculate energy in an applied electric field gradient with `EGX`, `EGY` and `EGZ`
-- Change the number of molecular orbitals to print with `PRINTMOS`
-- The `PRINTMOS` keyword will print molecular orbital information, regardless of `P` being used
+- The `DIPOLE` keyword with harmonic frequency calculations gives fully numerical intensities
+- Calculations in an applied electric field gradient with `EGX`, `EGY` and `EGZ`
+- Change the number of molecular orbitals printed with `PRINTMOS`
 - Keywords for precise SCF convergence control: `ECONV`, `MAXDP`, `RMSDP` and `DIISERR`
-- Keywords for time-dependent calculations, `TD` and to use the Tamm-Dancoff approximation `TDA`
-- `[D]` keyword for perturbative doubles correction to excited state calculations
+- Use `COLOUR` followed by a hexadecimcal, like #FF00FF, to get a specific colour for plotting
 
-- Sort out being able to use "DIPOLE" with harmonic intensities
+
 - Sort out printing MOs - make sure cartharm doesnt break everything
 - Relaxed unrestricted MP2 density
-! Triplets not right for TD-LSDA
-- Make sure P dosnt print orbiatl stuff again after TD
-- Make output for TD-UHF 6a -> 7a not 16-> 17 etc.
-- Freeze core not working for UHF
-- TDHF not working with (D)
-
+- Check whether g should be full ansym or scaled HFX ansym for unrestricted CIS(D) with different props.
+- Check double hybrid relaxed DMs, doe sit need K_XC?
+- Make sure last command in excited staets manual works
+- check all kinds of density matrices with frozen core
 
 ### Changed
 
-- SCF basis set extrapolation QZ/5Z and 5Z/6Z parameters optimised to reproduce the hydrogen atom energy 
-- The DFT module has been split off into tuna_xc, housing the exchange-correlation functionals
+- Basis set extrapolation QZ/5Z and 5Z/6Z parameters optimised to reproduce the hydrogen atom energy
+- - The DFT module has been split off into tuna_xc, housing the exchange-correlation functionals
 - The `ECONV` keyword now also affects SCF energy convergence, not just correlated calculations
 - Modules are now easily timed and with `P`, a sorted output for used modules is printed
 - The transformation of two-electron integrals to the molecular orbital basis is now 20% faster
 - Molecular orbital output now tells you the type of orbital (2px, 3dz^2, 4dxy etc.)
-- Speed of AO-MP2 (Laplace MP2) calculations is around 3x faster, with improved output
+- Speed of AO-MP2 calculations is around 3x faster, with clarified output
 - First-order vibrational perturbation theory can now be enabled with `VPT1`
 - An error will now prevent trying to calculate two-electron integrals without enough memory
 - Gaussian basis sets now only support up to "H" shells
 - The `CISTHRESH` keyword is now `EXTHRESH`
-- The `MPGRID` keyword now defaults to 10 quadrature points
-
+- The `MPGRID` keyword now defaults to 10 quadrature points rather than 20
+- Curved brackets are now also accepted as well as square brackets for keywords on Linux and MacOS
+- The `PRINTMOS` keyword will always print molecular orbital information
+- CISD and CISDT are now picked for automatic full CI rather than coupled cluster methods
+- Huge revamp of the manual
 
 ### Fixed
 
-- Some errors were printing referencing deprecated keywords
-- `SADGUESS` and `SCFGUESS` were not working for atomic calculations
-- False printing of using previous density matrix for `SCFGUESS` calciulations
-- A too old version of SciPy was being installed on installing TUNA
+- Some error messages were referencing deprecated keywords
+- The `SADGUESS` and `SCFGUESS` keywords were not working for atomic calculations
+- The MP2 unrelaxed density matrix was not correct with `FREEZECORE`
+- Some excited states were missed with the previous CIS code
 - Basis set extrapolation was not working with semi-empirical dispersion
-- The MP2 unrelaxed density matrix was not correct with frozen core - check other density matrices!
-- Some excited states were missed with the previous CIS module
-
+- An ancient version of SciPy was being installed on installing TUNA
+- Erroneous printing of guess information for `SCFGUESS` calciulations
 
 <br>
-
 
 ## TUNA 0.10.1 — 02/04/2026
 
@@ -464,7 +463,7 @@
 
 <br>
 
-## TUNA 0.4.0 
+## TUNA 0.4.0 — 29/05/2024
 
 ### Added
 
@@ -484,7 +483,7 @@
 
 <br>
 
-## TUNA 0.3.0
+## TUNA 0.3.0 — 21/05/2024
 
 ### Added
 
@@ -498,7 +497,7 @@
 
 <br>
 
-## TUNA 0.2.0
+## TUNA 0.2.0 — 02/05/2024
 
 ### Added
 
@@ -514,7 +513,7 @@
 
 <br>
 
-## TUNA 0.1.0
+## TUNA 0.1.0 — 02/04/2024
 
 ### Added
 

@@ -181,7 +181,7 @@ def break_density_spin_symmetry(P: ndarray, X: ndarray, n_occ: int, calculation:
 
     # Diagonalise the density for the natural orbitals
 
-    _, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=True)
+    _, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent = True)
 
     # Rotate the HONO and LUNO by theta degrees
 
@@ -300,7 +300,7 @@ def calculate_superposition_guess(S_inverse: ndarray, atomic_symbols: list[str],
 
     """
 
-    log("\n Calculating superposition of atomic densities for guess...  ", calculation, end="", silent=silent); sys.stdout.flush()
+    log("\n Calculating superposition of atomic densities for guess...  ", calculation, end="", silent = silent)
 
     # Forms superposition of atomic densities density matrix
 
@@ -327,7 +327,7 @@ def calculate_superposition_guess(S_inverse: ndarray, atomic_symbols: list[str],
 
     P_guess = P_guess_alpha + P_guess_beta
 
-    log("[Done]\n", calculation, silent=silent)
+    log("[Done]\n", calculation, silent = silent)
 
 
     return P_guess, P_guess_alpha, P_guess_beta
@@ -362,7 +362,7 @@ def calculate_core_guess(calculation: Calculation, H_core: ndarray, X: ndarray, 
 
     """
 
-    log("\n Diagonalising core Hamiltonian for guess...  ", calculation, end="", silent=silent); sys.stdout.flush()
+    log("\n Diagonalising core Hamiltonian for guess...  ", calculation, end="", silent = silent)
 
     # Diagonalise core Hamiltonian for one-electron guess
 
@@ -381,7 +381,7 @@ def calculate_core_guess(calculation: Calculation, H_core: ndarray, X: ndarray, 
 
     P_guess = P_guess_alpha + P_guess_beta
 
-    log("[Done]\n", calculation, silent=silent)
+    log("[Done]\n", calculation, silent = silent)
 
 
     return P_guess, P_guess_alpha, P_guess_beta
@@ -434,29 +434,29 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
     
     if calculation.reference == "RHF" and P_guess is not None and calculation.calculation_type != "SPE":
             
-        log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent=silent)
+        log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent = silent)
 
 
     elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None and calculation.calculation_type != "SPE": 
         
-        log("\n Using density matrices from previous step for guess. \n", calculation, silent=silent)
+        log("\n Using density matrices from previous step for guess. \n", calculation, silent = silent)
 
 
     elif calculation.core_guess:
 
         # Calculates guess density from core Hamiltonian
 
-        P_guess, P_guess_alpha, P_guess_beta = calculate_core_guess(calculation, integrals.H_core, X, molecule, rotate_guess_mos, silent=silent)
+        P_guess, P_guess_alpha, P_guess_beta = calculate_core_guess(calculation, integrals.H_core, X, molecule, rotate_guess_mos, silent = silent)
 
     else:
         
         # Calculates guess density from superposition of atomic densities
 
-        P_guess, P_guess_alpha, P_guess_beta = calculate_superposition_guess(S_inverse, atomic_symbols, molecule, calculation, rotate_guess_mos, X, silent=silent)
+        P_guess, P_guess_alpha, P_guess_beta = calculate_superposition_guess(S_inverse, atomic_symbols, molecule, calculation, rotate_guess_mos, X, silent = silent)
 
     if rotate_guess_mos: 
         
-        log(f" Initial guess density uses molecular orbitals rotated by {calculation.theta:.1f} degrees.\n", calculation, silent=silent)
+        log(f" Initial guess density uses molecular orbitals rotated by {calculation.theta:.1f} degrees.\n", calculation, silent = silent)
 
 
     # Calculates the guess energy by diagonalisation of the core Hamiltonian

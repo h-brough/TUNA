@@ -98,6 +98,11 @@ class Constants:
     exponent_ceiling = 600
     sigma_floor = density_floor ** 2
 
+    # Fixed threshold constants
+
+    ORB_HESS_EIG_THRESH = -1e-5
+    COMPLEX_EIG_THRESH = 1e-5
+
     # Convergence criteria for self-consistent field
 
     convergence_criteria_SCF = {
@@ -781,7 +786,7 @@ def calculate_centre_of_mass(masses: ndarray, coordinates: ndarray) -> float:
 
     """
 
-    centre_of_mass = np.einsum("i,ij->", masses, coordinates, optimize=True) / np.sum(masses)
+    centre_of_mass = np.einsum("i,ij->", masses, coordinates, optimize = True) / np.sum(masses)
     
 
     return centre_of_mass
@@ -960,7 +965,7 @@ def warning(message: str, space: int = 1) -> None:
 
 
 
-def log(message: str, calculation: any, priority: int = 1, end: str = "\n", silent: bool = False, colour: str = "light_grey") -> None:
+def log(message: str, calculation: any, priority: int = 1, silent: bool = False, end: str = "\n", colour: str = "light_grey") -> None:
 
     """
 
@@ -970,8 +975,8 @@ def log(message: str, calculation: any, priority: int = 1, end: str = "\n", sile
         message (string): Error message
         calculation (Calculation): Calculation object
         priority (int, optional): Priority of message (1 to always appear, 2 to appear unless T keyword used, and 3 only to appear if P keyword used, 4 if DEBUG)
-        end (string, optional): End of message
         silent (bool, optional): Specifies whether to print anything
+        end (string, optional): End of message
         colour (str, optional): Colour for logging
 
     """
@@ -1015,7 +1020,7 @@ def log(message: str, calculation: any, priority: int = 1, end: str = "\n", sile
 
 
 
-def log_spacer(calculation: any, priority: int = 1, start: str = "", end: str = "", space: str = " ", silent: bool = False) -> None:
+def log_spacer(calculation: any, priority: int = 1, silent: bool = False, start: str = "", end: str = "", space: str = " ") -> None:
 
     """
     
@@ -1024,14 +1029,14 @@ def log_spacer(calculation: any, priority: int = 1, start: str = "", end: str = 
     Args:
         calculation (Calculation): Calculation object
         priority (int, optional): Priority to print this
+        silent (bool, optional): Cancel logging
         start (str, optional): What to print at the start of the line
         end (str, optional): What to print at the end of the line
         space (str, optional): How many spaces to print at the start
-        silent (bool, optional): Cancel logging
     
     """
 
-    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent=silent)
+    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent = silent)
 
     return
 
@@ -1060,7 +1065,7 @@ def log_big_spacer(calculation: any, priority: int = 1, start: str = "", end: st
     
     """
 
-    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent=silent)
+    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent = silent)
 
     return
 
@@ -1268,11 +1273,15 @@ electronic_structure_methods = [
     
     Method("MP4", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
     Method("MP4[SDTQ]", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
+    Method("MP4(SDTQ)", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
     Method("MP4[SDQ]", "MP4 theory with singles, doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
+    Method("MP4(SDQ)", "MP4 theory with singles, doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
     Method("MP4[DQ]", "MP4 theory with doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
+    Method("MP4(DQ)", "MP4 theory with doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
     
     Method("CIS", "configuration interaction singles", excited_state_method = True),
     Method("CIS[D]", "configuration interaction singles with perturbative doubles", excited_state_method = True),
+    Method("CIS(D)", "configuration interaction singles with perturbative doubles", excited_state_method = True),
     Method("CISD", "configuration interaction singles and doubles", method_base = "CC"),
     Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", restricted_available = False),
     Method("TDHF", "time-dependent Hartree-Fock theory", excited_state_method = True),
@@ -1282,17 +1291,21 @@ electronic_structure_methods = [
     Method("CEPA", "coupled electron pair approximation", method_base = "CC"),
     Method("CEPA0", "coupled electron pair approximation", method_base = "CC"),
     Method("CEPA[0]", "coupled electron pair approximation", method_base = "CC"),
+    Method("CEPA(0)", "coupled electron pair approximation", method_base = "CC"),
     Method("LCCD", "linearised coupled cluster doubles", method_base = "CC"),
     Method("LCCSD", "linearised coupled cluster singles and doubles", method_base = "CC"),
     Method("QCISD", "quadratic configuration interaction singles and doubles", method_base = "CC"),
     Method("QCISD[T]", "quadratic configuration interaction singles, doubles and perturbative triples", method_base = "CC"),
+    Method("QCISD(T)", "quadratic configuration interaction singles, doubles and perturbative triples", method_base = "CC"),
     Method("CC2", "approximate coupled cluster singles and doubles", unrestricted_available = False, method_base = "CC"),
     Method("CC3", "approximate coupled cluster singles, doubles and triples", unrestricted_available = False, method_base = "CC"),
     
     Method("CCSD", "coupled cluster singles and doubles", method_base = "CC"),
     Method("CCSD[T]", "coupled cluster singles, doubles and perturbative triples", method_base = "CC"),
+    Method("CCSD(T)", "coupled cluster singles, doubles and perturbative triples", method_base = "CC"),
     Method("CCSDT","coupled cluster singles, doubles and triples", method_base = "CC"),
     Method("CCSDT[Q]", "coupled cluster singles, doubles, triples and perturbative quadruples", unrestricted_available = False, method_base = "CC"),
+    Method("CCSDT(Q)", "coupled cluster singles, doubles, triples and perturbative quadruples", unrestricted_available = False, method_base = "CC"),
     Method("CCSDTQ", "coupled cluster singles, doubles, triples and quadruples", unrestricted_available = False, method_base = "CC"),
     
     Method("HFS", "Hartree-Fock theory with Slater exchange", method_base = "DFT"),
@@ -1378,7 +1391,8 @@ electronic_structure_methods = [
 
 
 exchange_correlation_functionals = {
-
+    
+    "HF"           :     Functional(None, None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
     "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
     "SVWN"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
     "LSDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
@@ -1500,25 +1514,44 @@ basis_types = {
     "DEF2-QZVPD" : "def2-QZVPD",
     "DEF2-QZVPP" : "def2-QZVPP",
     "DEF2-QZVPPD" : "def2-QZVPPD",
-    "6-31G[D]" : "6-31G[d,p]",
-    "6-31+G[D]" : "6-31+G[d,p]",
-    "6-31++G[D]" : "6-31++G[d,p]",
-    "6-311G[D]" : "6-311G[d,p]",
-    "6-311+G[D]" : "6-311+G[d,p]",
-    "6-311++G[D]" : "6-311++G[d,p]",
-    "6-31G[D,P]" : "6-31G[d,p]",
-    "6-31+G[D,P]" : "6-31+G[d,p]",
-    "6-31++G[D,P]" : "6-31++G[d,p]",
-    "6-311G[D,P]" : "6-311G[d,p]",
-    "6-311+G[D,P]" : "6-311+G[d,p]",
-    "6-311++G[D,P]" : "6-311++G[d,p]",
-    "6-31G[2DF,P]" : "6-31G[2df,p]",
-    "6-31G[3DF,3PD]" : "6-31G[3df,3pd]",
-    "6-311G[D,P]" : "6-311G[d,p]",
-    "6-311G[2DF,2PD]" : "6-311G[2df,2pd]",
-    "6-311+G[2D,P]" : "6-311+G[2d,p]",
-    "6-311++G[2D,2P]" : "6-311++G[2d,2p]",
-    "6-311++G[3DF,3PD]" : "6-311++G[3df,3pd]",
+    "6-31G[D]" : "6-31G(d)",
+    "6-31G(D)" : "6-31G(d)",
+    "6-31+G[D]" : "6-31+G(d,p)",
+    "6-31+G(D)" : "6-31+G(d,p)",
+    "6-31++G[D]" : "6-31++G(d,p)",
+    "6-31++G(D)" : "6-31++G(d,p)",
+    "6-311G[D]" : "6-311G(d,p)",
+    "6-311G(D)" : "6-311G(d,p)",
+    "6-311+G[D]" : "6-311+G(d,p)",
+    "6-311+G(D)" : "6-311+G(d,p)",
+    "6-311++G[D]" : "6-311++G(d,p)",
+    "6-311++G(D)" : "6-311++G(d,p)",
+    "6-31G[D,P]" : "6-31G(d,p)",
+    "6-31G(D,P)" : "6-31G(d,p)",
+    "6-31+G[D,P]" : "6-31+G(d,p)",
+    "6-31+G(D,P)" : "6-31+G(d,p)",
+    "6-31++G[D,P]" : "6-31++G(d,p)",
+    "6-31++G(D,P)" : "6-31++G(d,p)",
+    "6-311G[D,P]" : "6-311G(d,p)",
+    "6-311G(D,P)" : "6-311G(d,p)",
+    "6-311+G[D,P]" : "6-311+G(d,p)",
+    "6-311+G(D,P)" : "6-311+G(d,p)",
+    "6-311++G[D,P]" : "6-311++G(d,p)",
+    "6-311++G(D,P)" : "6-311++G(d,p)",
+    "6-31G[2DF,P]" : "6-31G(2df,p)",
+    "6-31G(2DF,P)" : "6-31G(2df,p)",
+    "6-31G[3DF,3PD]" : "6-31G(3df,3pd)",
+    "6-31G(3DF,3PD)" : "6-31G(3df,3pd)",
+    "6-311G[D,P]" : "6-311G(d,p)",
+    "6-311G(D,P)" : "6-311G(d,p)",
+    "6-311G[2DF,2PD]" : "6-311G(2df,2pd)",
+    "6-311G(2DF,2PD)" : "6-311G(2df,2pd)",
+    "6-311+G[2D,P]" : "6-311+G(2d,p)",
+    "6-311+G(2D,P)" : "6-311+G(2d,p)",
+    "6-311++G[2D,2P]" : "6-311++G(2d,2p)",
+    "6-311++G(2D,2P)" : "6-311++G(2d,2p)",
+    "6-311++G[3DF,3PD]" : "6-311++G(3df,3pd)",
+    "6-311++G(3DF,3PD)" : "6-311++G(3df,3pd)",
     "PC-0" : "pc-0",
     "PC-1" : "pc-1",
     "PC-2" : "pc-2",

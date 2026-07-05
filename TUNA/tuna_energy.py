@@ -69,7 +69,7 @@ def evaluate_molecular_energy(calculation: Calculation, atomic_symbols: list, co
 
     energy_function = extrapolate_energy if calculation.extrapolate else calculate_energy
 
-    return energy_function(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, do_correlation=do_correlation, silent=silent, terse=terse, integrals=integrals)
+    return energy_function(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, do_correlation=do_correlation, silent = silent, terse=terse, integrals = integrals)
 
 
 
@@ -172,12 +172,12 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     small_name, large_name, small_header, large_header = zeta_info[small_basis_zeta]
 
-    log(f"\nBeginning basis set extrapolation with {small_name.lower()}- and {large_name.lower()}-zeta basis sets...", calculation, 1, silent=silent)
-    log(f"{small_name}-zeta basis is {basis_types.get(small_basis)}, {large_name.lower()}-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent=silent)
+    log(f"\nBeginning basis set extrapolation with {small_name.lower()}- and {large_name.lower()}-zeta basis sets...", calculation, 1, silent = silent)
+    log(f"{small_name}-zeta basis is {basis_types.get(small_basis)}, {large_name.lower()}-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent = silent)
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log(small_header, calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log(small_header, calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
     calculation.basis = small_basis
 
@@ -187,18 +187,18 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
 
     # Calculates the energy with the first basis
 
-    SCF_output_small, molecule_small, E_total_small, P_small = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent=silent, do_correlation=do_correlation, terse=terse, integrals=integrals)
+    SCF_output_small, molecule_small, E_total_small, P_small = calculate_energy(calculation, atomic_symbols, coordinates, P_guess=P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, silent = silent, do_correlation=do_correlation, terse=terse, integrals = integrals)
 
     calculation.basis = large_basis
     calculation.VV10 = do_VV10_dispersion
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log(large_header, calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start = "\n")
+    log(large_header, calculation, 1, silent = silent, colour = "white")
+    log_spacer(calculation, silent = silent)
 
     # Calculates the energy with the second basis
 
-    SCF_output_large, _, E_total_large, _ = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, do_correlation=do_correlation, silent=silent)
+    SCF_output_large, _, E_total_large, _ = calculate_energy(calculation, atomic_symbols, coordinates, terse=terse, do_correlation=do_correlation, silent = silent)
 
     E_SCF_small = SCF_output_small.energy
     E_SCF_large = SCF_output_large.energy
@@ -269,7 +269,7 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
     
     timer("Initial guess", 0)
 
-    log("\n Calculating self-consistent density for guess...  ", calculation, end="", silent=silent)
+    log("\n Calculating self-consistent density for guess...  ", calculation, end="", silent = silent)
 
     # Stores the full basis
 
@@ -279,7 +279,7 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
     
     # Performs a minimal basis SCF calculation
 
-    SCF_output, molecule_minimal, guess_energy, _ = calculate_energy(calculation, atomic_symbols, coordinates, terse=True, silent=True, do_correlation=False)
+    SCF_output, molecule_minimal, guess_energy, _ = calculate_energy(calculation, atomic_symbols, coordinates, terse=True, silent = True, do_correlation=False)
 
     # Restores calculation to old basis
 
@@ -297,7 +297,7 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
 
     P_guess = P_guess_alpha + P_guess_beta
 
-    log("[Done]", calculation, silent=silent)
+    log("[Done]", calculation, silent = silent)
 
     timer("Initial guess", 1)
 
@@ -343,13 +343,13 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
     electric_field_x = np.array([constants.SECOND_ELEC_DERIVATIVE_PROD, 0.0, 0.0]) 
     electric_field_z = np.array([0.0, 0.0, constants.SECOND_ELEC_DERIVATIVE_PROD])
 
-    log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent=silent)
+    log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent, start="\n")
-    log(f"                    Polarisability", calculation, 1, silent=silent)
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent, start="\n")
+    log(f"                    Polarisability", calculation, 1, silent = silent)
+    log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite field magnitude of {constants.SECOND_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent=silent)
+    log(f"  Using a finite field magnitude of {constants.SECOND_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
 
 
     def calculate_second_electric_field_derivative(electric_field: ndarray) -> tuple:
@@ -358,19 +358,19 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
         calculation.electric_field = original_electric_field + electric_field * 2
         
-        _, _, E_forward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+        _, _, E_forward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
 
         calculation.electric_field = original_electric_field + electric_field 
 
-        _, _, E_forward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+        _, _, E_forward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
         
         calculation.electric_field = original_electric_field - electric_field
 
-        _, _, E_backward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+        _, _, E_backward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
         
         calculation.electric_field = original_electric_field - electric_field * 2
 
-        _, _, E_backward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+        _, _, E_backward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
         
         # Calculates numerical second derivative for component of polarisability
 
@@ -381,7 +381,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     # Only two components of polarisability are indepdendent for diatomics
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent=silent, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
 
     polarisability_parallel, E_backward_parallel, E_forward_parallel = calculate_second_electric_field_derivative(electric_field_z)
     
@@ -389,13 +389,13 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.SECOND_ELEC_DERIVATIVE_PROD)
 
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent=silent, end="")
+    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end="")
     
     polarisability_perpendicular, _, _ = calculate_second_electric_field_derivative(electric_field_x)
     
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
     # Restores the electric field to baseline
     
@@ -410,15 +410,15 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     total_dipole_moment = electronic_dipole_moment + nuclear_dipole_moment
 
-    log(f"\n  Dipole moment:                         {total_dipole_moment:10.4f}", calculation, 1, silent=silent)
+    log(f"\n  Dipole moment:                         {total_dipole_moment:10.4f}", calculation, 1, silent = silent)
 
-    log(f"\n  Parallel component:                    {polarisability_parallel:10.4f}", calculation, 3, silent=silent)
-    log(f"  Perpendicular component:               {polarisability_perpendicular:10.4f}", calculation, 3, silent=silent) 
+    log(f"\n  Parallel component:                    {polarisability_parallel:10.4f}", calculation, 3, silent = silent)
+    log(f"  Perpendicular component:               {polarisability_perpendicular:10.4f}", calculation, 3, silent = silent) 
 
-    log(f"\n  Ansotropic polarisability:             {anisotropic_polarisability:10.4f}", calculation, 1, silent=silent)
-    log(f"  Isotropic polarisability:              {isotropic_polarisability:10.4f}", calculation, 1, silent=silent)
+    log(f"\n  Ansotropic polarisability:             {anisotropic_polarisability:10.4f}", calculation, 1, silent = silent)
+    log(f"  Isotropic polarisability:              {isotropic_polarisability:10.4f}", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent)
     
     timer("Polarisability", 1)
 
@@ -466,83 +466,84 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
     electric_field_x = np.array([constants.THIRD_ELEC_DERIVATIVE_PROD, 0.0, 0.0]) 
     electric_field_z = np.array([0.0, 0.0, constants.THIRD_ELEC_DERIVATIVE_PROD])
 
-    log(f"\n Beginning dipole-dipole-dipole hyperpolarisability calculation... ", calculation, 1, silent=silent)
+    log(f"\n Beginning dipole-dipole-dipole hyperpolarisability calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent, start="\n")
-    log(f"                 Hyperpolarisability", calculation, 1, silent=silent)
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent, start="\n")
+    log(f"                 Hyperpolarisability", calculation, 1, silent = silent)
+    log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite field magnitude of {constants.THIRD_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent=silent)
+    log(f"  Using a finite field magnitude of {constants.THIRD_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
 
     # Only two components of hyperpolarisability are indepdendent for diatomics
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
 
     # Performs third derivative of energy with respect to electric field along an axis
     
     calculation.electric_field = original_electric_field + electric_field_z * 3
     
-    _, _, E_forward_very_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_very_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
 
     calculation.electric_field = original_electric_field + electric_field_z * 2
     
-    _, _, E_forward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
 
     calculation.electric_field = original_electric_field + electric_field_z 
 
-    _, _, E_forward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field = original_electric_field - electric_field_z
 
-    _, _, E_backward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field = original_electric_field - electric_field_z * 2
 
-    _, _, E_backward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field = original_electric_field - electric_field_z * 3
     
-    _, _, E_backward_very_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_very_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field = original_electric_field - electric_field_z * 4
     
-    _, _, E_backward_super_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_super_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
 
     calculation.electric_field = original_electric_field + electric_field_z * 4
     
-    _, _, E_forward_super_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_super_far, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
+    # Calculates numerical third derivative for parallel component of hyperpolarisability
     
     parallel_hyperpolarisability = -1 * calculate_third_derivative(E_backward_super_far, E_backward_very_far, E_backward_far, E_backward, E_forward, E_forward_far, E_forward_very_far, E_forward_super_far, constants.THIRD_ELEC_DERIVATIVE_PROD)
 
 
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent=silent, end=""); sys.stdout.flush()
+    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end="")
     
     # Performs first derivative of energy with respect to electric field along an axis (z), of second derivative of energy wrt. field along another axis (x)
 
     calculation.electric_field = original_electric_field + electric_field_x + electric_field_z
 
-    _, _, E_forward_plus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_plus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
 
     calculation.electric_field = original_electric_field - electric_field_x + electric_field_z
 
-    _, _, E_backward_plus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_plus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field = original_electric_field + electric_field_x - electric_field_z
 
-    _, _, E_forward_minus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_minus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field = original_electric_field - electric_field_x - electric_field_z
 
-    _, _, E_backward_minus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_minus, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     # Calculates numerical third derivative for perpendicular component of hyperpolarisability
 
     perpendicular_hyperpolarisability = -(E_backward_plus - 2 * E_forward + E_forward_plus - E_backward_minus + 2 * E_backward - E_forward_minus) / (2 * constants.THIRD_ELEC_DERIVATIVE_PROD ** 3)
 
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
     # Calculates numerical dipole moment - this can be done for all electronic structure methods
 
@@ -558,12 +559,12 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
 
     total_dipole_moment = electronic_dipole_moment + nuclear_dipole_moment
 
-    log(f"\n  Dipole moment:                         {total_dipole_moment:10.4f}", calculation, 1, silent=silent)
+    log(f"\n  Dipole moment:                         {total_dipole_moment:10.4f}", calculation, 1, silent = silent)
 
-    log(f"\n  Parallel hyperpolarisability:          {parallel_hyperpolarisability:10.4f}", calculation, 1, silent=silent)
-    log(f"  Perpendicular hyperpolarisability:     {perpendicular_hyperpolarisability:10.4f}", calculation, 1, silent=silent)
+    log(f"\n  Parallel hyperpolarisability:          {parallel_hyperpolarisability:10.4f}", calculation, 1, silent = silent)
+    log(f"  Perpendicular hyperpolarisability:     {perpendicular_hyperpolarisability:10.4f}", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent)
     
     timer("Hyperpolarisability", 1)
 
@@ -607,31 +608,31 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
 
     electric_field_z = np.array([0.0, 0.0, constants.FIRST_ELEC_DERIVATIVE_PROD])
 
-    log(f"\n Beginning dipole moment calculation... ", calculation, 1, silent=silent)
+    log(f"\n Beginning dipole moment calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent, start="\n")
-    log(f"                    Dipole Moment", calculation, 1, silent=silent)
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent, start="\n")
+    log(f"                    Dipole Moment", calculation, 1, silent = silent)
+    log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite field magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent=silent)
+    log(f"  Using a finite field magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent=silent, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
 
     # Performs first derivative of energy with respect to electric field along the z-axis
 
     calculation.electric_field = original_electric_field + electric_field_z 
 
-    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field = original_electric_field - electric_field_z
 
-    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     # Calculates numerical first derivative for dipole moment
 
     electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_PROD)
 
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
     # Restores the electric field to baseline
     
@@ -641,11 +642,11 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
 
     total_dipole_moment = electronic_dipole_moment + nuclear_dipole_moment
 
-    log(f"\n  Nuclear dipole moment:                 {nuclear_dipole_moment:10.5f}", calculation, 1, silent=silent)
-    log(f"  Electronic dipole moment:              {electronic_dipole_moment:10.5f}", calculation, 1, silent=silent)
-    log(f"\n  Total dipole moment:                   {total_dipole_moment:10.5f}", calculation, 1, silent=silent)
+    log(f"\n  Nuclear dipole moment:                 {nuclear_dipole_moment:10.5f}", calculation, 1, silent = silent)
+    log(f"  Electronic dipole moment:              {electronic_dipole_moment:10.5f}", calculation, 1, silent = silent)
+    log(f"\n  Total dipole moment:                   {total_dipole_moment:10.5f}", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent)
     
     timer("Dipole moment", 1)
 
@@ -689,49 +690,49 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     electric_field_gradient_x = np.array([constants.FIRST_ELEC_DERIVATIVE_PROD, 0.0, 0.0])
     electric_field_gradient_z = np.array([0.0, 0.0, constants.FIRST_ELEC_DERIVATIVE_PROD])
 
-    log(f"\n Beginning quadrupole moment calculation... ", calculation, 1, silent=silent)
+    log(f"\n Beginning quadrupole moment calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent, start="\n")
-    log(f"                   Quadrupole Moment", calculation, 1, silent=silent)
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent, start="\n")
+    log(f"                   Quadrupole Moment", calculation, 1, silent = silent)
+    log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite gradient magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent=silent)
+    log(f"  Using a finite gradient magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent=silent, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
 
     # Performs first derivative of energy with respect to electric field gradient along the z-axis
 
     calculation.electric_field_gradient = original_electric_field_gradient + electric_field_gradient_z
 
-    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field_gradient = original_electric_field_gradient - electric_field_gradient_z
 
-    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     # Calculates numerical first derivative for z-component of quadrupole moment
 
     electronic_quadrupole_moment_z = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_PROD)
     
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent=silent, end="")
+    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end="")
 
     # Performs first derivative of energy with respect to electric field gradient along the x-axis
 
     calculation.electric_field_gradient = original_electric_field_gradient + electric_field_gradient_x
 
-    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_forward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     calculation.electric_field_gradient = original_electric_field_gradient - electric_field_gradient_x
 
-    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True, integrals=integrals)
+    _, _, E_backward_parallel, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True, integrals = integrals)
     
     # Calculates numerical first derivative for x-component of quadrupole moment
 
     electronic_quadrupole_moment_x = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_PROD)
     
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
     
     calculation.electric_field_gradient = original_electric_field_gradient
 
@@ -742,15 +743,15 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     anisotropic_quadrupole = quadrupole_moment_z - electronic_quadrupole_moment_x
     isotropic_quadrupole = (2 * electronic_quadrupole_moment_x + quadrupole_moment_z ) / 3
 
-    log(f"\n  Nuclear quadrupole moment:             {nuclear_quadrupole_moment:10.5f}", calculation, 1, silent=silent)
+    log(f"\n  Nuclear quadrupole moment:             {nuclear_quadrupole_moment:10.5f}", calculation, 1, silent = silent)
     
-    log(f"\n  Electronic quadrupole moment (x):      {electronic_quadrupole_moment_x:10.5f}", calculation, 1, silent=silent)
-    log(f"  Electronic quadrupole moment (z):      {electronic_quadrupole_moment_z:10.5f}", calculation, 1, silent=silent)
+    log(f"\n  Electronic quadrupole moment (x):      {electronic_quadrupole_moment_x:10.5f}", calculation, 1, silent = silent)
+    log(f"  Electronic quadrupole moment (z):      {electronic_quadrupole_moment_z:10.5f}", calculation, 1, silent = silent)
     
-    log(f"\n  Anisotropic quadrupole moment:         {anisotropic_quadrupole:10.5f}", calculation, 1, silent=silent)
-    log(f"  Isotropic quadrupole moment:           {isotropic_quadrupole:10.5f}", calculation, 1, silent=silent)
+    log(f"\n  Anisotropic quadrupole moment:         {anisotropic_quadrupole:10.5f}", calculation, 1, silent = silent)
+    log(f"  Isotropic quadrupole moment:           {isotropic_quadrupole:10.5f}", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent=silent)
+    log_spacer(calculation, 1, silent = silent)
     
     timer("Quadrupole moment", 1)
 
@@ -791,13 +792,13 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     """
 
-    log("\n Setting up molecule...     ", calculation, 1, silent=silent, end="")
+    log("\n Setting up molecule...     ", calculation, 1, silent = silent, end="")
 
     # Builds molecule object using calculation and atomic parameters
 
     molecule = Molecule(atomic_symbols, coordinates, calculation, do_correlation = do_correlation)
 
-    log("[Done]\n", calculation, 1, silent=silent)
+    log("[Done]\n", calculation, 1, silent = silent)
 
     # Store the harmonic transformation matrix if "CARTHARM" is not used 
 
@@ -833,7 +834,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     # Makes sure there is no linear dependency in the basis set
 
-    kern.check_overlap_eigenvalues(smallest_S_eigenvalue, calculation, silent=silent)
+    kern.check_overlap_eigenvalues(smallest_S_eigenvalue, calculation, silent = silent)
 
     P_guess, P_guess_alpha, P_guess_beta, E_guess = guess_container
 
@@ -841,11 +842,11 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
     
     if calculation.self_consistent_guess and do_correlation and P_guess is None and P_guess_alpha is None and P_guess_beta is None:
 
-        P_guess, P_guess_alpha, P_guess_beta, E_guess = calculate_self_consistent_guess(calculation, atomic_symbols, coordinates, molecule, S_inverse, silent=silent)
+        P_guess, P_guess_alpha, P_guess_beta, E_guess = calculate_self_consistent_guess(calculation, atomic_symbols, coordinates, molecule, S_inverse, silent = silent)
 
     # Calculates initial guess
 
-    E_guess, P_guess, P_guess_alpha, P_guess_beta = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, integrals, X, calculation, molecule, S_inverse, atomic_symbols, silent=silent)
+    E_guess, P_guess, P_guess_alpha, P_guess_beta = guess.setup_initial_guess(P_guess, P_guess_alpha, P_guess_beta, E_guess, integrals, X, calculation, molecule, S_inverse, atomic_symbols, silent = silent)
 
     # Force the trace of the guess density to be correct
 
@@ -855,7 +856,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     # Sets up the integration grid for DFT calculations
 
-    bfs_on_grid, weights, bf_gradients_on_grid, points = dft.set_up_integration_grid(molecule, P_guess_alpha, P_guess_beta, calculation, silent) if calculation.DFT_calculation else (None, None, None, None)
+    bfs_on_grid, weights, bf_gradients_on_grid, points = dft.set_up_integration_grid(molecule, P_guess_alpha, P_guess_beta, calculation, silent) if calculation.DFT_calculation or calculation.VV10 else (None, None, None, None)
 
     grid_container = bfs_on_grid, weights, bf_gradients_on_grid, points
 
@@ -907,7 +908,7 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
     # Builds the molecule, calculates molecular integrals and prepares the guess density
 
-    molecule, integrals, guess_container, grid_container, X, V_NN, E_dispersion = build_molecule_and_integrals(calculation, atomic_symbols, coordinates, silent, guess_container, do_correlation, integrals=integrals)
+    molecule, integrals, guess_container, grid_container, X, V_NN, E_dispersion = build_molecule_and_integrals(calculation, atomic_symbols, coordinates, silent, guess_container, do_correlation, integrals = integrals)
 
     # Updates the integral matrices if an electric field is applied
 
@@ -921,17 +922,17 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
 
     SCF_output = scf.run_self_consistent_field_cycle(molecule, calculation, integrals, V_NN, X, guess_container, grid_container, silent)
 
+    if not do_correlation:   # This prevents post-SCF calculations during the initial guess
+
+        return SCF_output, molecule, SCF_output.energy, SCF_output.P
+    
     # Calculate the non-local dispersion energy with VV10, if the "NL" keyword is used
 
-    E_dispersion = dft.calculate_VV10_energy(SCF_output.P, grid_container, calculation) if (calculation.VV10 or calculation.method.name == "B97M-V") and not silent else E_dispersion
+    E_dispersion = dft.calculate_VV10_energy(SCF_output.P, grid_container, calculation, silent) if (calculation.VV10 or calculation.method.name == "B97M-V") else E_dispersion
 
     # Stores the dispersion energy in the output object
 
     SCF_output.set_dispersion_energy(E_dispersion)
-
-    if not do_correlation:
-
-        return SCF_output, molecule, SCF_output.energy, SCF_output.P
 
     # Performs correlated calculations and prints the energy calculation output
 
@@ -1004,8 +1005,8 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
         
         step_size = -1 * step_size   
 
-    log(f"Initialising a {calculation.number_of_steps} step coordinate scan in {step_size:.4f} angstrom increments.", calculation, 1, silent=silent) 
-    log(f"Starting at a bond length of {bohr_to_angstrom(bond_length):.4f} angstroms.\n", calculation, 1, silent=silent)
+    log(f"Initialising a {calculation.number_of_steps} step coordinate scan in {step_size:.4f} angstrom increments.", calculation, 1, silent = silent) 
+    log(f"Starting at a bond length of {bohr_to_angstrom(bond_length):.4f} angstroms.\n", calculation, 1, silent = silent)
     
     bond_lengths, energies, dipole_moments = [], [], []
     P_guess, P_guess_alpha, P_guess_beta, E_guess = None, None, None, None
@@ -1017,13 +1018,13 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
 
         bond_length = calculate_bond_length(coordinates)
 
-        log_big_spacer(calculation, start="\n",space="", silent=silent)
-        log(f"Starting scan step {step} of {calculation.number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1, silent=silent)
-        log_big_spacer(calculation,space="", silent=silent)
+        log_big_spacer(calculation, start="\n",space="", silent = silent)
+        log(f"Starting scan step {step} of {calculation.number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1, silent = silent)
+        log_big_spacer(calculation,space="", silent = silent)
 
         # Calculates the energy at the coordinates (in bohr) specified
 
-        SCF_output, molecule, energy, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True, silent=silent)
+        SCF_output, molecule, energy, _ = evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha, P_guess_beta, E_guess, terse=True, silent = silent)
 
         if calculation.dipole:
 
@@ -1056,22 +1057,22 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
 
         if bond_length + step_size <= angstrom_to_bohr(0.2) and reverse: break
 
-    log_big_spacer(calculation, start="\n",space="", silent=silent)    
+    log_big_spacer(calculation, start="\n",space="", silent = silent)    
     
-    log("\nCoordinate scan calculation finished!\n\n Printing energy as a function of bond length...\n", calculation, 1, silent=silent)
-    log_spacer(calculation, silent=silent)
-    log("                   Coordinate Scan", calculation, 1, colour="white", silent=silent)
-    log_spacer(calculation, silent=silent)
-    log("  Step         Bond Length               Energy", calculation, 1, silent=silent)
-    log_spacer(calculation, silent=silent)
+    log("\nCoordinate scan calculation finished!\n\n Printing energy as a function of bond length...\n", calculation, 1, silent = silent)
+    log_spacer(calculation, silent = silent)
+    log("                   Coordinate Scan", calculation, 1, colour="white", silent = silent)
+    log_spacer(calculation, silent = silent)
+    log("  Step         Bond Length               Energy", calculation, 1, silent = silent)
+    log_spacer(calculation, silent = silent)
 
     # Prints a table of bond lengths and corresponding energies
 
     for i, (energy, bond_length) in enumerate(zip(energies, bond_lengths)):
         
-        log(f" {i + 1:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1, silent=silent)
+        log(f" {i + 1:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1, silent = silent)
 
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent)
 
     # If "DELPLOT" keyword is used, delete saved Pickle plot 
 

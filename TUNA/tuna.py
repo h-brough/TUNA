@@ -33,8 +33,8 @@ if len(sys.argv) > 1 and sys.argv[1] in ["-version", "--version"]:
 
 print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white", force_color = True) + colored(" ~~~~~~","light_grey", force_color = True)+colored(" | |  | |  | |  \\| |  /  \\","white", force_color = True)+colored(" ~~~~~~~~","light_grey", force_color = True)+colored(" / .      \\/ ) ","white", force_color = True)+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white", force_color = True)+colored(" ~~~~~~","light_grey", force_color = True)+colored(" (     ))    (","white", force_color = True)+colored(" ~~~~~\n ~~~~~~","light_grey", force_color = True)+colored(" | |  | |__| | |\\  |/ ____ \\ ","white", force_color = True)+colored("~~~~~~","light_grey", force_color = True)+colored(" \\___  ___/\\_) ","white", force_color = True)+colored("~~~~","light_grey", force_color = True)+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white", force_color = True))
 
-print(colored(f"\n\nWelcome to version {VERSION} of TUNA!\n", "light_grey", force_color=True))
-print(colored("Importing required libraries...  ", "light_grey", force_color=True),end=""); sys.stdout.flush()
+print(colored(f"\n\nWelcome to version {VERSION} of TUNA!\n", "light_grey", force_color = True))
+print(colored("Importing required libraries...  ", "light_grey", force_color = True), end = ""); sys.stdout.flush()
 
 import numpy as np
 from numpy import ndarray

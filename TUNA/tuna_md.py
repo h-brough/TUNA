@@ -48,7 +48,7 @@ def calculate_accelerations(forces: ndarray, masses: ndarray) -> ndarray:
 
     inv_masses = 1 / masses
 
-    accelerations = np.einsum("ij,i->ij", forces, inv_masses, optimize=True)
+    accelerations = np.einsum("ij,i->ij", forces, inv_masses, optimize = True)
 
     return accelerations
 
@@ -76,7 +76,7 @@ def calculate_kinetic_energy(masses: ndarray, velocities: ndarray) -> float:
 
     """
 
-    kinetic_energy = (1 / 2) * np.einsum("i,ij->", masses, velocities ** 2, optimize=True)
+    kinetic_energy = (1 / 2) * np.einsum("i,ij->", masses, velocities ** 2, optimize = True)
 
     return kinetic_energy
 
@@ -136,13 +136,13 @@ def calculate_initial_velocities(masses: ndarray, requested_temperature: float, 
 
     # Calculates initial velocities to match Maxwell-Boltzmann distribution
 
-    initial_velocities = np.einsum("i,ij->ij", np.sqrt(constants.k * requested_temperature / masses), np.random.normal(0, 1, (2, 3)), optimize=True)
+    initial_velocities = np.einsum("i,ij->ij", np.sqrt(constants.k * requested_temperature / masses), np.random.normal(0, 1, (2, 3)), optimize = True)
 
     if requested_temperature > 0:
 
         # Removes net linear momentum
 
-        linear_momentum = np.einsum("i,ij->j", masses, initial_velocities, optimize=True)
+        linear_momentum = np.einsum("i,ij->j", masses, initial_velocities, optimize = True)
         initial_velocities -= linear_momentum / np.sum(masses)
 
         # Calculates new temperature from kinetic energies after linear momentum has been removed
@@ -181,7 +181,7 @@ def calculate_forces(coordinates: ndarray, calculation: Calculation, atomic_symb
 
     """
 
-    force = opt.calculate_gradient(coordinates, calculation, atomic_symbols, silent=True)
+    force = opt.calculate_gradient(coordinates, calculation, atomic_symbols, silent = True)
 
     force_array_1D = np.array([0.0, 0.0, force])
 
@@ -359,7 +359,7 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
     # Remains silent to prevent too much printing, just prints to table
 
-    SCF_output, molecule, electronic_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent=True)
+    SCF_output, molecule, electronic_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True)
 
     # Calculates inverse mass array for acceleration calculation
     masses = molecule.masses

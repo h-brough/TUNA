@@ -53,9 +53,9 @@ def save_and_show_plot(calculation: Calculation) -> None:
 
     if calculation.save_plot:
 
-        log(f" \n Saving plot as \"{calculation.save_plot_filepath}\"...   ", calculation, 1, end=""); sys.stdout.flush()
+        log(f" \n Saving plot as \"{calculation.save_plot_filepath}\"...                  ", calculation, 1, end = "")
 
-        plt.savefig(calculation.save_plot_filepath, dpi=1200, transparent=True)
+        plt.savefig(calculation.save_plot_filepath, dpi = 1200, transparent = True)
     
         log("[Done]", calculation, 1)
 
@@ -120,7 +120,7 @@ def suppress_plot_warnings() -> None:
     logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
     logging.getLogger("matplotlib").setLevel(logging.ERROR)
 
-    warnings.filterwarnings("ignore", module="matplotlib.font_manager")
+    warnings.filterwarnings("ignore", module = "matplotlib.font_manager")
 
     # Forces the cache to build to access font list
 
@@ -166,9 +166,9 @@ def build_Cartesian_grid(bond_length: float, extent: float = 3, number_of_points
 
     # No Y axis is needed because of the symmetry of linear molecules
 
-    X, Z = np.meshgrid(x, z, indexing="ij")
+    X, Z = np.meshgrid(x, z, indexing = "ij")
     
-    grid = np.stack([X, Z], axis=0)
+    grid = np.stack([X, Z], axis = 0)
 
     return grid
 
@@ -198,7 +198,7 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
 
     temporary_pickle_path = "TUNA-plot-temp.pkl"
 
-    log("\nPlotting energy profile diagram...      ", calculation, 1, end=""); sys.stdout.flush()
+    log("\nPlotting energy profile diagram...      ", calculation, 1, end = "")
     
     suppress_plot_warnings()
 
@@ -211,7 +211,13 @@ def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energi
     legend_label = f"{calculation.method.name}/{basis_types.get(calculation.basis)}" if not calculation.method.excited_state_method else f"{calculation.method.name}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
     linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
 
-    plt.plot(bond_lengths, energies, color=calculation.scan_plot_colour,linewidth=1.75, label=legend_label, linestyle=linestyle)
+    try:
+
+        plt.plot(bond_lengths, energies, color = calculation.scan_plot_colour, linewidth = 1.75, label = legend_label, linestyle = linestyle)
+
+    except ValueError:
+
+        error(f"The hexadecimal code \"{calculation.scan_plot_colour}\" is not valid! {"Did you forget #?" if "#" not in calculation.scan_plot_colour else ""}")
 
     format_coordinate_scan_plot(calculation, ax)
 
@@ -554,7 +560,7 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         # Builds molecular orbitals on grid
 
-        molecular_orbitals_on_grid = np.einsum("ikl,ij->jkl", basis_functions_on_grid, molecular_orbitals, optimize=True)
+        molecular_orbitals_on_grid = np.einsum("ikl,ij->jkl", basis_functions_on_grid, molecular_orbitals, optimize = True)
 
         # Pickks out a particular molecular orbital
 
@@ -564,10 +570,12 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         view *= -1 if np.sign(view[np.unravel_index(np.argmin(X ** 2 + Z ** 2), X.shape)]) < 0 else 1
         
+        background_colour = 255 / 255
+
         # Molecular orbitals can be positive or negative in sign
 
         cmap = "bwr"
-        cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (255/255,) * 3, (1,0,0)], 257)
+        cmap = LinearSegmentedColormap.from_list("bwr_247", [(0,0,1), (background_colour,) * 3, (1,0,0)], 257)
 
         max_abs = np.max(np.abs(view))
         vmin, vmax = -max_abs, max_abs

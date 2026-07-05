@@ -75,10 +75,10 @@ def integrate_final_density(alpha_density: ndarray, beta_density: ndarray, densi
 
     n_electrons_DFT = integrate_on_grid(density, weights)
 
-    log(f"\n Integral of the final alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent=silent)
-    log(f" Integral of the final beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent=silent)
+    log(f"\n Integral of the final alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent = silent)
+    log(f" Integral of the final beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent = silent)
 
-    log(f" Integral of the final total density: {n_electrons_DFT:13.10f}", calculation, 1, silent=silent)
+    log(f" Integral of the final total density: {n_electrons_DFT:13.10f}", calculation, 1, silent = silent)
 
     return
 
@@ -99,7 +99,8 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
 
     Args:
         molecule (Molecule): Molecule object
-        P_guess (array): Density matrix in AO basis for guess
+        P_guess_alpha (array): Alpha density matrix in AO basis for guess
+        P_guess_beta (array): Beta density matrix in AO basis for guess
         calculation (Calculation): Calculation object
         silent (bool): Should anything be printed
     
@@ -113,7 +114,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
     
     timer("Integration grid setup", 0)
 
-    log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end="", silent=silent)
+    log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end="", silent = silent)
 
     # Reads the integration grid parameters from the requested convergence criteria
     
@@ -141,17 +142,17 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
 
     points, weights = build_molecular_grid(extent, n_radial, Lebedev_order, molecule.bond_length, molecule.atoms)
 
-    log("[Done]", calculation, 1, silent=silent)
+    log("[Done]", calculation, 1, silent = silent)
 
     # Calculates the total number of grid points, and the number per atom
 
     total_points = points.shape[1] * points.shape[2]
     points_per_atom = total_points // molecule.n_atoms
 
-    log(f"\n Integration grid has {n_radial} radial and {points.shape[2]} angular points, a Lebedev order of {Lebedev_order}.", calculation, 1, silent=silent)
-    log(f" In total there are {total_points} grid points, {points_per_atom} per atom.", calculation, 1, silent=silent)
+    log(f"\n Integration grid has {n_radial} radial and {points.shape[2]} angular points, a Lebedev order of {Lebedev_order}.", calculation, 1, silent = silent)
+    log(f" In total there are {total_points} grid points, {points_per_atom} per atom.", calculation, 1, silent = silent)
 
-    log("\n Building guess density on grid...  ", calculation, 1, end="", silent=silent)
+    log("\n Building guess density on grid...  ", calculation, 1, end="", silent = silent)
 
     # Calculates the basis functions expressed on the integration grid
 
@@ -159,7 +160,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
     
     # If a (meta-)GGA calculation has been requested, determines the basis functions expressed on the integration grid
 
-    bf_gradients_on_grid = construct_basis_function_gradients_on_grid(molecule.cartesian_basis_functions, points, molecule.spherical_harmonic_transformation_matrix) if calculation.functional.functional_class in ["GGA", "meta-GGA"] else None
+    bf_gradients_on_grid = construct_basis_function_gradients_on_grid(molecule.cartesian_basis_functions, points, molecule.spherical_harmonic_transformation_matrix) if calculation.functional.functional_class in ["GGA", "meta-GGA"] or calculation.VV10 else None
 
     # Constructs the electron density, using the guess density matrix, on the grid
 
@@ -168,7 +169,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
 
     density = alpha_density + beta_density
 
-    log("[Done]", calculation, 1, silent=silent)
+    log("[Done]", calculation, 1, silent = silent)
 
     # Integrates the grid to get the number of electrons
 
@@ -177,10 +178,10 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
 
     n_electrons_DFT = integrate_on_grid(density, weights)
 
-    log(f"\n Integral of the guess alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent=silent)
-    log(f" Integral of the guess beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent=silent)
+    log(f"\n Integral of the guess alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent = silent)
+    log(f" Integral of the guess beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent = silent)
 
-    log(f" Integral of the guess total density: {n_electrons_DFT:13.10f}\n", calculation, 1, silent=silent)
+    log(f" Integral of the guess total density: {n_electrons_DFT:13.10f}\n", calculation, 1, silent = silent)
 
     # Prints a warning of the density integral is a bit dodgy, and throws an error if its totally wrong
 
@@ -192,8 +193,8 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
 
             error("Integral for the density is completely wrong!")
     
-    log(f" Using {100 * calculation.DFX_prop:.1f}% density functional exchange and {100 * calculation.HFX_prop:.1f}% Hartree-Fock exchange.", calculation, 2, silent=silent)
-    log(f" Using {100 * calculation.DFC_prop:.1f}% density functional correlation and {100 * calculation.MPC_prop:.1f}% Moller-Plesset correlation.\n", calculation, 2, silent=silent)
+    log(f" Using {100 * calculation.DFX_prop:.1f}% density functional exchange and {100 * calculation.HFX_prop:.1f}% Hartree-Fock exchange.", calculation, 2, silent = silent)
+    log(f" Using {100 * calculation.DFC_prop:.1f}% density functional correlation and {100 * calculation.MPC_prop:.1f}% Moller-Plesset correlation.\n", calculation, 2, silent = silent)
     
     timer("Integration grid setup", 1)
 
@@ -249,11 +250,11 @@ def build_atomic_radial_and_angular_grid(radial_grid_cutoff: float, n_radial: in
 
     # Builds the Cartesian grid out of the radial and angular grids
 
-    atomic_points = np.einsum("m,in->imn", r, unit_sphere_directions, optimize=True)
+    atomic_points = np.einsum("m,in->imn", r, unit_sphere_directions, optimize = True)
 
     # Radial weights scaled by R^2 to account for surface of sphere getting larger away from nucleus
 
-    atomic_weights = np.einsum("m,m,n->mn", weights_radial, r ** 2, weights_angular, optimize=True)
+    atomic_weights = np.einsum("m,m,n->mn", weights_radial, r ** 2, weights_angular, optimize = True)
 
     return atomic_points, atomic_weights
 
@@ -418,7 +419,7 @@ def construct_molecular_orbitals_on_grid(basis_functions_on_grid: ndarray, molec
     
     """
 
-    molecular_orbitals_on_grid = np.einsum("nm,nra->mra", molecular_orbitals, basis_functions_on_grid, optimize=True)
+    molecular_orbitals_on_grid = np.einsum("nm,nra->mra", molecular_orbitals, basis_functions_on_grid, optimize = True)
 
     return molecular_orbitals_on_grid
 
@@ -533,7 +534,7 @@ def construct_basis_functions_on_grid(basis_functions: list, points: ndarray, sp
 
         # The shared exponent term for the primitive Gaussians
 
-        exponent_term = np.exp(-1 * np.einsum("i,jk->ijk", bf.exps, r_squared, optimize=True))
+        exponent_term = np.exp(-1 * np.einsum("i,jk->ijk", bf.exps, r_squared, optimize = True))
 
         # Basis functions are a product of the coefficient, norm, angular part and radial exponent part
 
@@ -543,7 +544,7 @@ def construct_basis_functions_on_grid(basis_functions: list, points: ndarray, sp
 
     # Transforms from Cartesian harmonics to spherical harmonics
 
-    bfs_on_grid = np.einsum("pq,qjk->pjk", spherical_harmonic_transformation_matrix, bfs_on_grid, optimize=True) 
+    bfs_on_grid = np.einsum("pq,qjk->pjk", spherical_harmonic_transformation_matrix, bfs_on_grid, optimize = True) 
 
     return bfs_on_grid
 
@@ -604,7 +605,7 @@ def construct_basis_function_gradients_on_grid(basis_functions: list, points: nd
 
         # The shared exponent term for the primitive Gaussians
 
-        exponent_term = np.exp(-1 * np.einsum("i,jk->ijk", bf.exps, r_squared, optimize=True))
+        exponent_term = np.exp(-1 * np.einsum("i,jk->ijk", bf.exps, r_squared, optimize = True))
 
         poly_x = X_relative ** l 
         poly_y = Y_relative ** m 
@@ -630,11 +631,11 @@ def construct_basis_function_gradients_on_grid(basis_functions: list, points: nd
 
         # Builds gradients on grid via primitives, norms and coefficients
 
-        bf_gradients_on_grid[i] = np.einsum("i,i,aijk->ajk", bf.coefs, bf.norm, primitives, optimize=True)
+        bf_gradients_on_grid[i] = np.einsum("i,i,aijk->ajk", bf.coefs, bf.norm, primitives, optimize = True)
 
     # Transforms from Cartesian harmonics to spherical harmonics
 
-    bf_gradients_on_grid = np.einsum("pq,qajk->apjk", spherical_harmonic_transformation_matrix, bf_gradients_on_grid, optimize=True) 
+    bf_gradients_on_grid = np.einsum("pq,qajk->apjk", spherical_harmonic_transformation_matrix, bf_gradients_on_grid, optimize = True) 
 
     return bf_gradients_on_grid
 
@@ -665,7 +666,7 @@ def construct_density_on_grid(P: ndarray, bfs_on_grid: ndarray, clean_density: b
 
     # Conventional expression for the electron density in terms of basis functions - using P encodes that only occupied orbitals are summed
 
-    density = np.einsum("ij,ikl,jkl->kl", P, bfs_on_grid, bfs_on_grid, optimize=True)
+    density = np.einsum("ij,ikl,jkl->kl", P, bfs_on_grid, bfs_on_grid, optimize = True)
 
     # This is on by default to get rid of very small, zero and negative values that break functionals
 
@@ -703,11 +704,11 @@ def calculate_density_gradient(P: ndarray, bfs_on_grid: ndarray, bf_gradients_on
 
     # Constructs the density gradient on a grid analytically - the factor of two is due to the symmetry of the density matrix
 
-    density_gradient = 2 * np.einsum("ij,ikl,ajkl->akl", P, bfs_on_grid, bf_gradients_on_grid, optimize=True)
+    density_gradient = 2 * np.einsum("ij,ikl,ajkl->akl", P, bfs_on_grid, bf_gradients_on_grid, optimize = True)
 
     # Builds the square density gradient, used in GGA functionals
 
-    sigma = np.einsum("akl->kl", density_gradient * density_gradient, optimize=True)
+    sigma = np.einsum("akl->kl", density_gradient * density_gradient, optimize = True)
 
     # It is important that this is cleaned at the *square* of the floor that the density and kinetic energy density are cleaned
 
@@ -741,7 +742,7 @@ def calculate_kinetic_energy_density(P: ndarray, bf_gradients_on_grid: ndarray) 
 
     # Conventional expression, with factor of a half, for non-interacting kinetic energy density used in meta-GGA functionals
 
-    tau = (1 / 2) * np.einsum("ij,aikl,ajkl->kl", P, bf_gradients_on_grid, bf_gradients_on_grid, optimize=True)
+    tau = (1 / 2) * np.einsum("ij,aikl,ajkl->kl", P, bf_gradients_on_grid, bf_gradients_on_grid, optimize = True)
     
     # This needs to be cleaned with the same floor as the density, higher than sigma
 
@@ -780,19 +781,19 @@ def calculate_V_X(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
 
     # Contribution to exchange matrix from LDA part of functional
 
-    V_X = np.einsum("kl,mkl,nkl,kl->mn", df_dn, bfs_on_grid, bfs_on_grid, weights, optimize=True)
+    V_X = np.einsum("kl,mkl,nkl,kl->mn", df_dn, bfs_on_grid, bfs_on_grid, weights, optimize = True)
 
     if df_ds is not None:
 
         # Contribution to exchange matrix from GGA part of functional
 
-        V_X += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
+        V_X += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
     if df_dt is not None:
         
         # Contribution to exchange matrix from meta-GGA part of functional
 
-        V_X += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize=True)
+        V_X += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
     # Absolutely necessary to symmetrise as these are not symmetric by design
 
@@ -833,7 +834,7 @@ def calculate_V_C(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
 
     # Contribution to exchange matrix from LDA part of functional
 
-    V_C = np.einsum("kl,mkl,nkl,kl->mn", df_dn, bfs_on_grid, bfs_on_grid, weights, optimize=True)
+    V_C = np.einsum("kl,mkl,nkl,kl->mn", df_dn, bfs_on_grid, bfs_on_grid, weights, optimize = True)
 
     if df_ds is not None:
 
@@ -841,18 +842,18 @@ def calculate_V_C(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
 
         if df_ds_ab is not None:
         
-            V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
-            V_C += 2 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds_ab, density_gradient_other_spin, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
+            V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
+            V_C += 2 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds_ab, density_gradient_other_spin, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
         else:
 
-            V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize=True)
+            V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
     if df_dt is not None:
         
         # Contribution to exchange matrix from meta-GGA part of functional
 
-        V_C += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize=True)
+        V_C += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
     # Absolutely necessary to symmetrise as these are not symmetric by design
 
@@ -953,7 +954,7 @@ def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarra
 
 
 
-def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calculation) -> float:
+def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calculation, silent: bool) -> float:
 
     """
     
@@ -963,6 +964,7 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
         P (array): Density matrix in AO basis
         grid_container (tuple): Integration grid information
         calculation (Calculation): Calculation object
+        silent (bool): Cancel logging
     
     Returns:
         E_VV10 (float): Non-local dispersion energy
@@ -979,11 +981,13 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
     timer("Non-local VV10 dispersion", 0)
 
-    log_spacer(calculation)
-    log("             Non-local Dispersion Energy", calculation)
-    log_spacer(calculation)
+    log_spacer(calculation, 1, silent)
+    log("             Non-local Dispersion Energy", calculation, 1, silent)
+    log_spacer(calculation, 1, silent)
 
-    log("  Calculating VV10 dispersion energy...      ", calculation, end = "")
+    log(f"  Using a \"b\" value of {b} and \"c\" value of {C}.", calculation, 3, silent, end="\n\n")
+
+    log("  Calculating VV10 dispersion energy...      ", calculation, 1, silent, end = "")
 
     density_full = construct_density_on_grid(P, bfs).ravel()
     sigma_full, _ = calculate_density_gradient(P, bfs, bf_grads)
@@ -1022,11 +1026,11 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
     E_VV10 = weighted_density @ (beta + (1 / 2) * inner_integral) * calculation.functional.VV10_scaling
     
-    log("[Done]", calculation)
+    log("[Done]", calculation, 1, silent)
 
-    print(f"\n  Energy from VV10:                {E_VV10:16.10f}")
+    log(f"\n  Energy from VV10:                {E_VV10:16.10f}", calculation, 1, silent)
 
-    log_spacer(calculation, end = "\n")
+    log_spacer(calculation, 1, silent, end = "\n")
 
     timer("Non-local VV10 dispersion", 1)
 
@@ -1041,47 +1045,175 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
 
 
-def calculate_exchange_correlation_kernel_matrix(molecule: Molecule, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray) -> ndarray:
+def calculate_restricted_exchange_correlation_kernel_matrix(o: slice, v: slice, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
 
     """
     
     Calculates the matrix elements of the exchange correlation kernel.
 
     Args:
-        molecule (Molecule): Molecule object
+        o (slice): Occupied slice
+        v (slice): Virtual slice
         density (array): Density on grid
         bfs_on_grid (array): Basis functions on grid
         molecular_orbitals (array): Molecular orbitals
         calculation (Calculation): Calculation object
         weights (array): Integration weights
+        silent (bool): Cancel logging
 
     Returns:
-        K_ia_jb (array): Exchange-correlation kernel matrix
+        K_XC_singlet (array): Singlet exchange-correlation kernel matrix
+        K_XC_triplet (array): Triplet exchange-correlation kernel matrix
     
     """
 
-    n_occ, n_virt = molecule.n_doubly_occ, molecule.n_doubly_virt
-
     # Builds molecular orbitals on the integration grid
+
+    log("\n Evaluating molecular orbitals on grid...    ", calculation, 1, silent, end = "")
 
     molecular_orbitals_on_grid = construct_molecular_orbitals_on_grid(bfs_on_grid, molecular_orbitals)
 
+    log("[Done]", calculation, 1, silent)
+    
+    log(" Evaluating exchange-correlation kernel...   ", calculation, 1, silent, end = "")
+
     # Calculates the second derivative of the exchange-correlation energy wrt. the density
 
-    # Need the factor of two for restricted references
+    exchange_kernel = xc.exchange_kernels.get(calculation.functional.x_functional)
 
-    f_XC = 2 * xc.calculate_Slater_exchange_kernel(density, None, None, calculation)
-    #f_XC += 2 * xc.calculate_restricted_VWN5_correlation_kernel(density, None, None, calculation) # For singlets
+    correlation_density_kernel = xc.correlation_density_kernels.get(calculation.functional.c_functional)
+    correlation_spin_kernel = xc.correlation_spin_kernels.get(calculation.functional.c_functional)
 
-    f_XC += 2 * xc.calculate_restricted_VWN5_spin_correlation_kernel(density, None, None, calculation) # For triplets
+    # Calculates the exchange kernel
+
+    f_XC = 2 * exchange_kernel(density, None, None, calculation)
+    
+    # Calculates the singlet correlation kernel
+
+    f_XC_singlet = f_XC + 2 * correlation_density_kernel(density, None, None, calculation)
+
+    # Calculates the triplet correlation kernel
+
+    f_XC_triplet = f_XC + 2 * correlation_spin_kernel(density, None, None, calculation)
+    
+    log("[Done]", calculation, 1, silent)
+
+    log(" Calculating matrix elements...              ", calculation, 1, silent, end = "")
 
     # Slice out occupied and virtual orbitals on a grid
 
-    occupied_orbitals = molecular_orbitals_on_grid[:n_occ]
-    virtual_orbitals = molecular_orbitals_on_grid[n_occ : n_occ + n_virt]
+    occupied_orbitals = molecular_orbitals_on_grid[o]
+    virtual_orbitals = molecular_orbitals_on_grid[v]
 
-    # Calculate the matrix elements of the exchange-correlation kernel
+    # Calculate the transition density for the matrix elements of the exchange-correlation kernel
 
-    K_XC = np.einsum("imn,amn,jmn,bmn,mn->iajb", occupied_orbitals, virtual_orbitals, occupied_orbitals, virtual_orbitals, f_XC * weights, optimize = True)
+    T = np.einsum("imn,amn->iamn", occupied_orbitals, virtual_orbitals, optimize = True)
     
+    # Contract the transition density with itself and the weights
+    
+    K_XC_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_XC_singlet * weights, optimize = True)
+    K_XC_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_XC_triplet * weights, optimize = True)
+
+    log("[Done]", calculation, 1, silent)
+
+    return K_XC_singlet, K_XC_triplet
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_exchange_correlation_kernel_matrix(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
+ 
+    """
+    
+    Calculates the matrix elements of the spin-resolved exchange-correlation kernel for an unrestricted reference.
+ 
+    Args:
+        o (slice): Occupied spin orbital slice
+        v (slice): Virtual spin orbital slice
+        P_alpha (array): Alpha density matrix in AO basis
+        P_beta (array): Beta density matrix in AO basis
+        bfs_on_grid (array): Basis functions on grid
+        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
+        spin_labels (list): Spin ("a" or "b") of each spin orbital, in ascending energy order
+        calculation (Calculation): Calculation object
+        weights (array): Integration weights
+        silent (bool): Cancel logging
+ 
+    Returns:
+        K_XC (array): spin orbital exchange-correlation kernel matrix
+    
+    """
+ 
+    # Builds the spin orbitals on the integration grid 
+ 
+    log("\n Evaluating molecular orbitals on grid...    ", calculation, 1, silent, end = "")
+ 
+    basis_functions_spin_blocked = np.concatenate([bfs_on_grid, bfs_on_grid], axis = 0)
+ 
+    molecular_orbitals_on_grid = construct_molecular_orbitals_on_grid(basis_functions_spin_blocked, C_spin_block)
+ 
+    log("[Done]", calculation, 1, silent)
+    
+    log(" Evaluating exchange-correlation kernel...   ", calculation, 1, silent, end = "")
+ 
+    # Constructs the alpha and beta densities on the grid, including any frozen-core electrons
+ 
+    alpha_density = construct_density_on_grid(P_alpha, bfs_on_grid)
+    beta_density = construct_density_on_grid(P_beta, bfs_on_grid)
+ 
+    total_density = alpha_density + beta_density
+ 
+    # The exchange kernel follows from the spin-scaling relation
+ 
+    exchange_kernel = xc.exchange_kernels.get(calculation.functional.x_functional)
+    correlation_kernel = xc.unrestricted_correlation_kernels.get(calculation.functional.c_functional)
+
+    f_X_aa = 2 * exchange_kernel(2 * alpha_density, None, None, calculation)
+    f_X_bb = 2 * exchange_kernel(2 * beta_density, None, None, calculation)
+ 
+    # The correlation kernel is evaluated analytically as the spin-resolved second derivatives of the correlation energy
+ 
+    f_C_aa, f_C_ab, f_C_bb = correlation_kernel(alpha_density, beta_density, total_density, None, None, None, None, None, calculation)
+ 
+    # The same-spin blocks combine the analytic exchange and correlation; the opposite-spin block is correlation only
+ 
+    f_aa = f_X_aa + f_C_aa
+    f_bb = f_X_bb + f_C_bb
+
+    f_ab = f_C_ab
+ 
+    log("[Done]", calculation, 1, silent)
+ 
+    log(" Calculating matrix elements...              ", calculation, 1, silent, end = "")
+ 
+    # Slice out occupied and virtual spin orbitals on the grid
+ 
+    occupied_orbitals = molecular_orbitals_on_grid[o]
+    virtual_orbitals  = molecular_orbitals_on_grid[v]
+
+    # Transition densities, split by the spin of the occupied spin orbital
+
+    T = np.einsum("imn,amn->iamn", occupied_orbitals, virtual_orbitals, optimize = True)
+
+    alpha_occupied = np.array(spin_labels)[o] == "a"
+    beta_occupied = np.array(spin_labels)[o] == "b"
+
+    T_alpha = T * alpha_occupied[:, None, None, None]
+    T_beta  = T * beta_occupied[:, None, None, None]
+
+    # Contracts each spin block of the kernel with the appropriate transition densities
+
+    K_XC = np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_alpha, f_aa * weights, optimize = True)
+    K_XC += np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_beta,  f_ab * weights, optimize = True)
+    K_XC += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_alpha, f_ab * weights, optimize = True)
+    K_XC += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_bb * weights, optimize = True)
+
+    log("[Done]", calculation, 1, silent)
+
     return K_XC

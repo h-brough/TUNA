@@ -39,7 +39,7 @@ def calculate_exchange_matrix(P: ndarray, ERI_AO: ndarray) -> ndarray:
 
     """
 
-    K = np.einsum("ilkj,kl->ij", ERI_AO, P, optimize=True)
+    K = np.einsum("ilkj,kl->ij", ERI_AO, P, optimize = True)
 
     return K
 
@@ -67,7 +67,7 @@ def calculate_coulomb_matrix(P: ndarray, ERI_AO: ndarray) -> ndarray:
 
     """
 
-    J = np.einsum("ijkl,kl->ij", ERI_AO, P, optimize=True)
+    J = np.einsum("ijkl,kl->ij", ERI_AO, P, optimize = True)
 
     return J
 
@@ -102,7 +102,7 @@ def format_output_line(E_total: float, delta_E: float, max_DP: float, RMS_DP: fl
 
     damping_factor = f"{damping_factor:.3f}" if damping_factor != 0 else " ---"
 
-    log(f"  {step:3.0f}  {E_total:16.10f}  {delta_E:16.10f} {RMS_DP:16.10f} {max_DP:16.10f} {commutator:16.10f}     {damping_factor}", calculation, 1, silent=silent)   
+    log(f"  {step:3.0f}  {E_total:16.10f}  {delta_E:16.10f} {RMS_DP:16.10f} {max_DP:16.10f} {commutator:16.10f}     {damping_factor}", calculation, 1, silent = silent)   
 
     return
 
@@ -133,21 +133,21 @@ def log_convergence_acceleration(calculation: Calculation, silent: bool = False)
 
     if calculation.DIIS:
 
-        log(f" Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration", calculation, silent=silent, end="")
+        log(f" Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration", calculation, silent = silent, end="")
 
         if damping:
             
             if damping_factor: 
                 
-                log(f", with static damping.", calculation, silent=silent)
+                log(f", with static damping.", calculation, silent = silent)
 
             else: 
                 
-                log(f", with dynamic damping.", calculation, silent=silent)
+                log(f", with dynamic damping.", calculation, silent = silent)
 
         else:
 
-            log(f".", calculation, silent=silent)
+            log(f".", calculation, silent = silent)
             
     else:
 
@@ -155,19 +155,19 @@ def log_convergence_acceleration(calculation: Calculation, silent: bool = False)
             
             if damping_factor: 
 
-                log(f" Using static damping for convergence acceleration.", calculation, silent=silent)
+                log(f" Using static damping for convergence acceleration.", calculation, silent = silent)
 
             else:
                 
-                log(f" Using dynamic damping for convergence acceleration.", calculation, silent=silent)
+                log(f" Using dynamic damping for convergence acceleration.", calculation, silent = silent)
 
 
     if not calculation.DIIS and not damping:
 
-        log(" No convergence acceleration used.", calculation, 1, silent=silent)
+        log(" No convergence acceleration used.", calculation, 1, silent = silent)
 
 
-    log("", calculation, silent=silent)
+    log("", calculation, silent = silent)
 
     return
 
@@ -323,9 +323,9 @@ def check_convergence(SCF_conv: float, step: int, delta_E: float, max_DP: float,
 
     if abs(delta_E) < SCF_conv["delta_E"] and abs(max_DP) < SCF_conv["max_DP"] and abs(RMS_DP) < SCF_conv["RMS_DP"] and abs(commutator) < SCF_conv["commutator"]: 
 
-        log_big_spacer(calculation, silent=silent)
+        log_big_spacer(calculation, silent = silent)
         
-        log(f"\n Self-consistent field converged in {step} cycles!\n", calculation, 1, silent=silent)
+        log(f"\n Self-consistent field converged in {step} cycles!\n", calculation, 1, silent = silent)
 
         converged = True
 
@@ -366,18 +366,18 @@ def calculate_restricted_electronic_energy(integrals: Integrals, P: ndarray, J: 
 
     # Calculates one-electron contributions to energy
 
-    kinetic_energy = np.einsum("ij,ij->", P, integrals.T, optimize=True)
-    nuclear_electron_energy = np.einsum("ij,ij->", P, integrals.V_NE, optimize=True)
-    electric_field_energy = np.einsum("ij,ij->", P, integrals.F, optimize=True)
-    electric_field_gradient_energy = np.einsum("ij,ij->", P, integrals.G, optimize=True)
+    kinetic_energy = np.einsum("ij,ij->", P, integrals.T, optimize = True)
+    nuclear_electron_energy = np.einsum("ij,ij->", P, integrals.V_NE, optimize = True)
+    electric_field_energy = np.einsum("ij,ij->", P, integrals.F, optimize = True)
+    electric_field_gradient_energy = np.einsum("ij,ij->", P, integrals.G, optimize = True)
 
     # Calculates classical electron-electron repulsion energy
 
-    coulomb_energy = (1 / 2) * np.einsum("ij,ij->", P, J, optimize=True)
+    coulomb_energy = (1 / 2) * np.einsum("ij,ij->", P, J, optimize = True)
 
     # Calculates Fock exchange energy, multiplies by HFX proportion for hybrid functionals
 
-    exchange_energy = -(1 / 4) * np.einsum("ij,ij->", P, K, optimize=True) * calculation.HFX_prop
+    exchange_energy = -(1 / 4) * np.einsum("ij,ij->", P, K, optimize = True) * calculation.HFX_prop
 
     correlation_energy = 0
 
@@ -444,19 +444,19 @@ def calculate_unrestricted_electronic_energy(integrals: Integrals, P_alpha: ndar
 
     # Calculates one-electron contributions to energy
 
-    kinetic_energy = np.einsum("ij,ij->", P, integrals.T, optimize=True)
-    nuclear_electron_energy = np.einsum("ij,ij->", P, integrals.V_NE, optimize=True)
-    electric_field_energy = np.einsum("ij,ij->", P, integrals.F, optimize=True)
-    electric_field_gradient_energy = np.einsum("ij,ij->", P, integrals.G, optimize=True)
+    kinetic_energy = np.einsum("ij,ij->", P, integrals.T, optimize = True)
+    nuclear_electron_energy = np.einsum("ij,ij->", P, integrals.V_NE, optimize = True)
+    electric_field_energy = np.einsum("ij,ij->", P, integrals.F, optimize = True)
+    electric_field_gradient_energy = np.einsum("ij,ij->", P, integrals.G, optimize = True)
 
     # Calculates classical electron-electron repulsion energy
 
-    coulomb_energy = (1 / 2) * np.einsum("ij,ij->",P, J_alpha + J_beta, optimize=True)
+    coulomb_energy = (1 / 2) * np.einsum("ij,ij->",P, J_alpha + J_beta, optimize = True)
 
     # Calculates Fock exchange energy, multiplies by HFX proportion for hybrid functionals
 
-    exchange_energy_alpha = -(1 / 2) * np.einsum("ij,ij->", P_alpha, K_alpha, optimize=True) * calculation.HFX_prop
-    exchange_energy_beta = -(1 / 2) * np.einsum("ij,ij->", P_beta, K_beta, optimize=True) * calculation.HFX_prop
+    exchange_energy_alpha = -(1 / 2) * np.einsum("ij,ij->", P_alpha, K_alpha, optimize = True) * calculation.HFX_prop
+    exchange_energy_beta = -(1 / 2) * np.einsum("ij,ij->", P_beta, K_beta, optimize = True) * calculation.HFX_prop
 
     correlation_energy = 0
 
@@ -708,7 +708,7 @@ def calculate_unrestricted_exchange_correlation_matrix(P_alpha: ndarray, P_beta:
 
         # This sigma is made here as the others are cleaned in calculate_density_gradient - do NOT clean this
 
-        sigma_ab = np.einsum("akl,akl->kl", density_gradient_alpha, density_gradient_beta, optimize=True)
+        sigma_ab = np.einsum("akl,akl->kl", density_gradient_alpha, density_gradient_beta, optimize = True)
 
         if calculation.functional.functional_class == "meta-GGA":
 
@@ -1045,7 +1045,7 @@ def apply_DIIS(commutator: float, step: int, P: ndarray, P_alpha: ndarray, P_bet
             P_alpha_DIIS = None
             P_beta_DIIS = None
 
-            log("\n                                       ~~~~~~ Resetting DIIS ~~~~~~", calculation, end="\n\n",silent=silent)
+            log("\n                                       ~~~~~~ Resetting DIIS ~~~~~~", calculation, end="\n\n",silent = silent)
 
         if P_alpha_DIIS is not None and P_beta_DIIS is not None: 
             
@@ -1142,7 +1142,7 @@ def run_restricted_SCF_cycle(step: int, E: float, P: ndarray, P_old: ndarray, P_
     
     # Applies DIIS to calculate a new density matrix
 
-    P, Fock_vector, DIIS_error_vector, _, _ = apply_DIIS(commutator, step, P, P / 2, P / 2,Fock_vector, DIIS_error_vector, n_doubly_occ, n_doubly_occ, X, 2, calculation, silent=silent)
+    P, Fock_vector, DIIS_error_vector, _, _ = apply_DIIS(commutator, step, P, P / 2, P / 2,Fock_vector, DIIS_error_vector, n_doubly_occ, n_doubly_occ, X, 2, calculation, silent = silent)
 
     P_before_damping = P
 
@@ -1261,7 +1261,7 @@ def run_unrestricted_SCF_cycle(step: int, E: float, P_alpha: ndarray, P_old_alph
     
     # Applies DIIS to calculate new density matrices
 
-    _, Fock_vector, DIIS_error_vector, P_alpha, P_beta = apply_DIIS(commutator, step, P, P_alpha, P_beta, Fock_vector, DIIS_error_vector, n_alpha, n_beta, X, 1, calculation, silent=silent)
+    _, Fock_vector, DIIS_error_vector, P_alpha, P_beta = apply_DIIS(commutator, step, P, P_alpha, P_beta, Fock_vector, DIIS_error_vector, n_alpha, n_beta, X, 1, calculation, silent = silent)
 
     P_before_damping_alpha = P_alpha
     P_before_damping_beta = P_beta
@@ -1312,21 +1312,21 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
     
     timer("Self-consistent field", 0)
 
-    log(" Beginning self-consistent field cycle...\n", calculation, 1, silent=silent)
+    log(" Beginning self-consistent field cycle...\n", calculation, 1, silent = silent)
 
     # Prints convergence criteria specified
 
-    log(f" Using \"{calculation.SCF_conv["name"]}\" SCF convergence criteria.", calculation, 1, silent=silent)
+    log(f" Using \"{calculation.SCF_conv["name"]}\" SCF convergence criteria.", calculation, 1, silent = silent)
 
     # Prints the chosen SCF convergence acceleration options
 
-    log_convergence_acceleration(calculation, silent=silent)
+    log_convergence_acceleration(calculation, silent = silent)
 
-    log_big_spacer(calculation, silent=silent)
-    log("                                   Self-consistent Field Cycle Iterations", calculation, 1, silent=silent, colour="white")
-    log_big_spacer(calculation, silent=silent)
-    log("  Step          E                 DE             RMS(DP)          MAX(DP)           Error       Damping", calculation, 1, silent=silent)
-    log_big_spacer(calculation, silent=silent)
+    log_big_spacer(calculation, silent = silent)
+    log("                                   Self-consistent Field Cycle Iterations", calculation, 1, silent = silent, colour="white")
+    log_big_spacer(calculation, silent = silent)
+    log("  Step          E                 DE             RMS(DP)          MAX(DP)           Error       Damping", calculation, 1, silent = silent)
+    log_big_spacer(calculation, silent = silent)
 
     # Unpacks useful calculation properties
 
@@ -1411,15 +1411,15 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
 
         # Data outputted to console
 
-        format_output_line(E_total, delta_E, maxDP, rmsDP, damping_factor, step, commutator, calculation, silent=silent)
+        format_output_line(E_total, delta_E, maxDP, rmsDP, damping_factor, step, commutator, calculation, silent = silent)
 
-        log(f"Density Matrix:\n {P} \n", calculation, 4, silent=silent)
-        log(f"Epsilons:\n {epsilons} \n", calculation, 4, silent=silent)
-        log(f"Molecular Orbitals:\n {molecular_orbitals} \n", calculation, 4, silent=silent)
+        log(f"Density Matrix:\n {P} \n", calculation, 4, silent = silent)
+        log(f"Epsilons:\n {epsilons} \n", calculation, 4, silent = silent)
+        log(f"Molecular Orbitals:\n {molecular_orbitals} \n", calculation, 4, silent = silent)
 
         # Check for convergence of energy and density
 
-        if check_convergence(calculation.SCF_conv, step, delta_E, maxDP, rmsDP, commutator, calculation, silent=silent): 
+        if check_convergence(calculation.SCF_conv, step, delta_E, maxDP, rmsDP, commutator, calculation, silent = silent): 
             
             kinetic_energy, nuclear_electron_energy, coulomb_energy, exchange_energy, correlation_energy, electric_field_energy, electric_field_gradient_energy = energy_components
 

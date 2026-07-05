@@ -135,7 +135,7 @@ def calculate_restricted_MP2_energy(t_ijab: ndarray, g_oovv: ndarray) -> float:
 
     """
 
-    E_MP2 = np.einsum("ijab,ijab->", t_ijab, 2 * g_oovv - g_oovv.transpose(0, 1, 3, 2), optimize=True)
+    E_MP2 = np.einsum("ijab,ijab->", t_ijab, 2 * g_oovv - g_oovv.transpose(0, 1, 3, 2), optimize = True)
 
     return E_MP2
 
@@ -163,7 +163,7 @@ def calculate_unrestricted_MP2_energy(t_ijab: ndarray, g_oovv: ndarray) -> float
 
     """
 
-    E_MP2 = (1 / 4) * np.einsum("ijab,ijab->", t_ijab, g_oovv, optimize=True)
+    E_MP2 = (1 / 4) * np.einsum("ijab,ijab->", t_ijab, g_oovv, optimize = True)
 
     return E_MP2
 
@@ -174,7 +174,7 @@ def calculate_unrestricted_MP2_energy(t_ijab: ndarray, g_oovv: ndarray) -> float
 
 
 
-def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab: ndarray, g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int) -> ndarray:
+def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab: ndarray, g: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation) -> ndarray:
 
     """
     
@@ -189,6 +189,7 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
         v (slice): Virtual orbital slice
         n_occ (int): Number of occupied orbitals
         n_virt (int): Number of virtual orbitals
+        calculation (Calculation): Calculation object
 
     Returns:
         P_relaxed (array): Relaxed density matrix in the spatial orbital basis
@@ -210,10 +211,10 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
 
     L_ia_explicit = np.zeros((n_occ, n_virt))
 
-    L_ia_explicit[o, :] += np.einsum("ijbc,ajbc->ia", w_ijab, g[v, o, v, v], optimize=True)
-    L_ia_explicit[o, :] += np.einsum("jibc,jabc->ia", w_ijab, g[o, v, v, v], optimize=True)
-    L_ia_explicit -= np.einsum("jkab,jkib->ia", w_ijab, g[o, o, o_occ, v], optimize=True)
-    L_ia_explicit -= np.einsum("jkba,jkbi->ia", w_ijab, g[o, o, v, o_occ], optimize=True)
+    L_ia_explicit[o, :] += np.einsum("ijbc,ajbc->ia", w_ijab, g[v, o, v, v], optimize = True)
+    L_ia_explicit[o, :] += np.einsum("jibc,jabc->ia", w_ijab, g[o, v, v, v], optimize = True)
+    L_ia_explicit -= np.einsum("jkab,jkib->ia", w_ijab, g[o, o, o_occ, v], optimize = True)
+    L_ia_explicit -= np.einsum("jkba,jkbi->ia", w_ijab, g[o, o, v, o_occ], optimize = True)
 
     # Builds a source density, initially the unrelaxed density
 
@@ -223,8 +224,8 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
 
     if n_frozen > 0:
 
-        L_fi_explicit = np.einsum("ijab,Fjab->Fi", w_ijab, g[f, o, v, v], optimize=True)
-        L_fi_explicit += np.einsum("jibc,jFbc->Fi", w_ijab, g[o, f, v, v], optimize=True)
+        L_fi_explicit = np.einsum("ijab,Fjab->Fi", w_ijab, g[f, o, v, v], optimize = True)
+        L_fi_explicit += np.einsum("jibc,jFbc->Fi", w_ijab, g[o, f, v, v], optimize = True)
 
         z_fi = L_fi_explicit / (epsilons[o][None, :] - epsilons[f][:, None])
 
@@ -240,9 +241,9 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
 
     # Calculates the Fock-response contribution to the occupied-virtual orbital gradient
 
-    L_ia_fock = 4 * np.einsum("pq,apiq->ia", P_source, g[v, :, o_occ, :], optimize=True)
-    L_ia_fock -= np.einsum("pq,aipq->ia", P_source, g[v, o_occ, :, :], optimize=True)
-    L_ia_fock -= np.einsum("pq,aiqp->ia", P_source, g[v, o_occ, :, :], optimize=True)
+    L_ia_fock = 4 * np.einsum("pq,apiq->ia", P_source, g[v, :, o_occ, :], optimize = True)
+    L_ia_fock -= np.einsum("pq,aipq->ia", P_source, g[v, o_occ, :, :], optimize = True)
+    L_ia_fock -= np.einsum("pq,aiqp->ia", P_source, g[v, o_occ, :, :], optimize = True)
 
     # Builds the total occupied-virtual orbital gradient
 
@@ -250,8 +251,8 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
 
     # Builds the occupied-virtual orbital Hessian blocks
 
-    A_ia_jb = ci.calculate_restricted_singlet_A_matrix(g, epsilons, o_occ, v, n_occ, n_virt, calculation)
-    B_ia_jb = ci.calculate_restricted_singlet_B_matrix(g, o_occ, v, n_occ, n_virt)
+    A_ia_jb = ci.calculate_restricted_singlet_A_matrix(g, epsilons, o_occ, v, calculation)
+    B_ia_jb = ci.calculate_restricted_singlet_B_matrix(g, o_occ, v, calculation)
 
     # Solves the system of equations for the Z-vector
 
@@ -293,8 +294,8 @@ def calculate_restricted_second_order_triples_amplitudes(e_ijkabc: ndarray, t_ij
 
     """
 
-    t_ijkabc = np.einsum("ijad,ckbd->ijkabc", t_ijab, g[v, o, v, v], optimize=True) 
-    t_ijkabc -= np.einsum("ilab,cklj->ijkabc", t_ijab, g[v, o, o, o], optimize=True)
+    t_ijkabc = np.einsum("ijad,ckbd->ijkabc", t_ijab, g[v, o, v, v], optimize = True) 
+    t_ijkabc -= np.einsum("ilab,cklj->ijkabc", t_ijab, g[v, o, o, o], optimize = True)
     
     # Permutes the ia/jb/kc columns to ensure correct symmetry
 
@@ -332,8 +333,8 @@ def build_t_amplitude_density_contribution(n_basis: int, t_ijab: ndarray, o: sli
 
     # Occupied-occupied and virtual-virtual contributions to MP2 density matrix
 
-    P_MP2[v, v] +=  (1 / 2) * np.einsum('ijac,ijbc->ab', t_ijab, t_ijab, optimize=True)
-    P_MP2[o, o] += - (1 / 2) * np.einsum('jkab,ikab->ij', t_ijab, t_ijab, optimize=True)
+    P_MP2[v, v] +=  (1 / 2) * np.einsum('ijac,ijbc->ab', t_ijab, t_ijab, optimize = True)
+    P_MP2[o, o] += - (1 / 2) * np.einsum('jkab,ikab->ij', t_ijab, t_ijab, optimize = True)
 
     return P_MP2
 
@@ -371,8 +372,8 @@ def spin_component_scale_MP2_energy(E_MP2_SS: float, E_MP2_OS: float, same_spin_
     E_MP2_SS_scaled = same_spin_scaling * E_MP2_SS 
     E_MP2_OS_scaled = opposite_spin_scaling * E_MP2_OS 
 
-    log(f"  Same-spin scaling: {same_spin_scaling:.3f}", calculation, 1, silent=silent)
-    log(f"  Opposite-spin scaling: {opposite_spin_scaling:.3f}\n", calculation, 1, silent=silent)
+    log(f"  Same-spin scaling: {same_spin_scaling:.3f}", calculation, 1, silent = silent)
+    log(f"  Opposite-spin scaling: {opposite_spin_scaling:.3f}\n", calculation, 1, silent = silent)
     
 
     return E_MP2_SS_scaled, E_MP2_OS_scaled
@@ -423,18 +424,18 @@ def calculate_natural_orbitals(P: ndarray, X: ndarray, calculation: Calculation,
 
     if calculation.method.name != "UHF": 
         
-        log("", calculation, 2, silent=silent)
+        log("", calculation, 2, silent = silent)
 
-    log("  Natural orbital occupancies: \n", calculation, 2, silent=silent)
+    log("  Natural orbital occupancies: \n", calculation, 2, silent = silent)
 
     # Prints out all the natural orbital occupancies, the sum and the trace of the density matrix
 
     for i in range(len(natural_orbital_occupancies)): 
         
-        log(f"    {(i + 1):2.0f}. {natural_orbital_occupancies[i]:12.8f}", calculation, 2, silent=silent)
+        log(f"    {(i + 1):2.0f}. {natural_orbital_occupancies[i]:12.8f}", calculation, 2, silent = silent)
 
-    log(f"\n  Sum of natural orbital occupancies: {sum_of_occupancies:.6f}", calculation, 2, silent=silent)
-    log(f"  Trace of density matrix: {np.trace(P_orthogonal):.6f}", calculation, 2, silent=silent)
+    log(f"\n  Sum of natural orbital occupancies: {sum_of_occupancies:.6f}", calculation, 2, silent = silent)
+    log(f"  Trace of density matrix: {np.trace(P_orthogonal):.6f}", calculation, 2, silent = silent)
 
 
     return natural_orbital_occupancies, natural_orbitals
@@ -474,21 +475,21 @@ def run_restricted_Laplace_MP2(integrals: Integrals, F: ndarray, calculation: Ca
 
     P /= 2
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("          Laplace Transform AO-MP2 Energy", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("          Laplace Transform AO-MP2 Energy", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
-    log("  Constructing hole density matrix...        ", calculation, 1, end="", silent=silent)
+    log("  Constructing hole density matrix...        ", calculation, 1, end="", silent = silent)
 
     # This is the unoccupied orbital analogue to the HF density matrix
 
     Q = np.linalg.inv(integrals.S)-P
 
-    log("[Done]", calculation, 1, silent=silent)
+    log("[Done]", calculation, 1, silent = silent)
 
-    tau = calculation.n_MP2_grid_points
+    tau = calculation.num_laplace_points
 
-    log(f"  Building {tau} point integration grid...      ", calculation, 1, end="", silent=silent)
+    log(f"\n  Building {tau} point integration grid...      {"" if tau > 9 else " "}", calculation, 1, end="", silent = silent)
 
     k = np.arange(1, tau + 1)
 
@@ -506,7 +507,7 @@ def run_restricted_Laplace_MP2(integrals: Integrals, F: ndarray, calculation: Ca
 
     L_AO = 2 * integrals.ERI_AO - integrals.ERI_AO.swapaxes(1, 3)
 
-    log("[Done]", calculation, 1, silent=silent)
+    log("[Done]", calculation, 1, silent = silent)
 
     f = []
 
@@ -514,16 +515,16 @@ def run_restricted_Laplace_MP2(integrals: Integrals, F: ndarray, calculation: Ca
 
     for i in range(len(s)):
         
-        log(f"\n   ~~~~~ Grid Point {i + 1} of {len(s)}  ~~~~~ ", calculation, 1, silent=silent)
+        log(f"\n   ~~~~~ Grid Point {i + 1} of {len(s)}  ~~~~~ ", calculation, 1, silent = silent)
 
-        log("\n   Building energy-weighted densities...     ", calculation, 1, end="", silent=silent)
+        log("\n   Building energy-weighted densities...     ", calculation, 1, end="", silent = silent)
 
         X = scipy.linalg.expm(s[i] * P @ F) @ P
         Y = scipy.linalg.expm(-s[i] * Q @ F) @ Q
         
-        log("[Done]", calculation, 1, silent=silent)
+        log("[Done]", calculation, 1, silent = silent)
         
-        log("   Calculating energy components...          ", calculation, 1, end="", silent=silent)
+        log("   Calculating energy components...          ", calculation, 1, end="", silent = silent)
 
         # This approach is around 3x faster than einsum
 
@@ -534,19 +535,19 @@ def run_restricted_Laplace_MP2(integrals: Integrals, F: ndarray, calculation: Ca
 
         e = np.tensordot(L4, integrals.ERI_AO, axes=([0, 1, 2, 3], [3, 2, 1, 0]))   
 
-        log("[Done]", calculation, 1, silent=silent)
+        log("[Done]", calculation, 1, silent = silent)
 
         f.append(e * ds_dr[i])
 
-    log("\n  Integrating MP2 energy...                  ", calculation, 1, end="", silent=silent)
+    log("\n  Integrating MP2 energy...                  ", calculation, 1, end="", silent = silent)
 
     # Uses the quadrature method to integrate the energy components as a functional of s(r).
 
     E_MP2 = -1 / (tau + 1) * np.sum(f) 
 
-    log("[Done]", calculation, 1, silent=silent)
+    log("[Done]", calculation, 1, silent = silent)
 
-    log(f"\n  MP2 correlation energy:           {E_MP2:15.10f}", calculation, 1, silent=silent)
+    log(f"\n  MP2 correlation energy:           {E_MP2:15.10f}", calculation, 1, silent = silent)
 
 
     return E_MP2
@@ -619,16 +620,16 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
     E_MP2 = 0
     E_conv = calculation.energy_convergence
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("           Iterative MP2 Energy and Density ", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("           Iterative MP2 Energy and Density ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
     
-    log(f"\n  Tolerance for energy convergence:    {E_conv:.10f}", calculation, 1, silent=silent)
-    log(f"\n  Starting MP2 iterations...\n", calculation, 1, end="", silent=silent)
+    log(f"\n  Tolerance for energy convergence:    {E_conv:.10f}", calculation, 1, silent = silent)
+    log(f"\n  Starting MP2 iterations...\n", calculation, 1, end="", silent = silent)
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("  Step          Correlation E               DE", calculation, 1, silent=silent)
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("  Step          Correlation E               DE", calculation, 1, silent = silent)
+    log_spacer(calculation, silent = silent)
 
     for step in range(1, calculation.correlated_max_iter + 1):
 
@@ -636,10 +637,10 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
 
         # Calculates this residual, minimises over time
 
-        R_ijab = ERI_MO[o, o, v, v] + np.einsum("ap,ijpq,qb->ijab", F[v, v], t_ijab, S[v, v], optimize=True) 
-        R_ijab += np.einsum("ap,ijpq,qb->ijab", S[v, v], t_ijab, F[v, v], optimize=True)
-        R_ijab += -1 * np.einsum("ap,ik,kjpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize=True) 
-        R_ijab += -1 * np.einsum("ap,kj,ikpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize=True)
+        R_ijab = ERI_MO[o, o, v, v] + np.einsum("ap,ijpq,qb->ijab", F[v, v], t_ijab, S[v, v], optimize = True) 
+        R_ijab += np.einsum("ap,ijpq,qb->ijab", S[v, v], t_ijab, F[v, v], optimize = True)
+        R_ijab += -1 * np.einsum("ap,ik,kjpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize = True) 
+        R_ijab += -1 * np.einsum("ap,kj,ikpq,qb->ijab", S[v, v], F[o, o], t_ijab, S[v, v], optimize = True)
 
         # Calculates updated doubles amplitudes
 
@@ -647,17 +648,17 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
 
         # Calculates pair energies
 
-        e_ij = np.einsum("ijab,ijab->ij", ERI_MO[o, o, v, v] + R_ijab, 4 * t_ijab - 2 * t_ijab.swapaxes(0, 1), optimize=True) 
+        e_ij = np.einsum("ijab,ijab->ij", ERI_MO[o, o, v, v] + R_ijab, 4 * t_ijab - 2 * t_ijab.swapaxes(0, 1), optimize = True) 
 
         # Total MP2 energy is a sum of pair correlation energies
 
-        E_MP2 = (1 / 2) * np.einsum("ij->", e_ij, optimize=True) 
+        E_MP2 = (1 / 2) * np.einsum("ij->", e_ij, optimize = True) 
 
         # Change from last iteration
 
         delta_E = np.abs(E_MP2 - E_MP2_old)
 
-        log(f"  {step:3.0f}           {E_MP2:13.10f}         {delta_E:13.10f}", calculation, 1, silent=silent)
+        log(f"  {step:3.0f}           {E_MP2:13.10f}         {delta_E:13.10f}", calculation, 1, silent = silent)
 
         if delta_E < E_conv: break 
 
@@ -665,11 +666,11 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
             
             error("Iterative MP2 failed to converge! Try increasing the maximum iterations?")
 
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent)
 
-    log(f"\n  MP2 correlation energy:             {E_MP2:.10f}", calculation, 1, silent=silent)
+    log(f"\n  MP2 correlation energy:             {E_MP2:.10f}", calculation, 1, silent = silent)
 
-    log("\n  Constructing MP2 unrelaxed density...", calculation, 1, end="", silent=silent)
+    log("\n  Constructing MP2 unrelaxed density...", calculation, 1, end="", silent = silent)
 
     P_MP2 = np.zeros_like(F)
 
@@ -679,8 +680,8 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
 
     # Builds the MP2 contribution to density
 
-    P_MP2[o, o] += -2 * np.einsum('ikab,kjab->ij', t_ijab, t_ijab, optimize=True)
-    P_MP2[v, v] += 2 * np.einsum('ijac,ijcb->ab', t_ijab, t_ijab, optimize=True)
+    P_MP2[o, o] += -2 * np.einsum('ikab,kjab->ij', t_ijab, t_ijab, optimize = True)
+    P_MP2[v, v] += 2 * np.einsum('ijac,ijcb->ab', t_ijab, t_ijab, optimize = True)
 
     # Converts from the spatial MO basis to the AO basis
 
@@ -688,11 +689,11 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
 
     P_alpha = P_beta = P / 2
 
-    log("      [Done]", calculation, 1, silent=silent)
+    log("      [Done]", calculation, 1, silent = silent)
     
     # If requested, calculates and prints the natural orbitals
 
-    natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent) if calculation.natural_orbitals else (None, None)
+    natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent = silent) if calculation.natural_orbitals else (None, None)
 
 
     return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
@@ -744,11 +745,11 @@ def run_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_orbitals: n
 
     do_spin_component_scaling = "SCS" in calculation.method.name or calculation.DFT_calculation and calculation.functional.functional_type == "spin-scaled double-hybrid" or calculation.DFT_calculation and (calculation.SSS_requested or calculation.OSS_requested)
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("                MP2 Energy and Density ", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("                MP2 Energy and Density ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
-    log("  Calculating MP2 correlation energy... ", calculation, 1, end="", silent=silent)
+    log("  Calculating MP2 correlation energy... ", calculation, 1, end="", silent = silent)
     
     # Convert to physicists' notation
 
@@ -759,26 +760,33 @@ def run_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_orbitals: n
     
     # Spin-components of energy
 
-    E_MP2_OS = np.einsum("ijab,ijab,ijab->", ERI_MO_ijab, ERI_MO_ijab, e_ijab, optimize=True)
-    E_MP2_SS = np.einsum("ijab,ijab,ijab->", ERI_MO_ijab, ERI_MO_ijab_ansym, e_ijab, optimize=True)
+    E_MP2_OS = np.einsum("ijab,ijab,ijab->", ERI_MO_ijab, ERI_MO_ijab, e_ijab, optimize = True)
+    E_MP2_SS = np.einsum("ijab,ijab,ijab->", ERI_MO_ijab, ERI_MO_ijab_ansym, e_ijab, optimize = True)
 
-    log("     [Done]\n", calculation, 1, silent=silent)
+    log("     [Done]\n", calculation, 1, silent = silent)
 
     # Optionally scales the same- and opposite-spin contributions to energy
 
     if do_spin_component_scaling:
 
-        E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent=silent)
+        E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent = silent)
 
     # Total MP2 energy
 
     E_MP2 = E_MP2_SS + E_MP2_OS
 
-    log(f"  Same spin contribution:             {E_MP2_SS:13.10f}", calculation, 1, silent=silent)
-    log(f"  Opposite spin contribution:         {E_MP2_OS:13.10f}", calculation, 1, silent=silent)
-    log(f"\n  MP2 correlation energy:             {E_MP2:13.10f}", calculation, 1, silent=silent)
+    log(f"  Same spin contribution:             {E_MP2_SS:13.10f}", calculation, 1, silent = silent)
+    log(f"  Opposite spin contribution:         {E_MP2_OS:13.10f}", calculation, 1, silent = silent)
+    log(f"\n  MP2 correlation energy:             {E_MP2:13.10f}", calculation, 1, silent = silent)
     
-    log(f"\n  Constructing MP2 {"relaxed" if calculation.MP2_relaxed_density else "unrelaxed"} density...   ", calculation, 1, end="", silent=silent)
+    if calculation.relaxed_density:
+
+        log(f"\n  Constructing MP2 relaxed density...   ", calculation, 1, end="", silent = silent)
+
+    else:
+
+        log(f"\n  Constructing MP2 unrelaxed density... ", calculation, 1, end="", silent = silent)
+
 
     # Opposite and same-spin t-amplitudes
 
@@ -792,23 +800,23 @@ def run_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_orbitals: n
 
     # Build OS-only MP2 density in MO-space 
 
-    P_MP2_OS[o, o] += -(1 / 2) * np.einsum('kiab,kjab->ij', t_ijab_OS, t_ijab_OS, optimize=True)
-    P_MP2_OS[v, v] += (1 / 2) * np.einsum('ijbc,ijac->ab', t_ijab_OS, t_ijab_OS, optimize=True)
+    P_MP2_OS[o, o] += -(1 / 2) * np.einsum('kiab,kjab->ij', t_ijab_OS, t_ijab_OS, optimize = True)
+    P_MP2_OS[v, v] += (1 / 2) * np.einsum('ijbc,ijac->ab', t_ijab_OS, t_ijab_OS, optimize = True)
 
     # Build SS-only MP2 density in MO-space
 
-    P_MP2_SS[o, o] += -1 * np.einsum('kiab,kjab->ij', t_ijab_SS, t_ijab_SS, optimize=True)
-    P_MP2_SS[v, v] += np.einsum('ijbc,ijac->ab', t_ijab_SS, t_ijab_SS, optimize=True)
+    P_MP2_SS[o, o] += -1 * np.einsum('kiab,kjab->ij', t_ijab_SS, t_ijab_SS, optimize = True)
+    P_MP2_SS[v, v] += np.einsum('ijbc,ijac->ab', t_ijab_SS, t_ijab_SS, optimize = True)
 
     # If the "RELAXED" keyword is used, calculates the relaxed MP2 density matrix
     
-    if calculation.MP2_relaxed_density:
+    if calculation.relaxed_density:
 
             w_ijab_OS = 2 * ERI_MO_ijab * e_ijab
             w_ijab_SS = 2 * ERI_MO_ijab_ansym * e_ijab
 
-            P_MP2_OS = calculate_restricted_relaxed_MP2_density_matrix(P_MP2_OS, w_ijab_OS, ERI_MO, epsilons, o, v, molecule.n_doubly_occ, molecule.n_basis - molecule.n_doubly_occ)
-            P_MP2_SS = calculate_restricted_relaxed_MP2_density_matrix(P_MP2_SS, w_ijab_SS, ERI_MO, epsilons, o, v, molecule.n_doubly_occ, molecule.n_basis - molecule.n_doubly_occ)
+            P_MP2_OS = calculate_restricted_relaxed_MP2_density_matrix(P_MP2_OS, w_ijab_OS, ERI_MO, epsilons, o, v, molecule.n_doubly_occ, molecule.n_basis - molecule.n_doubly_occ, calculation)
+            P_MP2_SS = calculate_restricted_relaxed_MP2_density_matrix(P_MP2_SS, w_ijab_SS, ERI_MO, epsilons, o, v, molecule.n_doubly_occ, molecule.n_basis - molecule.n_doubly_occ, calculation)
             
     # Optionally applies spin scaling to density
 
@@ -830,13 +838,13 @@ def run_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_orbitals: n
     P = molecular_orbitals @ P_MP2 @ molecular_orbitals.T
     P_alpha = P_beta = P / 2
 
-    log("     [Done]", calculation, 1, silent=silent)
+    log("     [Done]", calculation, 1, silent = silent)
     
     # Calculates and prints natural orbital occupancies
 
     if calculation.natural_orbitals: 
         
-        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
+        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent = silent)
 
 
     return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
@@ -900,9 +908,9 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
 
     do_spin_component_scaling = "SCS" in calculation.method.name or calculation.DFT_calculation and calculation.functional.functional_type == "spin-scaled double-hybrid" or calculation.DFT_calculation and (calculation.SSS_requested or calculation.OSS_requested)
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("                MP2 Energy and Density ", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("                MP2 Energy and Density ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
     # Spin-blocks alpha and beta orbitals separately
 
@@ -920,7 +928,7 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
     g_a = ci.antisymmetrise_integrals(ERI_SO_a)
     g_b = ci.antisymmetrise_integrals(ERI_SO_b)
 
-    log("  Calculating MP2 correlation energy... ", calculation, 1, end="", silent=silent)
+    log("  Calculating MP2 correlation energy... ", calculation, 1, end="", silent = silent)
     
     epsilons_alpha = np.sort(epsilons_alpha)
     epsilons_beta = np.sort(epsilons_beta)
@@ -956,26 +964,26 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
 
     E_MP2_OS = E_ab
 
-    log("     [Done]\n", calculation, 1, silent=silent)
+    log("     [Done]\n", calculation, 1, silent = silent)
 
     # Optionally scales the same- and opposite-spin contributions to energy
 
     if do_spin_component_scaling: 
         
-        E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent=silent)
+        E_MP2_SS, E_MP2_OS = spin_component_scale_MP2_energy(E_MP2_SS, E_MP2_OS, calculation.same_spin_scaling, calculation.opposite_spin_scaling, calculation, silent = silent)
 
 
     E_MP2 = E_MP2_SS + E_MP2_OS
 
-    log(f"  Energy from alpha-alpha pairs:      {E_aa:13.10f}", calculation, 1, silent=silent)
-    log(f"  Energy from beta-beta pairs:        {E_bb:13.10f}", calculation, 1, silent=silent)
-    log(f"  Energy from alpha-beta pairs:       {E_ab:13.10f}", calculation, 1, silent=silent)
+    log(f"  Energy from alpha-alpha pairs:      {E_aa:13.10f}", calculation, 1, silent = silent)
+    log(f"  Energy from beta-beta pairs:        {E_bb:13.10f}", calculation, 1, silent = silent)
+    log(f"  Energy from alpha-beta pairs:       {E_ab:13.10f}", calculation, 1, silent = silent)
 
-    log(f"\n  Same spin contribution:             {E_MP2_SS:13.10f}", calculation, 1, silent=silent)
-    log(f"  Opposite spin contribution:         {E_MP2_OS:13.10f}", calculation, 1, silent=silent)
-    log(f"\n  MP2 correlation energy:             {E_MP2:13.10f}", calculation, 1, silent=silent)
+    log(f"\n  Same spin contribution:             {E_MP2_SS:13.10f}", calculation, 1, silent = silent)
+    log(f"  Opposite spin contribution:         {E_MP2_OS:13.10f}", calculation, 1, silent = silent)
+    log(f"\n  MP2 correlation energy:             {E_MP2:13.10f}", calculation, 1, silent = silent)
 
-    log("\n  Constructing MP2 unrelaxed density... ", calculation, 1, end="", silent=silent)
+    log("\n  Constructing MP2 unrelaxed density... ", calculation, 1, end="", silent = silent)
     
     P_MP2_a = np.zeros((n_SO // 2, n_SO // 2))
     P_MP2_b = np.zeros((n_SO // 2, n_SO // 2))
@@ -1020,13 +1028,13 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
 
     P = P_alpha + P_beta
 
-    log("     [Done]", calculation, 1, silent=silent)
+    log("     [Done]", calculation, 1, silent = silent)
     
     # Calculates and prints natural orbital occupancies
 
     if calculation.natural_orbitals: 
         
-         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
+         natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent = silent)
 
     return E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
@@ -1071,22 +1079,22 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
     n_occ = molecule.n_occ
     n_virt = molecule.n_virt
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("      Orbital-optimised MP2 Energy and Density ", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("      Orbital-optimised MP2 Energy and Density ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
-    log(f"\n  Tolerance for energy convergence:    {calculation.energy_convergence:.10f}", 1, silent=silent)
-    log("\n  Starting orbital-optimised MP2 iterations...\n", calculation, 1, end="", silent=silent)
+    log(f"\n  Tolerance for energy convergence:    {calculation.energy_convergence:.10f}", 1, silent = silent)
+    log("\n  Starting orbital-optimised MP2 iterations...\n", calculation, 1, end="", silent = silent)
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("  Step          Correlation E               DE", calculation, 1, silent=silent)
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("  Step          Correlation E               DE", calculation, 1, silent = silent)
+    log_spacer(calculation, silent = silent)
     
     E_OMP2_old = 0
 
     n = np.newaxis
 
-    # Spin blocks and transforms core Hamiltonian to spin-orbital basis
+    # Spin blocks and transforms core Hamiltonian to spin orbital basis
 
     H_core_spin_block = ci.spin_block_core_Hamiltonian(H_core)
     H_core_SO = ci.transform_matrix_AO_to_SO(H_core_spin_block, C_spin_block)
@@ -1112,7 +1120,7 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
 
     for iteration in range(1, calculation.correlated_max_iter + 1):
 
-        # Build Fock matrix from core Hamiltonian and two-electron integrals, in spin-orbital basis
+        # Build Fock matrix from core Hamiltonian and two-electron integrals, in spin orbital basis
 
         F = ci.build_spin_orbital_Fock_matrix(H_core_SO, g, slice(0, n_occ))
         
@@ -1125,8 +1133,8 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
         # Full t amplitudes for MP2, with permutations 
 
         t_1 = g[v, v, o, o]
-        t_2 = np.einsum('ac,cbij->abij', F_prime[v, v], t_abij, optimize=True)
-        t_3 = np.einsum('ki,abkj->abij', F_prime[o, o], t_abij, optimize=True)
+        t_2 = np.einsum('ac,cbij->abij', F_prime[v, v], t_abij, optimize = True)
+        t_3 = np.einsum('ki,abkj->abij', F_prime[o, o], t_abij, optimize = True)
         t_abij = t_1 + t_2 - t_2.transpose((1, 0, 2, 3)) - t_3 + t_3.transpose((0, 1, 3, 2))
         
         # Epsilons tensor built and transposed to abij shape, forms final t amplitudes by multiplication
@@ -1149,8 +1157,8 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
 
         # Forms other contributions to two-particle density matrix and their permutations 
 
-        D_2 = np.einsum('rp,sq->rspq', P_corr, P_ref, optimize=True)
-        D_3 = np.einsum('rp,sq->rspq', P_ref, P_ref, optimize=True)
+        D_2 = np.einsum('rp,sq->rspq', P_corr, P_ref, optimize = True)
+        D_3 = np.einsum('rp,sq->rspq', P_ref, P_ref, optimize = True)
 
         # Forms total two-particle density matrix
 
@@ -1158,7 +1166,7 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
 
         # Forms generalised Fock matrix
 
-        F = np.einsum('pr,rq->pq', H_core_SO, P_OMP2, optimize=True) + (1 / 2) * np.einsum('prst,stqr->pq', g, D, optimize=True)
+        F = np.einsum('pr,rq->pq', H_core_SO, P_OMP2, optimize = True) + (1 / 2) * np.einsum('prst,stqr->pq', g, D, optimize = True)
 
         # Only consider rotations between occupied and virtual orbitals, as only these change the energy
 
@@ -1180,7 +1188,7 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
 
         # Calculates total energy from one-electron and two-electron contractions with one- and two-electron Hamiltonians
 
-        E_OMP2 = V_NN + np.einsum("ij,ij->", P_OMP2, H_core_SO, optimize=True) + (1 / 4) * np.einsum("ijkl,ijkl->", D, g, optimize=True)
+        E_OMP2 = V_NN + np.einsum("ij,ij->", P_OMP2, H_core_SO, optimize = True) + (1 / 4) * np.einsum("ijkl,ijkl->", D, g, optimize = True)
 
         # Determines change in energy, and correlation energy by removing original reference (HF) energy
 
@@ -1188,7 +1196,7 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
         delta_E = E_OMP2 - E_OMP2_old
 
         # Formats output lines nicely
-        log(f"  {iteration:3.0f}           {E_OMP2:13.10f}         {delta_E:13.10f}", calculation, 1, silent=silent)
+        log(f"  {iteration:3.0f}           {E_OMP2:13.10f}         {delta_E:13.10f}", calculation, 1, silent = silent)
         
         # Updates the "old" energy, to continue loop
 
@@ -1205,21 +1213,21 @@ def run_OMP2(molecule: Molecule, calculation: Calculation, g: ndarray, C_spin_bl
             error("Orbital-optimised MP2 failed to converge! Try increasing the maximum iterations?")
 
 
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent)
 
-    log(f"\n  OMP2 correlation energy:            {E_OMP2:.10f}", calculation, 1, silent=silent)
+    log(f"\n  OMP2 correlation energy:            {E_OMP2:.10f}", calculation, 1, silent = silent)
 
-    log("\n  Constructing OMP2 relaxed density...", calculation, 1, end="", silent=silent)
+    log("\n  Constructing OMP2 relaxed density...", calculation, 1, end="", silent = silent)
     
     P, P_alpha, P_beta = ci.transform_P_SO_to_AO(P_OMP2, C_spin_block, n_SO)
 
-    log("       [Done]", calculation, 1, silent=silent)
+    log("       [Done]", calculation, 1, silent = silent)
 
     # Calculates natural orbitals from OMP2 density
 
     if calculation.natural_orbitals: 
         
-        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent=silent)
+        natural_orbital_occupancies, natural_orbitals = calculate_natural_orbitals(P, X, calculation, silent = silent)
 
     return E_OMP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
 
@@ -1256,11 +1264,11 @@ def run_restricted_MP3(calculation: Calculation, g: ndarray, epsilons: ndarray, 
 
     """
     
-    log_spacer(calculation, silent=silent, start="\n")
-    log("                      MP3 Energy  ", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("                      MP3 Energy  ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
-    log("  Calculating amplitudes and multipliers...  ", calculation, 1, end="", silent=silent)
+    log("  Calculating amplitudes and multipliers...  ", calculation, 1, end="", silent = silent)
 
     # Forms MP2 Lagrange multipliers
 
@@ -1269,24 +1277,24 @@ def run_restricted_MP3(calculation: Calculation, g: ndarray, epsilons: ndarray, 
     # Builds epsilons tensor and t-amplitudes
 
     e_ijab = ci.build_doubles_epsilons_tensor(epsilons, epsilons, o, o, v, v)
-    t_ijab = np.einsum("ijab,aibj->ijab", e_ijab, g[v, o, v, o], optimize=True)
+    t_ijab = np.einsum("ijab,aibj->ijab", e_ijab, g[v, o, v, o], optimize = True)
     
     # Taken from Molecular Electronic-Structure Theory
 
-    t_dash_ijab = 2 * np.einsum("ijab,iajb->ijab", e_ijab, L[o, v, o, v], optimize=True)
+    t_dash_ijab = 2 * np.einsum("ijab,iajb->ijab", e_ijab, L[o, v, o, v], optimize = True)
     
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
-    log("  Calculating MP3 correlation energy...      ", calculation, 1, end="", silent=silent)
+    log("  Calculating MP3 correlation energy...      ", calculation, 1, end="", silent = silent)
     
     # Equations from Molecular Electronic-Structure Theory
 
-    X_ijab = (1 / 2) * np.einsum("ijcd,acbd->ijab", t_ijab, g[v, v, v, v], optimize=True) + (1 / 2) * np.einsum("klab,kilj->ijab", t_ijab, g[o, o, o, o], optimize=True)
-    X_ijab += np.einsum("ikac,bjkc->ijab", t_ijab, L[v, o, o, v], optimize=True) - np.einsum("kjac,bcki->ijab", t_ijab, g[v, v, o, o], optimize=True) - np.einsum("kiac,bjkc->ijab", t_ijab, g[v, o, o, v], optimize=True) 
+    X_ijab = (1 / 2) * np.einsum("ijcd,acbd->ijab", t_ijab, g[v, v, v, v], optimize = True) + (1 / 2) * np.einsum("klab,kilj->ijab", t_ijab, g[o, o, o, o], optimize = True)
+    X_ijab += np.einsum("ikac,bjkc->ijab", t_ijab, L[v, o, o, v], optimize = True) - np.einsum("kjac,bcki->ijab", t_ijab, g[v, v, o, o], optimize = True) - np.einsum("kiac,bjkc->ijab", t_ijab, g[v, o, o, v], optimize = True) 
 
-    E_MP3 = np.einsum("ijab,ijab->", t_dash_ijab, X_ijab, optimize=True)
+    E_MP3 = np.einsum("ijab,ijab->", t_dash_ijab, X_ijab, optimize = True)
 
-    log(f"[Done]\n\n  MP3 correlation energy:             {E_MP3:13.10f}", calculation, 1, silent=silent)
+    log(f"[Done]\n\n  MP3 correlation energy:             {E_MP3:13.10f}", calculation, 1, silent = silent)
 
     # Applies Grimme's default scaling to MP3 energy if SCS-MP3 is requested, then prints this information
 
@@ -1294,9 +1302,9 @@ def run_restricted_MP3(calculation: Calculation, g: ndarray, epsilons: ndarray, 
 
         E_MP3 *= calculation.MP3_scaling
         
-        log(f"\n  Scaling for MP3: {calculation.MP3_scaling:.3f}\n", calculation, 1, silent=silent)
-        log(f"  Scaled MP3 correlation energy:    {E_MP3:15.10f}", calculation, 1, silent=silent)
-        log(f"  SCS-MP3 correlation energy:       {(E_MP3 + E_MP2):15.10f}", calculation, 1, silent=silent)
+        log(f"\n  Scaling for MP3: {calculation.MP3_scaling:.3f}\n", calculation, 1, silent = silent)
+        log(f"  Scaled MP3 correlation energy:    {E_MP3:15.10f}", calculation, 1, silent = silent)
+        log(f"  SCS-MP3 correlation energy:       {(E_MP3 + E_MP2):15.10f}", calculation, 1, silent = silent)
 
 
     return E_MP3, e_ijab, t_ijab, t_dash_ijab, L
@@ -1330,19 +1338,19 @@ def run_unrestricted_MP3(calculation: Calculation, g: ndarray, epsilons_sorted: 
 
     """
 
-    log_spacer(calculation, silent=silent, start="\n")
-    log("                      MP3 Energy  ", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("                      MP3 Energy  ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
     e_ijab = ci.build_doubles_epsilons_tensor(epsilons_sorted, epsilons_sorted, o, o, v, v)
 
-    log("  Calculating MP3 correlation energy...      ", calculation, 1, end="", silent=silent)
+    log("  Calculating MP3 correlation energy...      ", calculation, 1, end="", silent = silent)
         
-    E_MP3 = (1 / 8) * np.einsum('ijab,klij,abkl,ijab,klab->', g[o, o, v, v], g[o, o, o, o], g[v, v, o, o], e_ijab, e_ijab, optimize=True)
-    E_MP3 += (1 / 8) * np.einsum('ijab,abcd,cdij,ijab,ijcd->', g[o, o, v, v], g[v, v, v, v], g[v, v, o, o], e_ijab, e_ijab, optimize=True)
-    E_MP3 += np.einsum('ijab,kbcj,acik,ijab,ikac->', g[o, o, v, v], g[o, v, v, o], g[v, v, o, o], e_ijab, e_ijab, optimize=True)
+    E_MP3 = (1 / 8) * np.einsum('ijab,klij,abkl,ijab,klab->', g[o, o, v, v], g[o, o, o, o], g[v, v, o, o], e_ijab, e_ijab, optimize = True)
+    E_MP3 += (1 / 8) * np.einsum('ijab,abcd,cdij,ijab,ijcd->', g[o, o, v, v], g[v, v, v, v], g[v, v, o, o], e_ijab, e_ijab, optimize = True)
+    E_MP3 += np.einsum('ijab,kbcj,acik,ijab,ikac->', g[o, o, v, v], g[o, v, v, o], g[v, v, o, o], e_ijab, e_ijab, optimize = True)
 
-    log(f"[Done]\n\n  MP3 correlation energy:             {E_MP3:13.10f}", calculation, 1, silent=silent)
+    log(f"[Done]\n\n  MP3 correlation energy:             {E_MP3:13.10f}", calculation, 1, silent = silent)
 
     # Applies Grimme's default scaling to MP3 energy if SCS-MP3 is requested, then prints this information
 
@@ -1350,9 +1358,9 @@ def run_unrestricted_MP3(calculation: Calculation, g: ndarray, epsilons_sorted: 
 
         E_MP3 *= calculation.MP3_scaling
         
-        log(f"\n  Scaling for MP3: {calculation.MP3_scaling:.3f}\n", calculation, 1, silent=silent)
-        log(f"  Scaled MP3 correlation energy:    {E_MP3:15.10f}", calculation, 1, silent=silent)
-        log(f"  SCS-MP3 correlation energy:       {(E_MP3 + E_MP2):15.10f}", calculation, 1, silent=silent)
+        log(f"\n  Scaling for MP3: {calculation.MP3_scaling:.3f}\n", calculation, 1, silent = silent)
+        log(f"  Scaled MP3 correlation energy:    {E_MP3:15.10f}", calculation, 1, silent = silent)
+        log(f"  SCS-MP3 correlation energy:       {(E_MP3 + E_MP2):15.10f}", calculation, 1, silent = silent)
 
 
     return E_MP3
@@ -1390,28 +1398,28 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
 
     """
     
-    log_spacer(calculation, silent=silent, start="\n")
-    log("                      MP4 Energy  ", calculation, 1, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent, start="\n")
+    log("                      MP4 Energy  ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent)
 
-    log("  Calculating amplitudes and multipliers...  ", calculation, 1, end="", silent=silent)
+    log("  Calculating amplitudes and multipliers...  ", calculation, 1, end="", silent = silent)
 
     # Doesn't calculate singles contributions for MP4[DQ]
 
-    if calculation.method.name != "MP4[DQ]":
+    if calculation.method.name not in ["MP4[DQ]", "MP4(DQ)"]:
         
         # Builds second-order singles epsilons tensor and singles t-amplitudes
 
         e_ia = ci.build_singles_epsilons_tensor(epsilons, o, v)
 
-        t_ia_2 = np.einsum("klad,kild->ia", t_ijab, L[o, o, o, v], optimize=True) - np.einsum("kicd,adkc->ia", t_ijab, L[v, v, o, v], optimize=True)
+        t_ia_2 = np.einsum("klad,kild->ia", t_ijab, L[o, o, o, v], optimize = True) - np.einsum("kicd,adkc->ia", t_ijab, L[v, v, o, v], optimize = True)
         
         t_ia_2 *= -e_ia
 
     # Builds second-order doubles t_amplitudes for MP4
 
-    t_ijab_2 = -1 * np.einsum("ijcd,acbd->ijab", t_ijab, g[v, v, v, v], optimize=True) - np.einsum("klab,kilj->ijab", t_ijab, g[o, o, o, o], optimize=True)
-    t_ijab_2 += -1 * permute_symmetric(np.einsum("ijkabc->ijab", np.einsum("ikac,bjkc->ijkabc", t_ijab, L[v, o, o, v], optimize=True) - np.einsum("kjac,bcki->ijkabc", t_ijab, g[v, v, o, o], optimize=True) - np.einsum("kiac,bjkc->ijkabc", t_ijab, g[v, o, o, v], optimize=True), optimize=True), (0, 1), (2, 3))
+    t_ijab_2 = -1 * np.einsum("ijcd,acbd->ijab", t_ijab, g[v, v, v, v], optimize = True) - np.einsum("klab,kilj->ijab", t_ijab, g[o, o, o, o], optimize = True)
+    t_ijab_2 += -1 * permute_symmetric(np.einsum("ijkabc->ijab", np.einsum("ikac,bjkc->ijkabc", t_ijab, L[v, o, o, v], optimize = True) - np.einsum("kjac,bcki->ijkabc", t_ijab, g[v, v, o, o], optimize = True) - np.einsum("kiac,bjkc->ijkabc", t_ijab, g[v, o, o, v], optimize = True), optimize = True), (0, 1), (2, 3))
     
     # Minus sign here due to difference in definition of e_ijab in TUNA and Molecular Electronic-Structure Theory
 
@@ -1427,15 +1435,15 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
 
         t_ijkabc_2 = calculate_restricted_second_order_triples_amplitudes(e_ijkabc, t_ijab, g, o, v)
 
-    log(f"[Done]", calculation, 1, silent=silent)
+    log(f"[Done]", calculation, 1, silent = silent)
 
-    log("  Calculating MP4 correlation energy...      ", calculation, 1, end="", silent=silent)
+    log("  Calculating MP4 correlation energy...      ", calculation, 1, end="", silent = silent)
 
-    if calculation.method.name != "MP4[DQ]":
+    if calculation.method.name not in ["MP4[DQ]", "MP4(DQ)"]:
 
         # Singles contribution to MP4 energy
 
-        S_ijab = np.einsum("jc,aibc->ijab", t_ia_2, g[v, o, v, v], optimize=True) - np.einsum("kb,aikj->ijab", t_ia_2, g[v, o, o, o], optimize=True)
+        S_ijab = np.einsum("jc,aibc->ijab", t_ia_2, g[v, o, v, v], optimize = True) - np.einsum("kb,aikj->ijab", t_ia_2, g[v, o, o, o], optimize = True)
     
     else:
 
@@ -1443,15 +1451,15 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
     
     # Doubles contribution to MP4 energy
 
-    D_ijab = (1 / 2) * np.einsum("ijcd,acbd->ijab", t_ijab_2, g[v, v, v, v], optimize=True) + (1 / 2) * np.einsum("klab,kilj->ijab", t_ijab_2, g[o, o, o, o], optimize=True)
-    D_ijab += np.einsum("ikac,bjkc->ijab", t_ijab_2, L[v, o, o, v], optimize=True) - np.einsum("kjac,bcki->ijab", t_ijab_2, g[v, v, o, o], optimize=True) - np.einsum("kiac,bjkc->ijab", t_ijab_2, g[v, o, o, v], optimize=True)
+    D_ijab = (1 / 2) * np.einsum("ijcd,acbd->ijab", t_ijab_2, g[v, v, v, v], optimize = True) + (1 / 2) * np.einsum("klab,kilj->ijab", t_ijab_2, g[o, o, o, o], optimize = True)
+    D_ijab += np.einsum("ikac,bjkc->ijab", t_ijab_2, L[v, o, o, v], optimize = True) - np.einsum("kjac,bcki->ijab", t_ijab_2, g[v, v, o, o], optimize = True) - np.einsum("kiac,bjkc->ijab", t_ijab_2, g[v, o, o, v], optimize = True)
 
     if calculation.method.name in ["MP4", "MP4[SDTQ]"]:
 
         # Triples contribution to MP4 energy (slowest step)
 
-        T_ijab = np.einsum("ijkacd,bckd->ijab", t_ijkabc_2, L[v, v, o, v], optimize=True) - np.einsum("kjiacd,kdbc->ijab", t_ijkabc_2, g[o, v, v, v], optimize=True)
-        T_ijab += -1 * np.einsum("iklabc,kjlc->ijab", t_ijkabc_2, L[o, o, o, v], optimize=True) + np.einsum("lkiabc,kjlc->ijab", t_ijkabc_2, g[o, o, o, v], optimize=True)
+        T_ijab = np.einsum("ijkacd,bckd->ijab", t_ijkabc_2, L[v, v, o, v], optimize = True) - np.einsum("kjiacd,kdbc->ijab", t_ijkabc_2, g[o, v, v, v], optimize = True)
+        T_ijab += -1 * np.einsum("iklabc,kjlc->ijab", t_ijkabc_2, L[o, o, o, v], optimize = True) + np.einsum("lkiabc,kjlc->ijab", t_ijkabc_2, g[o, o, o, v], optimize = True)
 
     else:
 
@@ -1459,44 +1467,44 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
 
     # Quadruples contribution to MP4 energy 
 
-    Q_ijab = (1 / 2) * np.einsum("klab,ijkl->ijab", t_ijab, np.einsum("ijcd,kcld->ijkl", t_ijab, g[o, v, o, v], optimize=True), optimize=True)
-    Q_ijab += np.einsum("ikac,jkbc->ijab", t_ijab, np.einsum("jlbd,kcld->jkbc", t_ijab - t_ijab.swapaxes(0, 1), L[o, v, o, v], optimize=True), optimize=True)
-    Q_ijab += (1 / 2) * np.einsum("kiac,jkbc->ijab", t_ijab, np.einsum("ljbd,kcld->jkbc", t_ijab, g[o, v, o, v], optimize=True), optimize=True)
-    Q_ijab += (1 / 2) * np.einsum("kjad,ikbd->ijab", t_ijab, np.einsum("libc,kcld->ikbd", t_ijab, g[o, v, o, v], optimize=True), optimize=True)
-    Q_ijab += -1 * np.einsum("ikab,jk->ijab", t_ijab, np.einsum("ljcd,lckd->jk", t_ijab, L[o, v, o, v], optimize=True), optimize=True)
-    Q_ijab += -1 * np.einsum("ijac,bc->ijab", t_ijab, np.einsum("klbd,kcld->bc", t_ijab, L[o, v, o, v], optimize=True), optimize=True)
+    Q_ijab = (1 / 2) * np.einsum("klab,ijkl->ijab", t_ijab, np.einsum("ijcd,kcld->ijkl", t_ijab, g[o, v, o, v], optimize = True), optimize = True)
+    Q_ijab += np.einsum("ikac,jkbc->ijab", t_ijab, np.einsum("jlbd,kcld->jkbc", t_ijab - t_ijab.swapaxes(0, 1), L[o, v, o, v], optimize = True), optimize = True)
+    Q_ijab += (1 / 2) * np.einsum("kiac,jkbc->ijab", t_ijab, np.einsum("ljbd,kcld->jkbc", t_ijab, g[o, v, o, v], optimize = True), optimize = True)
+    Q_ijab += (1 / 2) * np.einsum("kjad,ikbd->ijab", t_ijab, np.einsum("libc,kcld->ikbd", t_ijab, g[o, v, o, v], optimize = True), optimize = True)
+    Q_ijab += -1 * np.einsum("ikab,jk->ijab", t_ijab, np.einsum("ljcd,lckd->jk", t_ijab, L[o, v, o, v], optimize = True), optimize = True)
+    Q_ijab += -1 * np.einsum("ijac,bc->ijab", t_ijab, np.einsum("klbd,kcld->bc", t_ijab, L[o, v, o, v], optimize = True), optimize = True)
 
     # Final contractions to calculate the components of the MP4 energy
 
-    E_MP4_S = np.einsum("ijab,ijab->", t_tilde_ijab, S_ijab, optimize=True)
-    E_MP4_D = np.einsum("ijab,ijab->", t_tilde_ijab, D_ijab, optimize=True)
-    E_MP4_T = np.einsum("ijab,ijab->", t_tilde_ijab, T_ijab, optimize=True)
-    E_MP4_Q = np.einsum("ijab,ijab->", t_tilde_ijab, Q_ijab, optimize=True)
+    E_MP4_S = np.einsum("ijab,ijab->", t_tilde_ijab, S_ijab, optimize = True)
+    E_MP4_D = np.einsum("ijab,ijab->", t_tilde_ijab, D_ijab, optimize = True)
+    E_MP4_T = np.einsum("ijab,ijab->", t_tilde_ijab, T_ijab, optimize = True)
+    E_MP4_Q = np.einsum("ijab,ijab->", t_tilde_ijab, Q_ijab, optimize = True)
 
     E_MP4 = E_MP4_S + E_MP4_D + E_MP4_T + E_MP4_Q
 
-    log(f"[Done]\n", calculation, 1, silent=silent)
+    log(f"[Done]\n", calculation, 1, silent = silent)
 
     # Printiing information about what contributions were included in the MP4 energy
 
-    if calculation.method.name == "MP4[SDQ]": 
+    if calculation.method.name in ["MP4[SDQ]", "MP4(SDQ)"]: 
         
-        log(f"  Triples are not included in MP4(SDQ).\n", calculation, 1, silent=silent)
+        log(f"  Triples are not included in MP4(SDQ).\n", calculation, 1, silent = silent)
 
-    elif calculation.method.name == "MP4[DQ]": 
+    elif calculation.method.name in ["MP4[DQ]", "MP4(DQ)"]: 
         
-        log(f"  Singles and triples are not included in MP4(DQ).\n", calculation, 1, silent=silent)
+        log(f"  Singles and triples are not included in MP4(DQ).\n", calculation, 1, silent = silent)
 
     else: 
         
-        log(f"  Triples are included in full MP4.\n", calculation, 1, silent=silent)
+        log(f"  Triples are included in full MP4.\n", calculation, 1, silent = silent)
 
-    log(f"  Singles correlation energy:         {E_MP4_S:13.10f}", calculation, 2, silent=silent)
-    log(f"  Doubles correlation energy:         {E_MP4_D:13.10f}", calculation, 2, silent=silent)
-    log(f"  Triples correlation energy:         {E_MP4_T:13.10f}", calculation, 2, silent=silent)
-    log(f"  Quadruples correlation energy:      {E_MP4_Q:13.10f}", calculation, 2, silent=silent)
+    log(f"  Singles correlation energy:         {E_MP4_S:13.10f}", calculation, 2, silent = silent)
+    log(f"  Doubles correlation energy:         {E_MP4_D:13.10f}", calculation, 2, silent = silent)
+    log(f"  Triples correlation energy:         {E_MP4_T:13.10f}", calculation, 2, silent = silent)
+    log(f"  Quadruples correlation energy:      {E_MP4_Q:13.10f}", calculation, 2, silent = silent)
 
-    log(f"\n  MP4 correlation energy:             {E_MP4:13.10f}", calculation, 1, silent=silent)
+    log(f"\n  MP4 correlation energy:             {E_MP4:13.10f}", calculation, 1, silent = silent)
 
 
     return E_MP4
@@ -1510,7 +1518,7 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
 
 
 
-def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_output: Output, integrals: Integrals, calculation: Calculation, V_NN: float, silent: bool = False, bfs_on_grid: ndarray = None, weights: ndarray = None) -> tuple:
+def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_output: Output, integrals: Integrals, calculation: Calculation, V_NN: float, silent: bool = False) -> tuple:
 
     """
 
@@ -1524,8 +1532,6 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
         calculation (Calculation): Calculation object
         V_NN (float): Nuclear-nuclear repulsion energy
         silent (bool, optional): Should anything be printed
-        bfs_on_grid (array, optional): Basis functions evaluated on integration grid
-        weights (array, optional): Weights for grid integration
 
     Returns:
         E_MP2 (float): (SCS-)MP2 correlation energy
@@ -1548,7 +1554,6 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
     P_beta = SCF_output.P_beta
 
     n_SO = molecule.n_SO
-    n_occ = molecule.n_occ
     n_doubly_occ = molecule.n_doubly_occ
 
     ERI_AO = integrals.ERI_AO
@@ -1562,42 +1567,48 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
     if calculation.reference == "UHF" or method.name == "OMP2":
 
-        g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, _, _ = ci.begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, n_occ, calculation, silent=silent)
+        g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, _, _, _ = ci.begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, calculation, silent = silent)
     
     else:
 
-        ERI_MO, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, n_doubly_occ, calculation, silent=silent)
+        ERI_MO, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, calculation, silent = silent)
 
 
     # Sets off the assorted "not normal" MP2 methods
+    
+    timer("MP2", 0)
 
     if method.name == "OMP2": 
         
-        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, SCF_output.energy, ERI_spin_block, o, v, silent=silent)
-    
+        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_OMP2(molecule, calculation, g, C_spin_block, H_core, V_NN, n_SO, X, SCF_output.energy, ERI_spin_block, o, v, silent = silent)
+        
+        timer("MP2", 1)
+
     elif method.name == "IMP2":
 
-        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_doubly_occ, X, integrals, calculation, SCF_output, silent=silent)
+        E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_iterative_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, n_doubly_occ, X, integrals, calculation, SCF_output, silent = silent)
+        
+        timer("MP2", 1)
 
     elif method.name == "LMP2" or method.name == "AO-MP2":
 
-        E_MP2 = run_restricted_Laplace_MP2(integrals, SCF_output.F, calculation, SCF_output.P, silent=silent)
-    
+        E_MP2 = run_restricted_Laplace_MP2(integrals, SCF_output.F, calculation, SCF_output.P, silent = silent)
+        
+        timer("MP2", 1)
+
     #  Sets off "normal" many-body perturbation theory methods
 
     else:
 
         # Run MP2 first
-        
-        timer("MP2", 0)
 
         if calculation.reference == "UHF":
 
-            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, ERI_spin_block, X, silent=silent)
+            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, ERI_spin_block, X, silent = silent)
 
         else:
 
-            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, X, calculation, molecule, silent=silent)
+            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_restricted_MP2(ERI_MO, epsilons, molecular_orbitals, o, v, X, calculation, molecule, silent = silent)
 
         timer("MP2", 1)
 
@@ -1609,11 +1620,11 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
             if calculation.reference == "UHF":
             
-                E_MP3 = run_unrestricted_MP3(calculation, g, epsilons_sorted, E_MP2, o, v, silent=silent)
+                E_MP3 = run_unrestricted_MP3(calculation, g, epsilons_sorted, E_MP2, o, v, silent = silent)
 
             else:
 
-                E_MP3, e_ijab, t_ijab, t_tilde_ijab, L = run_restricted_MP3(calculation, ERI_MO, epsilons, E_MP2, o, v, silent=silent)
+                E_MP3, e_ijab, t_ijab, t_tilde_ijab, L = run_restricted_MP3(calculation, ERI_MO, epsilons, E_MP2, o, v, silent = silent)
             
             timer("MP3", 1)
 
@@ -1623,11 +1634,11 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
                 
                 timer("MP4", 0)
 
-                E_MP4 = run_restricted_MP4(e_ijab, t_ijab, t_tilde_ijab, L, ERI_MO, epsilons, o, v, calculation, silent=silent)
+                E_MP4 = run_restricted_MP4(e_ijab, t_ijab, t_tilde_ijab, L, ERI_MO, epsilons, o, v, calculation, silent = silent)
 
                 timer("MP4", 1)
 
-    log_spacer(calculation, silent=silent)
+    log_spacer(calculation, silent = silent)
 
 
     return E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals

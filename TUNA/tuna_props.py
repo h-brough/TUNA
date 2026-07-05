@@ -114,7 +114,7 @@ def calculate_analytical_dipole_moment(centre_of_mass: float, charges: ndarray, 
     # Extracts the z component of the dipole moment integrals
 
     nuclear_dipole_moment = calculate_nuclear_dipole_moment(centre_of_mass, charges, coordinates)        
-    electronic_dipole_moment = -1 * np.einsum("ij,ij->", P, D[2], optimize=True)
+    electronic_dipole_moment = -1 * np.einsum("ij,ij->", P, D[2], optimize = True)
 
     total_dipole_moment = nuclear_dipole_moment + electronic_dipole_moment
 
@@ -155,8 +155,8 @@ def calculate_analytical_quadrupole_moment(centre_of_mass: float, charges: ndarr
     
     # Extracts the xx and zz components of quadrupole moment integrals
 
-    electronic_quadrupole_moment_xx = -1 * np.einsum("ij,ij->", P, Q[0], optimize=True)
-    electronic_quadrupole_moment_zz = -1 * np.einsum("ij,ij->", P, Q[1], optimize=True)
+    electronic_quadrupole_moment_xx = -1 * np.einsum("ij,ij->", P, Q[0], optimize = True)
+    electronic_quadrupole_moment_zz = -1 * np.einsum("ij,ij->", P, Q[1], optimize = True)
 
     anisotropic_quadrupole_moment = electronic_quadrupole_moment_zz + nuclear_quadrupole_moment - electronic_quadrupole_moment_xx
 
@@ -342,42 +342,42 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
 
     virial_ratio = -1 * (total_energy - SCF_output.kinetic_energy) / SCF_output.kinetic_energy
            
-    log_spacer(calculation, priority=2, silent=silent)
-    log("                  Energy Components       ", calculation, 2, colour="white", silent=silent)
-    log_spacer(calculation, priority=2, silent=silent)    
+    log_spacer(calculation, priority=2, silent = silent)
+    log("                  Energy Components       ", calculation, 2, colour="white", silent = silent)
+    log_spacer(calculation, priority=2, silent = silent)    
 
-    log(f"  Kinetic energy:                   {SCF_output.kinetic_energy:15.10f}", calculation, 2, silent=silent)
-    log(f"  Coulomb energy:                   {SCF_output.coulomb_energy:15.10f}", calculation, 2, silent=silent)
-    log(f"  Exchange energy:                  {SCF_output.exchange_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"  Kinetic energy:                   {SCF_output.kinetic_energy:15.10f}", calculation, 2, silent = silent)
+    log(f"  Coulomb energy:                   {SCF_output.coulomb_energy:15.10f}", calculation, 2, silent = silent)
+    log(f"  Exchange energy:                  {SCF_output.exchange_energy:15.10f}", calculation, 2, silent = silent)
 
     if calculation.method.density_functional_method:
         
-        log(f"  Correlation energy:               {SCF_output.correlation_energy:15.10f}", calculation, 2, silent=silent)
+        log(f"  Correlation energy:               {SCF_output.correlation_energy:15.10f}", calculation, 2, silent = silent)
 
-    log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2, silent=silent)
-    log(f"  Nuclear attraction energy:        {SCF_output.nuclear_electron_energy:15.10f}", calculation, 2, silent=silent)      
+    log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2, silent = silent)
+    log(f"  Nuclear attraction energy:        {SCF_output.nuclear_electron_energy:15.10f}", calculation, 2, silent = silent)      
 
     if np.linalg.norm(calculation.electric_field) > 0:
     
-        log(f"  Electric field energy:            {SCF_output.electric_field_energy:15.10f}", calculation, 2, silent=silent)
+        log(f"  Electric field energy:            {SCF_output.electric_field_energy:15.10f}", calculation, 2, silent = silent)
     
     if np.linalg.norm(calculation.electric_field_gradient) > 0:
     
-        log(f"  Electric field gradient energy:   {SCF_output.electric_field_gradient_energy:15.10f}", calculation, 2, silent=silent)
+        log(f"  Electric field gradient energy:   {SCF_output.electric_field_gradient_energy:15.10f}", calculation, 2, silent = silent)
 
-    log(f"\n  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent=silent)
-    log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"\n  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent = silent)
+    log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent = silent)
 
     if calculation.method.density_functional_method:
         
-        log(f"  Exchange-correlation energy:      {SCF_output.exchange_energy + SCF_output.correlation_energy:15.10f}", calculation, 2, silent=silent)
+        log(f"  Exchange-correlation energy:      {SCF_output.exchange_energy + SCF_output.correlation_energy:15.10f}", calculation, 2, silent = silent)
 
-    log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2, silent=silent)
-    log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2, silent=silent)
+    log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2, silent = silent)
+    log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2, silent = silent)
             
-    log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2, silent=silent)
+    log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2, silent = silent)
 
-    log_spacer(calculation, priority=2, silent=silent)
+    log_spacer(calculation, priority=2, silent = silent)
 
     return
 
@@ -424,15 +424,15 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
 
     space1, space2 = ("       ", "            ") if len(kind) == 3 else ("", "")
     
-    log_spacer(calculation, silent=silent, priority=priority)
-    log(f"   {space1}       {title} Spin Contamination       ", calculation, priority, silent=silent, colour="white")
-    log_spacer(calculation, silent=silent, priority=priority)
+    log_spacer(calculation, silent = silent, priority=priority)
+    log(f"   {space1}       {title} Spin Contamination       ", calculation, priority, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent, priority=priority)
 
-    log(f"  Exact S^2 expectation value:            {s_squared_exact:9.6f}", calculation, priority, silent=silent)
-    log(f"  {kind} S^2 expectation value:  {space2}{s_squared:9.6f}", calculation, priority, silent=silent)
-    log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, priority, silent=silent)
+    log(f"  Exact S^2 expectation value:            {s_squared_exact:9.6f}", calculation, priority, silent = silent)
+    log(f"  {kind} S^2 expectation value:  {space2}{s_squared:9.6f}", calculation, priority, silent = silent)
+    log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, priority, silent = silent)
 
-    log_spacer(calculation, silent=silent, priority=priority, end="\n")
+    log_spacer(calculation, silent = silent, priority=priority, end="\n")
 
     return
 
@@ -880,7 +880,7 @@ def print_density_information(calculation: Calculation) -> None:
 
     method = calculation.method
 
-    density_type = "relaxed" if calculation.MP2_relaxed_density else "unrelaxed"
+    density_type = "relaxed" if calculation.relaxed_density else "unrelaxed"
 
     # Specifies which density matrix is used for the property calculations
     
@@ -890,8 +890,13 @@ def print_density_information(calculation: Calculation) -> None:
     elif method.method_base == "MP3" or method.method_base == "MP4": warning(f"Using the {density_type} MP2 density for property calculations.")
     
     if method.method_base == "CC": log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
-    if method.name == "CCSD[T]": warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")
-    if method.name == "QCISD[T]": warning("Using the linearised QCISD density, not the QCISD(T) density, for property calculations.")
+    if method.name in ["CCSD[T]", "CCSD(T)"]: warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")
+    if method.name in ["QCISD[T]", "QCISD(T)"]: warning("Using the linearised QCISD density, not the QCISD(T) density, for property calculations.")
+    
+    if method.excited_state_method or calculation.time_dependent: 
+    
+        log(f"\n Using the unrelaxed TD-DFT density for property calculations.", calculation, 1) if method.density_functional_method else log(f"\n Using the unrelaxed TD-HF density for property calculations.", calculation, 1)
+
 
     return
 
@@ -904,7 +909,7 @@ def print_density_information(calculation: Calculation) -> None:
 
 
 
-def calculate_molecular_properties(molecule: Molecule, calculation: Calculation, P: ndarray, S: ndarray, SCF_output: Output, P_alpha: ndarray, P_beta: ndarray) -> None:
+def calculate_molecular_properties(molecule: Molecule, calculation: Calculation, P: ndarray, S: ndarray, SCF_output: Output, P_alpha: ndarray, P_beta: ndarray, print_orbitals: bool = True) -> None:
 
     """
 
@@ -927,17 +932,19 @@ def calculate_molecular_properties(molecule: Molecule, calculation: Calculation,
 
     print_density_information(calculation)
 
-    # Prints molecular orbital eigenvalues and coefficients
+    if print_orbitals:
 
-    print_molecular_orbital_eigenvalues(calculation, molecule, SCF_output)
-    
-    print_molecular_orbital_coefficients(calculation, molecule, SCF_output)
+        # Prints molecular orbital eigenvalues and coefficients
 
-    # Prints Koopmans' theorem parameters if RHF reference is used
-
-    if calculation.reference == "RHF":
+        print_molecular_orbital_eigenvalues(calculation, molecule, SCF_output)
         
-        calculate_Koopmans_parameters(SCF_output.epsilons, molecule.n_doubly_occ, calculation)
+        print_molecular_orbital_coefficients(calculation, molecule, SCF_output)
+
+        # Prints Koopmans' theorem parameters if RHF reference is used
+
+        if calculation.reference == "RHF":
+            
+            calculate_Koopmans_parameters(SCF_output.epsilons, molecule.n_doubly_occ, calculation)
 
     # As long as there are two real atoms present, calculates rotational constant and dipole moment information
 

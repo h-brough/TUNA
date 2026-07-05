@@ -56,17 +56,17 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
 
-    log(" Calculating energy on displaced geometry 1 of 2...   ", calculation, 1, end="", silent=silent)
+    log(" Calculating energy on displaced geometry 1 of 2...   ", calculation, 1, end="", silent = silent)
     
-    _, _, energy_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent=True)
+    _, _, energy_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent=silent)
+    log("[Done]", calculation, 1, silent = silent)
 
-    log(" Calculating energy on displaced geometry 2 of 2...   ", calculation, 1, end="", silent=silent)
+    log(" Calculating energy on displaced geometry 2 of 2...   ", calculation, 1, end="", silent = silent)
 
-    _, _, energy_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, backward_coords, silent=True)
+    _, _, energy_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, backward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent=silent)
+    log("[Done]", calculation, 1, silent = silent)
 
     # Calculates numerical first derivative
 
@@ -114,29 +114,29 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
     backward_coords = coordinates - prodding_coords
     far_backward_coords = coordinates - 2 * prodding_coords  
 
-    log("\n Calculating energy on displaced geometry 1 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log("\n Calculating energy on displaced geometry 1 of 4...   ", calculation, 1, end="", silent = silent)
 
-    _, _, energy_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_forward_coords, silent=True)
+    _, _, energy_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_forward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent=silent)   
+    log("[Done]", calculation, 1, silent = silent)   
 
-    log(" Calculating energy on displaced geometry 2 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 2 of 4...   ", calculation, 1, end="", silent = silent)
 
-    SCF_output_forward, _, energy_forward, P_forward = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent=True)
+    SCF_output_forward, _, energy_forward, P_forward = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent=silent)   
+    log("[Done]", calculation, 1, silent = silent)   
 
-    log(" Calculating energy on displaced geometry 3 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 3 of 4...   ", calculation, 1, end="", silent = silent)
 
-    SCF_output_backward, _, energy_backward, P_backward = energ.evaluate_molecular_energy(calculation, atomic_symbols, backward_coords, silent=True)
+    SCF_output_backward, _, energy_backward, P_backward = energ.evaluate_molecular_energy(calculation, atomic_symbols, backward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent=silent)   
+    log("[Done]", calculation, 1, silent = silent)   
 
-    log(" Calculating energy on displaced geometry 4 of 4...   ", calculation, 1, end="", silent=silent); sys.stdout.flush()
+    log(" Calculating energy on displaced geometry 4 of 4...   ", calculation, 1, end="", silent = silent)
 
-    _, _, energy_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_backward_coords, silent=True)
+    _, _, energy_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_backward_coords, silent = True)
 
-    log("[Done]\n", calculation, 1, silent=silent)   
+    log("[Done]\n", calculation, 1, silent = silent)   
 
     # Calculates numerical second derivative
 

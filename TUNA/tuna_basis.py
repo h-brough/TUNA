@@ -18,6 +18,7 @@ The basis data dictionaries are stored as follows:
     ATOM NUMBER : [("ANGULAR MOMENTUM", [(EXPONENT, COEFFICIENT), (EXPONENT, COEFFICIENT), (EXPONENT, COEFFICIENT)])],
 
 Updated in version 0.10.0 to include triply-augmented basis sets and type hints.
+Updated in version 0.11.0 to support curly brackets, not just square brackets, for basis set names.
 
 The module contains:
 
@@ -199,7 +200,7 @@ def generate_basis(basis_set: str, atomic_number: int, calculation: Calculation)
 
     # Converts user basis set from human-readable to more computer-readable form, replacing *, + and - to STAR, PLUS and _ 
 
-    bas = basis_set.upper().replace("-", "_").replace("*", "STAR").replace("+", "PLUS").replace("[", "BRA").replace(",", "COMMA").replace("]", "KET")
+    bas = basis_set.upper().replace("-", "_").replace("*", "STAR").replace("+", "PLUS").replace("[", "BRA").replace("(", "BRA").replace(",", "COMMA").replace("]", "KET").replace(")", "KET")
 
     # If a custom basis set is requested, read the provided file
 

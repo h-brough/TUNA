@@ -14,7 +14,7 @@ This is the TUNA module for molecule and atom management, written first for vers
 At the start of every energy evaluation, a Molecule object is made. This contains information inherited from Calculation, as well as structural information, 
 data about the number of electrons, orbitals, etc. and is used to update the reference stored in Calculation (restricted or unrestricted).
 
-Updated in version 0.11.0 to make more consistent x, y and z grouping for Cartesian Gaussian subshells.
+Updated in version 0.11.0 to make more consistent x, y and z grouping for Cartesian Gaussian subshells, and make automatic full CI use CI instead of CC.
 
 This module contains:
 
@@ -306,7 +306,7 @@ class Molecule:
 
         calculation.reference = "RHF" if self.multiplicity == 1 and not calculation.method.unrestricted else "UHF"
 
-        # Some methods are only available for spin-orbitals
+        # Some methods are only available for spin orbitals
 
         if not calculation.method.restricted_available: 
             
@@ -350,7 +350,7 @@ class Molecule:
 
         calculation.MO_read = False if calculation.reference == "UHF" and self.multiplicity == 1 and not calculation.MO_read_requested and not calculation.no_rotate_guess or calculation.no_MO_read or calculation.rotate_guess else True
 
-        # The OMP2 method is only implemented for spin-orbitals, so the number of core spin orbitals needs to be doubled
+        # The OMP2 method is only implemented for spin orbitals, so the number of core spin orbitals needs to be doubled
 
         if "OMP2" in calculation.method.name and calculation.reference == "RHF": 
             
@@ -770,8 +770,8 @@ def calculate_and_print_rotational_constant(reduced_mass: float, bond_length: fl
     rotational_constant_per_cm = rotational_constant_per_bohr / (100 * constants.bohr_in_metres)
     rotational_constant_GHz = constants.per_cm_in_GHz * rotational_constant_per_cm
                     
-    log(f"\n Rotational constant (GHz):            {rotational_constant_GHz:12.6f}", calculation, 2, silent=silent)
-    log(f" Rotational constant (per cm):         {rotational_constant_per_cm:12.6f}", calculation, 2, silent=silent)
+    log(f"\n Rotational constant (GHz):            {rotational_constant_GHz:12.6f}", calculation, 2, silent = silent)
+    log(f" Rotational constant (per cm):         {rotational_constant_per_cm:12.6f}", calculation, 2, silent = silent)
     
     return rotational_constant_per_cm, rotational_constant_GHz
 
@@ -795,8 +795,7 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> st
         calculation (Calculation): Calculation object
     
     Returns:
-        updated_method (str): Method with reduced complexity.
-
+        updated_method (str): Method with reduced complexity
 
     """
 
@@ -816,22 +815,17 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> st
 
     elif molecule.n_electrons == 2:
 
-        if calculation.method.name in ["CCSD[T]", "CCSDT", "CCSDT[Q]", "CCSDTQ"]: 
+        if calculation.method.name in ["CCSD[T]", "CCSD(T)", "QCISD[T]", "QCISD(T)", "CISDT", "CCSDT", "CCSDT[Q]", "CCSDT(Q)", "CCSDTQ"]: 
             
-            updated_method = Method("CCSD", "coupled cluster singles and doubles", method_base = "CC", unrestricted = unrestricted) 
+            updated_method = Method("CISD", "configuration interaction singles and doubles", method_base = "CC", unrestricted = unrestricted) 
 
-
-        if calculation.method in ["QCISD[T]"]: 
-            
-            updated_method = Method("QCISD", "quadratic configuration interaction singles and doubles", method_base = "CC", unrestricted = unrestricted) 
-    
     # Ignores quadruple excitations if this is a two-electron system
 
     elif molecule.n_electrons == 3:
 
-        if calculation.method.name in ["CCSDT[Q]", "CCSDTQ"]: 
+        if calculation.method.name in ["CCSDT[Q]", "CCSDT(Q)", "CCSDTQ"]: 
             
-            updated_method = Method("CCSDT","coupled cluster singles, doubles and triples", method_base = "CC", unrestricted = unrestricted) 
+            updated_method = Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", unrestricted = unrestricted) 
             
 
     return updated_method

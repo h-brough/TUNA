@@ -9,7 +9,6 @@ from scipy import linalg, interpolate
 import numpy as np
 from numpy import ndarray
 from tuna_molecule import Molecule
-import sys
 
 
 """
@@ -22,6 +21,7 @@ optimised bond length are scanned, and the nuclear Hamiltonian diagonalised iter
 been sampled such that the fundamental transition frequency is converged to within a hundreth of a per cm. Then, the absorption spectrum is printed.
 
 Updated in version 0.10.1 to include VPT2 approximate anharmonic frequencies.
+Updated in version 0.11.0 to allow numerical dipole moments for harmonic frequency intensities.
 
 The module contains:
 
@@ -145,13 +145,13 @@ def calculate_anharmonicity_constant(transition_matrix: ndarray, harmonic_freque
 
 
 
-def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_output_forward: Output, SCF_output_backward: Output, P_forward: ndarray, P_backward: ndarray):
+def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_output_forward: Output, SCF_output_backward: Output, P_forward: ndarray, P_backward: ndarray, calculation: Calculation) -> float:
 
     """
 
     Calculates the dipole derivative in normal coordinates.
 
-    This is the numerical geometric derivative of the analytical dipole moment.
+    This is the numerical geometric derivative of the analytical or numerical dipole moment.
 
     Args:   
         coordinates (array): Atomic coordinates
@@ -160,11 +160,15 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
         P_forward (array): Density matrix from prodded forward coordinates
         SCF_output_backward (Output): SCF output from prodded backward coordinates
         P_backward (array): Density matrix from prodded backward coordinates
+        calculation (Calculation): Calculation object
 
     Returns:
         dipole_derivative (float): Dipole derivative in normal coordinates
 
     """
+
+    timer("Dipole derivative", 0)
+
 
     # Forward and backward coordinates are symmetrical by the mass weighting, to prevent influence of moving electric field origin in dipole moment calculations
 
@@ -175,8 +179,19 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
     
     # Calculates forward and backward dipole moments, using dipole integrals calculated from centre of mass
 
-    dipole_moment_forward, _, _ = props.calculate_analytical_dipole_moment(molecule.centre_of_mass, molecule.charges, forward_coords, P_forward, SCF_output_forward.integrals.D)
-    dipole_moment_backward, _, _ = props.calculate_analytical_dipole_moment(molecule.centre_of_mass, molecule.charges, backward_coords, P_backward, SCF_output_backward.integrals.D)
+    if calculation.dipole:
+        
+        log(" Calculating fully numerical dipole derivative...     ", calculation, 1, end = "")
+
+        dipole_moment_forward = energ.calculate_numerical_dipole_moment(molecule, calculation, True, calculation.atomic_symbols, forward_coords, SCF_output_forward.integrals)
+        dipole_moment_backward = energ.calculate_numerical_dipole_moment(molecule, calculation, True, calculation.atomic_symbols, backward_coords, SCF_output_backward.integrals)
+
+    else:
+        
+        log(" Calculating seminumerical dipole derivative...       ", calculation, 1, end = "")
+
+        dipole_moment_forward, _, _ = props.calculate_analytical_dipole_moment(molecule.centre_of_mass, molecule.charges, forward_coords, P_forward, SCF_output_forward.integrals.D)
+        dipole_moment_backward, _, _ = props.calculate_analytical_dipole_moment(molecule.centre_of_mass, molecule.charges, backward_coords, P_backward, SCF_output_backward.integrals.D)
 
     # Calculates dipole derivative by central differences method
 
@@ -186,6 +201,9 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
 
     dipole_derivative /= np.sqrt(molecule.reduced_mass)
 
+    log("[Done]\n", calculation, 1)
+
+    timer("Dipole derivative", 1)
 
     return dipole_derivative
 
@@ -215,7 +233,7 @@ def calculate_dipole_matrix(vibrational_wavefunctions: ndarray, dipole_moments_i
 
     # No dx term here as its already included due to continuum normalisation of vibrational_wavefunctions
 
-    dipole_matrix = np.einsum("ni,n,nj->ij", vibrational_wavefunctions, dipole_moments_interpolated, vibrational_wavefunctions, optimize=True) 
+    dipole_matrix = np.einsum("ni,n,nj->ij", vibrational_wavefunctions, dipole_moments_interpolated, vibrational_wavefunctions, optimize = True) 
 
     return dipole_matrix
 
@@ -609,7 +627,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
     # Does the first scan over the minimum; gets the bond lengths, energies and dipole moments
 
-    x_values, V_values, dipole_moments = energ.scan_coordinate(calculation, atomic_symbols, coordinates, silent=True)
+    x_values, V_values, dipole_moments = energ.scan_coordinate(calculation, atomic_symbols, coordinates, silent = True)
 
     log("[Done]\n", calculation, 1)
 
@@ -638,8 +656,8 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
         
         # Performs the forward and backwards scans
 
-        new_x_values_right, new_V_values_right, new_dipole_moments_right = energ.scan_coordinate(calculation, atomic_symbols, coordinates_right, silent=True)
-        new_x_values_left, new_V_values_left, new_dipole_moments_left = energ.scan_coordinate(calculation, atomic_symbols, coordinates_left, silent=True, reverse=True)
+        new_x_values_right, new_V_values_right, new_dipole_moments_right = energ.scan_coordinate(calculation, atomic_symbols, coordinates_right, silent = True)
+        new_x_values_left, new_V_values_left, new_dipole_moments_left = energ.scan_coordinate(calculation, atomic_symbols, coordinates_left, silent = True, reverse=True)
 
         # Updates the bond length values and energies by concatenating the results from the left and right scans
 
@@ -753,7 +771,7 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
 
     # Calculates the dipole derivative, maintaining gauge invariance
 
-    dipole_derivative = calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_output_backward, P_forward, P_backward)
+    dipole_derivative = calculate_dipole_derivative(coordinates, molecule, SCF_output_forward, SCF_output_backward, P_forward, P_backward, calculation)
 
     # Adding vibrational overlap contribution to match ORCA results (frequencies cancel for harmonic oscillator)
 
@@ -849,25 +867,25 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
 
     log("  Calculating displaced energy 1 of 4...     ", calculation, end="")
 
-    _, _, energy_super_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_backward_coords, silent=True)
+    _, _, energy_super_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_backward_coords, silent = True)
     
     log("[Done]", calculation)  
 
     log("  Calculating displaced energy 2 of 4...     ", calculation, end="")
 
-    _, _, energy_very_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_backward_coords, silent=True)
+    _, _, energy_very_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_backward_coords, silent = True)
 
     log("[Done]", calculation)  
 
     log("  Calculating displaced energy 3 of 4...     ", calculation, end="")
 
-    _, _, energy_very_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_forward_coords, silent=True)
+    _, _, energy_very_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_forward_coords, silent = True)
     
     log("[Done]", calculation)  
 
     log("  Calculating displaced energy 4 of 4...     ", calculation, end="")
 
-    _, _, energy_super_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_forward_coords, silent=True)
+    _, _, energy_super_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_forward_coords, silent = True)
     
     log("[Done]", calculation)  
 

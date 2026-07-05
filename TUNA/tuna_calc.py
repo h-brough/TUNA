@@ -110,15 +110,15 @@ KEYWORDS = [
     Keyword("NOX", "no_DFT_exchange"),
     Keyword("NOC", "no_DFT_correlation"),
     Keyword("NOSINGLES", "no_singles"),
-    Keyword("TD", "time_dependent"),
     Keyword("TDA", "tamm_dancoff_approximation"),
+    Keyword("TD", "time_dependent"),
     Keyword("NL", "VV10"),
-    Keyword("RELAXED", "MP2_relaxed_density"),
+    Keyword("RELAXED", "relaxed_density"),
     Keyword("UNRELAXED", "MP2_unrelaxed_density"),
     Keyword("STAB", "stability_analysis"),
     Keyword("NOTRIPLETS", "calculate_no_triplets"),
     Keyword("NOSINGLETS", "calculate_no_singlets"),
-    Keyword("[D]", "do_perturbative_doubles",),
+    Keyword(("[D]", "(D)"), "do_perturbative_doubles",),
 
     Keyword("SCANPLOT", "scan_plot"),
     Keyword("DASH", "plot_dashed_lines"),
@@ -180,13 +180,14 @@ KEYWORDS = [
     Keyword(("MP3S", "MP3SCALING", "MP3SCAL"), "MP3_scaling", "V", 1 / 4, float),
     Keyword("AMPCONV", "amp_conv", "V", 1e-8, float),
     Keyword("PRINTAMPS", "print_n_amplitudes", "V", 10, int),
-    Keyword("MPGRID", "n_MP2_grid_points", "V", 10, int),
+    Keyword("MPGRID", "num_laplace_points", "V", 10, int),
     Keyword("ECONV", "energy_convergence", "V", 1e-9, float),
     Keyword("RMSDP", "rms_density_change_convergence", "V", 1e-9, float),
     Keyword("MAXDP", "max_density_change_convergence", "V", 1e-9, float),
     Keyword("DIISERR", "commutator_convergence", "V", 1e-9, float),
     Keyword("CORRMAXITER", "correlated_max_iter", "V", 100, int),
     
+
     # These keywords give two attributes, one boolean for "is this keyword requested", another for the value given
     
     Keyword("ROTATE", "rotate_guess", "B+V", False, float, 45, "theta"),
@@ -208,6 +209,7 @@ KEYWORDS = [
     Keyword("SAVEPLOT", "save_plot", "B+V", False, str, "tuna-plot.pdf", "save_plot_filepath", True),
     Keyword("PLOTMO", "plot_molecular_orbital", "B+V", False, int, 1, "molecular_orbital_to_plot"),
     Keyword("PLOTNO", "plot_natural_orbital", "B+V", False, int, 1, "natural_orbital_to_plot"),
+    Keyword(("COLOUR", "COLOR"), "colour_requested", "B+V", False, str, "BLACK", "plot_colour"),
 
 ]
 
@@ -426,15 +428,21 @@ def process_complex_keywords(self: Calculation) -> None:
     self.electric_field = np.array([self.electric_field_x, self.electric_field_y, self.electric_field_z])
     self.electric_field_gradient = np.array([self.electric_field_gradient_x, self.electric_field_gradient_y, self.electric_field_gradient_z])
 
-    # Does anything need to be plotted at the end of the calculation
-    
+    # Checks first for normal colour keywords, "BLACK", "RED", etc.
+
     self.scan_plot_colour = next((code for name, code in colour_map.items() if name in self.params), "b")
+
+    # Then checks for "COLOUR #FF00FF"
+
+    self.scan_plot_colour = self.plot_colour if self.colour_requested else self.scan_plot_colour
+    
+    # Does anything need to be plotted at the end of the calculation
 
     self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital
 
     # Accounts for Hartree theory being requested
 
-    self.HFX_requested, self.HFX_prop = (False, 0)  if self.method.name in ["H", "UH"] else (self.HFX_requested, self.HFX_prop)
+    self.HFX_requested, self.HFX_prop = (False, 0)  if self.method.name in ["H", "UH"] and not self.HFX_requested else (self.HFX_requested, self.HFX_prop)
 
     # Manages the "NUM" keyword
 
@@ -561,7 +569,16 @@ class Calculation:
         self.original_basis = self.basis
         self.reference = "Undefined"
 
-        self.functional = exchange_correlation_functionals.get(self.method.name)
+        if self.method.name in exchange_correlation_functionals:
+
+            self.functional = exchange_correlation_functionals.get(self.method.name)
+
+        else:
+
+            # The default functional is HF, if no DFT method is requested
+
+            self.functional = exchange_correlation_functionals.get("HF")
+
         self.DFT_calculation = self.method.density_functional_method
         
         # Interprets the keyword list and sets the calculation attributes
