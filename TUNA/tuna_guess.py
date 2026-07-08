@@ -300,7 +300,7 @@ def calculate_superposition_guess(S_inverse: ndarray, atomic_symbols: list[str],
 
     """
 
-    log("\n Calculating superposition of atomic densities for guess...  ", calculation, end="", silent = silent)
+    log("\n Calculating superposition of atomic densities for guess...  ", calculation, end = "", silent = silent)
 
     # Forms superposition of atomic densities density matrix
 
@@ -362,7 +362,7 @@ def calculate_core_guess(calculation: Calculation, H_core: ndarray, X: ndarray, 
 
     """
 
-    log("\n Diagonalising core Hamiltonian for guess...  ", calculation, end="", silent = silent)
+    log("\n Diagonalising core Hamiltonian for guess...  ", calculation, end = "", silent = silent)
 
     # Diagonalise core Hamiltonian for one-electron guess
 

@@ -614,7 +614,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
     log(f"\n Using a scan step length of {calculation.step} angstroms.\n", calculation, 1)
     log(f" Using atomic mass of {(molecule.masses[0] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[0].capitalize()}, {(molecule.masses[1] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[1].capitalize()}.", calculation, 3)
 
-    log(" Calculating initial potential energy surface around minimum...  ", calculation, 1, end="")
+    log(" Calculating initial potential energy surface around minimum...  ", calculation, 1, end = "")
 
     # Determines how many scan steps are necessary, based on INITIAL_SCAN_EXTENT and step length
 
@@ -865,25 +865,25 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
 
     energy_far_backward, energy_backward, energy_forward, energy_far_forward = displaced_energies
 
-    log("  Calculating displaced energy 1 of 4...     ", calculation, end="")
+    log("  Calculating displaced energy 1 of 4...     ", calculation, end = "")
 
     _, _, energy_super_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_backward_coords, silent = True)
     
     log("[Done]", calculation)  
 
-    log("  Calculating displaced energy 2 of 4...     ", calculation, end="")
+    log("  Calculating displaced energy 2 of 4...     ", calculation, end = "")
 
     _, _, energy_very_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_backward_coords, silent = True)
 
     log("[Done]", calculation)  
 
-    log("  Calculating displaced energy 3 of 4...     ", calculation, end="")
+    log("  Calculating displaced energy 3 of 4...     ", calculation, end = "")
 
     _, _, energy_very_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_forward_coords, silent = True)
     
     log("[Done]", calculation)  
 
-    log("  Calculating displaced energy 4 of 4...     ", calculation, end="")
+    log("  Calculating displaced energy 4 of 4...     ", calculation, end = "")
 
     _, _, energy_super_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_forward_coords, silent = True)
     

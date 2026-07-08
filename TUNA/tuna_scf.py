@@ -133,7 +133,7 @@ def log_convergence_acceleration(calculation: Calculation, silent: bool = False)
 
     if calculation.DIIS:
 
-        log(f" Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration", calculation, silent = silent, end="")
+        log(f" Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence acceleration", calculation, silent = silent, end = "")
 
         if damping:
             

@@ -405,7 +405,7 @@ def update_DIIS(t_vectors: tuple, DIIS_error_vector: list, calculation: Calculat
 
         extrapolated_amplitudes = [None, None, None, None]
 
-        log("   (Resetting DIIS)", calculation, 1, end="", silent = silent)
+        log("   (Resetting DIIS)", calculation, 1, end = "", silent = silent)
 
 
     return tuple(extrapolated_amplitudes)
@@ -531,7 +531,7 @@ def calculate_coupled_cluster_linearised_density(t_ia: ndarray, t_ijab: ndarray,
 
     """
 
-    log("\n  Constructing linearised density...    ", calculation, 1, end="", silent = silent)
+    log("\n  Constructing linearised density...    ", calculation, 1, end = "", silent = silent)
 
     # Correlated part of density matrix from squared connected doubles
 
@@ -698,7 +698,7 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
     
     """
 
-    log("\n  Searching for largest amplitudes...        ", calculation, 2, end="", silent = silent)
+    log("\n  Searching for largest amplitudes...        ", calculation, 2, end = "", silent = silent)
 
     reference = calculation.reference
 
@@ -2531,7 +2531,7 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
         return array + array.transpose(1, 0, 2, 4, 3, 5) + array.transpose(2, 1, 0, 5, 4, 3) + array.transpose(0, 2, 1, 3, 5, 4) + array.transpose(2, 0, 1, 5, 3, 4) + array.transpose(1, 2, 0, 4, 5, 3)
 
 
-    log("  Forming disconnected amplitudes...         ", calculation, 1, end="", silent = silent)
+    log("  Forming disconnected amplitudes...         ", calculation, 1, end = "", silent = silent)
 
     # Calculation of key intermediate tensors
 
@@ -2550,7 +2550,7 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log("  Forming connected amplitudes...            ", calculation, 1, end="", silent = silent)
+    log("  Forming connected amplitudes...            ", calculation, 1, end = "", silent = silent)
 
     W_ijkabc = P_ijkabc(np.einsum("ibaf,kjcf->ijkabc", g[o, v, v, v], t_ijab, optimize = True) - np.einsum("ijam,mkbc->ijkabc", g[o, o, v, o], t_ijab, optimize = True))
 
@@ -2558,7 +2558,7 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
     
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end="", silent = silent)
+    log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end = "", silent = silent)
 
     E_CCSD_T = (1 / 3) * np.einsum("ijkabc,ijkabc,ijkabc->", W_ijkabc + V_ijkabc, W, e_ijkabc, optimize = True)
     
@@ -2609,7 +2609,7 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
         return array_ijab - array_ijab.swapaxes(idx1, idx2) - array_ijab.swapaxes(idx1, idx3)
 
-    log("  Forming disconnected amplitudes...         ", calculation, 1, end="", silent = silent)
+    log("  Forming disconnected amplitudes...         ", calculation, 1, end = "", silent = silent)
         
     # Temporary disconnected (d_ijkabc) and connected (c_ijkabc) triples tensors before permutation, from Crawford
 
@@ -2627,14 +2627,14 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log("  Forming connected amplitudes...            ", calculation, 1, end="", silent = silent)
+    log("  Forming connected amplitudes...            ", calculation, 1, end = "", silent = silent)
         
     c_ijkabc = np.einsum("jkae,eibc->ijkabc", t_ijab, g[v, o, v, v], optimize = True) - np.einsum("imbc,majk->ijkabc", t_ijab, g[o, v, o, o], optimize = True)
     t_ijkabc_c = np.einsum("ijkabc,ijkabc->ijkabc", e_ijkabc, permute_three_indices(permute_three_indices(c_ijkabc, 3, 4, 5), 0, 1, 2), optimize = True)
 
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end="", silent = silent)
+    log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end = "", silent = silent)
         
     # Final contraction for the CCSD(T) energy using the connected and disconnected approximate triples amplitudes
 
@@ -2679,7 +2679,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
     log(f"                   CCSDT(Q) Energy ", calculation, 1, silent = silent, colour="white")
     log_spacer(calculation, silent = silent)
 
-    log("  Forming quadruples amplitudes...           ", calculation, 1, end="", silent = silent)
+    log("  Forming quadruples amplitudes...           ", calculation, 1, end = "", silent = silent)
     
     # Now shape <pr|qs> -> (pq|rs) in chemist's notation
 
@@ -2703,7 +2703,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating MP5 contribution to energy...  ", calculation, 1, end="", silent = silent)
+    log(f"\n  Calculating MP5 contribution to energy...  ", calculation, 1, end = "", silent = silent)
 
     # Determines the MP5 contribution
 
@@ -2713,7 +2713,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
     log(f"[Done]", calculation, 1, silent = silent) 
 
-    log(f"  Calculating MP6 contribution to energy...  ", calculation, 1, end="", silent = silent)
+    log(f"  Calculating MP6 contribution to energy...  ", calculation, 1, end = "", silent = silent)
 
     t_bar_ijklabcd = -2 * t_ijklabcd - t_ijklabcd.swapaxes(4, 6).swapaxes(5, 7) + t_ijklabcd.swapaxes(4, 5)
     t_tilde_ijklabcd = 2 * t_ijklabcd.transpose(0, 1, 2, 3, 7, 5, 4, 6) - t_ijklabcd.transpose(0, 1, 2, 3, 5, 7, 4, 6)
@@ -3046,7 +3046,7 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
         F = ci.build_spin_orbital_Fock_matrix(H_core_SO, g, slice(0, n_occ))
 
 
-    log("\n Preparing arrays for coupled cluster...     ", calculation, 1, end="", silent = silent)
+    log("\n Preparing arrays for coupled cluster...     ", calculation, 1, end = "", silent = silent)
 
     # Builds the inverse epsilon tensors - skips triples and quadruples if not required
 

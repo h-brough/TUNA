@@ -407,7 +407,7 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     # Calculates the one-electron integrals
 
-    log(" Calculating one-electron integrals...     ", calculation, 1, end="", silent = silent)
+    log(" Calculating one-electron integrals...     ", calculation, 1, end = "", silent = silent)
 
     S_cart, T_cart, V_NE_cart, D_cart, Q_cart = calculate_one_electron_integrals(molecule.n_atoms, molecule.atoms, molecule.n_cartesian_basis, molecule.cartesian_basis_functions, molecule.centre_of_mass, calculation)
 
@@ -415,7 +415,7 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     # Makes sure the two-electron integrals can fit in memory, and calculate them
 
-    log(" Calculating two-electron integrals...     ", calculation, 1, end="", silent = silent)
+    log(" Calculating two-electron integrals...     ", calculation, 1, end = "", silent = silent)
 
     try:
 
@@ -481,7 +481,7 @@ def transform_to_spherical_harmonics(S_cart: ndarray, T_cart: ndarray, V_NE_cart
     
     timer("Spherical harmonic transformation", 0)
 
-    log("\n Transforming to spherical harmonics...    ", calculation, 1, end="", silent = silent)
+    log("\n Transforming to spherical harmonics...    ", calculation, 1, end = "", silent = silent)
 
     # Builds the Cartesian to spherical transformation matrix
 
@@ -731,7 +731,7 @@ def calculate_nuclear_repulsion_energy(charges: ndarray, coordinates: ndarray, c
 
     """
     
-    log(" Calculating nuclear repulsion energy...  ", calculation, 1, end="", silent = silent)
+    log(" Calculating nuclear repulsion energy...  ", calculation, 1, end = "", silent = silent)
 
     # Does not rely on molecule being aligned on z axis
 
@@ -770,7 +770,7 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
     
     timer("Fock transformation matrix", 0)
 
-    log(" Constructing Fock transformation matrix...   ", calculation, 1, end="", silent = silent)
+    log(" Constructing Fock transformation matrix...   ", calculation, 1, end = "", silent = silent)
 
     # Symmetrise the overlap matrix
 
@@ -994,7 +994,7 @@ def calculate_D2_dispersion_energy(molecule: Molecule, calculation: Calculation,
 
     S6 = calculation.functional.D2_S6 if calculation.DFT_calculation else 1.2
 
-    log(f" Calculating semi-empirical dispersion energy with S6 value of {S6:.3f}...  ", calculation, 1, end="", silent = silent)
+    log(f" Calculating semi-empirical dispersion energy with S6 value of {S6:.3f}...  ", calculation, 1, end = "", silent = silent)
     
     # This parameter was chosen to match the implementation of Hartree-Fock D2 in ORCA
 
@@ -1142,7 +1142,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     if method.perturbative_method or calculation.MPC_prop != 0: 
             
-        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, _, natural_orbitals = mp.run_perturbation_theory_calculation(method, molecule, SCF_output, integrals, calculation, V_NN, silent = silent)
+        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, _, natural_orbitals = mp.run_perturbation_theory_calculation(method, molecule, SCF_output, integrals, calculation, V_NN, grid_container, silent = silent)
         
         props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "MP2", silent)
 
@@ -1193,7 +1193,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # Adds up and prints MP2 energies
 
-    if method.method_base == "MP2" or calculation.MPC_prop != 0: 
+    if method.method_base == "MP2" or (calculation.MPC_prop != 0 and not method.excited_state_method and not calculation.time_dependent): 
         
         space = " " * max(0, 8 - len(method.name))
 
@@ -1205,12 +1205,11 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         if do_DFT:
             
-            log(f" Double-hybrid correlation energy:  " + f"{E_MP2:16.10f}\n", calculation, 1, silent = silent)
+            log(f" Double-hybrid correlation energy: " + f"{E_MP2:16.10f}\n", calculation, 1, silent = silent)
 
         else:
             
             log(f" Correlation energy from {method.name}: {space}" + f"{E_MP2:16.10f}\n", calculation, 1, silent = silent)
-
 
     # Adds up and prints MP3 energies
 
@@ -1285,11 +1284,12 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         final_energy = E_excited_state
 
         method.name = method.name.replace("[", "(").replace("]", ")")
-        space = " " * max(0, 8 - len(method.name))
 
         log(f"\n Excitation energy is the energy difference to excited state {calculation.root}.", calculation, 1, silent = silent)
         
-        log(f"\n Excitation energy from {method.name}:  {space}" + f"{E_transition:16.10f}", calculation, 1, silent = silent)
+        excited_method_name = method.name if method.excited_state_method else "TD-" + method.name
+        
+        log(f"\n Excitation energy from {f"{excited_method_name}:":<11} {E_transition:15.10f}", calculation, 1, silent = silent)
     
     # This is the total final energy
 

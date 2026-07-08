@@ -114,7 +114,7 @@ KEYWORDS = [
     Keyword("TD", "time_dependent"),
     Keyword("NL", "VV10"),
     Keyword("RELAXED", "relaxed_density"),
-    Keyword("UNRELAXED", "MP2_unrelaxed_density"),
+    Keyword("UNRELAXED", "unrelaxed_density"),
     Keyword("STAB", "stability_analysis"),
     Keyword("NOTRIPLETS", "calculate_no_triplets"),
     Keyword("NOSINGLETS", "calculate_no_singlets"),

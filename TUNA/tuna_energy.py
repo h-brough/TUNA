@@ -269,7 +269,7 @@ def calculate_self_consistent_guess(calculation: Calculation, atomic_symbols: li
     
     timer("Initial guess", 0)
 
-    log("\n Calculating self-consistent density for guess...  ", calculation, end="", silent = silent)
+    log("\n Calculating self-consistent density for guess...  ", calculation, end = "", silent = silent)
 
     # Stores the full basis
 
@@ -381,7 +381,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     # Only two components of polarisability are indepdendent for diatomics
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end = "")
 
     polarisability_parallel, E_backward_parallel, E_forward_parallel = calculate_second_electric_field_derivative(electric_field_z)
     
@@ -391,7 +391,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end="")
+    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end = "")
     
     polarisability_perpendicular, _, _ = calculate_second_electric_field_derivative(electric_field_x)
     
@@ -476,7 +476,7 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
 
     # Only two components of hyperpolarisability are indepdendent for diatomics
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end = "")
 
     # Performs third derivative of energy with respect to electric field along an axis
     
@@ -519,7 +519,7 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
 
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end="")
+    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end = "")
     
     # Performs first derivative of energy with respect to electric field along an axis (z), of second derivative of energy wrt. field along another axis (x)
 
@@ -616,7 +616,7 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
 
     log(f"  Using a finite field magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end = "")
 
     # Performs first derivative of energy with respect to electric field along the z-axis
 
@@ -698,7 +698,7 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
 
     log(f"  Using a finite gradient magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end="")
+    log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end = "")
 
     # Performs first derivative of energy with respect to electric field gradient along the z-axis
 
@@ -716,7 +716,7 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     
     log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end="")
+    log(f"  Calculating perpendicular derivative...    ", calculation, 1, silent = silent, end = "")
 
     # Performs first derivative of energy with respect to electric field gradient along the x-axis
 
@@ -792,7 +792,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     """
 
-    log("\n Setting up molecule...     ", calculation, 1, silent = silent, end="")
+    log("\n Setting up molecule...     ", calculation, 1, silent = silent, end = "")
 
     # Builds molecule object using calculation and atomic parameters
 

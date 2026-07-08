@@ -28,9 +28,7 @@
 
 - Sort out printing MOs - make sure cartharm doesnt break everything
 - Relaxed unrestricted MP2 density
-- Check whether g should be full ansym or scaled HFX ansym for unrestricted CIS(D) with different props.
-- Check double hybrid relaxed DMs, doe sit need K_XC?
-- Make sure last command in excited staets manual works
+- Double-hybrid relaxed density matrix not quite agreeing -fine probably but ask claude
 - check all kinds of density matrices with frozen core
 
 ### Changed

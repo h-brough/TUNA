@@ -114,7 +114,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
     
     timer("Integration grid setup", 0)
 
-    log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end="", silent = silent)
+    log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end = "", silent = silent)
 
     # Reads the integration grid parameters from the requested convergence criteria
     
@@ -152,7 +152,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
     log(f"\n Integration grid has {n_radial} radial and {points.shape[2]} angular points, a Lebedev order of {Lebedev_order}.", calculation, 1, silent = silent)
     log(f" In total there are {total_points} grid points, {points_per_atom} per atom.", calculation, 1, silent = silent)
 
-    log("\n Building guess density on grid...  ", calculation, 1, end="", silent = silent)
+    log("\n Building guess density on grid...  ", calculation, 1, end = "", silent = silent)
 
     # Calculates the basis functions expressed on the integration grid
 
@@ -1045,7 +1045,7 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
 
 
-def calculate_restricted_exchange_correlation_kernel_matrix(o: slice, v: slice, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
+def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
 
     """
     
@@ -1062,8 +1062,10 @@ def calculate_restricted_exchange_correlation_kernel_matrix(o: slice, v: slice, 
         silent (bool): Cancel logging
 
     Returns:
-        K_XC_singlet (array): Singlet exchange-correlation kernel matrix
-        K_XC_triplet (array): Triplet exchange-correlation kernel matrix
+        K_X_singlet (array): Singlet exchange kernel matrix
+        K_C_singlet (array): Singlet correlation kernel matrix
+        K_X_triplet (array): Triplet exchange kernel matrix
+        K_C_triplet (array): Triplet correlation kernel matrix
     
     """
 
@@ -1086,15 +1088,15 @@ def calculate_restricted_exchange_correlation_kernel_matrix(o: slice, v: slice, 
 
     # Calculates the exchange kernel
 
-    f_XC = 2 * exchange_kernel(density, None, None, calculation)
+    f_X = 2 * exchange_kernel(density, None, None, calculation)
     
     # Calculates the singlet correlation kernel
 
-    f_XC_singlet = f_XC + 2 * correlation_density_kernel(density, None, None, calculation)
+    f_C_singlet = 2 * correlation_density_kernel(density, None, None, calculation)
 
     # Calculates the triplet correlation kernel
 
-    f_XC_triplet = f_XC + 2 * correlation_spin_kernel(density, None, None, calculation)
+    f_C_triplet = 2 * correlation_spin_kernel(density, None, None, calculation)
     
     log("[Done]", calculation, 1, silent)
 
@@ -1111,12 +1113,15 @@ def calculate_restricted_exchange_correlation_kernel_matrix(o: slice, v: slice, 
     
     # Contract the transition density with itself and the weights
     
-    K_XC_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_XC_singlet * weights, optimize = True)
-    K_XC_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_XC_triplet * weights, optimize = True)
+    K_X_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_X * weights, optimize = True)
+    K_C_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_singlet * weights, optimize = True)
+
+    K_X_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_X * weights, optimize = True)
+    K_C_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_triplet * weights, optimize = True)
 
     log("[Done]", calculation, 1, silent)
 
-    return K_XC_singlet, K_XC_triplet
+    return K_X_singlet, K_C_singlet, K_X_triplet, K_C_triplet
 
 
 
@@ -1127,7 +1132,7 @@ def calculate_restricted_exchange_correlation_kernel_matrix(o: slice, v: slice, 
 
 
 
-def calculate_unrestricted_exchange_correlation_kernel_matrix(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
+def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
  
     """
     
@@ -1146,8 +1151,9 @@ def calculate_unrestricted_exchange_correlation_kernel_matrix(o: slice, v: slice
         silent (bool): Cancel logging
  
     Returns:
-        K_XC (array): spin orbital exchange-correlation kernel matrix
-    
+        K_X (array): Spin orbital exchange kernel matrix
+        K_C (array): Spin orbital correlation kernel matrix
+ 
     """
  
     # Builds the spin orbitals on the integration grid 
@@ -1182,12 +1188,7 @@ def calculate_unrestricted_exchange_correlation_kernel_matrix(o: slice, v: slice
     f_C_aa, f_C_ab, f_C_bb = correlation_kernel(alpha_density, beta_density, total_density, None, None, None, None, None, calculation)
  
     # The same-spin blocks combine the analytic exchange and correlation; the opposite-spin block is correlation only
- 
-    f_aa = f_X_aa + f_C_aa
-    f_bb = f_X_bb + f_C_bb
-
-    f_ab = f_C_ab
- 
+  
     log("[Done]", calculation, 1, silent)
  
     log(" Calculating matrix elements...              ", calculation, 1, silent, end = "")
@@ -1209,11 +1210,14 @@ def calculate_unrestricted_exchange_correlation_kernel_matrix(o: slice, v: slice
 
     # Contracts each spin block of the kernel with the appropriate transition densities
 
-    K_XC = np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_alpha, f_aa * weights, optimize = True)
-    K_XC += np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_beta,  f_ab * weights, optimize = True)
-    K_XC += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_alpha, f_ab * weights, optimize = True)
-    K_XC += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_bb * weights, optimize = True)
+    K_X = np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_alpha, f_X_aa * weights, optimize = True)
+    K_X += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_X_bb * weights, optimize = True)
+
+    K_C = np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_alpha, f_C_aa * weights, optimize = True)
+    K_C += np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_beta,  f_C_ab * weights, optimize = True)
+    K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_alpha, f_C_ab * weights, optimize = True)
+    K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_C_bb * weights, optimize = True)
 
     log("[Done]", calculation, 1, silent)
 
-    return K_XC
+    return K_X, K_C
