@@ -452,7 +452,7 @@ def calculate_thermochemical_corrections(molecule: Molecule, calculation: Calcul
     # All values are printed in units of hartree, for consistency
 
     log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
-    log("                                   Thermochemistry", calculation, 2, colour="white")
+    log("                                   Thermochemistry", calculation, 2, colour = "white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
     log(f"  Electronic energy:   {energy:16.10f}     Electronic entropy:   {temperature * electronic_entropy:16.10f}", calculation, 2)
     log(f"\n  Translational energy:{translational_internal_energy:16.10f}     Translational entropy:{temperature * translational_entropy:16.10f}", calculation, 2)

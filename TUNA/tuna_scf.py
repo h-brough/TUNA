@@ -1323,7 +1323,7 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
     log_convergence_acceleration(calculation, silent = silent)
 
     log_big_spacer(calculation, silent = silent)
-    log("                                   Self-consistent Field Cycle Iterations", calculation, 1, silent = silent, colour="white")
+    log("                                   Self-consistent Field Cycle Iterations", calculation, 1, silent = silent, colour = "white")
     log_big_spacer(calculation, silent = silent)
     log("  Step          E                 DE             RMS(DP)          MAX(DP)           Error       Damping", calculation, 1, silent = silent)
     log_big_spacer(calculation, silent = silent)

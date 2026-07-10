@@ -351,8 +351,8 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
         open(calculation.trajectory_path, "w").close()
 
-    log_big_spacer(calculation, start="\n")
-    log("                                  Ab Initio Molecular Dynamics Simulation", calculation, 1, colour="white")
+    log_big_spacer(calculation, start = "\n")
+    log("                                  Ab Initio Molecular Dynamics Simulation", calculation, 1, colour = "white")
     log_big_spacer(calculation)
     log("  Step    Time    Distance    Temperature    Pot. Energy     Kin. Energy        Energy          Drift", calculation, 1)
     log_big_spacer(calculation)

@@ -160,8 +160,8 @@ def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: 
     
     """
 
-    log_spacer(calculation, silent = silent, start="\n")
-    log(f"              {method.name:>5} Energy and Density ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent, start = "\n")
+    log(f"              {method.name:>5} Energy and Density ", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
     log(f"  Energy convergence tolerance:        {calculation.energy_convergence:.10f}", calculation, 1, silent = silent)
@@ -2519,8 +2519,8 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
     method.name = method.name.replace("[", "(").replace("]", ")")
 
-    log_spacer(calculation, silent = silent, start="\n")
-    log(f"                    {method.name} Energy ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent, start = "\n")
+    log(f"                    {method.name} Energy ", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
 
@@ -2599,8 +2599,8 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
     method.name = method.name.replace("[", "(").replace("]", ")")
 
-    log_spacer(calculation, silent = silent, start="\n")
-    log(f"                   {method.name} Energy  ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent, start = "\n")
+    log(f"                   {method.name} Energy  ", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
     def permute_three_indices(array_ijab, idx1, idx2, idx3):
@@ -2675,8 +2675,8 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
     """
 
-    log_spacer(calculation, silent = silent, start="\n")
-    log(f"                   CCSDT(Q) Energy ", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent, start = "\n")
+    log(f"                   CCSDT(Q) Energy ", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
     log("  Forming quadruples amplitudes...           ", calculation, 1, end = "", silent = silent)

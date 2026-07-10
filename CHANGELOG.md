@@ -7,6 +7,7 @@
 - Spin-adapted and unrestricted time-dependent Hartree-Fock and CIS
 - Time-dependent DFT with LSDA functionals with `TD` keyword, and optional `TDA`
 - Perturbative doubles for all TD methods with `[D]`
+- Plot absorbance spectra for `TD` calculations with `ABSPLOT`, change width with `PEAKWIDTH`
 - Configuration interaction methods CISD (spin-adapted and spin orbital) and CISDT (spin orbital)
 - Non-local dispersion energy with VV10 with functional-optimised parameters with `NL` keyword
 - Response density for (SCS-)MP2 and double-hybrids with `RELAXED` keyword
@@ -23,22 +24,23 @@
 - Calculations in an applied electric field gradient with `EGX`, `EGY` and `EGZ`
 - Change the number of molecular orbitals printed with `PRINTMOS`
 - Keywords for precise SCF convergence control: `ECONV`, `MAXDP`, `RMSDP` and `DIISERR`
-- Use `COLOUR` followed by a hexadecimcal, like #FF00FF, to get a specific colour for plotting
+- Use `COLOUR` followed by a hexadecimal, like #FF00FF, to get a specific colour for plotting
+- Greatly improved molecular orbital output, including type of orbital (2px, 3dz^2, 4dxy etc.)
+- Natural orbital coefficients and occupancies now print with `NATORBS` and `PRINTMOS` or `P`
 
-
-- Sort out printing MOs - make sure cartharm doesnt break everything
+- Other LDA derivatives
 - Relaxed unrestricted MP2 density
-- Double-hybrid relaxed density matrix not quite agreeing -fine probably but ask claude
-- check all kinds of density matrices with frozen core
+- check all kinds of density matrices with frozen core, (un)relaxed, linearised restricted all ok. check unrestricted after fix
+- Ask claude what's wrong with unrestricted MP2
+
 
 ### Changed
 
 - Basis set extrapolation QZ/5Z and 5Z/6Z parameters optimised to reproduce the hydrogen atom energy
-- - The DFT module has been split off into tuna_xc, housing the exchange-correlation functionals
+- The DFT module has been split off into tuna_xc, housing the exchange-correlation functionals
 - The `ECONV` keyword now also affects SCF energy convergence, not just correlated calculations
 - Modules are now easily timed and with `P`, a sorted output for used modules is printed
 - The transformation of two-electron integrals to the molecular orbital basis is now 20% faster
-- Molecular orbital output now tells you the type of orbital (2px, 3dz^2, 4dxy etc.)
 - Speed of AO-MP2 calculations is around 3x faster, with clarified output
 - First-order vibrational perturbation theory can now be enabled with `VPT1`
 - An error will now prevent trying to calculate two-electron integrals without enough memory
@@ -48,6 +50,8 @@
 - Curved brackets are now also accepted as well as square brackets for keywords on Linux and MacOS
 - The `PRINTMOS` keyword will always print molecular orbital information
 - CISD and CISDT are now picked for automatic full CI rather than coupled cluster methods
+- Default colour for plots is now black, rather than blue
+- The `PLOTVIB` keyword is now `VIBPLOT`
 - Huge revamp of the manual
 
 ### Fixed

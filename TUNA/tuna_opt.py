@@ -210,7 +210,7 @@ def optimisation_is_converged(iteration: int, gradient: float, step: float, calc
     
     if converged:
 
-        log_spacer(calculation, start="\n",space="")
+        log_spacer(calculation, start = "\n",space="")
         log(colored(f"      Optimisation converged in {iteration} iterations!","white"), calculation, 1)
         log_spacer(calculation,space="")
 
@@ -305,7 +305,7 @@ def print_optimisation_convergence_information(gradient: float, step: float, cal
     is_gradient_converged_str = convert_boolean_to_string(np.abs(gradient) < gradient_convergence_criteria)
     is_step_converged_str = convert_boolean_to_string(np.abs(step) < step_convergence_criteria)
 
-    log_spacer(calculation, start="\n")
+    log_spacer(calculation, start = "\n")
 
     log("   Factor        Value       Criteria    Converged?", calculation, 1)
 
@@ -385,7 +385,7 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
         bond_length = calculate_bond_length(coordinates)
 
-        log_big_spacer(calculation, start="\n",space="")
+        log_big_spacer(calculation, start = "\n",space="")
         log(f"Beginning energy and gradient iteration {iteration} with bond length of {bohr_to_angstrom(bond_length):5f} angstroms...", calculation, 1)
         log_big_spacer(calculation, space="")
 
@@ -516,7 +516,7 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
 
     if calculation.vertical or calculation.monatomic:
         
-        log_spacer(calculation, start="\n", space="")
+        log_spacer(calculation, start = "\n", space="")
         log("Calculating energy of original system...", calculation)
         log_spacer(calculation, space="")
 
@@ -526,7 +526,7 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
 
         calculation.charge += charge_delta * calculation.n_electrons_for_ip_or_ea
         
-        log_spacer(calculation, start="\n", space="")
+        log_spacer(calculation, start = "\n", space="")
         log("Calculating energy of charged system...", calculation)
         log_spacer(calculation, space="")
 
@@ -540,7 +540,7 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
 
         # These functions will calculate the adiabatic electron affinity or ionisation energy
 
-        log_spacer(calculation, start="\n", space="")
+        log_spacer(calculation, start = "\n", space="")
         log("Optimising energy of original molecule...", calculation)
         log_spacer(calculation, space="")
 
@@ -550,7 +550,7 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
 
         calculation.charge += charge_delta * calculation.n_electrons_for_ip_or_ea
 
-        log_spacer(calculation, start="\n", space="")
+        log_spacer(calculation, start = "\n", space="")
         log("Optimising energy of charged molecule...", calculation)
         log_spacer(calculation, space="")
 
@@ -599,7 +599,7 @@ def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols:
 
         _, _, _, zero_point_energy = freq.calculate_harmonic_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
 
-    log_spacer(calculation, start="\n", space="", end="~~~")
+    log_spacer(calculation, start = "\n", space="", end="~~~")
     log("Calculating energy on atoms", calculation) if calculation.no_counterpoise_correction else log("Calculating counterpoise-corrected atomic energies...", calculation)
     log_spacer(calculation, space="", end="~~~")
 

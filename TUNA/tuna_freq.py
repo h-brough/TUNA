@@ -449,8 +449,8 @@ def print_absorption_spectrum(calculation: Calculation, transition_matrix: ndarr
 
     """
 
-    log_big_spacer(calculation, 1, start="\n")
-    log("                                        Anharmonic Absorption Spectrum", calculation, 1, colour="white")
+    log_big_spacer(calculation, 1, start = "\n")
+    log("                                        Anharmonic Absorption Spectrum", calculation, 1, colour = "white")
     log_big_spacer(calculation, 1)
     log("  Transition         Energy          Frequency (per cm)       Wavelength (nm)     Intensity (km per mol)", calculation, 1)
     log_big_spacer(calculation, 1)
@@ -607,8 +607,8 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
     transition_per_cm = 0
 
-    log_spacer(calculation, 1, start="\n", space="")
-    log(" Beginning anharmonic frequency calculation...", calculation, 1, colour="white")
+    log_spacer(calculation, 1, start = "\n", space="")
+    log(" Beginning anharmonic frequency calculation...", calculation, 1, colour = "white")
     log_spacer(calculation, 1, space="")
 
     log(f"\n Using a scan step length of {calculation.step} angstroms.\n", calculation, 1)
@@ -636,7 +636,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
     calculation.number_of_steps = int(SCAN_EXTENT / calculation.step / 3) + 1
 
     log_big_spacer(calculation, 1)
-    log("                                          Anharmonic Frequency", calculation, 1, colour="white")
+    log("                                          Anharmonic Frequency", calculation, 1, colour = "white")
     log_big_spacer(calculation, 1)
     log("  Step       Fundamental Freq. (per cm)         Chi        Harmonic Freq. (per cm)     Bond Length Range", calculation, 1)
     log_big_spacer(calculation, 1)
@@ -749,8 +749,8 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
     masses = molecule.masses
     reduced_mass = molecule.reduced_mass
 
-    log_spacer(calculation, 1, start="\n", space="")
-    log(" Beginning harmonic frequency calculation...", calculation, 1, colour="white")
+    log_spacer(calculation, 1, start = "\n", space="")
+    log(" Beginning harmonic frequency calculation...", calculation, 1, colour = "white")
     log_spacer(calculation, 1, space="")
     
     log(f"\n Hessian will be calculated at a bond length of {bohr_to_angstrom(bond_length):.5f} angstroms.", calculation, 1)
@@ -787,7 +787,7 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
     log(" Dipole moment derivative already includes vibrational overlap.\n", calculation, 1)
 
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
-    log("           Harmonic Frequency                         Transition Intensity", calculation, 1, colour="white")
+    log("           Harmonic Frequency                         Transition Intensity", calculation, 1, colour = "white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
     log(f"  Force constant:           {hessian:10.5f}       Dipole moment derivative:  {dipole_derivative:10.5f}", calculation, 1)
     log(f"  Reduced mass:           {reduced_mass:12.5f}       Squared derivative:        {dipole_derivative_squared:10.5f}", calculation, 1)

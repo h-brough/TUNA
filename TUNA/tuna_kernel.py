@@ -56,7 +56,7 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
     # Prints various information about the molecule
 
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent = silent)
-    log("    Molecule and Basis Information", calculation, 1, silent = silent, colour="white")
+    log("    Molecule and Basis Information", calculation, 1, silent = silent, colour = "white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent = silent)
 
     log("  Molecular structure: " + molecule.molecular_structure, calculation, 1, silent = silent)
@@ -218,8 +218,8 @@ def calculate_extrapolated_energy(small_basis: str, E_SCF_small: float, E_SCF_la
 
     E_extrapolated = E_SCF_extrapolated + E_corr_extrapolated
 
-    log_spacer(calculation, silent = silent, start="\n")
-    log(f"                Basis Set Extrapolation", calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent, start = "\n")
+    log(f"                Basis Set Extrapolation", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
     log(f"  {small_name}-zeta SCF energy:".ljust(35) + f"{E_SCF_small:16.10f}",  calculation, 1, silent = silent)
@@ -1102,7 +1102,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
     E_CC, E_CC_perturbative = 0, 0
     E_excited_state, E_transition = 0, 0
 
-    natural_orbitals = None
+    natural_orbitals, natural_occupancies = None, None
     SCF_output.D = integrals.D
     SCF_output.Q = integrals.Q
 
@@ -1119,7 +1119,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         if calculation.natural_orbitals: 
                 
-            _, natural_orbitals = mp.calculate_natural_orbitals(P, X, calculation, silent)
+            natural_occupancies, natural_orbitals = mp.calculate_natural_orbitals(P, X, calculation, silent)
 
             log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent)
 
@@ -1142,7 +1142,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     if method.perturbative_method or calculation.MPC_prop != 0: 
             
-        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, _, natural_orbitals = mp.run_perturbation_theory_calculation(method, molecule, SCF_output, integrals, calculation, V_NN, grid_container, silent = silent)
+        E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_occupancies, natural_orbitals = mp.run_perturbation_theory_calculation(method, molecule, SCF_output, integrals, calculation, V_NN, grid_container, silent = silent)
         
         props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "MP2", silent)
 
@@ -1151,7 +1151,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     elif method.method_base == "CC":
 
-        E_CC, E_CC_perturbative, (P, P_alpha, P_beta), _, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
+        E_CC, E_CC_perturbative, (P, P_alpha, P_beta), natural_occupancies, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
         
         props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "Coupled cluster", silent = silent)
 
@@ -1160,7 +1160,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     if not terse and not silent:
         
-        props.calculate_molecular_properties(molecule, calculation, P, integrals.S, SCF_output, P_alpha, P_beta)
+        props.calculate_molecular_properties(molecule, calculation, P, integrals.S, SCF_output, P_alpha, P_beta, natural_orbitals = natural_orbitals, natural_occupancies = natural_occupancies)
     
 
     if method.excited_state_method or calculation.time_dependent:
@@ -1366,7 +1366,7 @@ def calculate_charge_change_energy(reference_energy: float, charged_energy: floa
         action_line = f"  Electron attachment from charge {format_charge(reference_molecule.charge)} to {format_charge(charged_molecule.charge)}..."
         
 
-    log_spacer(calculation, start="\n")
+    log_spacer(calculation, start = "\n")
 
     log(f"{property_name:^55}", calculation)
 
@@ -1422,7 +1422,7 @@ def print_bond_dissociation_energy_information(first_atom_energy: float, second_
     bond_dissociation_energy = first_atom_energy + second_atom_energy - optimised_energy
     bond_dissociation_energy_corrected = first_atom_energy + second_atom_energy - corrected_diatomic_energy
 
-    log_spacer(calculation, start="\n")
+    log_spacer(calculation, start = "\n")
     log(f"             Bond Disscociation Energy", calculation)
     log_spacer(calculation)
     

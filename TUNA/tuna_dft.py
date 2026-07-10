@@ -75,10 +75,10 @@ def integrate_final_density(alpha_density: ndarray, beta_density: ndarray, densi
 
     n_electrons_DFT = integrate_on_grid(density, weights)
 
-    log(f"\n Integral of the final alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent = silent)
-    log(f" Integral of the final beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent = silent)
+    log(f"\n Integral of the alpha density:       {n_alpha_DFT:13.10f}", calculation, 1, silent = silent)
+    log(f" Integral of the beta density:        {n_beta_DFT:13.10f}\n", calculation, 1, silent = silent)
 
-    log(f" Integral of the final total density: {n_electrons_DFT:13.10f}", calculation, 1, silent = silent)
+    log(f" Integral of the total density:       {n_electrons_DFT:13.10f}", calculation, 1, silent = silent)
 
     return
 
@@ -178,10 +178,10 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
 
     n_electrons_DFT = integrate_on_grid(density, weights)
 
-    log(f"\n Integral of the guess alpha density: {n_alpha_DFT:13.10f}", calculation, 1, silent = silent)
-    log(f" Integral of the guess beta density:  {n_beta_DFT:13.10f}\n", calculation, 1, silent = silent)
+    log(f"\n Integral of the guess alpha density: {n_alpha_DFT:14.10f}", calculation, 1, silent = silent)
+    log(f" Integral of the guess beta density:  {n_beta_DFT:14.10f}\n", calculation, 1, silent = silent)
 
-    log(f" Integral of the guess total density: {n_electrons_DFT:13.10f}\n", calculation, 1, silent = silent)
+    log(f" Integral of the guess total density: {n_electrons_DFT:14.10f}\n", calculation, 1, silent = silent)
 
     # Prints a warning of the density integral is a bit dodgy, and throws an error if its totally wrong
 
@@ -1062,10 +1062,9 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
         silent (bool): Cancel logging
 
     Returns:
-        K_X_singlet (array): Singlet exchange kernel matrix
-        K_C_singlet (array): Singlet correlation kernel matrix
-        K_X_triplet (array): Triplet exchange kernel matrix
-        K_C_triplet (array): Triplet correlation kernel matrix
+        K_XC_singlet (array): Singlet exchange-correlation kernel matrix
+        K_XC_triplet (array): Triplet exchange-correlation kernel matrix
+        K_XC_full (array): Unsliced singlet exchange-correlation kernel matrix
     
     """
 
@@ -1113,15 +1112,49 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
     
     # Contract the transition density with itself and the weights
     
-    K_X_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_X * weights, optimize = True)
-    K_C_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_singlet * weights, optimize = True)
+    K_X = np.einsum("iamn,jbmn,mn->iajb", T, T, f_X * weights, optimize = True)
 
-    K_X_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_X * weights, optimize = True)
+    K_C_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_singlet * weights, optimize = True)
     K_C_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_triplet * weights, optimize = True)
+    
+    K_XC_singlet = K_X * calculation.DFX_prop + K_C_singlet * calculation.DFC_prop
+    K_XC_triplet = K_X * calculation.DFX_prop + K_C_triplet * calculation.DFC_prop
+    
+    # Need to do this faster somehow, takes ages
+
+    if calculation.DFT_calculation:
+
+        # Folds in the HFX and DFX proportions
+
+        weighted_f_XC = weights * (f_X * calculation.DFX_prop + f_C_singlet * calculation.DFC_prop)
+
+        n_doubly_occ, n_doubly_virt = T.shape[:2]
+        n_basis = molecular_orbitals_on_grid.shape[0]
+
+        # We form flattened tensors and use BLAS3, which is much faster than einsum heree
+
+        T_flat = T.reshape(n_doubly_occ * n_doubly_virt, -1)
+        phi_flat = molecular_orbitals_on_grid.reshape(n_basis, -1)
+
+        phi_W = phi_flat * weighted_f_XC.ravel()
+
+        # Most memory intensive step
+
+        pair_densities = phi_flat[:, None, :] * phi_W[None, :, :]
+
+        pair_densities_flat = pair_densities.reshape(n_basis ** 2, -1)
+
+        K_flat = T_flat @ pair_densities_flat.T
+
+        K_XC_full = K_flat.reshape(n_doubly_occ, n_doubly_virt, n_basis, n_basis)
+
+    else:
+
+        K_XC_full = None
 
     log("[Done]", calculation, 1, silent)
 
-    return K_X_singlet, K_C_singlet, K_X_triplet, K_C_triplet
+    return K_XC_singlet, K_XC_triplet, K_XC_full
 
 
 
@@ -1151,8 +1184,7 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
         silent (bool): Cancel logging
  
     Returns:
-        K_X (array): Spin orbital exchange kernel matrix
-        K_C (array): Spin orbital correlation kernel matrix
+        K_XC (array): Spin orbital exchange-correlation kernel matrix
  
     """
  
@@ -1217,7 +1249,9 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
     K_C += np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_beta,  f_C_ab * weights, optimize = True)
     K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_alpha, f_C_ab * weights, optimize = True)
     K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_C_bb * weights, optimize = True)
+    
+    K_XC = K_X * calculation.DFX_prop + K_C * calculation.DFC_prop
 
     log("[Done]", calculation, 1, silent)
 
-    return K_X, K_C
+    return K_XC

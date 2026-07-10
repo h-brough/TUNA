@@ -131,7 +131,8 @@ KEYWORDS = [
     Keyword("PLOTLUMO", "plot_LUMO"),
     Keyword("DIFFDENSPLOT", "plot_difference_density"),
     Keyword("DIFFSPINDENSPLOT", "plot_difference_spin_density"),
-    Keyword(("VIBPLOT", "PLOTVIB"), "plot_vibrational_wavefunctions"),
+    Keyword("VIBPLOT", "plot_vibrational_wavefunctions"),
+    Keyword("ABSPLOT", "plot_absorbance_spectrum"),
 
     Keyword("DIPOLE", "dipole"),
     Keyword("QUADRUPOLE", "quadrupole"),
@@ -165,6 +166,7 @@ KEYWORDS = [
     Keyword(("ROOT", "STATE"), "root", "V", 1, int),
     Keyword("EXTHRESH", "excited_state_contribution_threshold", "V", 1, float),
     Keyword("NSTATES", "n_states", "V", 10, int),
+    Keyword("PEAKWIDTH", "peak_width", "V", 3.0, float),
 
     Keyword(("GEOMMAXITER", "MAXGEOMITER"), "geom_max_iter", "V", 30, int),
     Keyword("MAXSTEP", "max_step", "V", 0.2, float),
@@ -430,7 +432,7 @@ def process_complex_keywords(self: Calculation) -> None:
 
     # Checks first for normal colour keywords, "BLACK", "RED", etc.
 
-    self.scan_plot_colour = next((code for name, code in colour_map.items() if name in self.params), "b")
+    self.scan_plot_colour = next((code for name, code in colour_map.items() if name in self.params), "black")
 
     # Then checks for "COLOUR #FF00FF"
 

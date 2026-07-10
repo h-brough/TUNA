@@ -13,6 +13,8 @@ This is the TUNA module for post energy evaluation properties, written first for
 Functions to calculate and print properties after the molecular energy and density matrix has been evaluated live here. These properties include population analysis,
 multipole moments, and printing in a clearly formatted way the molecular orbital coefficients and eigenvalues.
 
+Updated in version 0.11.0 to improve orbital printing, including support for natural orbitals.
+
 This module contains:
 
 1. Functions to calculate multipole moments (calculate_nuclear_dipole_moment, calculate_nuclear_quadrupole_moment, calculate_and_print_multipole_moments, etc.)
@@ -214,13 +216,11 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
 
         """
 
-        width, boundary = 25, 1e-5
-
-        if value > boundary:
+        if value > constants.MOMENT_THRESH:
             
             text = f"  {molecule.molecular_structure}  {positive_diagram}"
         
-        elif value < -boundary:
+        elif value < -constants.MOMENT_THRESH:
             
             text = f"  {molecule.molecular_structure}  {negative_diagram}"
 
@@ -228,7 +228,7 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
             
             text = f"      {molecule.molecular_structure}      "
         
-        return text.center(width)
+        return text.center(25)
 
 
     # Creates consistent dipole and quadrupole moment diagrams
@@ -239,7 +239,7 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
 
 
     log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
-    log("                    Dipole Moment                                        Quadrupole Moment", calculation, 2, colour="white")
+    log("                    Dipole Moment                                        Quadrupole Moment", calculation, 2, colour = "white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
     log(f"  Nuclear: {nuclear_dipole_moment:11.7f}     Electronic: {electronic_dipole_moment:11.7f}       Nuclear: {nuclear_quadrupole_moment:11.7f}   Anisotropic: {anisotropic_quadrupole_moment:11.7f}\n", calculation, 2)
     
@@ -258,7 +258,7 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
 
 
 
-def calculate_Koopmans_parameters(epsilons: ndarray, n_occ: int, calculation: Calculation) -> tuple:
+def calculate_koopmans_parameters(epsilons: ndarray, n_occ: int, calculation: Calculation) -> tuple:
 
     """
 
@@ -343,7 +343,7 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
     virial_ratio = -1 * (total_energy - SCF_output.kinetic_energy) / SCF_output.kinetic_energy
            
     log_spacer(calculation, priority=2, silent = silent)
-    log("                  Energy Components       ", calculation, 2, colour="white", silent = silent)
+    log("                  Energy Components       ", calculation, 2, colour = "white", silent = silent)
     log_spacer(calculation, priority=2, silent = silent)    
 
     log(f"  Kinetic energy:                   {SCF_output.kinetic_energy:15.10f}", calculation, 2, silent = silent)
@@ -408,7 +408,7 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
 
     """
 
-    s_squared_exact = ((n_alpha - n_beta) / 2) * ((n_alpha - n_beta) / 2 + 1)
+    s_squared_exact = (n_alpha - n_beta) / 2 * ((n_alpha - n_beta) / 2 + 1)
 
     # Contraction to calculate spin contamination
 
@@ -424,15 +424,15 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
 
     space1, space2 = ("       ", "            ") if len(kind) == 3 else ("", "")
     
-    log_spacer(calculation, silent = silent, priority=priority)
-    log(f"   {space1}       {title} Spin Contamination       ", calculation, priority, silent = silent, colour="white")
-    log_spacer(calculation, silent = silent, priority=priority)
+    log_spacer(calculation, silent = silent, priority = priority)
+    log(f"   {space1}       {title} Spin Contamination       ", calculation, priority, silent = silent, colour = "white")
+    log_spacer(calculation, silent = silent, priority = priority)
 
     log(f"  Exact S^2 expectation value:            {s_squared_exact:9.6f}", calculation, priority, silent = silent)
     log(f"  {kind} S^2 expectation value:  {space2}{s_squared:9.6f}", calculation, priority, silent = silent)
     log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, priority, silent = silent)
 
-    log_spacer(calculation, silent = silent, priority=priority, end="\n")
+    log_spacer(calculation, silent = silent, priority = priority, end="\n")
 
     return
 
@@ -511,7 +511,7 @@ def calculate_and_print_population_analysis(P: ndarray, S: ndarray, R: ndarray, 
         atoms_formatted.append(atomic_symbol)
 
     log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
-    log("      Mulliken Charges                Lowdin Charges                Mayer Free, Bonded, Total Valence", calculation, 2, colour="white")
+    log("      Mulliken Charges                Lowdin Charges                Mayer Free, Bonded, Total Valence", calculation, 2, colour = "white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
     log(f"  {atoms_formatted[0]} {charges_Mulliken[0]:8.5f}                  {atoms_formatted[0]} {charges_Lowdin[0]:8.5f}                  {atoms_formatted[0]} {free_valences[0]:8.5f},  {bond_order_Mayer:8.5f},  {total_valences[0]:8.5f}", calculation, 2)
     log(f"  {atoms_formatted[1]} {charges_Mulliken[1]:8.5f}                  {atoms_formatted[1]} {charges_Lowdin[1]:8.5f}                  {atoms_formatted[1]} {free_valences[1]:8.5f},  {bond_order_Mayer:8.5f},  {total_valences[1]:8.5f}", calculation, 2)
@@ -531,85 +531,47 @@ def calculate_and_print_population_analysis(P: ndarray, S: ndarray, R: ndarray, 
 
 
 
-def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Molecule, SCF_output: Output) -> None:
+def print_molecular_orbital_eigenvalues(calculation: Calculation, SCF_output: Output, occupancies: list, spin_labels: list) -> None:
 
     """
 
-    Prints the Fock matrix eigenvalues, separately for UHF references.
+    Prints the Fock matrix eigenvalues.
 
     Args:   
         calculation (Calculation): Calculation object
-        molecule (Molecule): Molecule object
         SCF_output (Output): Output object   
+        occupancies (list): Orbital occupancies
+        spin_labels (list): Orbital spin labels
 
     """
 
     priority = 1 if calculation.print_molecular_orbitals else 3
 
-    log_spacer(calculation, priority=priority, start="\n")
-    log("           Molecular Orbital Eigenvalues", calculation, priority=priority, colour="white")
-    log_spacer(calculation, priority=priority)
+    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority)
+    log("                 Molecular Orbital Eigenvalues", calculation, priority = priority, colour = "white")
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority)
+    log("   N        Occupancy           Spin                 Energy", calculation, priority)
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, priority)
 
-    epsilons, epsilons_alpha, epsilons_beta = SCF_output.epsilons, SCF_output.epsilons_alpha, SCF_output.epsilons_beta
+    orbital_energies = SCF_output.epsilons
 
-    # Prints alpha and beta eigenvalues separately
+    # Prints the spin for unrestricted calculations
 
-    if calculation.reference == "UHF":
+    if calculation.reference == "RHF":
+        
+        spin_labels_words = ["----"] * len(orbital_energies)
 
-        if molecule.n_beta > 0:
+    else:
+        
+        spin_labels_words = [{"a": "Alpha", "b": "Beta"}.get(item, item) for item in spin_labels]
 
-            log("\n    Alpha Eigenvalues           Beta Eigenvalues\n", calculation, priority=priority)
-            
-            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority=priority)
-            log("   N    Occ.    Energy        N    Occ.    Energy  ", calculation, priority=priority)
-            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority=priority)
-            
-            # Occupied orbitals are alpha electrons only
+    # Prints out the molecular orbital information
 
-            occupancies_alpha = [1] * molecule.n_alpha + [0] * int((len(epsilons_alpha) - molecule.n_alpha))
-            occupancies_beta = [1] * molecule.n_beta + [0] * int((len(epsilons_beta) - molecule.n_beta))
+    for mo in range(len(orbital_energies)):
 
-            for i, (epsilon_alpha, epsilon_beta) in enumerate(zip(epsilons_alpha, epsilons_beta)):
-
-                log(f"  {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}       {(i + 1):2.0f}     {occupancies_beta[i]}   {epsilon_beta:10.6f}", calculation, priority=priority)
-
-            log(" ~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, priority=priority)
-
-
-        else:
-
-            log("\n  Alpha eigenvalues:\n", calculation, priority=priority)
-            
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~  ", calculation, priority=priority)
-            log("    N    Occ.    Energy     ", calculation, priority=priority)
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~   ", calculation, priority=priority)
-            
-            # Occupied orbitals are alpha electrons only
-
-            occupancies_alpha = [1] * molecule.n_alpha + [0] * int((len(epsilons_alpha) - molecule.n_alpha))
-
-            for i, epsilon_alpha in enumerate(epsilons_alpha):
-
-                log(f"   {(i + 1):2.0f}     {occupancies_alpha[i]}   {epsilon_alpha:10.6f}    ", calculation, priority=priority)
-
-            log("  ~~~~~~~~~~~~~~~~~~~~~~~  \n", calculation, priority=priority)
-
-
-    elif calculation.reference == "RHF":
-
-        log("    N            Occupation              Energy ", calculation, priority=priority)
-        log_spacer(calculation, priority=priority)
-
-        # Occupied orbitals (doubly occupied) depend on number electron pairs
-
-        occupancies = [2] * molecule.n_doubly_occ + [0] * int((len(epsilons) - molecule.n_doubly_occ))
-
-        for i, epsilon in enumerate(epsilons):
-
-            log(f"   {(i + 1):2.0f}                {occupancies[i]}                {epsilon:10.6f}", calculation, priority=priority)
-
-
-        log_spacer(calculation, priority = priority)
+       log(f" {mo + 1:3.0f}         {occupancies[mo]:7.5f}            {spin_labels_words[mo]:<6}         {orbital_energies[mo]:16.10f}", calculation, priority)
+     
+    log(f"", calculation, priority)
 
     return
 
@@ -621,240 +583,213 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, molecule: Mole
 
 
 
-
-def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Molecule, SCF_output: Output) -> None:
-
+def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Molecule, SCF_output: Output, occupancies: list, spin_labels: list, natural_orbitals: ndarray = None, natural_occupancies: ndarray = None) -> None:
+    
     """
-
-    Prints the coefficients of all molecular orbitals, for both alpha and beta spins for UHF.
+    Prints out molecular orbital coefficients, formatted very carefully.
 
     Args:
         calculation (Calculation): Calculation object
         molecule (Molecule): Molecule object
         SCF_output (Output): Output object
+        occupancies (list): Orbital occupancies
+        spin_labels (list): Orbital spin labels
+        natural_orbitals (array): Natural orbitals
+        natural_occupancies (array): Natural occupancies
 
     """
-    
+
+    # Natural orbitals will be printed if calculated
+
+    do_natorbs = natural_orbitals is not None
+
     priority = 1 if calculation.print_molecular_orbitals else 3
 
-    log_spacer(calculation, priority=priority, start="")
-    log("           Molecular Orbital Coefficients", calculation, priority=priority, colour="white")
-    log_spacer(calculation, priority=priority)
+    if do_natorbs:
+        
+        log("                   Natural Orbital Coefficients", calculation, priority, colour = "white")
 
-    # Build per-orbital atom symbol and subshell label lists
+    else: 
+        
+        log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority)
+        log("                 Molecular Orbital Coefficients", calculation, priority, colour = "white")
+    
+    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority)
 
-    symbol_list, n_list = [], []
-    switch_value = 0
+    # These are sorted by energy, so interleaved for unrestricted calculations - same as for plotting
 
-    for i, atom in enumerate(molecule.partitioned_basis_functions):
+    molecular_orbitals = SCF_output.molecular_orbitals
+    orbital_energies = SCF_output.epsilons
+    
+    orbitals = natural_orbitals if do_natorbs else molecular_orbitals
 
-        for j, _ in enumerate(atom):
+    # Mappings from Cartesian to spherical harmonic counting
 
-            symbol_list.append(molecule.atomic_symbols[i])
-            n_list.append(j + 1)
+    starting_n = {"s": 1, "p": 2, "d": 3, "f": 4, "g": 5, "h": 6}
+    capacity = {"s": 1, "p": 3, "d": 6, "f": 10, "g": 15, "h": 21}
 
-            if i == 1 and j == 0:
+    if calculation.cartesian_harmonics:   # Handles the "CARTHARM" case
 
-                switch_value = len(symbol_list) - 1
+        components = {
 
+            "s": [""],
+            "p": ["x", "y", "z"],
+            "d": ["xx", "xy", "xz", "yy", "yz", "zz"],
+            "f": ["xxx", "xxy", "xxz", "xyy", "xyz", "xzz", "yyy", "yyz", "yzz", "zzz"],
+            "g": [f"c{i}" for i in range(1, 16)],
+            "h": [f"c{i}" for i in range(1, 22)], 
 
+        }
 
-    def format_angular_momentum_list(angular_momentum_list: list, partition_ranges: list) -> list:
+    else:   # Handles the usual case, in spherical harmonics
 
-        """
+        components = {
 
-        Formats the angular momentum list with per-atom subshell numbering.
+            "s": [""],
+            "p": ["x", "y", "z"],
+            "d": ["xy", "xz", "yz", "xxyy", "zz"],
+            "f": ["-3", "-2", "-1", "0", "+1", "+2", "+3"],
+            "g": ["-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4"],
+            "h": ["-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4", "+5"],
 
-        Args:
-            angular_momentum_list (list): List of angular momentum strings
-            partition_ranges (array): Ranges of basis functions partitioned over atomic centres
+        }
+    
+    current_n = starting_n.copy()
+    all_orbitals, all_components = [], []
+    atom_1_cutoff = molecule.partition_ranges[0]
+    
+    i = 0
 
-        Returns:
-            formatted (list): Formatted angular momentum list, with degeneracies considered
+    # Loops through atomic orbitals, transforming lists to spherical harmonic counting if needed
 
-        """
+    while i < len(molecule.angular_momentum_list):
 
-        l_of = {ch: i for i, ch in enumerate("spdfgh")}
+        if len(all_orbitals) == atom_1_cutoff:
 
-        def min_n(letter): 
+            current_n = starting_n.copy()
             
-            return l_of.get(letter, 0) + 1
+        l = molecule.angular_momentum_list[i]
 
-        def degeneracy(letter):
+        n = current_n[l]
+        
+        for comp in components[l]:
 
-            l = l_of.get(letter, 0)
+            # Creates orbital list as eg. "1s", "2s"
 
-            return 2 * l + 1
+            all_orbitals.append(f"{n}{l}")
+            all_components.append(comp)
+            
+        i += capacity[l] 
 
-        formatted, idx = [], 0
+        current_n[l] += 1
 
-        for num_orbitals in partition_ranges:
+    # Atomic orbital lists - "1s", "2s", "2p", "2p", "2p", etc.
 
-            state = {}
+    orbitals_on_atom_1 = all_orbitals[:atom_1_cutoff]
+    orbitals_on_atom_2 = all_orbitals[atom_1_cutoff:]
+    
+    # Angular momenta - "", "", "x", "y", "z", etc.
 
-            for _ in range(num_orbitals):
+    angular_momentum_on_atom_1 = all_components[:atom_1_cutoff]
+    angular_momentum_on_atom_2 = all_components[atom_1_cutoff:]
 
-                # Converts an index into s, p, d, etc.
+    # Makes ranges, accounting for "NATORBS" and single atom calculations
 
-                letter = str(angular_momentum_list[idx]).lower()
+    ao_range = max(molecule.partition_ranges[0], molecule.partition_ranges[1]) if len(molecule.atoms) > 1 else molecule.partition_ranges[0]
+    mo_range = len(SCF_output.molecular_orbitals_alpha) if do_natorbs else len(orbital_energies)
 
-                n, used = state.get(letter, (min_n(letter), 0))
+    # Changes occupancy list to words
 
-                if used >= degeneracy(letter):
+    occupancies = ["Occupied" if occ in [1, 2] else "Virtual " for occ in occupancies]
 
-                    n, used = n + 1, 0
-                
-                used += 1
-                    
-                state[letter] = (n, used)
+    orbital_abbreviation = "NO" if do_natorbs else "MO"
 
-                shell_m = letter
+    # Loops over molecular orbitals
 
-                if letter == "p":
+    for mo in range(min(mo_range, calculation.n_orbitals_to_print)):
 
-                    shell_m = letter + " " + ("x" if used == 1 else "y" if used == 2 else "z")
+        log(f"\n  {orbital_abbreviation} {mo + 1} ", calculation, priority, end = "")
 
-                elif letter == "d":
+        if not do_natorbs:
 
-                    shell_m = letter + " " + ("xy" if used == 1 else "xz" if used == 2 else "yz" if used == 3 else "x2y2" if used == 4 else "z2")
-
-                elif letter == "f":
-
-                    shell_m = letter + " " + ("xy" if used == 1 else "xz" if used == 2 else "yz" if used == 3 else "x2y2" if used == 4 else "z2" if used == 5 else "z2" if used == 6 else "z2")
-
-                # Determines the orbital with the principal quantum number and angular momentum
-
-                formatted.append(f"{n}{shell_m}")
-
-                idx += 1
-
-        return formatted
-
-
-
-
-    def format_molecular_orbitals(symbol_list: list, k: int, switch_value: int, atoms: list, calculation: Calculation, has_printed_1: bool, has_printed_2: bool) -> tuple:
-
-        """
-
-        Manages ghost atoms and formats the list of atoms to be printed.
-
-        """
-
-        sym = symbol_list[k]
-
-        sym = ("X" + sym.split("X")[1].lower().capitalize()) if "X" in sym else sym.lower().capitalize()
-
-        if len(sym) == 1: 
-
-            sym += " "
-
-        if k < switch_value:
-
-            if not has_printed_1: has_printed_1 = True
-
-            else: sym = "  "
+            log(f"{"~~~" if mo + 1 < 10 else "~~"} {occupancies[mo]}", calculation, priority, end = "")
 
         else:
-
-            if not has_printed_2: has_printed_2 = True
-
-            else: sym = "  "
-
-        if k == switch_value and len(atoms) == 2:
-
-            log("", calculation, priority=priority)
-
-        symbol_list[k] = sym
-
-        return sym, has_printed_1, has_printed_2
-
-
-    # Format the orbital to "2p", "3d", etc.
-
-    formatted_ang_mom = format_angular_momentum_list(molecule.angular_momentum_list, molecule.partition_ranges)
-
-
-    def print_coeffs(molecular_orbitals: ndarray, eps: ndarray, n_occ: int) -> None:
-
-        """
+            
+            log(f"{" " if mo + 1 < 10 else ""}", calculation, priority, end = "")
         
-        Prints MO coefficients for RHF.
-        
-        """
+        # Prints occupancy of molecular orbitals
 
-        # The "PRINTMOS" keyword overrides not using "P" for additional print
+        if calculation.reference == "UHF" and not do_natorbs:
 
+            if occupancies[mo] == "Occupied":
+              
+                log(f" ~~~ {"Alpha"}", calculation, priority, end = "") if spin_labels[mo] == "a" else log(f" ~~~~ {"Beta"}", calculation, priority, end = "")
+            
+            else:
 
-        for mo in range(min(len(eps), calculation.n_orbitals_to_print)):
+                log(f"~~~~ {"Alpha"}", calculation, priority, end = "") if spin_labels[mo] == "a" else log(f"~~~~~ {"Beta"}", calculation, priority, end = "")
+ 
+        else:
+      
+            log(f"          ", calculation, priority, end = "")
 
-            occ = "(Occupied)" if n_occ > mo else "(Virtual)"
+        if do_natorbs:   # Prints natural orbital occupancy
+            
+            log(f"                           N = {natural_occupancies[mo]:14.10f}", calculation, priority, end = "\n\n")
 
-            log(f"\n   MO {mo+1} {occ}\n", calculation, priority=priority)
+        else:   # Prints molecular orbital energy
 
-            has_printed_1 = has_printed_2 = False
+            log(f"                E = {orbital_energies[mo]:14.10f}", calculation, priority, end = "\n\n")
 
-            for k in range(len(molecular_orbitals.T[mo])):
+        # Loops over atomic orbitals in molecular orbital
 
-                try:
-                    symbol_list[k], has_printed_1, has_printed_2 = format_molecular_orbitals(symbol_list, k, switch_value, molecule.atomic_symbols, calculation, has_printed_1, has_printed_2)
-                    
-                    log("    " + symbol_list[k] + f"  {formatted_ang_mom[k]}  :  {molecular_orbitals.T[mo][k]:7.4f}", calculation, priority=priority)
-                
-                except: 
-                    
-                    pass
+        for ao in range(ao_range):
 
-    # For unrestricted references, print the alpha and beta coefficients separately
+            # Only look at the atomic orbitals on the first atom
 
-    if calculation.reference == "UHF":
+            orbital_1_coeff = orbitals.T[mo][:molecule.partition_ranges[0]]
 
-        show_beta = molecule.n_beta > 0
+            first_atom = f"{molecule.atoms[0].symbol_formatted:<4}" if ao == 0 else "    "
 
-        header = "\n Alpha coefficients:          Beta coefficients:" if show_beta else "\n Alpha coefficients:         "
-        log(header, calculation, priority=priority)
+            log(f"   {first_atom}", calculation, priority, end = "")
+            
+            if ao < molecule.partition_ranges[0]:   # Only print orbitals on first atom
 
-        for mo in range(min(len(SCF_output.epsilons_alpha), calculation.n_orbitals_to_print)):
+                log(f"{orbitals_on_atom_1[ao]} {angular_momentum_on_atom_1[ao]:<4}  : ", calculation, priority, end = "")
 
-            occ_a = "(Occupied)" if molecule.n_alpha > mo else "(Virtual)"
-
-            if show_beta:
-
-                occ_b = "(Occupied)" if molecule.n_beta > mo else "(Virtual)"
-
-                log(f"\n  MO {mo+1} {occ_a}              MO {mo+1} {occ_b}\n", calculation, priority=priority)
+                log(f"{orbital_1_coeff[ao]:11.5f}", calculation, priority, end = "")
 
             else:
 
-                log(f"\n   MO {mo+1} {occ_a}      \n", calculation, priority=priority)
+                log("                    ", calculation, priority, end = "")
+            
+            # Allows atomic calculations
+            
+            if len(molecule.atoms) > 1:   
+                
+                # Only look at the atomic orbitals on the second atom
 
-            has_printed_1 = has_printed_2 = False
+                orbital_2_coeff = orbitals.T[mo][molecule.partition_ranges[0]:]
 
-            for k in range(len(SCF_output.molecular_orbitals.T[mo])):
+                second_atom = f"{molecule.atoms[1].symbol_formatted:<4}" if ao == 0 else "    "
 
-                try:
+                log(f"        {second_atom}", calculation, priority, end = "")
+        
+                if ao < molecule.partition_ranges[1]:   # Only print orbitals on second atom
 
-                    symbol_list[k], has_printed_1, has_printed_2 = format_molecular_orbitals(symbol_list, k, switch_value, molecule.atomic_symbols, calculation, has_printed_1, has_printed_2)
+                    log(f"{orbitals_on_atom_2[ao]} {angular_momentum_on_atom_2[ao]:<4}  : ", calculation, priority, end = "")
 
-                    line = "   " + symbol_list[k] + f"  {formatted_ang_mom[k]}  :  {SCF_output.molecular_orbitals_alpha.T[mo][k]:7.4f}"
-                    
-                    if show_beta:
+                    log(f"{orbital_2_coeff[ao]:11.5f}", calculation, priority)
 
-                        line += "           " + symbol_list[k] + f"  {formatted_ang_mom[k]}  :  {SCF_output.molecular_orbitals_beta.T[mo][k]:7.4f}"
-                    
-                    log(line, calculation, priority=priority)
+                else:
 
-                except: 
-                    
-                    pass
+                    log("", calculation, priority)
+            else:
 
-    else:
+                log("", calculation, priority)
 
-        # Only one set of coefficients for restricted references
-
-        print_coeffs(SCF_output.molecular_orbitals, SCF_output.epsilons, molecule.n_doubly_occ)
-
-    log_spacer(calculation, priority=priority, start="\n")
+    log("\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority)
 
     return
 
@@ -884,18 +819,49 @@ def print_density_information(calculation: Calculation) -> None:
 
     # Specifies which density matrix is used for the property calculations
     
-    if method.name in ["MP2", "SCS-MP2"]: log(f"\n Using the MP2 {density_type} density for property calculations.", calculation, 1)
-    elif method.name == "OMP2": log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
-    elif method.name == "LMP2": warning("Using the Hartree-Fock density, not the MP2 density, for property calculations.")
-    elif method.method_base == "MP3" or method.method_base == "MP4": warning(f"Using the {density_type} MP2 density for property calculations.")
+    match calculation.method.name:
+
+        case "MP2" | "SCS-MP2": 
+
+            log(f"\n Using the MP2 {density_type} density for property calculations.", calculation, 1)
+
+        case "OMP2":
+
+            log("\n Using the orbital-optimised MP2 relaxed density for property calculations.", calculation, 1)
+
+        case "AO-MP2":
+
+            warning("Using the Hartree-Fock density, not the MP2 density, for property calculations.")
+
+        case "CCSD[T]" | "CCSD(T)":
+
+            warning("Using the linearised CCSD density for property calculations.")
+
+        case "QCISD[T]" | "QCISD(T)":
+
+            warning("Using the linearised QCISD density for property calculations.")
+
+    if method.method_base in ["MP3", "MP4"]:
+
+        warning(f"Using the {density_type} MP2 density for property calculations.")
+
+    elif method.coupled_cluster_method:
     
-    if method.method_base == "CC": log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
-    if method.name in ["CCSD[T]", "CCSD(T)"]: warning("Using the linearised CCSD density, not the CCSD(T) density, for property calculations.")
-    if method.name in ["QCISD[T]", "QCISD(T)"]: warning("Using the linearised QCISD density, not the QCISD(T) density, for property calculations.")
+        log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
+
+    elif method.excited_state_method or calculation.time_dependent: 
     
-    if method.excited_state_method or calculation.time_dependent: 
-    
-        log(f"\n Using the unrelaxed TD-DFT density for property calculations.", calculation, 1) if method.density_functional_method else log(f"\n Using the unrelaxed TD-HF density for property calculations.", calculation, 1)
+        if method.density_functional_method:
+
+            log(f"\n Using the unrelaxed TD-DFT density for property calculations.", calculation, 1)
+        
+        else:
+            
+            log(f"\n Using the unrelaxed TD-HF density for property calculations.", calculation, 1)
+
+    if method.density_functional_method and calculation.MPC_prop != 0 and not calculation.time_dependent:
+
+        log(f"\n Using the double-hybrid {density_type} density for property calculations.", calculation, 1)
 
 
     return
@@ -909,7 +875,7 @@ def print_density_information(calculation: Calculation) -> None:
 
 
 
-def calculate_molecular_properties(molecule: Molecule, calculation: Calculation, P: ndarray, S: ndarray, SCF_output: Output, P_alpha: ndarray, P_beta: ndarray, print_orbitals: bool = True) -> None:
+def calculate_molecular_properties(molecule: Molecule, calculation: Calculation, P: ndarray, S: ndarray, SCF_output: Output, P_alpha: ndarray, P_beta: ndarray, print_orbitals: bool = True, natural_orbitals: ndarray = None, natural_occupancies: ndarray = None) -> None:
 
     """
 
@@ -923,6 +889,9 @@ def calculate_molecular_properties(molecule: Molecule, calculation: Calculation,
         SCF_output (Output): Output object
         P_alpha (array): Alpha density matrix in AO basis
         P_beta (array): Beta density matrix in AO basis
+        print_orbitals (bool): Should orbitals be printed
+        natural_orbitals (array): Natural orbitals
+        natural_occupancies (array): Natural orbital occupancies
 
     """
 
@@ -934,23 +903,49 @@ def calculate_molecular_properties(molecule: Molecule, calculation: Calculation,
 
     if print_orbitals:
 
+        # The list of spins for each spin orbital - only relevant for unrestricted references
+
+        spin_labels = ["a"] * len(SCF_output.molecular_orbitals_alpha) + ["b"] * len(SCF_output.molecular_orbitals_beta)
+
+        spin_labels_sorted = [spin_labels[i] for i in np.argsort(SCF_output.epsilons_combined)]
+
+        # Builds a list of orbital occupancies
+
+        if calculation.reference == "RHF":
+
+            occupancies = [2] * molecule.n_doubly_occ + [0] * (len(SCF_output.epsilons) - molecule.n_doubly_occ)
+
+        else:
+
+            occupancies = [1] * molecule.n_occ + [0] * (len(SCF_output.epsilons_combined) - molecule.n_occ)
+
         # Prints molecular orbital eigenvalues and coefficients
 
-        print_molecular_orbital_eigenvalues(calculation, molecule, SCF_output)
+        print_molecular_orbital_eigenvalues(calculation, SCF_output, occupancies, spin_labels_sorted)
         
-        print_molecular_orbital_coefficients(calculation, molecule, SCF_output)
+        print_molecular_orbital_coefficients(calculation, molecule, SCF_output, occupancies, spin_labels_sorted)
+
+        # Print natural orbital information
+
+        if natural_orbitals is not None:
+            
+            print_molecular_orbital_coefficients(calculation, molecule, SCF_output, occupancies, spin_labels_sorted, natural_orbitals, natural_occupancies)
 
         # Prints Koopmans' theorem parameters if RHF reference is used
 
         if calculation.reference == "RHF":
             
-            calculate_Koopmans_parameters(SCF_output.epsilons, molecule.n_doubly_occ, calculation)
+            calculate_koopmans_parameters(SCF_output.epsilons, molecule.n_doubly_occ, calculation)
 
     # As long as there are two real atoms present, calculates rotational constant and dipole moment information
 
     if calculation.diatomic:
 
+        # Prints the rotational constant
+
         mol.calculate_and_print_rotational_constant(molecule.reduced_mass, molecule.bond_length, calculation)
+
+        # Prints the analytical dipole and quadrupole moments
 
         calculate_and_print_multipole_moments(P, molecule, SCF_output, calculation)
 

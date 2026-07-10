@@ -82,7 +82,7 @@ def delete_saved_plot() -> None:
     
     """
 
-    # This file path doesn't need to be changed by the user
+    # This file path doesn"t need to be changed by the user
 
     file_path = "TUNA-plot-temp.pkl"
 
@@ -90,11 +90,11 @@ def delete_saved_plot() -> None:
         
         os.remove(file_path)
 
-        warning(f"The file {file_path} has been deleted due to the \"DELPLOT\" keyword.\n", space=0)
+        warning(f"The file {file_path} has been deleted due to the \"DELPLOT\" keyword.\n", space = 0)
 
     else:
         
-        warning(f"Plot deletion requested but {file_path} could not be found!\n",space=0)
+        warning(f"Plot deletion requested but {file_path} could not be found!\n", space = 0)
 
     return
 
@@ -181,69 +181,6 @@ def build_Cartesian_grid(bond_length: float, extent: float = 3, number_of_points
 
 
 
-def plot_coordinate_scan(calculation: Calculation, bond_lengths: ndarray, energies: ndarray) -> None:
-
-    """
-
-    Interfaces with Matplotlib to plot energy as a function of bond length.
-
-    Args:
-        calculation (Calculation): Calculation object
-        bond_lengths (array): List of bond lengths  
-        energies (array): List of molecular energies at each bond length
-
-    """
-
-    # Path for the temporary file
-
-    temporary_pickle_path = "TUNA-plot-temp.pkl"
-
-    log("\nPlotting energy profile diagram...      ", calculation, 1, end = "")
-    
-    suppress_plot_warnings()
-
-    # Saves temporary file if "ADDPLOT" used
-
-    fig, ax = read_temporary_plot_file(temporary_pickle_path) if calculation.add_plot else plt.subplots(figsize=(10, 6))
-
-    # For excited state calculations, also print the root
-
-    legend_label = f"{calculation.method.name}/{basis_types.get(calculation.basis)}" if not calculation.method.excited_state_method else f"{calculation.method.name}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
-    linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
-
-    try:
-
-        plt.plot(bond_lengths, energies, color = calculation.scan_plot_colour, linewidth = 1.75, label = legend_label, linestyle = linestyle)
-
-    except ValueError:
-
-        error(f"The hexadecimal code \"{calculation.scan_plot_colour}\" is not valid! {"Did you forget #?" if "#" not in calculation.scan_plot_colour else ""}")
-
-    format_coordinate_scan_plot(calculation, ax)
-
-    log("[Done]", calculation, 1)
-
-    # If the "ADDPLOT" keyword is used, save the plot to the pickle temporary file
-
-    if calculation.add_plot:
-
-        with open(temporary_pickle_path, "wb") as f:
-
-            pickle.dump(fig, f)
-
-    save_and_show_plot(calculation)
-
-    return
-
-
-
-
-
-
-
-
-
-
 def read_temporary_plot_file(temporary_pickle_path: str) -> tuple[any, any]:
 
     """
@@ -273,7 +210,7 @@ def read_temporary_plot_file(temporary_pickle_path: str) -> tuple[any, any]:
     
     except:
 
-        # If we can't, just open a new plot
+        # If we can"t, just open a new plot
 
         fig, ax = plt.subplots(figsize=(10, 6))    
 
@@ -326,7 +263,7 @@ def format_charge(charge: int) -> str:
 
 
 
-def format_coordinate_scan_plot(calculation: Calculation, ax: any) -> None:
+def format_one_dimensional_plot(calculation: Calculation, ax: any, plot_type: str) -> None:
 
     """
 
@@ -335,6 +272,7 @@ def format_coordinate_scan_plot(calculation: Calculation, ax: any) -> None:
     Args:
         calculation (Calculation): Calculation object
         ax (any): Matplotlib axes 
+        plot_type (str): Type of plot
 
     """
 
@@ -358,23 +296,31 @@ def format_coordinate_scan_plot(calculation: Calculation, ax: any) -> None:
     plot_font = ["Consolas", "Liberation Mono", "Courier New", "DejaVu Sans"]
 
     matplotlib.rcParams["font.family"] = plot_font
-    font_prop = fm.FontProperties(family=plot_font, size=12)
+    font_prop = fm.FontProperties(family = plot_font, size = 12)
 
     # Formats the charge into a nicely readable string
 
     charge = format_charge(calculation.charge)
     
-    plt.xlabel("Bond Length (Angstrom)", fontweight="bold", labelpad=10, fontfamily=plot_font, fontsize=14)
-    plt.ylabel("Energy (Hartree)",labelpad=10, fontweight="bold", fontfamily=plot_font, fontsize=14)
+    if plot_type != "absorbance spectrum":
 
-    plt.legend(loc="upper right", fontsize=12, frameon=False, handlelength=4, prop=font_prop)
+        plt.xlabel("Bond Length (angstrom)", fontweight="bold", labelpad=10, fontfamily = plot_font, fontsize=14)
+        plt.ylabel("Energy (hartree)",labelpad = 10, fontweight="bold", fontfamily = plot_font, fontsize=14)
 
-    plt.title(f"TUNA Calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ Molecule", fontweight="bold", fontsize=16, fontfamily=plot_font, pad=15)
+    else:
+
+        plt.xlabel("Wavelength (nm)", fontweight="bold", labelpad=10, fontfamily = plot_font, fontsize=14)
+        plt.ylabel("Oscillator Strength (au)",labelpad=10, fontweight="bold", fontfamily = plot_font, fontsize=14)
+   
+
+    plt.legend(loc="upper right", fontsize = 12, frameon=False, handlelength=4, prop=font_prop)
+
+    plt.title(f"TUNA Calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ Molecule", fontweight="bold", fontsize=16, fontfamily = plot_font, pad=15)
     
     # Major and minor ticks
 
-    ax.tick_params(axis='both', which='major', labelsize=11, width=1.25, length=6, direction='out')
-    ax.tick_params(axis='both', which='minor', labelsize=11, width=1.25, length=3, direction='out')
+    ax.tick_params(axis="both", which="major", labelsize=11, width=1.25, length=6, direction="out")
+    ax.tick_params(axis="both", which="minor", labelsize=11, width=1.25, length=3, direction="out")
 
     # Set the linewidth of the border 
 
@@ -445,7 +391,7 @@ def plot_vibrational_wavefunctions(calculation: Calculation, bond_lengths: ndarr
 
     plt.plot(bond_lengths[mask], energies[mask], color="black", linewidth=1.75, label=legend_label, linestyle=linestyle)
 
-    format_coordinate_scan_plot(calculation, ax)
+    format_one_dimensional_plot(calculation, ax, "vibrational wavefunctions")
 
     save_and_show_plot(calculation)
 
@@ -507,11 +453,11 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         if len(calculation.atomic_symbols) == 2:
 
-            plt.title(f"{density_type} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
+            plt.title(f"{density_type} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule", fontweight="bold", fontsize=11, fontfamily = plot_font, pad=15)
 
         else:
 
-            plt.title(f"{density_type} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom", fontweight="bold", fontsize=11, fontfamily=plot_font, pad=15)
+            plt.title(f"{density_type} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom", fontweight="bold", fontsize=11, fontfamily = plot_font, pad=15)
 
         # Builds density on grid
 
@@ -552,11 +498,11 @@ def show_cube_plot(calculation: Calculation, basis_functions_on_grid: ndarray, g
 
         if len(calculation.atomic_symbols) == 2:
 
-            plt.title(f"Orbital {which_MO + 1} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}—"f"{calculation.atomic_symbols[1].capitalize()}"rf"$^{{{charge}}}$ molecule",fontweight="bold",fontsize=11,fontfamily = plot_font,pad=15)
 
         else:
 
-            plt.title(f"Orbital {which_MO + 1} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily=plot_font,pad=15)
+            plt.title(f"Orbital {which_MO + 1} from {calculation.method.name}/{basis_types.get(calculation.basis)} calculation on "f"{calculation.atomic_symbols[0].capitalize()}"rf"$^{{{charge}}}$ atom",fontweight="bold",fontsize=11,fontfamily = plot_font,pad=15)
 
         # Builds molecular orbitals on grid
 
@@ -736,5 +682,136 @@ def save_trajectory_to_file(molecule: Molecule, energy: float, coordinates: ndar
             file.write(f"  {molecule.atomic_symbols[i]}      {coordinates_angstrom[i][0]:6f}      {coordinates_angstrom[i][1]:6f}      {coordinates_angstrom[i][2]:6f}\n")
 
     file.close()
+
+    return
+
+
+
+
+
+
+
+
+
+
+def generate_absorbance_spectrum(calculation: Calculation, excitation_energies: ndarray, oscillator_strengths: ndarray) -> None:
+
+    """
+    
+    Generates the absorbance spectrum, for plotting.
+
+    Args:
+        calculation (Calculation): Calculation object
+        excitation_energies (array): Excitation energies in hartree
+        oscillator_strengths (array): Oscillator strengths
+       
+    """
+
+    # Padding for the edge of the plot
+
+    excess_wavelength = 10 * calculation.peak_width
+
+    # Conversion from hartree to nanometers
+
+    excitation_wavelengths = 1e7 / (excitation_energies * constants.per_cm_in_hartree)
+
+    # Largest wavelength with a non-zero intensity
+
+    maximum_wavelength = excess_wavelength + np.max(excitation_wavelengths[oscillator_strengths > 0.0])
+
+    # Builds variable array
+
+    wavelength = np.arange(0, maximum_wavelength, 0.1)
+
+    # Increasing the Gaussian exponent makes the width smaller
+
+    exponent = 1 / calculation.peak_width
+
+    # Initialise spectrum
+
+    spectrum = np.zeros_like(wavelength)
+
+    # Loops over excitations, builds spectrum as sum of gaussians
+
+    for i in range(len(excitation_wavelengths)):
+
+        gaussian = oscillator_strengths[i] * np.exp(-exponent * (wavelength - excitation_wavelengths[i]) ** 2)
+
+        spectrum += gaussian
+   
+    # Generates and shows the plot, in TUNA style
+
+    generate_one_dimensional_plot(calculation, wavelength, spectrum, "absorbance spectrum")
+
+    return
+
+
+
+
+
+
+
+
+
+
+def generate_one_dimensional_plot(calculation: Calculation, variable: ndarray, function: ndarray, plot_type: str) -> None:
+
+    """
+    
+    Generates and shows a one-dimensional function plot, with addition available.
+
+    Args:
+        calculation (Calculation): Calculation object
+        variable (array): Input array
+        function (array): Output array, function of input
+        plot_type (str): Type of plot for printing
+    
+    """
+
+    # If "DELPLOT" has been used, delete the saved plot
+
+    if calculation.delete_plot:
+
+        delete_saved_plot()
+
+    # Path for the temporary file
+
+    temporary_pickle_path = "TUNA-plot-temp.pkl"
+
+    log(f"\n Plotting {plot_type}...      ", calculation, 1, end = "")
+    
+    suppress_plot_warnings()
+
+    # Saves temporary file if "ADDPLOT" used
+
+    fig, ax = read_temporary_plot_file(temporary_pickle_path) if calculation.add_plot else plt.subplots(figsize=(10, 6))
+
+    # For excited state calculations, also print the root
+
+    legend_label = f"{calculation.method.name}/{basis_types.get(calculation.basis)}" if not calculation.method.excited_state_method else f"{calculation.method.name}/{basis_types.get(calculation.basis)}, ROOT {calculation.root}"
+    
+    linestyle = "--" if calculation.plot_dashed_lines else ":" if calculation.plot_dotted_lines else "-"
+
+    try:
+
+        plt.plot(variable, function, color = calculation.scan_plot_colour, linewidth = 1.75, label = legend_label, linestyle = linestyle)
+
+    except ValueError:
+
+        error(f"The hexadecimal code \"{calculation.scan_plot_colour}\" is not valid! {"Did you forget #?" if "#" not in calculation.scan_plot_colour else ""}")
+
+    format_one_dimensional_plot(calculation, ax, plot_type)
+
+    log("[Done]", calculation, 1)
+
+    # If the "ADDPLOT" keyword is used, save the plot to the pickle temporary file
+
+    if calculation.add_plot:
+
+        with open(temporary_pickle_path, "wb") as f:
+
+            pickle.dump(fig, f)
+
+    save_and_show_plot(calculation)
 
     return

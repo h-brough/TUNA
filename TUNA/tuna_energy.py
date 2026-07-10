@@ -175,8 +175,8 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
     log(f"\nBeginning basis set extrapolation with {small_name.lower()}- and {large_name.lower()}-zeta basis sets...", calculation, 1, silent = silent)
     log(f"{small_name}-zeta basis is {basis_types.get(small_basis)}, {large_name.lower()}-zeta basis is {basis_types.get(large_basis)}.", calculation, 1, silent = silent)
 
-    log_spacer(calculation, silent = silent, start="\n")
-    log(small_header, calculation, 1, silent = silent, colour="white")
+    log_spacer(calculation, silent = silent, start = "\n")
+    log(small_header, calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
     calculation.basis = small_basis
@@ -345,7 +345,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent = silent, start="\n")
+    log_spacer(calculation, 1, silent = silent, start = "\n")
     log(f"                    Polarisability", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
@@ -468,7 +468,7 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
 
     log(f"\n Beginning dipole-dipole-dipole hyperpolarisability calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent = silent, start="\n")
+    log_spacer(calculation, 1, silent = silent, start = "\n")
     log(f"                 Hyperpolarisability", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
@@ -610,7 +610,7 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
 
     log(f"\n Beginning dipole moment calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent = silent, start="\n")
+    log_spacer(calculation, 1, silent = silent, start = "\n")
     log(f"                    Dipole Moment", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
@@ -692,7 +692,7 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
 
     log(f"\n Beginning quadrupole moment calculation... ", calculation, 1, silent = silent)
 
-    log_spacer(calculation, 1, silent = silent, start="\n")
+    log_spacer(calculation, 1, silent = silent, start = "\n")
     log(f"                   Quadrupole Moment", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
@@ -1018,7 +1018,7 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
 
         bond_length = calculate_bond_length(coordinates)
 
-        log_big_spacer(calculation, start="\n",space="", silent = silent)
+        log_big_spacer(calculation, start = "\n",space="", silent = silent)
         log(f"Starting scan step {step} of {calculation.number_of_steps} with bond length of {bohr_to_angstrom(bond_length):.5f} angstroms...", calculation, 1, silent = silent)
         log_big_spacer(calculation,space="", silent = silent)
 
@@ -1057,11 +1057,11 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
 
         if bond_length + step_size <= angstrom_to_bohr(0.2) and reverse: break
 
-    log_big_spacer(calculation, start="\n",space="", silent = silent)    
+    log_big_spacer(calculation, start = "\n",space="", silent = silent)    
     
     log("\nCoordinate scan calculation finished!\n\n Printing energy as a function of bond length...\n", calculation, 1, silent = silent)
     log_spacer(calculation, silent = silent)
-    log("                   Coordinate Scan", calculation, 1, colour="white", silent = silent)
+    log("                   Coordinate Scan", calculation, 1, colour = "white", silent = silent)
     log_spacer(calculation, silent = silent)
     log("  Step         Bond Length               Energy", calculation, 1, silent = silent)
     log_spacer(calculation, silent = silent)
@@ -1073,20 +1073,13 @@ def scan_coordinate(calculation: Calculation, atomic_symbols: list, starting_coo
         log(f" {i + 1:4.0f}            {bohr_to_angstrom(bond_length):.5f}             {energy:13.10f}", calculation, 1, silent = silent)
 
     log_spacer(calculation, silent = silent)
-
-    # If "DELPLOT" keyword is used, delete saved Pickle plot 
-
-    if calculation.delete_plot:
-        
-        out.delete_saved_plot()
-        
-    # If "SCANPLOT" keyword is used, plots and shows a Matplotlib graph of the data
     
     timer("Coordinate scan", 1)
 
+    # If "SCANPLOT" keyword is used, plots and shows a Matplotlib graph of the data
+
     if calculation.scan_plot: 
         
-        out.plot_coordinate_scan(calculation, bohr_to_angstrom(bond_lengths), energies)
-
+        out.generate_one_dimensional_plot(calculation, bohr_to_angstrom(bond_lengths), energies, "coordinate scan")
 
     return bond_lengths, energies, dipole_moments

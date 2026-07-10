@@ -102,6 +102,7 @@ class Constants:
 
     ORB_HESS_EIG_THRESH = -1e-5
     COMPLEX_EIG_THRESH = 1e-5
+    MOMENT_THRESH = 1e-5
 
     # Convergence criteria for self-consistent field
 
@@ -1036,7 +1037,7 @@ def log_spacer(calculation: any, priority: int = 1, silent: bool = False, start:
     
     """
 
-    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent = silent)
+    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority = priority, silent = silent)
 
     return
 
@@ -1065,7 +1066,7 @@ def log_big_spacer(calculation: any, priority: int = 1, start: str = "", end: st
     
     """
 
-    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority=priority, silent = silent)
+    log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority = priority, silent = silent)
 
     return
 
@@ -1139,7 +1140,7 @@ def print_timer_information(calculation: any, total_time: float) -> None:
 
     """
 
-    log_spacer(calculation, start="\n", priority = 3)
+    log_spacer(calculation, start = "\n", priority = 3)
     log("      Calculation Timing Information (Seconds)", calculation, priority = 3)
     log_spacer(calculation, priority = 3)
 
