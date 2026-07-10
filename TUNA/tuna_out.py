@@ -265,7 +265,7 @@ def format_charge(charge: int) -> str:
 
 def format_one_dimensional_plot(calculation: Calculation, ax: any, plot_type: str) -> None:
 
-    """
+    """fontsize = 14
 
     Sets up the formatting for plotting a coordinate scan.
 
@@ -304,13 +304,13 @@ def format_one_dimensional_plot(calculation: Calculation, ax: any, plot_type: st
     
     if plot_type != "absorbance spectrum":
 
-        plt.xlabel("Bond Length (angstrom)", fontweight="bold", labelpad=10, fontfamily = plot_font, fontsize=14)
-        plt.ylabel("Energy (hartree)",labelpad = 10, fontweight="bold", fontfamily = plot_font, fontsize=14)
+        plt.xlabel("Bond Length (angstrom)", fontweight="bold", labelpad=10, fontfamily = plot_font, fontsize = 14)
+        plt.ylabel("Energy (hartree)",labelpad = 10, fontweight="bold", fontfamily = plot_font, fontsize = 14)
 
     else:
 
-        plt.xlabel("Wavelength (nm)", fontweight="bold", labelpad=10, fontfamily = plot_font, fontsize=14)
-        plt.ylabel("Oscillator Strength (au)",labelpad=10, fontweight="bold", fontfamily = plot_font, fontsize=14)
+        plt.xlabel("Wavelength (nm)", fontweight="bold", labelpad=10, fontfamily = plot_font, fontsize = 14)
+        plt.ylabel("Oscillator Strength (au)",labelpad=10, fontweight="bold", fontfamily = plot_font, fontsize = 14)
    
 
     plt.legend(loc="upper right", fontsize = 12, frameon=False, handlelength=4, prop=font_prop)
