@@ -78,7 +78,7 @@ For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms wi
 TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
-Read the manual for details!
+Read <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">the manual</a> for details!
 
 ## Citation
 
