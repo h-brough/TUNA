@@ -1165,7 +1165,7 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
 
 
 
-def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
+def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool, return_full_kernel: bool = False) -> ndarray:
  
     """
     
@@ -1182,9 +1182,11 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
         calculation (Calculation): Calculation object
         weights (array): Integration weights
         silent (bool): Cancel logging
+        return_full_kernel (bool, optional): Should the unsliced kernel also be returned, for coupled-perturbed Kohn-Sham equations
  
     Returns:
         K_XC (array): Spin orbital exchange-correlation kernel matrix
+        K_XC_full (array): Unsliced exchange-correlation kernel matrix, only if return_full_kernel is used
  
     """
  
@@ -1252,6 +1254,49 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
     
     K_XC = K_X * calculation.DFX_prop + K_C * calculation.DFC_prop
 
+    # Optionally builds the kernel matrices needed for coupled-perturbed Kohn-Sham equations over the full spin orbital space
+
+    if return_full_kernel:
+
+        alpha_virtual = np.array(spin_labels)[v] == "a"
+        beta_virtual = np.array(spin_labels)[v] == "b"
+
+        # Opposite-spin orbitals have overlapping spatial parts on the grid, giving spurious matrix elements for spin-flip pairs, so these are masked out
+
+        spin_conserving = alpha_occupied[:, None] * alpha_virtual[None, :] + beta_occupied[:, None] * beta_virtual[None, :]
+
+        K_XC = K_XC * spin_conserving[:, :, None, None] * spin_conserving[None, None, :, :]
+
+        # Spin-resolved kernels on the grid, folding in the integration weights and the DFX and DFC proportions
+
+        f_aa = weights * (f_X_aa * calculation.DFX_prop + f_C_aa * calculation.DFC_prop)
+        f_ab = weights * f_C_ab * calculation.DFC_prop
+        f_bb = weights * (f_X_bb * calculation.DFX_prop + f_C_bb * calculation.DFC_prop)
+
+        # Spin-conserving occupied-virtual transition densities
+
+        T_alpha_conserving = T_alpha * alpha_virtual[None, :, None, None]
+        T_beta_conserving = T_beta * beta_virtual[None, :, None, None]
+
+        spin_labels_array = np.array(spin_labels)
+        n_spin_orbitals = molecular_orbitals_on_grid.shape[0]
+
+        K_XC_full = np.zeros((T.shape[0], T.shape[1], n_spin_orbitals, n_spin_orbitals))
+
+        # Contracts the transition densities with the products of pairs of spin orbitals, one spin block at a time to limit memory use
+
+        for spin, f_same, f_opposite, T_same, T_opposite in (("a", f_aa, f_ab, T_alpha_conserving, T_beta_conserving), ("b", f_bb, f_ab, T_beta_conserving, T_alpha_conserving)):
+
+            indices = np.where(spin_labels_array == spin)[0]
+
+            pair_products = np.einsum("pmn,qmn->pqmn", molecular_orbitals_on_grid[indices], molecular_orbitals_on_grid[indices], optimize = True)
+
+            K_XC_full[:, :, indices[:, None], indices[None, :]] = np.einsum("iamn,pqmn,mn->iapq", T_same, pair_products, f_same, optimize = True) + np.einsum("iamn,pqmn,mn->iapq", T_opposite, pair_products, f_opposite, optimize = True)
+
     log("[Done]", calculation, 1, silent)
+
+    if return_full_kernel:
+
+        return K_XC, K_XC_full
 
     return K_XC

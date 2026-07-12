@@ -5991,6 +5991,162 @@ def calculate_Slater_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndar
 
 
 
+def calculate_restricted_VWN3_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+
+    """
+    
+    Calculates the restricted VWN-III correlation kernel.
+
+    Args:
+        density (array): Electron density on integration grid
+    
+    Returns:
+        d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
+    
+    """
+
+    # Parameters for a restricted (paramagnetic) reference, with first and second Seitz-radius derivatives
+
+    _, de_C_dr, d2e_C_dr2 = calculate_VWN_correlation_derivatives(density, -0.409286, 13.0720, 42.7198, 0.0310907)
+
+    # Seitz radius as a function of density
+
+    r_s, _ = calculate_seitz_radius(density)
+
+    # Second derivative of f = n * e_C with respect to density
+
+    d2f_dn2 = (r_s ** 2 * d2e_C_dr2 - 2 * r_s * de_C_dr) / (9 * density)
+
+    return d2f_dn2
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_VWN3_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+
+    """
+    
+    Calculates the restricted VWN-III spin correlation kernel for triplet excitations.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient (unused for LDA)
+        tau (array): Non-interacting kinetic energy density (unused for LDA)
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        f_mm (array): Spin correlation kernel evaluated on the grid
+    
+    """
+
+    # Parameters for a restricted (paramagnetic) and fully polarised (ferromagnetic) reference  
+
+    _, e_C_0, _ = calculate_VWN_potential(density, -0.409286, 13.0720, 42.7198, 0.0310907)
+    _, e_C_1, _ = calculate_VWN_potential(density, -0.743294, 20.1231, 101.578, 0.01554535)
+
+    # Second zeta-derivative of the spin-scaling function at zero polarisation
+
+    f_prime_prime_at_zero = 8 / (9 * (np.cbrt(2) ** 4 - 2))
+
+    # The spin stiffness of VWN-III follows from the simple interpolation between the paramagnetic and ferromagnetic limits
+
+    f_mm = f_prime_prime_at_zero * (e_C_1 - e_C_0) / density
+
+    return f_mm
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_VWN3_correlation_kernel(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
+
+    """
+
+    Calculates the spin-resolved VWN-III correlation kernel for an unrestricted reference.
+
+    Args:
+        alpha_density (array): Alpha electron density on grid
+        beta_density (array): Beta electron density on grid
+        density (array): Total electron density on grid
+
+    Returns:
+        f_C_alpha_alpha (array): Alpha-alpha correlation kernel block
+        f_C_alpha_beta (array): Alpha-beta correlation kernel block
+        f_C_beta_beta (array): Beta-beta correlation kernel block
+
+    """
+
+    zeta = calculate_zeta(alpha_density, beta_density)
+
+    r_s, _ = calculate_seitz_radius(density)
+
+    # Paramagnetic and ferromagnetic VWN fits, with first and second Seitz-radius derivatives
+
+    e_C_0, de0_dr, d2e0_dr2 = calculate_VWN_correlation_derivatives(density, -0.409286, 13.0720, 42.7198, 0.0310907)
+    e_C_1, de1_dr, d2e1_dr2 = calculate_VWN_correlation_derivatives(density, -0.743294, 20.1231, 101.578, 0.01554535)
+
+    # Spin-scaling function and its first two derivatives, with the second derivative floored at full polarisation
+
+    denominator = np.cbrt(2) ** 4 - 2
+
+    f_zeta = calculate_f_zeta(zeta)
+    f_prime_zeta = calculate_f_prime_zeta(zeta)
+
+    one_plus = np.maximum(1 + zeta, constants.density_floor)
+    one_minus = np.maximum(1 - zeta, constants.density_floor)
+
+    f_prime_prime_zeta = (4 / 9) * (np.cbrt(one_plus) ** (-2) + np.cbrt(one_minus) ** (-2)) / denominator
+
+    # Derivatives of the energy density per particle with respect to the Seitz radius and spin polarisation, for the simple VWN-III interpolation
+
+    de_dr = de0_dr * (1 - f_zeta) + de1_dr * f_zeta
+    d2e_dr2 = d2e0_dr2 * (1 - f_zeta) + d2e1_dr2 * f_zeta
+    de_dzeta = (e_C_1 - e_C_0) * f_prime_zeta
+    d2e_dzeta2 = (e_C_1 - e_C_0) * f_prime_prime_zeta
+    d2e_dr_dzeta = (de1_dr - de0_dr) * f_prime_zeta
+
+    # Second derivatives of f = n e_C in the (density, zeta) variables
+
+    f_nn = (r_s ** 2 * d2e_dr2 - 2 * r_s * de_dr) / (9 * density)
+    f_nz = de_dzeta - (r_s / 3) * d2e_dr_dzeta
+    f_zz = density * d2e_dzeta2
+    f_z = density * de_dzeta
+
+    # Partial derivatives of zeta with respect to the alpha (u) and beta (w) densities
+
+    zeta_u = (1 - zeta) / density
+    zeta_w = - (1 + zeta) / density
+    zeta_uu = - 2 * (1 - zeta) / density ** 2
+    zeta_ww = 2 * (1 + zeta) / density ** 2
+    zeta_uw = 2 * zeta / density ** 2
+
+    # Assembles the spin-resolved correlation kernel via the chain rule
+
+    f_C_alpha_alpha = f_nn + 2 * f_nz * zeta_u + f_zz * zeta_u ** 2 + f_z * zeta_uu
+    f_C_beta_beta = f_nn + 2 * f_nz * zeta_w + f_zz * zeta_w ** 2 + f_z * zeta_ww
+    f_C_alpha_beta = f_nn + f_nz * (zeta_u + zeta_w) + f_zz * zeta_u * zeta_w + f_z * zeta_uw
+
+    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta
+
+
+
+
+
+
+
+
+
 
 def calculate_restricted_VWN5_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
@@ -6167,10 +6323,6 @@ def calculate_unrestricted_VWN5_correlation_kernel(alpha_density: ndarray, beta_
 
     """
 
-    zeta = calculate_zeta(alpha_density, beta_density)
-
-    r_s, _ = calculate_seitz_radius(density)
-
     # Paramagnetic, ferromagnetic and spin-stiffness VWN fits, with first and second Seitz-radius derivatives
 
     e_C_0, de0_dr, d2e0_dr2 = calculate_VWN_correlation_derivatives(density, -0.10498, 3.72744, 12.9352, 0.0310907)
@@ -6180,6 +6332,52 @@ def calculate_unrestricted_VWN5_correlation_kernel(alpha_density: ndarray, beta_
     # The spin stiffness is the negative of the VWN fit with the RPA parameters
 
     alpha_C, dalpha_C_dr, d2alpha_C_dr2 = - vwn_alpha, - dvwn_alpha_dr, - d2vwn_alpha_dr2
+
+    # Kernel for an unrestricted reference by interpolation between limits
+
+    f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta = calculate_VWN5_spin_interpolation_kernel(alpha_density, beta_density, density, alpha_C, dalpha_C_dr, d2alpha_C_dr2, e_C_0, de0_dr, d2e0_dr2, e_C_1, de1_dr, d2e1_dr2)
+
+    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta
+
+
+
+
+
+
+
+
+
+
+def calculate_VWN5_spin_interpolation_kernel(alpha_density: ndarray, beta_density: ndarray, density: ndarray, alpha_C: ndarray, dalpha_C_dr: ndarray, d2alpha_C_dr2: ndarray, e_C_0: ndarray, de0_dr: ndarray, d2e0_dr2: ndarray, e_C_1: ndarray, de1_dr: ndarray, d2e1_dr2: ndarray) -> tuple:
+
+    """
+
+    Calculates the spin-resolved correlation kernel for the VWN-V spin interpolation between LDA correlation fits.
+
+    Args:
+        alpha_density (array): Alpha spin electron density on grid
+        beta_density (array): Beta spin electron density on grid
+        density (array): Electron density on grid
+        alpha_C (array): Spin stiffness
+        dalpha_C_dr (array): First derivative of the spin stiffness with respect to the Seitz radius
+        d2alpha_C_dr2 (array): Second derivative of the spin stiffness with respect to the Seitz radius
+        e_C_0 (array): Energy density for paramagnetic system
+        de0_dr (array): First derivative of the paramagnetic energy density with respect to the Seitz radius
+        d2e0_dr2 (array): Second derivative of the paramagnetic energy density with respect to the Seitz radius
+        e_C_1 (array): Energy density for ferromagnetic system
+        de1_dr (array): First derivative of the ferromagnetic energy density with respect to the Seitz radius
+        d2e1_dr2 (array): Second derivative of the ferromagnetic energy density with respect to the Seitz radius
+
+    Returns:
+        f_C_alpha_alpha (array): Alpha-alpha correlation kernel block
+        f_C_alpha_beta (array): Alpha-beta correlation kernel block
+        f_C_beta_beta (array): Beta-beta correlation kernel block
+
+    """
+
+    zeta = calculate_zeta(alpha_density, beta_density)
+
+    r_s, _ = calculate_seitz_radius(density)
 
     # Spin-scaling function and its first two derivatives; f and f' reuse the energy convention, while the second derivative is floored at full polarisation
 
@@ -6236,6 +6434,189 @@ def calculate_unrestricted_VWN5_correlation_kernel(alpha_density: ndarray, beta_
     f_C_alpha_alpha = f_nn + 2 * f_nz * zeta_u + f_zz * zeta_u ** 2 + f_z * zeta_uu
     f_C_beta_beta = f_nn + 2 * f_nz * zeta_w + f_zz * zeta_w ** 2 + f_z * zeta_ww
     f_C_alpha_beta = f_nn + f_nz * (zeta_u + zeta_w) + f_zz * zeta_u * zeta_w + f_z * zeta_uw
+
+    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_PW_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+
+    """
+    
+    Calculates the restricted PW92 correlation kernel.
+
+    Args:
+        density (array): Electron density on integration grid
+    
+    Returns:
+        d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
+    
+    """
+
+    # Parameters for a restricted (paramagnetic) reference, with first and second Seitz-radius derivatives
+
+    _, de_C_dr, d2e_C_dr2 = calculate_PW_correlation_derivatives(density, 0.0310907, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+
+    # Seitz radius as a function of density
+
+    r_s, _ = calculate_seitz_radius(density)
+
+    # Second derivative of f = n * e_C with respect to density
+
+    d2f_dn2 = (r_s ** 2 * d2e_C_dr2 - 2 * r_s * de_C_dr) / (9 * density)
+
+    return d2f_dn2
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_PW_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+
+    """
+    
+    Calculates the restricted PW92 spin correlation kernel for triplet excitations.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient (unused for LDA)
+        tau (array): Non-interacting kinetic energy density (unused for LDA)
+        calculation (Calculation): Calculation object
+    
+    Returns:
+        f_mm (array): Spin correlation kernel evaluated on the grid
+    
+    """
+
+    # Calculates the spin stiffness
+
+    _, minus_alpha, _ = calculate_PW_potential(density, 0.0168869, 0.11125, 10.357, 3.6231, 0.88026, 0.49671, 1)
+
+    # The spin stiffness alpha is the negative of minus_alpha
+    
+    f_mm = - minus_alpha / density
+
+    return f_mm
+
+
+
+
+
+
+
+
+
+
+def calculate_PW_correlation_derivatives(density: ndarray, A: float, alpha_1: float, beta_1: float, beta_2: float, beta_3: float, beta_4: float, P: float) -> tuple:
+
+    """
+
+    Calculates a single PW92 correlation fit and its first two derivatives with respect to the Seitz radius.
+
+    Args:
+        density (array): Electron density on grid
+        A (float): Coefficient for PW92
+        alpha_1 (float): Coefficient for PW92
+        beta_1 (float): Coefficient for PW92
+        beta_2 (float): Coefficient for PW92
+        beta_3 (float): Coefficient for PW92
+        beta_4 (float): Coefficient for PW92
+        P (float): Exponent for PW92
+
+    Returns:
+        e_C (array): Energy density per particle
+        de_C_dr (array): First derivative of the energy density with respect to the Seitz radius
+        d2e_C_dr2 (array): Second derivative of the energy density with respect to the Seitz radius
+
+    """
+
+    # Calculates the Seitz radius for the density
+
+    r_s, _ = calculate_seitz_radius(density)
+
+    # Square rooting via ** (1 / 2) is faster than np.sqrt, and the root is reused for all fractional powers
+
+    sqrt_r_s = r_s ** (1 / 2)
+
+    # Intermediate quantities for PW92 LDA correlation, and their first and second Seitz-radius derivatives
+
+    Q_0 = -2 * A * (1 + alpha_1 * r_s)
+    Q_1 = 2 * A * (beta_1 * sqrt_r_s + beta_2 * r_s + beta_3 * r_s * sqrt_r_s + beta_4 * r_s ** (P + 1))
+    Q_1_prime = A * (beta_1 / sqrt_r_s + 2 * beta_2 + 3 * beta_3 * sqrt_r_s + 2 * (P + 1) * beta_4 * r_s ** P)
+    Q_1_prime_prime = A * (-beta_1 / (2 * r_s * sqrt_r_s) + (3 / 2) * beta_3 / sqrt_r_s + 2 * P * (P + 1) * beta_4 * r_s ** (P - 1))
+
+    # Numpy's log_1_plus function is more numerically stable than log(1 + 1/Q_1)
+
+    log_term = np.log1p(1 / Q_1)
+
+    denominator = Q_1 * Q_1 + Q_1
+
+    # Energy density per particle for PW92
+
+    e_C = Q_0 * log_term
+
+    # First and second derivatives of energy density with respect to Seitz radius
+
+    de_C_dr = -2 * A * alpha_1 * log_term - Q_0 * Q_1_prime / denominator
+
+    d2e_C_dr2 = 4 * A * alpha_1 * Q_1_prime / denominator + Q_0 * (Q_1_prime * Q_1_prime * (2 * Q_1 + 1) / denominator - Q_1_prime_prime) / denominator
+
+    return e_C, de_C_dr, d2e_C_dr2
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_PW_correlation_kernel(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
+
+    """
+
+    Calculates the spin-resolved PW92 correlation kernel for an unrestricted reference.
+
+    This is "modified" PW92 from LibXC and has more significant figures than the original paper.
+
+    Args:
+        alpha_density (array): Alpha electron density on grid
+        beta_density (array): Beta electron density on grid
+        density (array): Total electron density on grid
+
+    Returns:
+        f_C_alpha_alpha (array): Alpha-alpha correlation kernel block
+        f_C_alpha_beta (array): Alpha-beta correlation kernel block
+        f_C_beta_beta (array): Beta-beta correlation kernel block
+
+    """
+
+    # Paramagnetic, ferromagnetic and spin-stiffness PW92 fits, with first and second Seitz-radius derivatives
+
+    e_C_0, de0_dr, d2e0_dr2 = calculate_PW_correlation_derivatives(density, 0.0310907, 0.21370, 7.5957, 3.5876, 1.6382, 0.49294, 1)
+    e_C_1, de1_dr, d2e1_dr2 = calculate_PW_correlation_derivatives(density, 0.01554535, 0.20548, 14.1189, 6.1977, 3.3662, 0.62517, 1)
+    minus_alpha, dminus_alpha_dr, d2minus_alpha_dr2 = calculate_PW_correlation_derivatives(density, 0.0168869, 0.11125, 10.357, 3.6231, 0.88026, 0.49671, 1)
+
+    # The spin stiffness is the negative of the PW92 fit with the RPA parameters
+
+    alpha_C, dalpha_C_dr, d2alpha_C_dr2 = - minus_alpha, - dminus_alpha_dr, - d2minus_alpha_dr2
+
+    # Kernel for an unrestricted reference by interpolation between limits
+
+    f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta = calculate_VWN5_spin_interpolation_kernel(alpha_density, beta_density, density, alpha_C, dalpha_C_dr, d2alpha_C_dr2, e_C_0, de0_dr, d2e0_dr2, e_C_1, de1_dr, d2e1_dr2)
 
     return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta
 
@@ -6341,7 +6722,9 @@ exchange_kernels = {
 
 correlation_density_kernels = {
 
+    "VWN3": calculate_restricted_VWN3_correlation_kernel,
     "VWN5": calculate_restricted_VWN5_correlation_kernel,
+    "PW": calculate_restricted_PW_correlation_kernel,
 
 }
 
@@ -6356,7 +6739,9 @@ correlation_density_kernels = {
 
 correlation_spin_kernels = {
 
+    "VWN3": calculate_restricted_VWN3_spin_correlation_kernel,
     "VWN5": calculate_restricted_VWN5_spin_correlation_kernel,
+    "PW": calculate_restricted_PW_spin_correlation_kernel,
 
 }
 
@@ -6371,6 +6756,8 @@ correlation_spin_kernels = {
 
 unrestricted_correlation_kernels = {
 
+    "VWN3": calculate_unrestricted_VWN3_correlation_kernel,
     "VWN5": calculate_unrestricted_VWN5_correlation_kernel,
+    "PW": calculate_unrestricted_PW_correlation_kernel,
 
 }

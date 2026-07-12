@@ -1,6 +1,6 @@
 # Changelog
 
-## TUNA 0.11.0 — 11/07/2026
+## TUNA 0.11.0 — 18/07/2026
 
 ### Added
 
@@ -8,7 +8,7 @@
 - Time-dependent DFT with LSDA functionals with `TD` keyword, and optional `TDA`
 - Perturbative doubles for all TD methods with `[D]`
 - Plot absorbance spectra for `TD` calculations with `ABSPLOT`, change width with `PEAKWIDTH`
-- Configuration interaction methods CISD (spin-adapted and spin orbital) and CISDT (spin orbital)
+- Configuration interaction methods CID, CISD (spin-adapted and spin orbital) and CISDT (spin orbital)
 - Non-local dispersion energy with VV10 with functional-optimised parameters with `NL` keyword
 - Response density for (SCS-)MP2 and double-hybrids with `RELAXED` keyword
 - Stability analysis for restricted and unrestricted SCF with `STAB`
@@ -27,12 +27,6 @@
 - Use `COLOUR` followed by a hexadecimal, like #FF00FF, to get a specific colour for plotting
 - Greatly improved molecular orbital output, including type of orbital (2px, 3dz^2, 4dxy etc.)
 - Natural orbital coefficients and occupancies now print with `NATORBS` and `PRINTMOS` or `P`
-
-- Other LDA derivatives
-- Relaxed unrestricted MP2 density
-- check all kinds of density matrices with frozen core, (un)relaxed, linearised restricted all ok. check unrestricted after fix
-- Ask claude what's wrong with unrestricted MP2
-
 
 ### Changed
 

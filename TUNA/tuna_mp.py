@@ -284,6 +284,120 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
 
 
 
+
+
+def calculate_unrestricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab: ndarray, g: ndarray, ERI_SO: ndarray, epsilons: ndarray, o: slice, v: slice, n_occ: int, n_virt: int, calculation: Calculation, K_XC: ndarray, K_XC_full: ndarray) -> ndarray:
+
+    """
+    
+    Calculates the relaxed MP2 density matrix contribution for unrestricted references, in the spin orbital basis.
+
+    Args:
+        P_unrelaxed (array): Unrelaxed density matrix in the spin orbital basis, correlation part only
+        w_ijab (array): Orbital gradient weight, the scaled t-amplitudes
+        g (array): Antisymmetrised two-electron integrals in physicists' spin orbital notation
+        ERI_SO (array): Two-electron integrals in physicists' spin orbital notation
+        epsilons (array): Spin orbital eigenvalues, sorted in ascending order
+        o (slice): Correlated occupied spin orbital slice
+        v (slice): Virtual spin orbital slice
+        n_occ (int): Number of occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+        calculation (Calculation): Calculation object
+        K_XC (array): Exchange-correlation kernel in the spin orbital basis
+        K_XC_full (array): Unsliced exchange-correlation kernel in the spin orbital basis
+
+    Returns:
+        P_relaxed (array): Relaxed density matrix in the spin orbital basis
+    
+    """
+
+    # A slice for all occupied spin orbitals, including frozen core
+
+    o_occ = slice(0, n_occ)
+
+    # A slice for the frozen occupied spin orbitals, assumed to precede the active occupied spin orbitals
+
+    n_frozen = 0 if o.start is None else o.start
+    f = slice(0, n_frozen)
+
+    P_relaxed = P_unrelaxed.copy()
+
+    # Builds the explicit two-electron contribution to the occupied-virtual orbital gradient - the two permutations of each restricted term are equal for antisymmetrised integrals
+
+    L_ia_explicit = np.zeros((n_occ, n_virt))
+
+    L_ia_explicit[o, :] += np.einsum("ijbc,ajbc->ia", w_ijab, g[v, o, v, v], optimize = True)
+    L_ia_explicit -= np.einsum("jkab,jkib->ia", w_ijab, g[o, o, o_occ, v], optimize = True)
+
+    # Builds a source density, initially the unrelaxed density
+
+    P_source = P_unrelaxed.copy()
+
+    # Calculates the frozen-core active-occupied relaxation contribution, if needed
+
+    if n_frozen > 0:
+
+        L_fi_explicit = np.einsum("ijab,Fjab->Fi", w_ijab, g[f, o, v, v], optimize = True)
+
+        z_fi = L_fi_explicit / (epsilons[o][None, :] - epsilons[f][:, None])
+
+        # Relaxes the frozen-core orbitals
+
+        P_relaxed[f, o] += (1 / 2) * z_fi
+        P_relaxed[o, f] += (1 / 2) * z_fi.T
+
+        # The frozen-core relaxation must be included before forming the Fock response
+
+        P_source[f, o] += (1 / 2) * z_fi
+        P_source[o, f] += (1 / 2) * z_fi.T
+
+    # The Fock response and orbital Hessian use exact exchange scaled by its proportion in the functional
+
+    g_response = ERI_SO - calculation.HFX_prop * ERI_SO.transpose(0, 1, 3, 2) if calculation.HFX_prop != 1 else g
+
+    # Calculates the Fock-response contribution to the occupied-virtual orbital gradient
+
+    L_ia_fock = 2 * np.einsum("pq,apiq->ia", P_source, g_response[v, :, o_occ, :], optimize = True)
+
+    # Necessary to link in Kohn-Sham RHS for double-hybrids
+
+    if K_XC_full is not None:
+
+        L_ia_fock += 2 * np.einsum("iapq,pq->ia", K_XC_full, P_source, optimize = True)
+
+    # Builds the total occupied-virtual orbital gradient
+
+    L_ia = L_ia_fock + L_ia_explicit
+
+    # Builds the occupied-virtual orbital Hessian blocks
+
+    A_ia_jb = ci.calculate_unrestricted_A_matrix(g_response, epsilons, o_occ, v, K_XC)
+    B_ia_jb = ci.calculate_unrestricted_B_matrix(g_response, o_occ, v, K_XC)
+
+    # Solves the system of equations for the Z-vector
+
+    z_ia = np.linalg.solve(A_ia_jb + B_ia_jb, -L_ia.ravel())
+
+    # Reshapes the Z-vector to a matrix with the occupied-virtual shape
+
+    z_ia = z_ia.reshape(n_occ, n_virt)
+
+    # Builds the relaxed density matrix contribution from the Z-vector
+
+    P_relaxed[o_occ, v] += (1 / 2) * z_ia
+    P_relaxed[v, o_occ] += (1 / 2) * z_ia.T
+
+    return P_relaxed
+
+    
+
+
+
+
+
+
+
+
 def calculate_restricted_second_order_triples_amplitudes(e_ijkabc: ndarray, t_ijab: ndarray, g: ndarray, o: slice, v: slice) -> ndarray:
     
     """
@@ -868,11 +982,11 @@ def run_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_orbitals: n
 
 
 
-def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_output: Output, n_SO: int, o: slice, ERI_spin_block: ndarray, X: ndarray, silent: bool = False) -> tuple:
+def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_output: Output, n_SO: int, o: slice, ERI_spin_block: ndarray, X: ndarray, silent: bool = False, g: ndarray = None, ERI_SO: ndarray = None, epsilons_sorted: ndarray = None, C_spin_block: ndarray = None, spin_labels: list = None, K_XC: ndarray = None, K_XC_full: ndarray = None) -> tuple:
 
     """
 
-    Calculates the unrestricted MP2 energy and unrelaxed density.
+    Calculates the unrestricted MP2 energy and density.
 
     Args:
         molecule (Molecule): Molecule object
@@ -883,12 +997,19 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
         ERI_spin_block (array): Spin-blocked electron repulsion integrals in AO basis
         X (array): Fock transformation matrix
         silent (bool, optional): Should anything be printed
+        g (array, optional): Antisymmetrised two-electron integrals in physicists' spin orbital notation, needed for the relaxed density
+        ERI_SO (array, optional): Two-electron integrals in physicists' spin orbital notation, needed for the relaxed density
+        epsilons_sorted (array, optional): Spin orbital eigenvalues, sorted in ascending order, needed for the relaxed density
+        C_spin_block (array, optional): Spin-blocked molecular orbitals in AO basis, needed for the relaxed density
+        spin_labels (list, optional): Spin ("a" or "b") of each spin orbital, in ascending energy order, needed for the relaxed density
+        K_XC (array, optional): Exchange-correlation kernel in the spin orbital basis, for double-hybrids
+        K_XC_full (array, optional): Unsliced exchange-correlation kernel in the spin orbital basis, for double-hybrids
 
     Returns:
         E_MP2 (float): MP2 correlation energy
-        P (array): MP2 unrelaxed density matrix in AO basis
-        P_alpha (array): MP2 unrelaxed density matrix for alpha orbitals in AO basis
-        P_beta (array): MP2 unrelaxed density matrix for beta orbitals in AO basis
+        P (array): MP2 density matrix in AO basis
+        P_alpha (array): MP2 density matrix for alpha orbitals in AO basis
+        P_beta (array): MP2 density matrix for beta orbitals in AO basis
 
     """
     
@@ -931,7 +1052,7 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
 
     ERI_SO_a = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_alpha, C_spin_block_alpha, calculation, True)
     ERI_SO_b = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_beta, C_spin_block_beta, calculation, True)
-    ERI_SO_ab = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_alpha, C_spin_block_beta, calculation, True)
+    ERI_SO_ab = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block_beta, C_spin_block_alpha, calculation, True)
 
     # Antisymmetrises alpha and beta spins, but not alpha-beta spins
 
@@ -942,7 +1063,6 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
     
     epsilons_alpha = np.sort(epsilons_alpha)
     epsilons_beta = np.sort(epsilons_beta)
-
 
     # Slicing out occupied and virtual parts of alpha-alpha, beta-beta and alpha-beta contributions to ERI
 
@@ -994,7 +1114,13 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
     log(f"  Opposite spin contribution:         {E_MP2_OS:13.10f}", calculation, 1, silent = silent)
     log(f"\n  MP2 correlation energy:             {E_MP2:13.10f}", calculation, 1, silent = silent)
 
-    log("\n  Constructing MP2 unrelaxed density... ", calculation, 1, end = "", silent = silent)
+    if calculation.relaxed_density:
+
+        log("\n  Constructing MP2 relaxed density...   ", calculation, 1, end = "", silent = silent)
+
+    else:
+
+        log("\n  Constructing MP2 unrelaxed density... ", calculation, 1, end = "", silent = silent)
     
     P_MP2_a = np.zeros((n_SO // 2, n_SO // 2))
     P_MP2_b = np.zeros((n_SO // 2, n_SO // 2))
@@ -1038,6 +1164,42 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
     # Total AO density matrix
 
     P = P_alpha + P_beta
+
+    # If the "RELAXED" keyword is used, calculates the relaxed MP2 density matrix in the full spin orbital basis, replacing the unrelaxed density
+
+    if calculation.relaxed_density:
+
+        v = slice(molecule.n_occ, None)
+        n_occ, n_virt = molecule.n_occ, n_SO - molecule.n_occ
+
+        # Doubles epsilons tensor and t-amplitudes in the full spin orbital basis
+
+        e_ijab = ci.build_doubles_epsilons_tensor(epsilons_sorted, epsilons_sorted, o, o, v, v)
+        t_ijab = ci.build_MP2_t_amplitudes(g[o, o, v, v], e_ijab)
+
+        # Occupied pairs are scaled by the same-spin or opposite-spin factors, and by the double-hybrid scale
+
+        spins_occupied = np.array(spin_labels)[o]
+        pair_scaling = np.where(spins_occupied[:, None] == spins_occupied[None, :], same_spin_scale, opposite_spin_scale)
+
+        w_ijab = t_ijab * pair_scaling[:, :, None, None] * double_hybrid_scale
+
+        # Unrelaxed density matrix in the spin orbital basis, correlation part only
+
+        P_SO = np.zeros((n_SO, n_SO))
+
+        P_SO[o, o] -= (1 / 2) * np.einsum("jkab,ikab->ij", w_ijab, t_ijab, optimize = True)
+        P_SO[v, v] += (1 / 2) * np.einsum("ijac,ijbc->ab", w_ijab, t_ijab, optimize = True)
+
+        P_SO = calculate_unrestricted_relaxed_MP2_density_matrix(P_SO, w_ijab, g, ERI_SO, epsilons_sorted, o, v, n_occ, n_virt, calculation, K_XC, K_XC_full)
+
+        # Adds the Hartree-Fock density matrix contribution
+
+        P_SO[:n_occ, :n_occ] += np.eye(n_occ)
+
+        # Transforms the MP2 density from the spin orbital basis back to the AO basis
+
+        P, P_alpha, P_beta = ci.transform_P_SO_to_AO(P_SO, C_spin_block, n_SO)
 
     log("     [Done]", calculation, 1, silent = silent)
     
@@ -1579,10 +1741,10 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
 
     # Calculates useful quantities for all spin orbital or spatial orbital calculations
-
+    
     if calculation.reference == "UHF" or method.name == "OMP2":
 
-        g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels, _, _ = ci.begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, calculation, silent = silent)
+        g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels, _, ERI_SO = ci.begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, calculation, silent = silent)
         
         # Calculates the exchange-correlation kernel matrices for double-hybrids
 
@@ -1592,9 +1754,8 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
                 error("The relaxed density is not yet available for this exchange-correlation functional!")
 
-            K_X, K_C = dft.calculate_unrestricted_exchange_correlation_kernel_matrices(o, v, P_alpha, P_beta, grid_container[0], C_spin_block, spin_labels, calculation, grid_container[1], silent) 
+            K_XC, K_XC_full = dft.calculate_unrestricted_exchange_correlation_kernel_matrices(slice(0, molecule.n_occ), v, P_alpha, P_beta, grid_container[0], C_spin_block, spin_labels, calculation, grid_container[1], silent, return_full_kernel = True) 
             
-
     else:
 
         ERI_MO, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, ERI_AO, SCF_output, calculation, silent = silent)
@@ -1640,7 +1801,7 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
         if calculation.reference == "UHF":
 
-            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, ERI_spin_block, X, silent = silent)
+            E_MP2, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals = run_unrestricted_MP2(molecule, calculation, SCF_output, n_SO, o, ERI_spin_block, X, silent = silent, g = g, ERI_SO = ERI_SO, epsilons_sorted = epsilons_sorted, C_spin_block = C_spin_block, spin_labels = spin_labels, K_XC = K_XC, K_XC_full = K_XC_full)
 
         else:
 
