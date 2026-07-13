@@ -259,8 +259,9 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
 
     # Builds the occupied-virtual orbital Hessian blocks - need to modify this for double-hybrids!
 
-    A_ia_jb = ci.calculate_restricted_singlet_A_matrix(g, epsilons, o_occ, v, calculation, K_XC)
-    B_ia_jb = ci.calculate_restricted_singlet_B_matrix(g, o_occ, v, calculation, K_XC)
+    A_ia_jb = ci.calculate_A_matrix(calculation, g, epsilons, o_occ, v, K_XC, "singlet")
+
+    B_ia_jb = ci.calculate_B_matrix(calculation, g, o, v, K_XC, "singlet")
 
     # Solves the system of equations for the Z-vector
 
@@ -353,7 +354,7 @@ def calculate_unrestricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ij
 
     # The Fock response and orbital Hessian use exact exchange scaled by its proportion in the functional
 
-    g_response = ERI_SO - calculation.HFX_prop * ERI_SO.transpose(0, 1, 3, 2) if calculation.HFX_prop != 1 else g
+    g_response = ERI_SO - calculation.HFX_prop * ERI_SO.transpose(0, 1, 3, 2)
 
     # Calculates the Fock-response contribution to the occupied-virtual orbital gradient
 
@@ -371,8 +372,9 @@ def calculate_unrestricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ij
 
     # Builds the occupied-virtual orbital Hessian blocks
 
-    A_ia_jb = ci.calculate_unrestricted_A_matrix(g_response, epsilons, o_occ, v, K_XC)
-    B_ia_jb = ci.calculate_unrestricted_B_matrix(g_response, o_occ, v, K_XC)
+    A_ia_jb = ci.calculate_A_matrix(calculation, g_response, epsilons, o_occ, v, K_XC)
+
+    B_ia_jb = ci.calculate_B_matrix(calculation, g_response, o_occ, v, K_XC)
 
     # Solves the system of equations for the Z-vector
 
@@ -595,7 +597,7 @@ def run_restricted_Laplace_MP2(integrals: Integrals, F: ndarray, calculation: Ca
 
     # Removes the factor of two from the RHF density matrix to restore idempotency
 
-    P /= 2
+    P = P / 2
 
     log_spacer(calculation, silent = silent, start = "\n")
     log("          Laplace Transform AO-MP2 Energy", calculation, 1, silent = silent, colour = "white")
@@ -798,7 +800,7 @@ def run_iterative_restricted_MP2(ERI_MO: ndarray, epsilons: ndarray, molecular_o
 
     # This is the Hartree-Fock density in the MO basis
 
-    P_MP2[o, o] = 2 * np.eye(n_doubly_occ)
+    P_MP2[slice(0, n_doubly_occ), slice(0, n_doubly_occ)] = 2 * np.eye(n_doubly_occ)
 
     # Builds the MP2 contribution to density
 
@@ -1149,7 +1151,7 @@ def run_unrestricted_MP2(molecule: Molecule, calculation: Calculation, SCF_outpu
 
     # Scales MP2 density if a double-hybrid functional is used
 
-    double_hybrid_scale = calculation.MPC_prop if calculation.DFT_calculation else 1
+    double_hybrid_scale = calculation.MPC_prop if calculation.MPC_requested or calculation.DFT_calculation else 1
 
     # Builds alpha and beta MP2 density matrices
 
@@ -1256,7 +1258,7 @@ def run_orbital_optimised_MP2(molecule: Molecule, calculation: Calculation, g: n
     log("      Orbital-optimised MP2 Energy and Density ", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
-    log(f"\n  Tolerance for energy convergence:    {calculation.energy_convergence:.10f}", 1, silent = silent)
+    log(f"\n  Tolerance for energy convergence:    {calculation.energy_convergence:.10f}", calculation, 1, silent = silent)
     log("\n  Starting orbital-optimised MP2 iterations...\n", calculation, 1, end = "", silent = silent)
 
     log_spacer(calculation, silent = silent, start = "\n")
@@ -1743,6 +1745,10 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
     # Calculates useful quantities for all spin orbital or spatial orbital calculations
     
     if calculation.reference == "UHF" or method.name == "OMP2":
+
+        if not calculation.method.unrestricted_available:
+
+            error("This electronic structure method is unavailable for unrestricted calculations!")
 
         g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels, _, ERI_SO = ci.begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, calculation, silent = silent)
         

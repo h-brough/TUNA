@@ -696,7 +696,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
     # Makes ranges, accounting for "NATORBS" and single atom calculations
 
     ao_range = max(molecule.partition_ranges[0], molecule.partition_ranges[1]) if len(molecule.atoms) > 1 else molecule.partition_ranges[0]
-    mo_range = len(SCF_output.molecular_orbitals_alpha) if do_natorbs else len(orbital_energies)
+    mo_range = SCF_output.molecular_orbitals_alpha.shape[1] if do_natorbs else len(orbital_energies)
 
     # Changes occupancy list to words
 
@@ -905,7 +905,7 @@ def calculate_molecular_properties(molecule: Molecule, calculation: Calculation,
 
         # The list of spins for each spin orbital - only relevant for unrestricted references
 
-        spin_labels = ["a"] * len(SCF_output.molecular_orbitals_alpha) + ["b"] * len(SCF_output.molecular_orbitals_beta)
+        spin_labels = ["a"] * SCF_output.molecular_orbitals_alpha.shape[1] + ["b"] * SCF_output.molecular_orbitals_beta.shape[1]
 
         spin_labels_sorted = [spin_labels[i] for i in np.argsort(SCF_output.epsilons_combined)]
 

@@ -14,6 +14,7 @@ In any calculation, this module runs first and parses the input line. It then ha
 things, including a big fish logo, are printed to the terminal during this. The time taken in a calculation starts counting here, after modules have been imported.
 
 Updated in version 0.10.1 to process electronic structure methods as objects rather than strings.
+Updated in version 0.11.0 to enable running programatically, not just from the command line.
 
 The module contains:
 
@@ -39,7 +40,7 @@ print(colored("Importing required libraries...  ", "light_grey", force_color = T
 import numpy as np
 from numpy import ndarray
 import time
-from tuna_util import error, Method, timer, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation, log, log_spacer
+from tuna_util import error, TunaError, Method, timer, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation, log, log_spacer
 from tuna_calc import Calculation
 import tuna_energy as energ
 import tuna_opt as opt
@@ -55,11 +56,14 @@ print(colored("[Done]\n", "light_grey", force_color=True))
 start_time = time.perf_counter()
 
 
-def parse_input() -> tuple[str, str, str, list[str], ndarray, list[str]]:
+def parse_input(input_line: str = None) -> tuple[str, str, str, list[str], ndarray, list[str]]:
 
     """
 
     Parses the input line in the console and returns extracted quantities.
+
+    Args:
+        input_line (string, optional): Run TUNA programmatically
 
     Returns:
         calculation_type (string): Type of calculation
@@ -80,7 +84,7 @@ def parse_input() -> tuple[str, str, str, list[str], ndarray, list[str]]:
 
     # Puts input line into standardised format, capital letters and separated by spaces for each argument
 
-    input_line = " ".join(sys.argv[1:]).upper().strip()
+    input_line = " ".join(sys.argv[1:]).upper().strip() if input_line is None else input_line
 
     try: 
         
@@ -338,7 +342,7 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
         
 
-def main() -> None: 
+def run(input_line: str = None, suppress_output: bool = False) -> None: 
 
     """
 
@@ -348,27 +352,31 @@ def main() -> None:
 
     # Reads input line, makes sure it's okay and extracts the desired parameters
 
-    calculation_type, method_string, basis, atomic_symbols, coordinates, params = parse_input()
+    calculation_type, method_string, basis, atomic_symbols, coordinates, params = parse_input(input_line)
     
     # Processes the requested method into a Method object
 
     method = process_method(method_string)
 
-    print(colored(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set requested.", "light_grey", force_color=True))
+    if not suppress_output:
 
-    print(colored(f"Electronic structure method is {method.long_name}.\n", "light_grey", force_color=True))
+        print(colored(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set requested.", "light_grey", force_color=True))
+
+        print(colored(f"Electronic structure method is {method.long_name}.\n", "light_grey", force_color=True))
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
 
-    calculation = Calculation(calculation_type, method, start_time, params, basis, atomic_symbols)
+    calculation = Calculation(calculation_type, method, start_time, params, basis, atomic_symbols, suppress_output)
 
     # If a decontracted basis has been requested, this is printed to the console
 
     contraction = "fully decontracted" if calculation.decontract else "partially contracted"
 
-    print(colored(f"Setting up calculation using {contraction} basis set.", "light_grey", force_color=True))
+    if not suppress_output:
 
-    print(colored(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey", force_color=True))
+        print(colored(f"Setting up calculation using {contraction} basis set.", "light_grey", force_color=True))
+
+        print(colored(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey", force_color=True))
 
     # Sets off the desired calculation with the requested parameters
 
@@ -395,8 +403,14 @@ if __name__ == "__main__":
 
         while True:
 
-            main()
+            run()
 
     except KeyboardInterrupt: 
         
         error("The TUNA calculation has been interrupted by the user. Goodbye!")
+
+    except TunaError as tuna_error:
+
+        print(tuna_error)
+
+        sys.exit(1)

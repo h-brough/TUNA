@@ -913,6 +913,23 @@ def format_charge(charge: int) -> str:
 
 
 
+class TunaError(Exception):
+
+    """
+    
+    Base class for every error TUNA raises deliberately.
+    
+    """
+
+
+
+
+
+
+
+
+
+
 def error(message: str) -> None: 
 
     """
@@ -924,13 +941,7 @@ def error(message: str) -> None:
 
     """
     
-    print(colored(f"\nERROR: {message}  :(\n", "light_red"))
-
-    # Exits the program
-
-    sys.exit()
-
-    return
+    raise TunaError(colored(f"\nERROR: {message}  :(\n", "light_red"))
 
 
 
@@ -982,7 +993,7 @@ def log(message: str, calculation: any, priority: int = 1, silent: bool = False,
 
     """
 
-    if not silent:
+    if not silent and not calculation.suppress_output:
 
         # All printing is blocked if "silent" is passed, such as in a gradient calculation
 

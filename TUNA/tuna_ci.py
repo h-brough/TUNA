@@ -579,7 +579,7 @@ def begin_spin_orbital_calculation(molecule: Molecule, ERI_AO: ndarray, SCF_outp
 
     # Tracks the spin state of each epsilon
 
-    spin_labels = ["a"] * len(SCF_output.molecular_orbitals_alpha) + ["b"] * len(SCF_output.molecular_orbitals_beta)
+    spin_labels = ["a"] * SCF_output.molecular_orbitals_alpha.shape[1] + ["b"] * SCF_output.molecular_orbitals_beta.shape[1]
     spin_labels_sorted = [spin_labels[i] for i in np.argsort(epsilons_combined)]
 
     def prefix_counts(seq):
@@ -712,128 +712,47 @@ def calculate_oscillator_strengths(transition_dipoles: ndarray, excitation_energ
 
 
 
-def calculate_restricted_singlet_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
+def calculate_A_matrix(calculation: Calculation, g: ndarray, epsilons: ndarray, o: slice, v: slice, K_XC, matrix_type: str = "singlet") -> ndarray:
 
     """
     
-    Calculates the singlet A matrix for a spin-restricted reference.
+    Calculates the "A" matrix, for orbital excitations.
 
     Args:
-        g (array): Two-electron integrals in physicists' spatial orbital notation
-        epsilons (array): Molecular orbital eigenvalues
-        o (slice): Occupied orbital slice
-        v (slice): Virtual orbital slice
         calculation (Calculation): Calculation object
-        K_XC (array, optional): Exchange-correlation kernel matrix 
-
+        g (array): Either spatial orbital ERIs or antisymmetrised spin orbital ERIs in physicists' notation 
+        epsilons (array): Fock matrix eigenvalues
+        o (slice): Active occupied orbital slice
+        v (slice): Active virtual orbital slice
+        K_XC (array): Exchange-correlation kernel matrix, shape (occ, virt, occ, virt)
+        matrix_type (str): Either "singlet" or "triplet" for restricted calculations
+    
     Returns:
-        A_ia_jb (array): Restricted singlet orbital Hessian matrix
-
-    """
-
-    # Builds the contributions to the A matrix
-
-    A = 2 * g[o, o, v, v].transpose(0, 2, 1, 3) - g[o, v, o, v] * calculation.HFX_prop 
-
-    if K_XC is not None:
-
-        A = A + K_XC
-
-    # Reshapes into a matrix of excitations
-
-    A_ia_jb = A.reshape(A.shape[0] * A.shape[1], -1)
-
-    # The diagonal elements also need the orbital energy differences, which are added on here
-
-    A_ia_jb[np.diag_indices_from(A_ia_jb)] += (epsilons[v][None, :] - epsilons[o][:, None]).ravel()
-
-    # Ensures matrix is Hermitian
-
-    A_ia_jb = symmetrise(A_ia_jb)
-
-    return A_ia_jb
-
-
-
-
-
-
-
-
-
-
-def calculate_restricted_triplet_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
+        A_ia_jb (array): Excitation matrix
 
     """
     
-    Calculates the triplet A matrix for a spin-restricted reference.
-
-    Args:
-        g (array): Two-electron integrals in physicists' spatial orbital notation
-        epsilons (array): Molecular orbital eigenvalues
-        o (slice): Occupied orbital slice
-        v (slice): Virtual orbital slice
-        calculation (Calculation): Calculation object
-        K_XC (array, optional): Exchange-correlation kernel matrix 
-
-    Returns:
-        A_ia_jb (array): Restricted triplet orbital Hessian matrix
-
-    """
-
-    # Builds the contributions to the A matrix
-
-    A = - g[o, v, o, v] * calculation.HFX_prop
-
-    if K_XC is not None:
-
-        A = A + K_XC
-
-    # Reshapes into a matrix of excitations
-
-    A_ia_jb = A.reshape(A.shape[0] * A.shape[1], -1)
-
-    # The diagonal elements also need the orbital energy differences, which are added on here
-
-    A_ia_jb[np.diag_indices_from(A_ia_jb)] += (epsilons[v][None, :] - epsilons[o][:, None]).ravel()
-
-    # Ensures matrix is Hermitian
-
-    A_ia_jb = symmetrise(A_ia_jb)
-
-    return A_ia_jb
-
-
-
-
-
-
-
-
-
-
-def calculate_unrestricted_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: slice, K_XC: ndarray = None) -> ndarray:
-
-    """
+    assert matrix_type in ["singlet", "triplet"], "Invalid matrix type for B matrix calculation!"
     
-    Calculates the orbital Hessian for a spin-unrestricted reference.
+    # The restricted matrices scale the exchange-like part by "HFX"
 
-    Args:
-        g (array): Antisymmetrised spin orbital two-electron integrals in physicists' notation
-        epsilons (array): spin orbital molecular orbital eigenvalues
-        o (slice): Occupied spin orbital slice
-        v (slice): Virtual spin orbital slice
-        calculation (Calculation): Calculation object
-        K_XC (array, optional): Exchange-correlation kernel matrix 
+    if calculation.reference == "RHF":
 
-    Returns:
-        A_ia_jb (array): Unrestricted spin orbital Hessian matrix
+        if matrix_type == "singlet":
 
-    """
+            A = 2 * g[o, o, v, v].transpose(0, 2, 1, 3) - g[o, v, o, v] * calculation.HFX_prop 
 
-    # Builds the spin orbital contribution to the orbital Hessian
+        elif matrix_type == "triplet":
 
-    A = g[v, o, o, v].transpose(2, 0, 1, 3) 
+            A = - g[o, v, o, v] * calculation.HFX_prop
+    
+    # In the unrestricted case, the exchange scaling is already with the ERIs
+
+    elif calculation.reference == "UHF":
+
+        A = np.array(g[v, o, o, v].transpose(2, 0, 1, 3))
+    
+    # Adds on the exchange-correlation kernel for DFT calculations
 
     if K_XC is not None:
 
@@ -846,11 +765,11 @@ def calculate_unrestricted_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: 
     # The diagonal elements also need the spin orbital energy differences, which are added on here
 
     A_ia_jb[np.diag_indices_from(A_ia_jb)] += (epsilons[v][None, :] - epsilons[o][:, None]).ravel()
-
+    
     # Ensures matrix is Hermitian
 
     A_ia_jb = symmetrise(A_ia_jb)
-
+    
     return A_ia_jb
 
 
@@ -862,126 +781,55 @@ def calculate_unrestricted_A_matrix(g: ndarray, epsilons: ndarray, o: slice, v: 
 
 
 
-def calculate_restricted_singlet_B_matrix(g: ndarray, o: slice, v: slice, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
+def calculate_B_matrix(calculation: Calculation, g: ndarray, o: slice, v: slice, K_XC, matrix_type: str = "singlet") -> ndarray:
 
     """
     
-    Calculates the singlet B matrix for a spin-restricted reference.
+    Calculates the "B" matrix, for orbital de-excitations.
 
     Args:
-        g (array): Two-electron integrals in physicists' spatial orbital notation
-        o (slice): Occupied orbital slice
-        v (slice): Virtual orbital slice
         calculation (Calculation): Calculation object
-        K_XC (array, optional): Exchange-correlation kernel matrix 
-
+        g (array): Either spatial orbital ERIs or antisymmetrised spin orbital ERIs in physicists' notation 
+        o (slice): Active occupied orbital slice
+        v (slice): Active virtual orbital slice
+        K_XC (array): Exchange-correlation kernel matrix, shape (occ, virt, occ, virt)
+        matrix_type (str): Either "singlet" or "triplet" for restricted calculations
+    
     Returns:
-        B_ia_jb (array): Restricted singlet B matrix
+        B_ia_jb (array): De-excitation matrix
 
     """
 
-    # Builds the contributions to the B matrix
-
-    B = 2 * g[o, o, v, v].transpose(0, 2, 1, 3) - g[o, o, v, v].transpose(0, 3, 1, 2) * calculation.HFX_prop
+    assert matrix_type in ["singlet", "triplet"], "Invalid matrix type for B matrix calculation!"
     
-    if K_XC is not None:
+    # The restricted matrices scale the exchange-like part by "HFX"
 
-        B = B + K_XC
+    if calculation.reference == "RHF":
 
-    # Reshapes into a matrix of excitations
+        if matrix_type == "singlet":
 
-    B_ia_jb = B.reshape(B.shape[0] * B.shape[1], -1)
+            B = 2 * g[o, o, v, v].transpose(0, 2, 1, 3) - g[o, o, v, v].transpose(0, 3, 1, 2) * calculation.HFX_prop
 
-    # Ensures matrix is Hermitian
+        elif matrix_type == "triplet":
 
-    B_ia_jb = symmetrise(B_ia_jb)
-    
-    return B_ia_jb
+            B = - g[o, o, v, v].transpose(0, 3, 1, 2) * calculation.HFX_prop
 
+    # In the unrestricted case, the exchange scaling is already with the ERIs
 
+    elif calculation.reference == "UHF":
 
+        B = g[v, v, o, o].transpose(2, 0, 3, 1)
 
-
-
-
-
-
-
-def calculate_restricted_triplet_B_matrix(g: ndarray, o: slice, v: slice, calculation: Calculation, K_XC: ndarray = None) -> ndarray:
-
-    """
-    
-    Calculates the triplet B matrix for a spin-restricted reference.
-
-    Args:
-        g (array): Two-electron integrals in physicists' spatial orbital notation
-        o (slice): Occupied orbital slice
-        v (slice): Virtual orbital slice
-        calculation (Calculation): Calculation object
-        K_XC (array, optional): Exchange-correlation kernel matrix
-
-    Returns:
-        B_ia_jb (array): Restricted triplet B matrix
-
-    """
-
-    # Builds the contributions to the B matrix
-
-    B = - g[o, o, v, v].transpose(0, 3, 1, 2) * calculation.HFX_prop
+    # Adds on the exchange-correlation kernel for DFT calculations
 
     if K_XC is not None:
 
         B = B + K_XC
-
-    # Reshapes into a matrix of excitations
-
-    B_ia_jb = B.reshape(B.shape[0] * B.shape[1], -1)
-
-    # Ensures matrix is Hermitian
-
-    B_ia_jb = symmetrise(B_ia_jb)
-    
-    return B_ia_jb
-
-
-
-
-
-
-
-
-
-
-def calculate_unrestricted_B_matrix(g: ndarray, o: slice, v: slice, K_XC: ndarray = None) -> ndarray:
-
-    """
-    
-    Calculates the B matrix for a spin-unrestricted reference.
-
-    Args:
-        g (array): Antisymmetrised spin orbital two-electron integrals in physicists' notation
-        o (slice): Occupied spin orbital slice
-        v (slice): Virtual spin orbital slice
-        calculation (Calculation): Calculation object
-        K_XC (array, optional): Exchange-correlation kernel matrix
-
-    Returns:
-        B_ia_jb (array): Unrestricted spin orbital B matrix
-
-    """
-
-    # Builds the spin orbital contribution to the B matrix
-
-    B = g[v, v, o, o].transpose(2, 0, 3, 1)
-
-    if K_XC is not None:
-
-        B = B + K_XC 
 
     # Reshapes into a matrix of spin orbital excitations
 
     B_ia_jb = B.reshape(B.shape[0] * B.shape[1], -1)
-
+    
     # Ensures matrix is Hermitian
 
     B_ia_jb = symmetrise(B_ia_jb)
@@ -1022,9 +870,9 @@ def build_orbital_hessian(g: ndarray, epsilons: ndarray, o: slice, v: slice, cal
 
     if calculation.reference == "UHF":   # Handles the spin-unrestricted case
 
-        A = calculate_unrestricted_A_matrix(g, epsilons, o, v, K_XC)
+        A = calculate_A_matrix(calculation, g, epsilons, o, v, K_XC)
 
-        B = calculate_unrestricted_B_matrix(g, o, v, K_XC)
+        B = calculate_B_matrix(calculation, g, o, v, K_XC)
 
         # Screens out non-spin-conserving excitations
 
@@ -1040,15 +888,15 @@ def build_orbital_hessian(g: ndarray, epsilons: ndarray, o: slice, v: slice, cal
         
         if hessian_type == "triplet":   # Calculates the restricted triplet Hessian
 
-            A = calculate_restricted_triplet_A_matrix(g, epsilons, o, v, calculation, K_XC)
+            A = calculate_A_matrix(calculation, g, epsilons, o, v, K_XC, "triplet")
 
-            B = calculate_restricted_triplet_B_matrix(g, o, v, calculation, K_XC)
+            B = calculate_B_matrix(calculation, g, o, v, K_XC, "triplet")
 
         else:   # Calculates the restricted singlet Hessian
 
-            A = calculate_restricted_singlet_A_matrix(g, epsilons, o, v, calculation, K_XC)
+            A = calculate_A_matrix(calculation, g, epsilons, o, v, K_XC, "singlet")
 
-            B = calculate_restricted_singlet_B_matrix(g, o, v, calculation, K_XC)
+            B = calculate_B_matrix(calculation, g, o, v, K_XC, "singlet")
 
     # The Hessian is a block matrix with A and B submatrices
 
@@ -1071,7 +919,7 @@ def build_orbital_hessian(g: ndarray, epsilons: ndarray, o: slice, v: slice, cal
 
 
 
-def perform_restricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slice, v: slice, calculation: Calculation, silent: bool = False, K_X_singlet: ndarray = None, K_C_singlet: ndarray = None, K_X_triplet: ndarray = None, K_C_triplet: ndarray = None) -> None:
+def perform_restricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slice, v: slice, calculation: Calculation, silent: bool = False, K_XC_singlet: ndarray = None, K_XC_triplet: ndarray = None) -> None:
     
     """
     
@@ -1084,10 +932,8 @@ def perform_restricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slic
         v (slice): Virtual orbital slice
         calculation (Calculation): Calculation object
         silent (bool, optional): Cancel logging
-        K_X_singlet (array, optional): Singlet exchange kernel matrix
-        K_C_singlet (array, optional): Singlet correlation kernel matrix
-        K_X_triplet (array, optional): Triplet exchange kernel matrix
-        K_C_triplet (array, optional): Triplet correlation kernel matrix
+        K_XC_singlet (array, optional): Singlet exchange-correlation kernel matrix
+        K_XC_triplet (array, optional): Triplet exchange-correlation kernel matrix
 
     """
 
@@ -1095,13 +941,13 @@ def perform_restricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slic
 
     log("  Building singlet orbital Hessian...        ", calculation, 1, silent, end = "")
 
-    H_singlet = build_orbital_hessian(g, epsilons, o, v, calculation, "singlet", K_X_singlet, K_C_singlet)
+    H_singlet = build_orbital_hessian(g, epsilons, o, v, calculation, "singlet", K_XC_singlet)
 
     log("[Done]", calculation, 1, silent)
 
     log("  Building triplet orbital Hessian...        ", calculation, 1, silent, end = "")
 
-    H_triplet = build_orbital_hessian(g, epsilons, o, v, calculation, "triplet", K_X_triplet, K_C_triplet)
+    H_triplet = build_orbital_hessian(g, epsilons, o, v, calculation, "triplet", K_XC_triplet)
 
     log("[Done]", calculation, 1, silent)
     
@@ -1141,7 +987,7 @@ def perform_restricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slic
 
 
 
-def perform_unrestricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slice, v: slice, calculation: Calculation, silent: bool = False, K_X: ndarray = None, K_C: ndarray = None, spin_labels: list = None) -> None:
+def perform_unrestricted_stability_analysis(g: ndarray, epsilons: ndarray, o: slice, v: slice, calculation: Calculation, silent: bool = False, K_XC: ndarray = None, spin_labels: list = None) -> None:
     
     """
     
@@ -1154,8 +1000,7 @@ def perform_unrestricted_stability_analysis(g: ndarray, epsilons: ndarray, o: sl
         v (slice): Virtual spin orbital slice
         calculation (Calculation): Calculation object
         silent (bool, optional): Cancel logging
-        K_X (array, optional): Exchange kernel matrix
-        K_C (array, optional): Correlation kernel matrix
+        K_XC (array, optional): Exchange-correlation kernel matrix
         spin_labels (list, optional): List of spin orbital labels
     
     """
@@ -1164,7 +1009,7 @@ def perform_unrestricted_stability_analysis(g: ndarray, epsilons: ndarray, o: sl
 
     log("  Building unrestricted orbital Hessian...   ", calculation, 1, silent, end = "")
 
-    H = build_orbital_hessian(g, epsilons, o, v, calculation, hessian_type = None, K_X = K_X, K_C = K_C, spin_labels = spin_labels)
+    H = build_orbital_hessian(g, epsilons, o, v, calculation, hessian_type = None, K_XC = K_XC, spin_labels = spin_labels)
     
     log("[Done]", calculation, 1, silent)
     
@@ -1214,7 +1059,7 @@ def determine_self_consistent_field_stability(molecule: Molecule, calculation: C
 
     """
     
-    K_X_singlet, K_C_singlet, K_X_triplet, K_C_triplet, K_X, K_C = None, None, None, None, None, None
+    K_XC_singlet, K_XC_triplet, K_XC = None, None, None
 
     # Stability analysis will work for the same functionals as TD-DFT
 
@@ -1238,7 +1083,7 @@ def determine_self_consistent_field_stability(molecule: Molecule, calculation: C
 
         if calculation.method.density_functional_method:   # Handles the DFT case
             
-            K_X, K_C = calculate_unrestricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P_alpha, SCF_output.P_beta, bfs_on_grid, C_spin_block, spin_labels, calculation, weights, silent)
+            K_XC = calculate_unrestricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P_alpha, SCF_output.P_beta, bfs_on_grid, C_spin_block, spin_labels, calculation, weights, silent)
 
     log_spacer(calculation, 1, silent, start = "\n")
     log("                  Stability Analysis", calculation, 1, silent, colour = "white")
@@ -1248,11 +1093,11 @@ def determine_self_consistent_field_stability(molecule: Molecule, calculation: C
 
     if calculation.reference == "RHF":
 
-        perform_restricted_stability_analysis(g, epsilons, o, v, calculation, silent, K_X_singlet, K_C_singlet, K_X_triplet, K_C_triplet)
+        perform_restricted_stability_analysis(g, epsilons, o, v, calculation, silent, K_XC_singlet, K_XC_triplet)
 
     else:
         
-        perform_unrestricted_stability_analysis(g, epsilons, o, v, calculation, silent, K_X, K_C, spin_labels)
+        perform_unrestricted_stability_analysis(g, epsilons, o, v, calculation, silent, K_XC, spin_labels)
     
     log_spacer(calculation, 1, silent)
 
@@ -1476,19 +1321,19 @@ def calculate_restricted_single_reference_excited_states(g: ndarray, epsilons: n
 
     if not calculation.calculate_no_singlets:   # Calculates singlet matrices
 
-        A_singlet = calculate_restricted_singlet_A_matrix(g, epsilons, o, v, calculation, K_XC_singlet)
+        A_singlet = calculate_A_matrix(calculation, g, epsilons, o, v, K_XC_singlet, "singlet")
 
         if not calculation.tamm_dancoff_approximation:  
 
-            B_singlet = calculate_restricted_singlet_B_matrix(g, o, v, calculation, K_XC_singlet)
+            B = calculate_B_matrix(calculation, g, o, v, K_XC_singlet, "singlet")
 
     if not calculation.calculate_no_triplets:   # Calculates triplet matrices
 
-        A_triplet = calculate_restricted_triplet_A_matrix(g, epsilons, o, v, calculation, K_XC_triplet)
+        A_triplet = calculate_A_matrix(calculation, g, epsilons, o, v, K_XC_triplet, "triplet")
 
         if not calculation.tamm_dancoff_approximation:  
 
-            B_triplet = calculate_restricted_triplet_B_matrix(g, o, v, calculation, K_XC_triplet) 
+            B = calculate_B_matrix(calculation, g, o, v, K_XC_triplet, "triplet")
     
     log("[Done]", calculation, 1, silent)
 
@@ -1568,7 +1413,7 @@ def calculate_unrestricted_single_reference_excited_states(g: ndarray, epsilons:
 
     # The unrestricted A matrix is built in the full spin orbital basis, then restricted to spin-conserving excitations
 
-    A = calculate_unrestricted_A_matrix(g, epsilons, o, v, K_XC)[np.ix_(spin_conserving, spin_conserving)]
+    A = calculate_A_matrix(calculation, g, epsilons, o, v, K_XC)[np.ix_(spin_conserving, spin_conserving)]
 
     log("[Done]", calculation, 1, silent)
 
@@ -1589,7 +1434,7 @@ def calculate_unrestricted_single_reference_excited_states(g: ndarray, epsilons:
 
         # The B matrix is also restricted to spin-conserving excitations for full TDHF
 
-        B = calculate_unrestricted_B_matrix(g, o, v, K_XC)[np.ix_(spin_conserving, spin_conserving)]
+        B = calculate_B_matrix(calculation, g, o, v, K_XC)[np.ix_(spin_conserving, spin_conserving)]
 
         excitation_energies, vectors = calculate_time_dependent_hartree_fock_states(A, B)
 
@@ -2114,7 +1959,7 @@ def calculate_restricted_doubles_correction(excitation_energy: ndarray, epsilons
 
     # Allows double-hybrid calculations with "MPC"
 
-    E_D_scaled = E_D * calculation.MPC_prop if calculation.MPC_requested else E_D
+    E_D_scaled = E_D * calculation.MPC_prop if calculation.MPC_requested or calculation.DFT_calculation else E_D
 
     # Correction energy in eV prints if P used
 
@@ -2130,7 +1975,7 @@ def calculate_restricted_doubles_correction(excitation_energy: ndarray, epsilons
 
     log_spacer(calculation, silent = silent)
  
-    return E_D
+    return E_D_scaled
 
 
 
@@ -2211,7 +2056,7 @@ def calculate_unrestricted_doubles_correction(excitation_energy: ndarray, epsilo
     
     # Allows double-hybrid calculations with "MPC"
 
-    E_D_scaled = E_D * calculation.MPC_prop if calculation.MPC_requested else E_D
+    E_D_scaled = E_D * calculation.MPC_prop if calculation.MPC_requested or calculation.DFT_calculation else E_D
 
     # Correction energy in eV prints if P used
 
@@ -2227,7 +2072,7 @@ def calculate_unrestricted_doubles_correction(excitation_energy: ndarray, epsilo
 
     log_spacer(calculation, 1, silent)
   
-    return E_D
+    return E_D_scaled
 
 
 

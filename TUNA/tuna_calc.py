@@ -563,6 +563,10 @@ class Calculation:
 
     atomic_symbols: list[str]
 
+    # Should anything be printed
+
+    suppress_output: bool
+
 
     def __post_init__(self) -> None:
 
