@@ -1325,7 +1325,7 @@ def calculate_restricted_single_reference_excited_states(g: ndarray, epsilons: n
 
         if not calculation.tamm_dancoff_approximation:  
 
-            B = calculate_B_matrix(calculation, g, o, v, K_XC_singlet, "singlet")
+            B_singlet = calculate_B_matrix(calculation, g, o, v, K_XC_singlet, "singlet")
 
     if not calculation.calculate_no_triplets:   # Calculates triplet matrices
 
@@ -1333,7 +1333,7 @@ def calculate_restricted_single_reference_excited_states(g: ndarray, epsilons: n
 
         if not calculation.tamm_dancoff_approximation:  
 
-            B = calculate_B_matrix(calculation, g, o, v, K_XC_triplet, "triplet")
+            B_triplet = calculate_B_matrix(calculation, g, o, v, K_XC_triplet, "triplet")
     
     log("[Done]", calculation, 1, silent)
 

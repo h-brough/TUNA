@@ -88,13 +88,19 @@ def delete_saved_plot() -> None:
 
     if os.path.exists(file_path):
         
-        os.remove(file_path)
+        try:
 
-        warning(f"The file {file_path} has been deleted due to the \"DELPLOT\" keyword.\n", space = 0)
+            os.remove(file_path)
+
+            warning(f"The file \"{file_path}\" has been deleted because of the \"DELPLOT\" keyword.\n", space = 0)
+
+        except OSError:
+
+            warning(f"Plot deletion requested with \"DELPLOT\" but \"{file_path}\" could not be deleted!\n", space = 0)
 
     else:
         
-        warning(f"Plot deletion requested but {file_path} could not be found!\n", space = 0)
+        warning(f"Plot deletion requested with \"DELPLOT\" but \"{file_path}\" could not be found!\n", space = 0)
 
     return
 
