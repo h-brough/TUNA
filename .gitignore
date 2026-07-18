@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.c
+*.so
+*.pyd
+build/
+dist/
+wheelhouse/
+*.egg-info/
+.venv/
+venv/
+.DS_Store
+EOF
