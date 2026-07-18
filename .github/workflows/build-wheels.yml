@@ -1,15 +1,12 @@
 name: Build and publish wheels
-
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
-
 permissions:
   contents: read
   id-token: write
-
 jobs:
   build-wheels:
     runs-on: ${{ matrix.os }}
@@ -18,26 +15,22 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: 3.12
-            cibw-build: cp312-manylinux_x86_64
+            cibw_build: "cp312-manylinux_x86_64 cp313-manylinux_x86_64 cp314-manylinux_x86_64 cp314t-manylinux_x86_64"
           - os: macos-latest
             python-version: 3.12
-            cibw-build: cp312-macosx_*
+            cibw_build: "cp312-macosx_* cp313-macosx_* cp314-macosx_* cp314t-macosx_*"
           - os: windows-latest
             python-version: 3.12
-            cibw-build: cp312-win_amd64
-
+            cibw_build: "cp312-win_amd64 cp313-win_amd64 cp314-win_amd64 cp314t-win_amd64"
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: "x64"
-
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
-
       - name: Build wheels
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
@@ -48,20 +41,17 @@ jobs:
             python -m pip install -U pip setuptools wheel cython &&
             python -m pip install --only-binary=:all: numpy>=1.26 scipy>=1.11.0
         run: python -m cibuildwheel --output-dir wheelhouse
-
       - name: Upload built wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
           if-no-files-found: error
-
       - name: Build sdist
         if: runner.os == 'Linux'
         run: |
           python -m pip install build
           python -m build --sdist
-
       - name: Upload sdist
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
@@ -69,7 +59,6 @@ jobs:
           name: sdist
           path: dist/*.tar.gz
           if-no-files-found: ignore
-
   publish:
     needs: build-wheels
     runs-on: ubuntu-latest
@@ -78,13 +67,12 @@ jobs:
         with:
           pattern: wheels-*
           merge-multiple: true
-
+          path: dist
       - uses: actions/download-artifact@v4
         with:
           name: sdist
-          path: .
-
+          path: dist
       - name: Publish to PyPI (Trusted Publisher)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: .
+          packages-dir: dist
