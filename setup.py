@@ -28,10 +28,12 @@ if platform.system() == "Windows":
 elif platform.system() == "Darwin":
 
     # Apple Clang needs the OpenMP flag passed to the frontend, and the runtime
-    # comes from Homebrew's libomp (keg-only, so paths must be given explicitly).
-    libomp = ""
+    # comes from libomp. LIBOMP_PREFIX can point at a libomp built for an older
+    # macOS (e.g. from conda-forge) when building redistributable wheels; otherwise
+    # fall back to Homebrew's keg-only libomp (paths must be given explicitly).
+    libomp = os.environ.get("LIBOMP_PREFIX", "")
 
-    if shutil.which("brew"):
+    if not libomp and shutil.which("brew"):
         try:
             libomp = subprocess.check_output(["brew", "--prefix", "libomp"], text=True).strip()
         except subprocess.CalledProcessError:
@@ -43,7 +45,7 @@ elif platform.system() == "Darwin":
                 libomp = candidate
                 break
         else:
-            raise SystemExit("libomp not found - install it with `brew install libomp`")
+            raise SystemExit("libomp not found - install it with `brew install libomp` or set LIBOMP_PREFIX")
 
     extra_compile_args = ["-O3", "-Xpreprocessor", "-fopenmp", f"-I{libomp}/include"]
     extra_link_args = [f"-L{libomp}/lib", "-lomp", f"-Wl,-rpath,{libomp}/lib"]

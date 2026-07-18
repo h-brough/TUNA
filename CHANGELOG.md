@@ -51,6 +51,7 @@
 ### Fixed
 
 - Some error messages were referencing deprecated keywords
+- A term in the MP5 component of the CCSDT(Q) energy was incorrect
 - The `SADGUESS` and `SCFGUESS` keywords were not working for atomic calculations
 - The MP2 unrelaxed density matrix was not correct with `FREEZECORE`
 - Some excited states were missed with the previous CIS code

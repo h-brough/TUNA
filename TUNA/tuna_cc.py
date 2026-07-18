@@ -2795,7 +2795,8 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
     u_ijab = 2 * t_ijab - t_ijab.swapaxes(2, 3)
 
-    K_ijab = g[o, o, v, v]  # (ij|ab)
+    K_ijab = g[o, v, o, v].transpose(0, 2, 1, 3)  # (ia|jb)
+
     L_ijab = 2 * K_ijab - K_ijab.swapaxes(2, 3)
 
     G = np.einsum("iabe,jklecd->ijklabcd", g[o, v, v, v], t_ijkabc, optimize = True) 
