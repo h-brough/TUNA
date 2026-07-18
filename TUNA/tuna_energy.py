@@ -6,7 +6,7 @@ import tuna_props as props
 from numpy import ndarray
 from tuna_molecule import Molecule
 import tuna_dft as dft
-import tuna_integral as ints
+from tuna_integrals import tuna_integral as ints
 import tuna_guess as guess
 import tuna_kernel as kern
 import tuna_out as out
