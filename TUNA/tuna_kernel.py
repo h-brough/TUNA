@@ -750,7 +750,7 @@ def calculate_nuclear_repulsion_energy(charges: ndarray, coordinates: ndarray, c
 
 
 
-def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, silent: bool = False) -> tuple[ndarray, float, ndarray]:
+def calculate_orthogonalisation_matrix(S: ndarray, calculation: Calculation, silent: bool = False) -> tuple[ndarray, float, ndarray]:
 
     """
 
@@ -762,15 +762,15 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
         silent (bool, optional): Should anything be printed
 
     Returns:
-        X (array): Fock transformation matrix
+        X (array): Fock orthogonalisation matrix
         smallest_S_eigenvalue (float): Smallest overlap matrix eigenvalue.
         S_inverse (array): Inverse overlap matrix
         
     """
     
-    timer("Fock transformation matrix", 0)
+    timer("Fock orthogonalisation matrix", 0)
 
-    log(" Constructing Fock transformation matrix...   ", calculation, 1, end = "", silent = silent)
+    log(" Constructing Fock orthogonalisation matrix...", calculation, 1, end = "", silent = silent)
 
     # Symmetrise the overlap matrix
 
@@ -780,9 +780,9 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
 
     S_vals, S_vecs = np.linalg.eigh(S)
 
-    # This error only happens in really weird situations
-
     if min(S_vals) < 0:
+        
+        # This occurs with numerical instability and highly overlapping basis functions
 
         error("A negative overlap matrix eigenvalue was found!")
 
@@ -802,7 +802,13 @@ def calculate_Fock_transformation_matrix(S: ndarray, calculation: Calculation, s
 
     log("[Done]", calculation, 1, silent = silent)
     
-    timer("Fock transformation matrix", 1)
+    log(f"Overlap Matrix:\n{S}", calculation, 4, silent = silent)
+    
+    log(f"\nOverlap Eigenvalues:\n{S_vals}", calculation, 4, silent = silent)
+    
+    log(f"\nFock Orthogonalisation Matrix:\n{X}", calculation, 4, silent = silent)
+
+    timer("Fock orthogonalisation matrix", 1)
 
     return X, smallest_S_eigenvalue, S_inverse
 

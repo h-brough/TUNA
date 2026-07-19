@@ -1999,6 +1999,35 @@ def run_restricted_CC3_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
 
 
 
+def project_triples_onto_physical_space(t_ijkabc: ndarray) -> ndarray:
+
+    """
+
+    Projects the pair-symmetric triples amplitudes onto the physical (singlet CSF) subspace of the
+    redundant spin-free representation, dramatically improving convergence.
+
+    Args:
+        t_ijkabc (ndarray): Triples amplitudes
+
+    Returns:
+        t_ijkabc_projected (ndarray): Projected triples amplitudes
+
+    """
+
+    t_ijkabc_projected = (5 / 6) * t_ijkabc
+
+    # All five non-identity permutations of the occupied indices
+
+    t_ijkabc_projected += (-1 / 6) * (t_ijkabc.transpose(0, 2, 1, 3, 4, 5) + t_ijkabc.transpose(1, 0, 2, 3, 4, 5) 
+                                    + t_ijkabc.transpose(2, 1, 0, 3, 4, 5) + t_ijkabc.transpose(1, 2, 0, 3, 4, 5)
+                                    + t_ijkabc.transpose(2, 0, 1, 3, 4, 5))
+
+    return t_ijkabc_projected
+
+
+
+
+
 
 
 
@@ -2141,6 +2170,10 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
     t_ia += e_ia * residual_ia
     t_ijab += e_ijab * residual_ijab
     t_ijkabc += e_ijkabc * residual_ijkabc 
+    
+    # Removes redundant components, improves convergence
+
+    t_ijkabc = project_triples_onto_physical_space(t_ijkabc)
 
     t_amplitudes = t_ia, t_ijab, t_ijkabc, None
 
@@ -2483,6 +2516,48 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
         t_amplitudes (tuple): Updated amplitudes
     
     """
+    
+
+    def project_quadruples_onto_physical_space(t_ijklabcd: ndarray) -> ndarray:
+
+        """
+
+        Projects the pair-symmetric quadruples amplitudes onto the physical (singlet CSF) subspace of the
+        redundant spin-free representation, removing the null-space components that prevent convergence. 
+
+        Args:
+            t_ijklabcd (ndarray): Quadruples amplitudes
+
+        Returns:
+            t_ijklabcd_projected (ndarray): Projected quadruples amplitudes
+
+        """
+
+        t_ijklabcd_projected = (7 / 12) * t_ijklabcd
+
+        # Single transpositions of the occupied indices
+
+        t_ijklabcd_projected += (-1 / 6) * (t_ijklabcd.transpose(0, 1, 3, 2, 4, 5, 6, 7) + t_ijklabcd.transpose(0, 2, 1, 3, 4, 5, 6, 7)
+                                          + t_ijklabcd.transpose(0, 3, 2, 1, 4, 5, 6, 7) + t_ijklabcd.transpose(1, 0, 2, 3, 4, 5, 6, 7)
+                                          + t_ijklabcd.transpose(2, 1, 0, 3, 4, 5, 6, 7) + t_ijklabcd.transpose(3, 1, 2, 0, 4, 5, 6, 7))
+
+        # Three-cycles of the occupied indices
+
+        t_ijklabcd_projected += (-1 / 24) * (t_ijklabcd.transpose(0, 2, 3, 1, 4, 5, 6, 7) + t_ijklabcd.transpose(0, 3, 1, 2, 4, 5, 6, 7)
+                                           + t_ijklabcd.transpose(1, 2, 0, 3, 4, 5, 6, 7) + t_ijklabcd.transpose(1, 3, 2, 0, 4, 5, 6, 7)
+                                           + t_ijklabcd.transpose(2, 0, 1, 3, 4, 5, 6, 7) + t_ijklabcd.transpose(2, 1, 3, 0, 4, 5, 6, 7)
+                                           + t_ijklabcd.transpose(3, 0, 2, 1, 4, 5, 6, 7) + t_ijklabcd.transpose(3, 1, 0, 2, 4, 5, 6, 7))
+
+        # Double transpositions and four-cycles of the occupied indices
+
+        t_ijklabcd_projected += (1 / 12) * (t_ijklabcd.transpose(1, 0, 3, 2, 4, 5, 6, 7) + t_ijklabcd.transpose(2, 3, 0, 1, 4, 5, 6, 7)
+                                          + t_ijklabcd.transpose(3, 2, 1, 0, 4, 5, 6, 7) + t_ijklabcd.transpose(1, 2, 3, 0, 4, 5, 6, 7)
+                                          + t_ijklabcd.transpose(1, 3, 0, 2, 4, 5, 6, 7) + t_ijklabcd.transpose(2, 0, 3, 1, 4, 5, 6, 7)
+                                          + t_ijklabcd.transpose(2, 3, 1, 0, 4, 5, 6, 7) + t_ijklabcd.transpose(3, 0, 1, 2, 4, 5, 6, 7)
+                                          + t_ijklabcd.transpose(3, 2, 0, 1, 4, 5, 6, 7))
+
+        return t_ijklabcd_projected
+    
 
     t_ia, t_ijab, t_ijkabc, t_ijklabcd = t_amplitudes
     e_ia, e_ijab, e_ijkabc, e_ijklabcd = e_denominators
@@ -2587,7 +2662,14 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
     t_ia += e_ia * residual_ia
     t_ijab += e_ijab * residual_ijab
     t_ijkabc += e_ijkabc * residual_ijkabc
+
+    t_ijkabc = project_triples_onto_physical_space(t_ijkabc)
+
     t_ijklabcd += e_ijklabcd * residual_ijklabcd
+    
+    # Projects out null-space components of quadruples amplitudes
+
+    t_ijklabcd = project_quadruples_onto_physical_space(t_ijklabcd)
 
     t_amplitudes = t_ia, t_ijab, t_ijkabc, t_ijklabcd
 

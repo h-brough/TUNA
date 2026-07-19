@@ -830,7 +830,7 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
     
     # Calculates Fock transformation matrix from overlap matrix
 
-    X, smallest_S_eigenvalue, S_inverse = kern.calculate_Fock_transformation_matrix(integrals.S, calculation, silent)
+    X, smallest_S_eigenvalue, S_inverse = kern.calculate_orthogonalisation_matrix(integrals.S, calculation, silent)
 
     # Makes sure there is no linear dependency in the basis set
 

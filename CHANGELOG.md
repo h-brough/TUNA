@@ -1,5 +1,22 @@
 # Changelog
 
+## TUNA 0.11.1 — 15/08/2026
+
+### Added
+
+- Much better convergence of CCSDT and CCSDTQ by projecting null-space amplitudes
+
+### Changed
+
+- Fock transformation matrix has been reworded to orthogonalisation matrix
+- Final correlation energy is now printed for correlated methods with sub-parts
+
+### Fixed
+
+- 
+
+<br>
+
 ## TUNA 0.11.0 — 18/07/2026
 
 ### Added
