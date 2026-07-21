@@ -1,10 +1,9 @@
-from tuna_util import log, warning, error, symmetrise, constants, timer, log_spacer
+from tuna_util import log, warning, symmetrise, constants, timer, log_spacer, check
 from tuna_calc import Calculation
 import tuna_xc as xc
 from tuna_molecule import Molecule
 import numpy as np
 from numpy import ndarray
-import sys
 from scipy.integrate import lebedev_rule
 from scipy.spatial.distance import cdist
 
@@ -20,6 +19,7 @@ functionals are found in the SCF module, not here.
 
 Updated in version 0.10.1 to allow expressing molecular orbitals on grid, and calculating the differential overlap integrals.
 Updated in version 0.11.0 to rotate Cartesian basis functions expressed on a grid onto spherical harmonics, add VV10 energy and exchange-correlation kernel matrix.
+Updated in version 0.11.1 to express molecular orbital gradients on the grid.
 
 The module contains:
 
@@ -189,9 +189,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
 
         warning(" Integral of density is far from the number of electrons! Be careful with your results.")
 
-        if np.abs(n_electrons_DFT - molecule.n_electrons) > 0.5:
-
-            error("Integral for the density is completely wrong!")
+        check(np.abs(n_electrons_DFT - molecule.n_electrons) < 0.5, "Integral for the density is completely wrong!")
     
     log(f" Using {100 * calculation.DFX_prop:.1f}% density functional exchange and {100 * calculation.HFX_prop:.1f}% Hartree-Fock exchange.", calculation, 2, silent = silent)
     log(f" Using {100 * calculation.DFC_prop:.1f}% density functional correlation and {100 * calculation.MPC_prop:.1f}% Moller-Plesset correlation.\n", calculation, 2, silent = silent)
@@ -372,11 +370,11 @@ def build_molecular_grid(radial_grid_cutoff: float, n_radial: int, lebedev_order
 
     # Builds the molecular Cartesian grid
 
-    X = np.concatenate([X_A, X_B], axis=0)
-    Y = np.concatenate([Y_A, Y_B], axis=0)
-    Z = np.concatenate([Z_A, Z_B], axis=0)
+    X = np.concatenate([X_A, X_B], axis = 0)
+    Y = np.concatenate([Y_A, Y_B], axis = 0)
+    Z = np.concatenate([Z_A, Z_B], axis = 0)
 
-    points = np.stack((X, Y, Z), axis=0)
+    points = np.stack((X, Y, Z), axis = 0)
 
     # Uses Becke atomic partitioning to get weights for each atom
 
@@ -391,7 +389,7 @@ def build_molecular_grid(radial_grid_cutoff: float, n_radial: int, lebedev_order
 
     # Forms total molecular weights array
 
-    weights = np.concatenate([weights_combined_A, weights_combined_B], axis=0)
+    weights = np.concatenate([weights_combined_A, weights_combined_B], axis = 0)
 
     return points, weights
 
@@ -404,24 +402,52 @@ def build_molecular_grid(radial_grid_cutoff: float, n_radial: int, lebedev_order
 
 
 
-def construct_molecular_orbitals_on_grid(basis_functions_on_grid: ndarray, molecular_orbitals: ndarray) -> ndarray:
+def construct_molecular_orbitals_on_grid(bfs_on_grid: ndarray, molecular_orbitals: ndarray) -> ndarray:
     
     """
     
     Expresses the molecular orbitals on the integration grid.
 
     Args:
-        basis_functions_on_grid (array): Basis functions evaluated on integration grid
+        bfs_on_grid (array): Basis functions evaluated on integration grid
         molecular_orbitals (array): Molecular orbitals
     
     Returns:
-        molecular_orbitals_on_grid (array): Molecular orbitals evaluated on integration grid, shape (molecular_orbital, radial_points, angular_points)
+        mos_on_grid (array): Molecular orbitals evaluated on integration grid, shape (orbital, radial, angular)
     
     """
 
-    molecular_orbitals_on_grid = np.einsum("nm,nra->mra", molecular_orbitals, basis_functions_on_grid, optimize = True)
+    mos_on_grid = np.einsum("mp,mra->pra", molecular_orbitals, bfs_on_grid, optimize = True)
 
-    return molecular_orbitals_on_grid
+    return mos_on_grid
+
+
+
+
+
+
+
+
+
+
+def construct_molecular_orbital_gradients_on_grid(bf_gradients_on_grid: ndarray, molecular_orbitals: ndarray) -> ndarray:
+    
+    """
+    
+    Expresses the molecular orbital gradients on the integration grid.
+
+    Args:
+        bf_gradients_on_grid (array): Basis function gradients evaluated on integration grid
+        molecular_orbitals (array): Molecular orbitals
+    
+    Returns:
+        mo_gradients_on_grid (array): Molecular orbital gradients evaluated on integration grid, shape (cartesian, orbital, radial, angular)
+    
+    """
+
+    mo_gradients_on_grid = np.einsum("mp,cmra->cpra", molecular_orbitals, bf_gradients_on_grid, optimize = True)
+
+    return mo_gradients_on_grid
 
 
 
@@ -928,7 +954,7 @@ def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarra
 
             # Kernel calculations
 
-            np.add(d2, gj, out=sm)
+            np.add(d2, gj, out = sm)
             
             d2 *= gj
             d2 *= sm

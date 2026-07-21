@@ -17,6 +17,7 @@ reductions in memory requirements.
 
 Updated in version 0.10.1 to add spin-restricted CC2 and CC3.
 Updated in version 0.11.0 to include spin-restricted and unrestricted CISD, CID, and unrestricted CISDT.
+Updated in version 0.11.1 to improve CCSDT and CCSDTQ convergence dramatically by projecting out null space amplitudes.
 
 The module contains:
 

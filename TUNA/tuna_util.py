@@ -952,6 +952,33 @@ def error(message: str) -> None:
 
 
 
+def check(assertion: bool, message: str) -> None:
+
+    """
+    
+    Checks an assertion is true, prints an error otherwise.
+    
+    Args:
+        assertion (bool): Assertion to check
+        message (str): Error message
+
+    """
+
+    if not assertion:
+
+        error(message)
+
+    return
+
+
+
+
+
+
+
+
+
+
 def warning(message: str, space: int = 1) -> None: 
     
     """
