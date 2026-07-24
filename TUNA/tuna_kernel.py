@@ -413,6 +413,9 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     log("[Done]", calculation, 1, silent = silent)
 
+    log("\nKinetic Matrix:", calculation, 4, silent = silent)
+    log(f"\n{T_cart}", calculation, 4, silent = silent)
+
     # Makes sure the two-electron integrals can fit in memory, and calculate them
 
     log(" Calculating two-electron integrals...     ", calculation, 1, end = "", silent = silent)
