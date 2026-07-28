@@ -773,7 +773,7 @@ def calculate_orthogonalisation_matrix(S: ndarray, calculation: Calculation, sil
     
     timer("Fock orthogonalisation matrix", 0)
 
-    log(" Constructing Fock orthogonalisation matrix...", calculation, 1, end = "", silent = silent)
+    log(" Constructing Fock orthogonalisation matrix... ", calculation, 1, end = "", silent = silent)
 
     # Symmetrise the overlap matrix
 
