@@ -32,7 +32,7 @@ if len(sys.argv) > 1 and sys.argv[1] in ["-version", "--version"]:
 
 # Prints the big fish logo
 
-print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white", force_color = True) + colored(" ~~~~~~","light_grey", force_color = True)+colored(" | |  | |  | |  \\| |  /  \\","white", force_color = True)+colored(" ~~~~~~~~","light_grey", force_color = True)+colored(" / .      \\/ ) ","white", force_color = True)+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white", force_color = True)+colored(" ~~~~~~","light_grey", force_color = True)+colored(" (     ))    (","white", force_color = True)+colored(" ~~~~~\n ~~~~~~","light_grey", force_color = True)+colored(" | |  | |__| | |\\  |/ ____ \\ ","white", force_color = True)+colored("~~~~~~","light_grey", force_color = True)+colored(" \\___  ___/\\_) ","white", force_color = True)+colored("~~~~","light_grey", force_color = True)+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white", force_color = True))
+print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white",attrs=["bold"], force_color = True) + colored(" ~~~~~~","light_grey", force_color = True)+colored(" | |  | |  | |  \\| |  /  \\","white",attrs=["bold"], force_color = True)+colored(" ~~~~~~~~","light_grey", force_color = True)+colored(" / .      \\/ ) ","white",attrs=["bold"], force_color = True)+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white",attrs=["bold"], force_color = True)+colored(" ~~~~~~","light_grey", force_color = True)+colored(" (     ))    (","white",attrs=["bold"], force_color = True)+colored(" ~~~~~\n ~~~~~~","light_grey", force_color = True)+colored(" | |  | |__| | |\\  |/ ____ \\ ","white",attrs=["bold"], force_color = True)+colored("~~~~~~","light_grey", force_color = True)+colored(" \\___  ___/\\_) ","white",attrs=["bold"], force_color = True)+colored("~~~~","light_grey", force_color = True)+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white",attrs=["bold"], force_color = True))
 
 print(colored(f"\n\nWelcome to version {VERSION} of TUNA!\n", "light_grey", force_color = True))
 print(colored("Importing required libraries...  ", "light_grey", force_color = True), end = ""); sys.stdout.flush()
@@ -77,7 +77,7 @@ def parse_input(input_line: str = None) -> tuple[str, str, str, list[str], ndarr
 
     # Allowed options for the input line
 
-    atom_options = atomic_properties.keys() 
+    atom_options = atomic_properties.keys()
     ghost_options = [f"X{key}" for key in atomic_properties.keys()]
     calculation_options = calculation_types.keys()
     method_options = [method.name for method in electronic_structure_methods]
@@ -86,8 +86,8 @@ def parse_input(input_line: str = None) -> tuple[str, str, str, list[str], ndarr
 
     input_line = " ".join(sys.argv[1:]).upper().strip() if input_line is None else input_line
 
-    try: 
-        
+    try:
+
         # Separates input line into sections separated by a colon, extracts relevant information from those sections
 
         sections = input_line.split(":")
@@ -98,34 +98,34 @@ def parse_input(input_line: str = None) -> tuple[str, str, str, list[str], ndarr
 
         params = sections[3].strip().split() if len(sections) == 4 else []
 
-        for param in params: 
-            
-            param = param.strip()   
+        for param in params:
 
-    except: 
-        
+            param = param.strip()
+
+    except:
+
         error("Input line formatted incorrectly! Read the manual for help.")
 
     # Creates a list of atoms, either one or two long
 
     atomic_symbols = [atom.strip() for atom in geometry_section.split(" ")[0:2] if atom.strip()]
-    
+
     try:
-        
+
         # Extracts bond length from geometry section if it exists, sets coordinates to be [0, bond length]
 
         coordinates_1D = [0] + [float(bond_length.strip()) for bond_length in geometry_section.split(" ")[2:] if bond_length.strip()]
-    
-    except ValueError: 
-        
-        error("Could not parse bond length!")
-    
-    # Checks if requested calculation, method, basis, etc. are in the allowed options, then gives relevant error message if not 
 
-    if calculation_type not in calculation_options: 
-        
+    except ValueError:
+
+        error("Could not parse bond length!")
+
+    # Checks if requested calculation, method, basis, etc. are in the allowed options, then gives relevant error message if not
+
+    if calculation_type not in calculation_options:
+
         error(f"Calculation type \"{calculation_type}\" is not supported.")
-    
+
     if method_string not in method_options:
 
         base_method = method_string.split("U", 1)[-1]
@@ -134,24 +134,24 @@ def parse_input(input_line: str = None) -> tuple[str, str, str, list[str], ndarr
 
             error(f"Electronic structure method \"{method_string}\" is not supported.")
 
-    if basis not in basis_types.keys(): 
-        
+    if basis not in basis_types.keys():
+
         error(f"Basis set \"{basis}\" is not supported.")
-    
-    if not all(atom in atom_options or atom in ghost_options for atom in atomic_symbols): 
-        
+
+    if not all(atom in atom_options or atom in ghost_options for atom in atomic_symbols):
+
         error("One or more atom types not recognised! Check the manual for available atoms.")
-    
-    if len(atomic_symbols) != len(coordinates_1D): 
-        
+
+    if len(atomic_symbols) != len(coordinates_1D):
+
         error("Two atoms requested without a bond length!")
 
     # Rejects requests for tiny bond lengths, such as two atoms on top of each other
 
     MINIMUM_BOND_LENGTH_ANGSTROMS = 0.01
 
-    if len(coordinates_1D) == 2 and coordinates_1D[1] < MINIMUM_BOND_LENGTH_ANGSTROMS: 
-        
+    if len(coordinates_1D) == 2 and coordinates_1D[1] < MINIMUM_BOND_LENGTH_ANGSTROMS:
+
         error(f"Bond length ({coordinates_1D[1]} angstroms) is too small! Minimum bond length is {MINIMUM_BOND_LENGTH_ANGSTROMS} angstroms.")
 
     # Converts 1D coordinate array in angstroms to 3D array ion bohr
@@ -172,7 +172,7 @@ def parse_input(input_line: str = None) -> tuple[str, str, str, list[str], ndarr
 def process_method(method_string: str) -> Method:
 
     """
-    
+
     Processes a requested (un)restricted electronic structure method.
 
     Args:
@@ -180,7 +180,7 @@ def process_method(method_string: str) -> Method:
 
     Returns:
         method (Method): (Un)restricted method object
-    
+
     """
 
     # Checks if an unrestricted method has been requested
@@ -195,7 +195,7 @@ def process_method(method_string: str) -> Method:
     if unrestricted_requested and not method.unrestricted_available:
 
         error(f"The {method_string} method is only implemented for spin-restricted references!")
-    
+
     # Sets the method to be unrestricted
 
     method.unrestricted = unrestricted_requested
@@ -236,101 +236,101 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
         # Single point energy
 
-        case "SPE": 
-            
+        case "SPE":
+
             # The timer has to live here and not in the function, because the function recursively calls itself for multiple iterations
 
             timer("Energy evaluation", 0)
 
             energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
-            
+
             timer("Energy evaluation", 1)
 
         # Ionisation energy
 
-        case "IP": 
-            
+        case "IP":
+
             reference_energy, charged_energy, reference_molecule, charged_molecule = opt.calculate_charged_state_energies(calculation, atomic_symbols, coordinates, charge_delta = +1)
 
             kern.calculate_charge_change_energy(reference_energy, charged_energy, reference_molecule, charged_molecule, calculation)
 
         # Electron affinity
 
-        case "EA": 
-            
+        case "EA":
+
             reference_energy, charged_energy, reference_molecule, charged_molecule = opt.calculate_charged_state_energies(calculation, atomic_symbols, coordinates, charge_delta = -1)
 
             kern.calculate_charge_change_energy(reference_energy, charged_energy, reference_molecule, charged_molecule, calculation)
-        
+
         # Bond dissociation energy
 
-        case "BDE": 
-            
+        case "BDE":
+
             opt.calculate_bond_dissociation_energy(calculation, atomic_symbols, coordinates)
 
         # Coordinate scan
 
-        case "SCAN": 
+        case "SCAN":
 
-            if calculation.step is None: 
-                
+            if calculation.step is None:
+
                 error(f"Coordinate scan requested but no step size given by keyword \"STEP\"!")
-            
-            if calculation.number_of_steps is None: 
-                
+
+            if calculation.number_of_steps is None:
+
                 error(f"Coordinate scan requested but no number of steps given by keyword \"NUM\"!")
 
             energ.scan_coordinate(calculation, atomic_symbols, coordinates)
-                    
+
 
         # Geometry optimisation
 
-        case "OPT" | "FORCE": 
-            
+        case "OPT" | "FORCE":
+
             multiple_iterations = False if calculation_type == "FORCE" else True
 
             opt.optimise_geometry(calculation, atomic_symbols, coordinates, multiple_iterations = multiple_iterations)
 
         # Harmonic frequency
 
-        case "FREQ": 
+        case "FREQ":
 
             freq.calculate_harmonic_frequency(calculation, atomic_symbols=atomic_symbols, coordinates=coordinates)
 
 
         # Anharmonic frequency
 
-        case "ANHARM": 
+        case "ANHARM":
 
             optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
-            
+
             _, _, harmonic_frequency_per_cm, _ = freq.calculate_harmonic_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
 
-            freq.calculate_anharmonic_frequency(calculation, atomic_symbols, harmonic_frequency_per_cm, optimised_molecule)    
+            freq.calculate_anharmonic_frequency(calculation, atomic_symbols, harmonic_frequency_per_cm, optimised_molecule)
 
 
         # Geometry optimisation and harmonic frequency
 
-        case "OPTFREQ": 
+        case "OPTFREQ":
 
             optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
 
             freq.calculate_harmonic_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
 
-            
+
         # Ab initio molecular dynamics
 
-        case "MD": 
+        case "MD":
 
             # Turns on printing the trajectory only if "NOTRAJ" parameter has not been used
 
-            if not calculation.no_trajectory: 
-                
+            if not calculation.no_trajectory:
+
                 calculation.trajectory = True
-  
+
             md.run_molecular_dynamics_simulation(calculation, atomic_symbols, coordinates)
-            
-            
+
+
     return
 
 
@@ -340,9 +340,9 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
 
 
-        
 
-def run(input_line: str = None, suppress_output: bool = False) -> None: 
+
+def run(input_line: str = None, suppress_output: bool = False) -> None:
 
     """
 
@@ -353,7 +353,7 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
     # Reads input line, makes sure it's okay and extracts the desired parameters
 
     calculation_type, method_string, basis, atomic_symbols, coordinates, params = parse_input(input_line)
-    
+
     # Processes the requested method into a Method object
 
     method = process_method(method_string)
@@ -397,7 +397,7 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
 
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
 
     try:
 
@@ -405,8 +405,8 @@ if __name__ == "__main__":
 
             run()
 
-    except KeyboardInterrupt: 
-        
+    except KeyboardInterrupt:
+
         error("The TUNA calculation has been interrupted by the user. Goodbye!")
 
     except TunaError as tuna_error:

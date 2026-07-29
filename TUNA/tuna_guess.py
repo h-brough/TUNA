@@ -16,8 +16,8 @@ import sys
 This is the TUNA module for determining the initial guess to a self-consistent field calculation, written first for version 0.10.0 of TUNA.
 
 The options for initial guess are (1) core Hamiltonian diagonalisation (one-electron energy), (2) superposition of atomic densities or (3) minimal basis
-self-consistent field and projection, which is the best when combined with an initial SAD guess, so is the default. The atomic densities for SAD are stored in 
-tuna_util within atomic_properties as spherically averaged minimal basis density matrices, which are projected onto larger basis sets. For unrestricted references, 
+self-consistent field and projection, which is the best when combined with an initial SAD guess, so is the default. The atomic densities for SAD are stored in
+tuna_util within atomic_properties as spherically averaged minimal basis density matrices, which are projected onto larger basis sets. For unrestricted references,
 the spin-symmetry of the alpha and beta orbitals can be broken for symmetric molecules, or with the "ROTATE" keyword.
 
 Updated in version 0.11.0 to rotate Cartesian basis functions onto spherical harmonics for guesses involving projection and Cythonise the cross-basis overlap.
@@ -34,7 +34,7 @@ The module contains:
 
 
 def rotate_molecular_orbitals(molecular_orbitals: ndarray, n_occ: int, theta: float) -> ndarray:
-    
+
     """
 
     Rotates HOMO and LUMO of molecular orbitals by given angle theta to break the symmetry.
@@ -48,7 +48,7 @@ def rotate_molecular_orbitals(molecular_orbitals: ndarray, n_occ: int, theta: fl
         rotated_molecular_orbitals (array): Molecular orbitals with HOMO and LUMO rotated
 
     """
-    
+
     # Converts to radians
 
     theta = np.deg2rad(theta)
@@ -64,11 +64,11 @@ def rotate_molecular_orbitals(molecular_orbitals: ndarray, n_occ: int, theta: fl
     # Makes sure there is a HOMO and a LUMO to rotate, builds rotation matrix using sine and cosine of the requested angle, at the HOMO and LUMO indices
 
     try:
-        
+
         rotation_matrix[homo_index:lumo_index + 1, homo_index:lumo_index + 1] = np.array([[cos_theta, -sin_theta], [sin_theta, cos_theta]])
-    
-    except: 
-        
+
+    except:
+
         error("Basis set too small to rotate initial guess orbitals! Use a larger basis or the NOROTATE keyword.")
 
     # Rotates molecular orbitals with this matrix
@@ -87,8 +87,8 @@ def rotate_molecular_orbitals(molecular_orbitals: ndarray, n_occ: int, theta: fl
 
 
 
-def form_minimal_basis_superposition_density(atoms: list[Atom]) -> ndarray: 
-    
+def form_minimal_basis_superposition_density(atoms: list[Atom]) -> ndarray:
+
     """
 
     Forms the superposition of atomic densities guess density matrix.
@@ -119,9 +119,9 @@ def form_minimal_basis_superposition_density(atoms: list[Atom]) -> ndarray:
 def build_minimal_basis_molecule(calculation: Calculation, molecule: Molecule, atomic_symbols: list[str]) -> Molecule:
 
     """
-    
+
     Builds a molecule object with a minimal basis set.
-    
+
     Args:
         calculation (Calculation): Calculation object
         molecule (Molecule): Molecule object
@@ -149,7 +149,7 @@ def build_minimal_basis_molecule(calculation: Calculation, molecule: Molecule, a
         # Ensures restoration of full basis
 
         calculation.basis = old_basis
-    
+
 
     return molecule_minimal
 
@@ -165,9 +165,9 @@ def build_minimal_basis_molecule(calculation: Calculation, molecule: Molecule, a
 def break_density_spin_symmetry(P: ndarray, X: ndarray, n_occ: int, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Breaks the spin symmetry of a density matrix, by mixing the HONO and LUNO.
-    
+
     Args:
         P (array): Spin-symmetric density matrix
         X (array): Fock orthogonalisation matrix
@@ -209,9 +209,9 @@ def break_density_spin_symmetry(P: ndarray, X: ndarray, n_occ: int, calculation:
 def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inverse: ndarray, spherical_harmonic_transformation_matrix: ndarray) -> ndarray:
 
     """
-    
+
     Projects the input density matrix onto a larger basis set.
-    
+
     Args:
         P_to_project (array): Density matrix to project
         S_cross (array): Overlap matrix between small and large basis sets
@@ -235,7 +235,7 @@ def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inv
 
     return P_target
 
- 
+
 
 
 
@@ -245,11 +245,11 @@ def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inv
 
 
 def calculate_energy_guess(H_core: ndarray, X: ndarray) -> float:
-       
+
     """
-    
+
     Calculates the guess energy for a given core Hamiltonian.
-    
+
     Args:
         H_core (array): Core Hamiltonian matrix in AO basis
         X (array): Fock transformation matrix in AO basis
@@ -305,7 +305,7 @@ def calculate_superposition_guess(S_inverse: ndarray, atomic_symbols: list[str],
     # Forms superposition of atomic densities density matrix
 
     P_minimal = form_minimal_basis_superposition_density(molecule.atoms)
-    
+
     # Builds minimal basis molecule
 
     molecule_minimal = build_minimal_basis_molecule(calculation, molecule, atomic_symbols)
@@ -396,7 +396,7 @@ def calculate_core_guess(calculation: Calculation, H_core: ndarray, X: ndarray, 
 
 
 def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: ndarray, E_guess: float, integrals: Integrals, X: ndarray, calculation: Calculation, molecule: Molecule, S_inverse: ndarray, atomic_symbols: list[str], silent=False) -> tuple[float, ndarray, ndarray, ndarray]:
-    
+
     """
 
     Calculates the guess density matrices and guess energy.
@@ -430,15 +430,15 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
 
     # Only rotate guess MOs if there's an even number of electrons, and it hasn't been overridden by "NOROTATE"
 
-    rotate_guess_mos = True if molecule.multiplicity == 1 and not calculation.no_rotate_guess and calculation.reference == "UHF" else False 
-    
+    rotate_guess_mos = True if molecule.multiplicity == 1 and not calculation.no_rotate_guess and calculation.reference == "UHF" else False
+
     if calculation.reference == "RHF" and P_guess is not None and calculation.calculation_type != "SPE":
-            
+
         log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent = silent)
 
 
-    elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None and calculation.calculation_type != "SPE": 
-        
+    elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None and calculation.calculation_type != "SPE":
+
         log("\n Using density matrices from previous step for guess. \n", calculation, silent = silent)
 
 
@@ -449,19 +449,19 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
         P_guess, P_guess_alpha, P_guess_beta = calculate_core_guess(calculation, integrals.H_core, X, molecule, rotate_guess_mos, silent = silent)
 
     else:
-        
+
         # Calculates guess density from superposition of atomic densities
 
         P_guess, P_guess_alpha, P_guess_beta = calculate_superposition_guess(S_inverse, atomic_symbols, molecule, calculation, rotate_guess_mos, X, silent = silent)
 
-    if rotate_guess_mos: 
-        
+    if rotate_guess_mos:
+
         log(f" Initial guess density uses molecular orbitals rotated by {calculation.theta:.1f} degrees.\n", calculation, silent = silent)
 
 
-    # Calculates the guess energy by diagonalisation of the core Hamiltonian
+    # Calculates the guess energy with the  core Hamiltonian
 
-    E_guess = calculate_energy_guess(integrals.H_core, X) if E_guess is None else E_guess
+    E_guess = np.einsum("mn,mn->", integrals.H_core, P_guess, optimize = True)
 
     calculation.decontract = decontract_requested
 

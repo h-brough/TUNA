@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 This is the TUNA module for constants and utility functions, written first for version 0.3.0 and rewritten for version 0.10.1.
 
-Various widely useful functions are stored here, as are the defining constants which are used throughout the program. This module does not import any other 
+Various widely useful functions are stored here, as are the defining constants which are used throughout the program. This module does not import any other
 TUNA module, and is imported by all other TUNA modules.
 
 This module contains:
@@ -28,7 +28,7 @@ class Constants:
     """
 
     Defines all the contants used in TUNA. Fundamental values are taken from the CODATA 2022 recommendations.
-    
+
     Fundamental values are used to define various emergent constants and conversion factors.
 
     """
@@ -70,11 +70,11 @@ class Constants:
 
     # Gradient correct to 9 sf. for "EXTREME" and "TIGHT", 8 sf. for "MEDIUM" and 7 sf. for "LOOSE"
 
-    FIRST_GEOM_DERIVATIVE_PROD = 0.00005   
+    FIRST_GEOM_DERIVATIVE_PROD = 0.00005
 
     # Dipole moment correct to 9 sf. for "EXTREME" and "TIGHT", 7 sf. for "MEDIUM" and 6 sf. for "LOOSE"
 
-    FIRST_ELEC_DERIVATIVE_PROD = 0.00001 
+    FIRST_ELEC_DERIVATIVE_PROD = 0.00001
 
     # Hessian correct to 8 sf. for "EXTREME", 7 sf. for "TIGHT", 6 sf. for "MEDIUM" and 5 sf. for "LOOSE" - which is still correct frequency to 0.01 per cm
 
@@ -83,7 +83,7 @@ class Constants:
     # Isotropic polarisability correct to 7 sf. for "EXTREME", 5 sf. for "TIGHT", 4 sf. for "MEDIUM" and 3 sf. for "LOOSE"
 
     SECOND_ELEC_DERIVATIVE_PROD = 0.001
-    
+
     # Second-order VPT is correct to 8 sf. for "EXTREME" and "TIGHT", 5 sf. for "MEDIUM" and 2 sf. for "LOOSE" - a compromise between third and fourth derivative precision
 
     THIRD_GEOM_DERIVATIVE_PROD = 0.025
@@ -111,8 +111,8 @@ class Constants:
         "loose" : {"delta_E": 0.000001, "max_DP": 0.00001, "RMS_DP": 0.000001, "commutator": 0.0001, "name": "loose"},
         "medium" : {"delta_E": 0.0000001, "max_DP": 0.000001, "RMS_DP": 0.0000001, "commutator": 0.00001, "name": "medium"},
         "tight" : {"delta_E": 0.000000001, "max_DP": 0.00000001, "RMS_DP": 0.000000001, "commutator": 0.0000001, "name": "tight"},
-        "extreme" : {"delta_E": 0.00000000001, "max_DP": 0.0000000001, "RMS_DP": 0.00000000001, "commutator": 0.000000001, "name": "extreme"}   
-        
+        "extreme" : {"delta_E": 0.00000000001, "max_DP": 0.0000000001, "RMS_DP": 0.00000000001, "commutator": 0.000000001, "name": "extreme"}
+
     }
 
     # Convergence criteria for geometry optimisation
@@ -122,12 +122,12 @@ class Constants:
         "loose" : {"gradient": 0.001, "step": 0.01, "name": "loose"},
         "medium" : {"gradient": 0.0001, "step": 0.0001, "name": "medium"},
         "tight" : {"gradient": 0.000001, "step": 0.00001, "name": "tight"},
-        "extreme" : {"gradient": 0.00000001, "step": 0.0000001, "name": "extreme"}   
+        "extreme" : {"gradient": 0.00000001, "step": 0.0000001, "name": "extreme"}
 
     }
 
     # Tightness criteria for the DFT grid
-    
+
     convergence_criteria_grid = {
 
         "loose" : {"integral_accuracy": 3, "extent_multiplier": 0.7, "name": "loose"},
@@ -153,7 +153,7 @@ constants = Constants()
 class Integrals:
 
     """
-    
+
     Stores the integrals needed for a self-consistent field calculation.
 
     """
@@ -165,7 +165,7 @@ class Integrals:
     Q: ndarray  # Quadrupole integrals
 
     ERI_AO: ndarray  # Two-electron integrals
-    
+
     F: ndarray | None = None # Total electric field integrals
     G: ndarray | None = None # Total electric field gradient integrals
 
@@ -177,17 +177,17 @@ class Integrals:
             return self.T + self.V_NE + self.F
 
         return self.T + self.V_NE
-    
+
     @property
     def one_electron_integrals(self):
 
         return self.S, self.T, self.V_NE, self.D
-    
+
     @property
     def two_electron_integrals(self):
 
         return self.ERI_AO
-    
+
     @property
     def n_basis(self):
 
@@ -206,9 +206,9 @@ class Integrals:
 class Output:
 
     """
-    
+
     Stores the useful output of a self-consistent field calculation.
-    
+
     """
 
     # Components of energy
@@ -264,9 +264,9 @@ class Output:
 
     dispersion_energy: float = 0
 
-    @property 
+    @property
     def epsilons_combined(self):
-        
+
         return np.append(self.epsilons_alpha, self.epsilons_beta)
 
     @property
@@ -300,7 +300,7 @@ class Output:
 class Method:
 
     """
-    
+
     Defines an electronic structure method.
 
     """
@@ -322,7 +322,7 @@ class Method:
     restricted_available: bool = True
 
     # What kind of electronic structure method is this?
-    
+
     method_base: bool = "HF"
 
     # Is this a method for excited states?
@@ -335,17 +335,17 @@ class Method:
 
     @property
     def long_name(self) -> str:
-        
+
         if self.unrestricted:
 
-            return "unrestricted " + self.generic_name 
+            return "unrestricted " + self.generic_name
 
         return self.generic_name
 
     @property
     def perturbative_method(self) -> bool:
 
-        return self.method_base in ["MP2", "MP3", "MP4"] 
+        return self.method_base in ["MP2", "MP3", "MP4"]
 
     @property
     def coupled_cluster_method(self) -> bool:
@@ -419,15 +419,15 @@ class Functional:
         if self.MPC != 0:
 
             if self.same_spin_scaling != 1 and self.opposite_spin_scaling != 1:
-                 
+
                 return "spin-scaled double-hybrid"
-            
+
             return "double-hybrid"
 
         if self.HFX != 0:
 
              return "hybrid"
-        
+
         return "pure"
 
 
@@ -439,20 +439,20 @@ class Functional:
 
 
 
-def bohr_to_angstrom(length_in_bohr: float | list | ndarray) -> float | ndarray: 
-    
+def bohr_to_angstrom(length_in_bohr: float | list | ndarray) -> float | ndarray:
+
     """
 
     Converts length in bohr to length in angstroms.
 
-    Args:   
+    Args:
         length_in_bohr (float | list | array): Length in bohr
 
     Returns:
         length_in_angstrom (float | array) : Length in angstrom
 
     """
-    
+
     length_in_bohr = np.array(length_in_bohr)
 
     length_in_angstrom = length_in_bohr * constants.bohr_radius_in_angstrom
@@ -468,20 +468,20 @@ def bohr_to_angstrom(length_in_bohr: float | list | ndarray) -> float | ndarray:
 
 
 
-def angstrom_to_bohr(length_in_angstrom: float | list | ndarray) -> float | ndarray: 
-    
+def angstrom_to_bohr(length_in_angstrom: float | list | ndarray) -> float | ndarray:
+
     """
 
     Converts length in angstrom to length in bohr.
 
-    Args:   
+    Args:
         length (float | list | array): Length in angstrom
 
     Returns:
         length_in_bohr  (float | array) : Length in bohr
 
     """
-        
+
     length_in_angstrom = np.array(length_in_angstrom)
 
     length_in_bohr = length_in_angstrom / constants.bohr_radius_in_angstrom
@@ -497,13 +497,13 @@ def angstrom_to_bohr(length_in_angstrom: float | list | ndarray) -> float | ndar
 
 
 
-def one_dimension_to_three(coordinates_1D: ndarray) -> ndarray: 
-    
+def one_dimension_to_three(coordinates_1D: ndarray) -> ndarray:
+
     """
 
     Converts 1D coordinate array into 3D.
 
-    Args:   
+    Args:
         coordinates (array): Coordinates in one dimension
 
     Returns:
@@ -512,7 +512,7 @@ def one_dimension_to_three(coordinates_1D: ndarray) -> ndarray:
     """
 
     coordinates_3D = np.array([[0, 0, coord] for coord in coordinates_1D])
-    
+
     return coordinates_3D
 
 
@@ -524,13 +524,13 @@ def one_dimension_to_three(coordinates_1D: ndarray) -> ndarray:
 
 
 
-def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray: 
-    
+def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray:
+
     """
 
     Converts 3D coordinate array into 1D.
 
-    Args:   
+    Args:
         coordinates_3D (array): Coordinates in three dimensions
 
     Returns:
@@ -539,9 +539,9 @@ def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray:
     """
 
     coordinates_1D = np.array([atom_coord[2] for atom_coord in coordinates_3D])
-    
+
     return coordinates_1D
-    
+
 
 
 
@@ -554,15 +554,15 @@ def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray:
 def calculate_bond_length(coordinates: ndarray) -> float:
 
     """
-    
+
     Calculates the bond length of a molecule with 1D or 3D coordinates.
 
     Args:
         coordinates (array): Atomic coordinates in bohr
-    
+
     Returns:
         bond_length (float): Bond length in bohr
-    
+
     """
 
     bond_length = np.linalg.norm(coordinates[1] - coordinates[0])
@@ -612,7 +612,7 @@ def calculate_first_derivative(F_m_1: float, F_p_1: float, dx: float) -> float:
 def calculate_second_derivative(F_m_2: float, F_m_1: float, F: float, F_p_1: float, F_p_2: float, dx: float) -> float:
 
     """
-    
+
     Calculates the numerical second derivative of a function using the five-point stencil method.
 
     This has error of O(dx^4).
@@ -646,9 +646,9 @@ def calculate_second_derivative(F_m_2: float, F_m_1: float, F: float, F_p_1: flo
 
 
 def calculate_third_derivative(F_m_4: float, F_m_3: float, F_m_2: float, F_m_1: float, F_p_1: float, F_p_2: float, F_p_3: float, F_p_4: float, dx: float) -> float:
-    
+
     """
-    
+
     Calculates the numerical third derivative of a function using the eight-point stencil method.
 
     This has error of O(dx^6).
@@ -683,9 +683,9 @@ def calculate_third_derivative(F_m_4: float, F_m_3: float, F_m_2: float, F_m_1: 
 
 
 def calculate_fourth_derivative(F_m_4: float, F_m_3: float, F_m_2: float, F_m_1: float, F:float, F_p_1: float, F_p_2: float, F_p_3: float, F_p_4: float, dx: float) -> float:
-    
+
     """
-    
+
     Calculates the numerical fourth derivative of a function using the nine-point stencil method.
 
     This has error of O(dx^6).
@@ -728,7 +728,7 @@ def convert_boolean_to_string(boolean: bool) -> str:
 
     Args:
         boolean (bool): A true of false object
-    
+
     Returns
         convert_boolean_to_string (str): Either "Yes" or "No"
 
@@ -748,12 +748,12 @@ def convert_boolean_to_string(boolean: bool) -> str:
 def symmetrise(matrix: ndarray) -> ndarray:
 
     """
-    
+
     Symmetrises a square matrix.
 
     Args:
         matrix (array): Square matrix
-    
+
     Returns:
         matrix_symmetrised (array): Symmetrised square matrix
 
@@ -772,13 +772,13 @@ def symmetrise(matrix: ndarray) -> ndarray:
 
 
 
-def calculate_centre_of_mass(masses: ndarray, coordinates: ndarray) -> float: 
-    
+def calculate_centre_of_mass(masses: ndarray, coordinates: ndarray) -> float:
+
     """
 
     Calculates the centre of mass of a coordinate and mass array.
 
-    Args:   
+    Args:
         masses (array): Atomic masses
         coordinates (array): Atomic coordinates
 
@@ -788,7 +788,7 @@ def calculate_centre_of_mass(masses: ndarray, coordinates: ndarray) -> float:
     """
 
     centre_of_mass = np.einsum("i,ij->", masses, coordinates, optimize = True) / np.sum(masses)
-    
+
 
     return centre_of_mass
 
@@ -804,7 +804,7 @@ def calculate_centre_of_mass(masses: ndarray, coordinates: ndarray) -> float:
 def is_molecule_aligned_on_z_axis(molecule: any) -> bool:
 
     """
-    
+
     Checks if a molecule lies only on the z axis.
 
     Args:
@@ -824,11 +824,11 @@ def is_molecule_aligned_on_z_axis(molecule: any) -> bool:
         for i in range(molecule.n_atoms):
 
             for j in range(2):
-                
+
                 # Below 1e-14 is numerical noise and is irrelevant
 
                 if np.abs(molecule.coordinates[i][j]) > 1e-14:
-                    
+
                     is_molecule_aligned = False
 
     return is_molecule_aligned
@@ -845,7 +845,7 @@ def is_molecule_aligned_on_z_axis(molecule: any) -> bool:
 def clean_coordinates(coordinates: ndarray) -> ndarray:
 
     """
-    
+
     Makes sure the atomic coordinates are perfectly aligned along the z-axis.
 
     Args:
@@ -861,13 +861,13 @@ def clean_coordinates(coordinates: ndarray) -> ndarray:
     if coordinates.shape == (2, 3):
 
         coordinates_cleaned = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, calculate_bond_length(coordinates)]])
-    
+
     # Handles the case for 1D coordinates of a molecule
 
     elif coordinates.shape == (1, 2):
 
         coordinates_cleaned = np.array([[0.0, calculate_bond_length(coordinates)]])
-    
+
     # Handles the case for coordinates of an atom
 
     else:
@@ -887,17 +887,17 @@ def clean_coordinates(coordinates: ndarray) -> ndarray:
 
 
 def format_charge(charge: int) -> str:
-    
+
     """
-    
+
     Formats the charge as a string.
 
     Args:
         charge (int): Molecular charge
-    
+
     Returns:
         formatted_charge (str): Charge stringwith prepended plus sign
-    
+
     """
 
     formatted_charge = f"+{charge}" if charge > 0 else str(charge)
@@ -916,9 +916,9 @@ def format_charge(charge: int) -> str:
 class TunaError(Exception):
 
     """
-    
+
     Base class for every error TUNA raises deliberately.
-    
+
     """
 
 
@@ -930,17 +930,17 @@ class TunaError(Exception):
 
 
 
-def error(message: str) -> None: 
+def error(message: str) -> None:
 
     """
 
     Closes TUNA and prints an error, in light red.
 
-    Args:   
+    Args:
         message (string): Error message
 
     """
-    
+
     raise TunaError(colored(f"\nERROR: {message}  :(\n", "light_red"))
 
 
@@ -955,9 +955,9 @@ def error(message: str) -> None:
 def check(assertion: bool, message: str) -> None:
 
     """
-    
+
     Checks an assertion is true, prints an error otherwise.
-    
+
     Args:
         assertion (bool): Assertion to check
         message (str): Error message
@@ -979,18 +979,18 @@ def check(assertion: bool, message: str) -> None:
 
 
 
-def warning(message: str, space: int = 1) -> None: 
-    
+def warning(message: str, space: int = 1) -> None:
+
     """
 
     Prints a warning message, in light yellow.
 
-    Args:   
+    Args:
         message (string): Error message
         space (int, optional): Number of indenting spaces from the left hand side
 
     """
-    
+
     print(colored(f"\n{" " * space}WARNING: {message}", "light_yellow"))
 
     return
@@ -1010,7 +1010,7 @@ def log(message: str, calculation: any, priority: int = 1, silent: bool = False,
 
     Logs a message to the console.
 
-    Args:   
+    Args:
         message (string): Error message
         calculation (Calculation): Calculation object
         priority (int, optional): Priority of message (1 to always appear, 2 to appear unless T keyword used, and 3 only to appear if P keyword used, 4 if DEBUG)
@@ -1020,33 +1020,35 @@ def log(message: str, calculation: any, priority: int = 1, silent: bool = False,
 
     """
 
+    bold = ["bold"] if(colour != "light_grey") else [];
+
     if not silent and not calculation.suppress_output:
 
         # All printing is blocked if "silent" is passed, such as in a gradient calculation
 
         if priority == 1:
-            
+
             # For information that should always be printed
-            
-            print(colored(message, colour), end = end, flush = True)
-        
-        elif priority == 2 and not calculation.terse: 
-            
+
+            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
+
+        elif priority == 2 and not calculation.terse:
+
             # Print unless the "T" keyword is used
 
-            print(colored(message, colour, force_color = True), end = end, flush = True)
-        
-        elif priority == 3 and calculation.additional_print: 
-            
+            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
+
+        elif priority == 3 and calculation.additional_print:
+
             # Print only if the "P" keyword is used
-            
-            print(colored(message, colour, force_color = True), end = end, flush = True)
-        
-        elif priority == 4 and calculation.debug:  
-            
+
+            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
+
+        elif priority == 4 and calculation.debug:
+
             # Print only if the "DEBUG" keyword is used
 
-            print(colored(message, colour, force_color = True), end = end, flush = True)
+            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
 
     return
 
@@ -1062,7 +1064,7 @@ def log(message: str, calculation: any, priority: int = 1, silent: bool = False,
 def log_spacer(calculation: any, priority: int = 1, silent: bool = False, start: str = "", end: str = "", space: str = " ") -> None:
 
     """
-    
+
     Prints out a normal size wavey spacer.
 
     Args:
@@ -1072,7 +1074,7 @@ def log_spacer(calculation: any, priority: int = 1, silent: bool = False, start:
         start (str, optional): What to print at the start of the line
         end (str, optional): What to print at the end of the line
         space (str, optional): How many spaces to print at the start
-    
+
     """
 
     log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority = priority, silent = silent)
@@ -1091,7 +1093,7 @@ def log_spacer(calculation: any, priority: int = 1, silent: bool = False, start:
 def log_big_spacer(calculation: any, priority: int = 1, start: str = "", end: str = "", space: str = " ", silent: bool = False) -> None:
 
     """
-    
+
     Prints out a very big wavey spacer.
 
     Args:
@@ -1101,7 +1103,7 @@ def log_big_spacer(calculation: any, priority: int = 1, start: str = "", end: st
         end (str, optional): What to print at the end of the line
         space (str, optional): How many spaces to print at the start
         silent (bool, optional): Cancel logging
-    
+
     """
 
     log(f"{start}{space}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{end}", calculation, priority = priority, silent = silent)
@@ -1136,7 +1138,7 @@ def timer(name: str, state: int) -> None:
     """
 
     if state == 1:
-        
+
         if name in active_timers:
 
             # Calculates the time elapsed for the named timer
@@ -1146,7 +1148,7 @@ def timer(name: str, state: int) -> None:
             # Adds the elapsed time into the "completed_timers" dictionary with the same name
 
             completed_timers[name] = completed_timers.get(name, 0) + elapsed
-    
+
     elif state == 0:
 
         active_timers[name] = time.perf_counter()
@@ -1167,7 +1169,7 @@ def timer(name: str, state: int) -> None:
 
 
 def print_timer_information(calculation: any, total_time: float) -> None:
-    
+
     """
 
     Prints the timer information.
@@ -1195,7 +1197,7 @@ def print_timer_information(calculation: any, total_time: float) -> None:
     for name, duration in sorted_times:
 
         log(f"  {name:<35}  | {duration:>10.4f}", calculation, priority = 3)
-    
+
     log(f"                                       |", calculation, priority = 3)
 
     log(f"  {"Total calculation time":<35}  | {total_time:>10.4f}", calculation, priority = 3)
@@ -1219,7 +1221,7 @@ def finish_calculation(calculation: any) -> None:
 
     Finishes the calculation and exits the program.
 
-    Args:   
+    Args:
         calculation (Calculation): Calculation object
 
     """
@@ -1239,20 +1241,20 @@ def finish_calculation(calculation: any) -> None:
         seconds = total_time % 60
 
         if total_time > 7200:
-            
+
             hours = total_time // 3600
             extra_minutes = (total_time % 3600) // 60
 
             log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
         else:
-            
+
             log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
     else:
-        
+
         log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n", "white"), calculation, 1)
-    
+
 
     # Exits the program
 
@@ -1282,7 +1284,7 @@ calculation_types = {
     "IP"        :     "Ionisation potential",
     "EA"        :     "Electron affinity",
     "BDE"       :     "Bond dissociation energy"
-    
+
     }
 
 
@@ -1301,15 +1303,15 @@ electronic_structure_methods = [
     Method("RHF", "Hartree-Fock theory"),
 
     Method("MP2", "MP2 theory", method_base = "MP2"),
-    Method("OMP2", "orbital-optimised MP2 theory", method_base = "MP2"), 
+    Method("OMP2", "orbital-optimised MP2 theory", method_base = "MP2"),
     Method("IMP2", "iterative MP2 theory", unrestricted_available = False, method_base = "MP2"),
     Method("LMP2", "Laplace transform MP2 theory", unrestricted_available = False, method_base = "MP2"),
     Method("AO-MP2", "Laplace transform MP2 theory", unrestricted_available = False, method_base = "MP2"),
     Method("SCS-MP2", "spin-component-scaled MP2 theory", method_base = "MP2"),
-    
+
     Method("MP3", "MP3 theory", method_base = "MP3"),
     Method("SCS-MP3", "spin-component-scaled MP3 theory", method_base = "MP3"),
-    
+
     Method("MP4", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
     Method("MP4[SDTQ]", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
     Method("MP4(SDTQ)", "MP4 theory", unrestricted_available = False, method_base = "MP4"),
@@ -1317,7 +1319,7 @@ electronic_structure_methods = [
     Method("MP4(SDQ)", "MP4 theory with singles, doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
     Method("MP4[DQ]", "MP4 theory with doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
     Method("MP4(DQ)", "MP4 theory with doubles and quadruples", unrestricted_available = False, method_base = "MP4"),
-    
+
     Method("CIS", "configuration interaction singles", excited_state_method = True),
     Method("CIS[D]", "configuration interaction singles with perturbative doubles", excited_state_method = True),
     Method("CIS(D)", "configuration interaction singles with perturbative doubles", excited_state_method = True),
@@ -1339,7 +1341,7 @@ electronic_structure_methods = [
     Method("QCISD(T)", "quadratic configuration interaction singles, doubles and perturbative triples", method_base = "CC"),
     Method("CC2", "approximate coupled cluster singles and doubles", unrestricted_available = False, method_base = "CC"),
     Method("CC3", "approximate coupled cluster singles, doubles and triples", unrestricted_available = False, method_base = "CC"),
-    
+
     Method("CCSD", "coupled cluster singles and doubles", method_base = "CC"),
     Method("CCSD[T]", "coupled cluster singles, doubles and perturbative triples", method_base = "CC"),
     Method("CCSD(T)", "coupled cluster singles, doubles and perturbative triples", method_base = "CC"),
@@ -1347,7 +1349,7 @@ electronic_structure_methods = [
     Method("CCSDT[Q]", "coupled cluster singles, doubles, triples and perturbative quadruples", unrestricted_available = False, method_base = "CC"),
     Method("CCSDT(Q)", "coupled cluster singles, doubles, triples and perturbative quadruples", unrestricted_available = False, method_base = "CC"),
     Method("CCSDTQ", "coupled cluster singles, doubles, triples and quadruples", unrestricted_available = False, method_base = "CC"),
-    
+
     Method("HFS", "Hartree-Fock theory with Slater exchange", method_base = "DFT"),
     Method("LDA", "density functional theory via local density approximation", method_base = "DFT"),
     Method("LSDA", "density functional theory via local spin density approximation", method_base = "DFT"),
@@ -1355,7 +1357,7 @@ electronic_structure_methods = [
     Method("SVWN3", "density functional theory with Slater exchange and VWN-III correlation", method_base = "DFT"),
     Method("SVWN5", "density functional theory with Slater exchange and VWN-V correlation", method_base = "DFT"),
     Method("SPW", "density functional theory with Slater exchange and Perdew-Wang correlation", method_base = "DFT"),
-    
+
     Method("HFB", "Hartree-Fock theory with Becke exchange", method_base = "DFT"),
     Method("BVWN", "density functional theory with Becke exchange and VWN correlation", method_base = "DFT"),
     Method("BVWN3","density functional theory with Becke exchange and VWN-III correlation", method_base = "DFT"),
@@ -1371,14 +1373,14 @@ electronic_structure_methods = [
     Method("BP86", "density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
     Method("MPWLYP", "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("BP86", "density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
-    
+
     Method("TPSS", "density functional theory with TPSS exchange and correlation", method_base = "DFT"),
     Method("REVTPSS", "density functional theory with revised TPSS exchange and correlation", method_base = "DFT"),
     Method("SCAN", "density functional theory with SCAN exchange and correlation", method_base = "DFT"),
     Method("RSCAN", "density functional theory with regularised SCAN exchange and correlation", method_base = "DFT"),
     Method("R2SCAN", "density functional theory with regularised and restored SCAN exchange and correlation", method_base = "DFT"),
     Method("B97M-V", "density functional theory with B97M-V exchange and correlation", method_base = "DFT"),
-    
+
     Method("PBE0", "hybrid density functional theory with PBE exchange and correlation", method_base = "DFT"),
     Method("REVPBE0", "hybrid density functional theory with revised PBE exchange and correlation", method_base = "DFT"),
     Method("REVPBE38", "hybrid density functional theory with revised PBE exchange and correlation", method_base = "DFT"),
@@ -1431,7 +1433,7 @@ electronic_structure_methods = [
 
 
 exchange_correlation_functionals = {
-    
+
     "HF"           :     Functional(None, None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
     "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
     "SVWN"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
@@ -1664,7 +1666,7 @@ basis_types = {
 
 
 atomic_properties = {
-            
+
     "X" : {
 
         "charge" : 0,
@@ -1818,7 +1820,7 @@ atomic_properties = {
         "core_orbitals": 1,
         "name" : "sodium",
         "density" : np.array([[2.17662152, -6.46761790e-01, 0, 0, 0, 1.12325209e-01, 0, 0, 0], [-6.46761790e-01, 2.37933229, 0, 0, 0, -5.32213795e-01, 0, 0, 0], [0, 0, 1.59827524, 0, 0, 0, 3.51284476e-01, 0, 0], [0, 0, 0, 1.59827524, 0, 0, 0, 3.51284476e-01, 0], [0, 0, 0, 0, 1.59827524, 0, 0, 0, 3.51284476e-01], [1.12325209e-01, -5.32213795e-01, 0, 0, 0, 1.27775127, 0, 0, 0], [0, 0, 3.51284476e-01, 0, 0, 0, 7.73009653e-02, 0, 0], [0, 0, 0, 3.51284476e-01, 0, 0, 0, 7.73009653e-02, 0], [0, 0, 0, 0, 3.51284476e-01, 0, 0, 0, 7.73009653e-02]])
-   
+
     },
 
     "MG" : {
@@ -1831,7 +1833,7 @@ atomic_properties = {
         "core_orbitals": 1,
         "name" : "magnesium",
         "density" : np.array([[2.20235014, -0.71327382, 0, 0, 0, 0.21565979, 0, 0, 0], [-0.71327382, 2.52187183, 0, 0, 0, -0.88613634, 0, 0, 0], [0, 0, 1.7603467, 0, 0, 0, 0.26850121, 0, 0], [0, 0, 0, 1.7603467, 0, 0, 0, 0.26850121, 0], [0, 0, 0, 0, 1.7603467, 0, 0, 0, 0.26850121], [0.21565979, -0.88613634, 0, 0, 0, 2.31198223, 0, 0, 0], [0, 0, 0.26850121, 0, 0, 0, 0.04095381, 0, 0], [0, 0, 0, 0.26850121, 0, 0, 0, 0.04095381, 0], [0, 0, 0, 0, 0.26850121, 0, 0, 0, 0.04095381]])
-    
+
     },
 
     "AL" : {
@@ -1844,7 +1846,7 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "aluminium",
         "density": np.array([[2.21518153, -0.7210589, 0, 0, 0, 0.17765448, 0, 0, 0], [-0.7210589, 2.42119273, 0, 0, 0, -0.69637357, 0, 0, 0], [0, 0, 2.00715026, -0.00013103, -0.0624102, 0, -0.17674644, 0.00032326, 0.15397241], [0, 0, -0.00013103, 1.85304795, 5.307e-05, 0, 0.00032326, 0.20343991, -0.00013092], [0, 0, -0.0624102, 5.307e-05, 1.87832344, 0, 0.15397241, -0.00013092, 0.14108264], [0.17765448, -0.69637357, 0, 0, 0, 2.20073007, 0, 0, 0], [0, 0, -0.17674644, 0.00032326, 0.15397241, 0, 0.96020735, -0.00079744, -0.37983008], [0, 0, 0.00032326, 0.20343991, -0.00013092, 0, -0.00079744, 0.02233666, 0.00032296], [0, 0, 0.15397241, -0.00013092, 0.14108264, 0, -0.37983008, 0.00032296, 0.17616399]])
-    
+
     },
 
     "SI" : {
@@ -1857,7 +1859,7 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "silicon",
         "density": np.array([[2.23075361, -0.7411749, 0, 0, 0, 0.15812382, 0, 0, 0], [-0.7411749, 2.38444931, 0, 0, 0, -0.59611799, 0, 0, 0], [0, 0, 1.90557606, 0, 0, 0, 0.1529621, 0, 0], [0, 0, 0, 2.15540668, 0, 0, 0, -0.57876127, 0], [0, 0, 0, 0, 1.90557606, 0, 0, 0, 0.1529621], [0.15812382, -0.59611799, 0, 0, 0, 2.1494, 0, 0, 0], [0, 0, 0.1529621, 0, 0, 0, 0.01227839, 0, 0], [0, 0, 0, -0.57876127, 0, 0, 0, 2.15540668, 0], [0, 0, 0, 0, 0.1529621, 0, 0, 0, 0.01227839]])
-    
+
     },
 
     "P" : {
@@ -1867,10 +1869,10 @@ atomic_properties = {
         "C6" : 135.9848,
         "vdw_radius" : 3.22198,
         "real_vdw_radius" : 180,
-        "core_orbitals": 5,        
+        "core_orbitals": 5,
         "name" : "phosphorus",
         "density": np.array([[2.2491554, -0.77208347, 0, 0, 0, 0.16024315, 0, 0, 0], [-0.77208347, 2.3962711, 0, 0, 0, -0.58386231, 0, 0, 0], [0, 0, 1.9839067, -0.06015484, -0.05490761, 0, -0.05656304, 0.1850791, 0.16994956], [0, 0, -0.06015484, 2.0002586, 0.00511423, 0, 0.1850791, -0.10642059, -0.01632541], [0, 0, -0.05490761, 0.00511423, 2.1244592, 0, 0.16994956, -0.01632541, -0.49095309], [0.16024315, -0.58386231, 0, 0, 0, 2.1426492, 0, 0, 0], [0, 0, -0.05656304, 0.1850791, 0.16994956, 0, 0.58002822, -0.56941502, -0.52603041], [0, 0, 0.1850791, -0.10642059, -0.01632541, 0, -0.56941502, 0.73200918, 0.05206724], [0, 0, 0.16994956, -0.01632541, -0.49095309, 0, -0.52603041, 0.05206724, 1.9225545]])
-    
+
     },
 
     "S" : {
@@ -1883,7 +1885,7 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "sulfur",
         "density": np.array([[2.26601244, -0.799712, 0, 0, 0, 0.16211699, 0, 0, 0], [-0.799712, 2.40784748, 0, 0, 0, -0.57394585, 0, 0, 0], [0, 0, 2.13878051, -0.02469174, -0.00351481, 0, -0.54127214, 0.07973172, 0.01134962], [0, 0, -0.02469174, 1.94413911, -0.02814566, 0, 0.07973172, 0.08724145, 0.09088472], [0, 0, -0.00351481, -0.02814566, 2.13785753, 0, 0.01134962, 0.09088472, -0.53829176], [0.16211699, -0.57394585, 0, 0, 0, 2.13721465, 0, 0, 0], [0, 0, -0.54127214, 0.07973172, 0.01134962, 0, 2.10971252, -0.25746048, -0.03664888], [0, 0, 0.07973172, 0.08724145, 0.09088472, 0, -0.25746048, 0.08018887, -0.29347446], [0, 0, 0.01134962, 0.09088472, -0.53829176, 0, -0.03664888, -0.29347446, 2.10008862]])
-   
+
     },
 
     "CL" : {
@@ -1896,7 +1898,7 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "chlorine",
         "density" : np.array([[2.27846455, -0.81566933, 0, 0, 0, 0.14797638, 0, 0, 0], [-0.81566933, 2.39225803, 0, 0, 0, -0.51184572, 0, 0, 0], [0, 0, 2.04723353, -0.02649908, 0.0046819, 0, -0.24466305, 0.09752204, -0.01723034], [0, 0, -0.02649908, 2.10392172, 0.0018477, 0, 0.09752204, -0.45328717, -0.00679993], [0, 0, 0.0046819, 0.0018477, 2.11405309, 0, -0.01723034, -0.00679993, -0.49057268], [0.14797638, -0.51184572, 0, 0, 0, 2.10986634, 0, 0, 0], [0, 0, -0.24466305, 0.09752204, -0.01723034, 0, 1.20496033, -0.35890104, 0.06341118], [0, 0, 0.09752204, -0.45328717, -0.00679993, 0, -0.35890104, 1.97273974, 0.02502514], [0, 0, -0.01723034, -0.00679993, -0.49057268, 0, 0.06341118, 0.02502514, 2.10995807]])
-   
+
     },
 
     "AR" : {
@@ -1909,7 +1911,7 @@ atomic_properties = {
         "core_orbitals": 5,
         "name" : "argon",
         "density" : np.array([[2.29450954, -0.84439346, 0, 0, 0, 0.16247279, 0, 0, 0], [-0.84439346, 2.42446138, 0, 0, 0, -0.55006745, 0, 0, 0], [0, 0, 2.12900247, 0, 0, 0, -0.52406734, 0, 0], [0, 0, 0, 2.12900247, 0, 0, 0, -0.52406734, 0], [0, 0, 0, 0, 2.12900247, 0, 0, 0, -0.52406734], [0.16247279, -0.55006745, 0, 0, 0, 2.12522405, 0, 0, 0], [0, 0, -0.52406734, 0, 0, 0, 2.12900247, 0, 0], [0, 0, 0, -0.52406734, 0, 0, 0, 2.12900247, 0], [0, 0, 0, 0, -0.52406734, 0, 0, 0, 2.12900247]])
-   
+
     }
 
 }

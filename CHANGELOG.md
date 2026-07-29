@@ -10,10 +10,11 @@
 
 - Fock transformation matrix has been reworded to orthogonalisation matrix
 - Final correlation energy is now printed for correlated methods with sub-parts
+- More vibrant, bolder white text in output
 
 ### Fixed
 
-- 
+- More general guess energy is now calculated from guess density matrix
 
 <br>
 
@@ -120,7 +121,7 @@
 - Spin-restricted CCSDT, CCSDT(Q) and CCSDTQ energy
 - Anharmonic vibrational frequencies by solving the nuclear Schrodinger equation on the full PES via the `ANHARM` calculation type
 - Anharmonic transition intensities using either analytical or numerical dipole moment
-- Plot vibrational wavefunctions with `PLOTVIB`, control transition energy convergence with `ANHARMCONV` 
+- Plot vibrational wavefunctions with `PLOTVIB`, control transition energy convergence with `ANHARMCONV`
 - Numerical calculation of dipole moments for all electronic structure methods via `DIPOLE`
 - Numerical calculation of polarisability and hyperpolarisability via `POLAR` and `HYPER`
 - Calculations in applied electric field with `EX`, `EY`, and `EZ` keywords
@@ -193,7 +194,7 @@
 - Increased two-electron integral speed by 2—10x through leveraging diatomic symmetry and code optimisations
 - Keyword `OMP2MAXITER` is now `MPMAXITER`
 - Keyword `OMP2CONV` is now `MPCONV`
-- Major changes to SCF module, more robust convergence and stability 
+- Major changes to SCF module, more robust convergence and stability
 - Removed level shift
 - Updated manual with acknowledgements and further detail
 
@@ -255,8 +256,8 @@
 - New basis sets: pc-0, pc-1, pc-2, pc-3, pc-4, aug-pc-0, aug-pc-1, aug-pc-2, aug-pc-3, aug-pc-4
 - New basis sets: pcseg-0, pcseg-1, pcseg-2, pcseg-3, pcseg-4, aug-pcseg-0, aug-pcseg-1, aug-pcseg-2, aug-pcseg-3, aug-pcseg-4
 - New basis sets: aug-cc-pVDZ, aug-cc-pVTZ, aug-cc-pVQZ, aug-cc-pV5Z, aug-cc-pV6Z, d-aug-cc-pVDZ, d-aug-cc-pVTZ, d-aug-cc-pVQZ, d-aug-cc-pV5Z, d-aug-cc-pV6Z
-- New basis sets: cc-pCVDZ, cc-pCVTZ, cc-pCVQZ, cc-pCV5Z, aug-cc-pCVDZ, aug-cc-pCVTZ, aug-cc-pCVQZ, aug-cc-pCV5Z 
-- New basis sets: cc-pwCVDZ, cc-pwCVTZ, cc-pwCVQZ, cc-pwCV5Z, aug-cc-pwCVDZ, aug-cc-pwCVTZ, aug-cc-pwCVQZ, aug-cc-pwCV5Z 
+- New basis sets: cc-pCVDZ, cc-pCVTZ, cc-pCVQZ, cc-pCV5Z, aug-cc-pCVDZ, aug-cc-pCVTZ, aug-cc-pCVQZ, aug-cc-pCV5Z
+- New basis sets: cc-pwCVDZ, cc-pwCVTZ, cc-pwCVQZ, cc-pwCV5Z, aug-cc-pwCVDZ, aug-cc-pwCVTZ, aug-cc-pwCVQZ, aug-cc-pwCV5Z
 - New basis sets: ano-pVDZ, ano-pVTZ, ano-pVQZ, ano-pV5Z, aug-ano-pVDZ, aug-ano-pVTZ, aug-ano-pVQZ, aug-ano-pV5Z
 - New basis sets: 6-31G(d), 6-31G(d,p), 6-31+G(d), 6-31+G(d,p), 6-31++G(d), 6-31++G(d,p), 6-311G(d), 6-311G(d,p), 6-311+G(d), 6-311+G(d,p), 6-311++G(d), 6-311++G(d,p)
 
@@ -289,7 +290,7 @@
 
 - Energy and linearised density from CEPA0, LCCD, LCCSD, CCD, CCSD, CCSD(T) and CCSDT
 - Convergence control for coupled cluster calculations with damping via `CCDAMP` keyword (default off)
-- Convergence control for coupled cluster calculations and DIIS via `DIIS` keyword (default on) 
+- Convergence control for coupled cluster calculations and DIIS via `DIIS` keyword (default on)
 - Support for atoms beyond the first period — atoms up to argon are now implemented
 - Cython-based Gaussian integral engine via the McMurchie-Davidson algorithm allows higher angular momentum orbitals
 - New basis sets: 6-31G*, 6-31G**, 6-311G*, 6-311G**, cc-pVDZ, cc-pVTZ, cc-pVQZ, cc-pV5Z, cc-pV6Z
@@ -333,8 +334,8 @@
 - Incorrect unit conversions in `SCANSTEP`
 - Incorrect unit conversions in `SCANPLOT`
 - The `GEOMMAXITER` keyword was not working correctly
-- The SCF convergence keyword was being overridden if an optimisation is requested 
-- The geometry convergence keyword was being overridden if an subsequent frequency calculation is requested 
+- The SCF convergence keyword was being overridden if an optimisation is requested
+- The geometry convergence keyword was being overridden if an subsequent frequency calculation is requested
 
 <br>
 
@@ -453,7 +454,7 @@
 - Terminal output now has colour for warning and errors
 - Increased speed of all TUNA calculations by 50–95% through making full use of permutational symmetry in the two-electron integrals
 - Much better error handling and clear errors and warnings
-- New changelog, manual, GitHub and PyPI pages 
+- New changelog, manual, GitHub and PyPI pages
 - TUNA can now be installed simply by `pip install QuantumTUNA`
 
 ### Changed
@@ -463,7 +464,7 @@
 - Optimised and simplified integral engine
 - Reduced default SCF and optimisation convergence criteria by fixing associated bug
 - Better handling of print levels; optimizations now only calculate properties at the end by default
-- Now use more energy evaluations for gradients and Hessians, making them more robust but slower 
+- Now use more energy evaluations for gradients and Hessians, making them more robust but slower
 - Generally refined the output, making information more precise and clear
 
 ### Fixed
