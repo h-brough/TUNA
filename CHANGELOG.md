@@ -5,6 +5,7 @@
 ### Added
 
 - Much better convergence of CCSDT and CCSDTQ by projecting null-space amplitudes
+- `PRINTLEVEL` keyword for fine control over output, from 1 (minimal) to 4 (maximal)
 
 ### Changed
 
@@ -15,6 +16,7 @@
 ### Fixed
 
 - More general guess energy is now calculated from guess density matrix
+- The 6-31G(d,p) basis was returning 6-311G(d,p) values
 
 <br>
 

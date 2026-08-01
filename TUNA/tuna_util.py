@@ -1020,7 +1020,15 @@ def log(message: str, calculation: any, priority: int = 1, silent: bool = False,
 
     """
 
-    bold = ["bold"] if(colour != "light_grey") else [];
+    print_level = calculation.print_level
+
+    # The level of printing can be changed with the "T", "P" and "DEBUG" keywords
+
+    if calculation.terse: print_level = 1
+    if calculation.additional_print: print_level = 3
+    if calculation.debug: print_level = 4
+
+    bold = ["bold"] if colour != "light_grey" else []
 
     if not silent and not calculation.suppress_output:
 
@@ -1032,19 +1040,19 @@ def log(message: str, calculation: any, priority: int = 1, silent: bool = False,
 
             print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
 
-        elif priority == 2 and not calculation.terse:
+        elif priority == 2 and print_level > 1:
 
             # Print unless the "T" keyword is used
 
             print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
 
-        elif priority == 3 and calculation.additional_print:
+        elif priority == 3 and print_level > 2:
 
             # Print only if the "P" keyword is used
 
             print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
 
-        elif priority == 4 and calculation.debug:
+        elif priority == 4 and print_level > 3:
 
             # Print only if the "DEBUG" keyword is used
 

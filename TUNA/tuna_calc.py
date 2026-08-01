@@ -24,11 +24,11 @@ This module contains:
 
 @dataclass
 class Keyword:
-    
+
     """
-    
+
     Defines a keyword, with the variable types it corresponds to and their defaults.
-    
+
     """
 
     # Aliases for this keyword, e.g. "TEMP", "TEMPERATURE"
@@ -54,7 +54,7 @@ class Keyword:
     # Default for value attribute
 
     value_default: object = None
-    
+
     # If there's a second attribute, like "DAMP 0.2" records is_damping = True and damping_factor = 0.2
 
     value_attribute: str | None = None
@@ -68,7 +68,7 @@ class Keyword:
     def __post_init__(self):
 
         if isinstance(self.aliases, str):
-            
+
             self.aliases = (self.aliases,)
 
 
@@ -151,6 +151,7 @@ KEYWORDS = [
     Keyword(("ML", "MULTIPLICITY"), "multiplicity", "V", 1, int),
     Keyword("BASIS", "custom_basis_file", "V", None, str),
     Keyword("THREADS", "number_of_threads", "V", 4, int),
+    Keyword("PRINTLEVEL", "print_level", "V", 2, int),
 
     Keyword("XA", "X_alpha", "V", 2 / 3, float),
     Keyword("STHRESH", "S_eigenvalue_threshold", "V", 1e-7, float),
@@ -188,24 +189,24 @@ KEYWORDS = [
     Keyword("MAXDP", "max_density_change_convergence", "V", 1e-9, float),
     Keyword("DIISERR", "commutator_convergence", "V", 1e-9, float),
     Keyword("CORRMAXITER", "correlated_max_iter", "V", 100, int),
-    
+
 
     # These keywords give two attributes, one boolean for "is this keyword requested", another for the value given
-    
+
     Keyword("ROTATE", "rotate_guess", "B+V", False, float, 45, "theta"),
     Keyword("PRINTMOS", "print_molecular_orbitals", "B+V", False, int, 10, "n_orbitals_to_print"),
     Keyword("DIIS", "DIIS", "B+V", True, int, 6, "max_DIIS_matrices"),
     Keyword("DAMP", "damping", "B+V", True, float, None, "damping_factor"),
     Keyword("FREEZECORE", "freeze_core", "B+V", False, int, None, "freeze_n_orbitals"),
     Keyword("CORRDAMP", "correlated_damping_requested", "B+V", False, float, 0, "correlated_damping_parameter"),
-    
+
     Keyword("INTACC", "integral_accuracy_requested", "B+V", False, float, 4, "integral_accuracy"),
     Keyword("DFX", "DFX_requested", "B+V", False, float, 1, "DFX_prop"),
     Keyword("DFC", "DFC_requested", "B+V", False, float, 1, "DFC_prop"),
     Keyword("MPC", "MPC_requested", "B+V", False, float, 0, "MPC_prop"),
     Keyword("HFX", "HFX_requested", "B+V", False, float, 1, "HFX_prop"),
     Keyword("SSS", "SSS_requested", "B+V", False, float, 1 / 3, "same_spin_scaling"),
-    Keyword("OSS", "OSS_requested", "B+V", False, float, 6 / 5, "opposite_spin_scaling"), 
+    Keyword("OSS", "OSS_requested", "B+V", False, float, 6 / 5, "opposite_spin_scaling"),
 
     Keyword("TRAJ", "trajectory", "B+V", False, str, "tuna-trajectory.xyz", "trajectory_path"),
     Keyword("SAVEPLOT", "save_plot", "B+V", False, str, "tuna-plot.pdf", "save_plot_filepath", True),
@@ -248,15 +249,15 @@ colour_map = {
 def interpret_keywords(calculation: Calculation, params: list) -> None:
 
     """
-    
+
     Iterates through the given parameters, checks if they are keywords and sets the attributes of a Calculation object.
 
     Args:
         calculation (Calculation): Calculation object
         params (list): List of parameters on simple input line
-    
+
     """
-    
+
     ALIASES = {alias: keyword for keyword in KEYWORDS for alias in keyword.aliases}
 
     PLOT_EXTENSIONS = (".png", ".jpg", ".pdf", ".svg", ".jpeg", ".tif", ".tiff", ".bmp", ".raw", ".eps", ".ps")
@@ -282,7 +283,7 @@ def interpret_keywords(calculation: Calculation, params: list) -> None:
 
             i += 1
             continue
-        
+
         # Boolean keywords
 
         if keyword.keyword_type == "B":
@@ -304,7 +305,7 @@ def interpret_keywords(calculation: Calculation, params: list) -> None:
                 error(f"Parameter \"{param}\" requested but no value specified!")
 
             elif keyword.keyword_type == "B+V":
-                
+
                 # Sets the boolean part of the keyword to true regardless of value being given
 
                 setattr(calculation, keyword.attribute, True)
@@ -356,20 +357,20 @@ def interpret_keywords(calculation: Calculation, params: list) -> None:
 def process_complex_keywords(self: Calculation) -> None:
 
     """
-    
+
     Processes the keywords which are not trivially interpreted.
 
     Args:
         self (Calculation): Calculation object
-    
+
     """
 
     # Some keywords can override others
-    
+
     self.MO_read = not self.no_MO_read
     self.DIIS = False if self.no_DIIS else self.DIIS
     self.damping = False if self.no_damping else self.damping
-    
+
     # Checks if multiplicity has been overridden
 
     self.default_multiplicity = not any(param in ("ML", "MULTIPLICITY") for param in self.params)
@@ -383,7 +384,7 @@ def process_complex_keywords(self: Calculation) -> None:
         # Temperature default depends on calculation type
 
         self.temperature = 0 if self.calculation_type == "MD" else 298.15
-    
+
     # Updates the method considering CEPA and the treatment of single excitations
 
     if self.method.name.startswith("U"):
@@ -408,15 +409,15 @@ def process_complex_keywords(self: Calculation) -> None:
     # Allows overwriting of defaults with keywords
 
     if self.core_guess_requested or self.monatomic:
-        
+
         guess = "core"
 
     if self.superposition_guess_requested:
-        
+
         guess = "superposition"
 
     if self.self_consistent_guess_requested:
-        
+
         guess = "scf"
 
     # Set mutually exclusive guess options
@@ -437,7 +438,7 @@ def process_complex_keywords(self: Calculation) -> None:
     # Then checks for "COLOUR #FF00FF"
 
     self.scan_plot_colour = self.plot_colour if self.colour_requested else self.scan_plot_colour
-    
+
     # Does anything need to be plotted at the end of the calculation
 
     self.plot_something = self.plot_density or self.plot_spin_density or self.plot_HOMO or self.plot_LUMO or self.plot_difference_density or self.plot_difference_spin_density or self.plot_molecular_orbital or self.plot_natural_orbital
@@ -450,8 +451,8 @@ def process_complex_keywords(self: Calculation) -> None:
 
     self.number_of_steps = 30 if self.number_of_steps is None and self.calculation_type == "MD" else self.number_of_steps
 
-    if self.DFT_calculation: 
-        
+    if self.DFT_calculation:
+
         # Only overwrites HFX, DFX, etc. if a DFT calculation is requested
 
         self.HFX_prop = self.functional.HFX if not self.HFX_requested else self.HFX_prop
@@ -459,8 +460,8 @@ def process_complex_keywords(self: Calculation) -> None:
         self.DFC_prop = self.functional.DFC if not self.DFC_requested else self.DFC_prop
         self.MPC_prop = self.functional.MPC if not self.MPC_requested else self.MPC_prop
 
-        self.same_spin_scaling = self.functional.same_spin_scaling if not self.SSS_requested else self.same_spin_scaling 
-        self.opposite_spin_scaling = self.functional.opposite_spin_scaling if not self.OSS_requested else self.opposite_spin_scaling 
+        self.same_spin_scaling = self.functional.same_spin_scaling if not self.SSS_requested else self.same_spin_scaling
+        self.opposite_spin_scaling = self.functional.opposite_spin_scaling if not self.OSS_requested else self.opposite_spin_scaling
 
     # Processes the "NOX" and "NOC" keywords
 
@@ -484,7 +485,7 @@ def process_complex_keywords(self: Calculation) -> None:
     self.SCF_conv = constants.convergence_criteria_SCF["medium"] if "MEDIUM" in self.params or "MEDIUMSCF"in self.params else self.SCF_conv
     self.SCF_conv = constants.convergence_criteria_SCF["tight"] if "TIGHT" in self.params or "TIGHTSCF" in self.params else self.SCF_conv
     self.SCF_conv = constants.convergence_criteria_SCF["extreme"] if "EXTREME" in self.params or "EXTREMESCF" in self.params else self.SCF_conv
-    
+
     # The "ECONV" keyword can overwrite all the others, the values here are only relevant if the keyword is used
 
     self.SCF_conv["delta_E"] = self.SCF_conv["delta_E"] if "ECONV" not in self.params else self.energy_convergence
@@ -494,11 +495,11 @@ def process_complex_keywords(self: Calculation) -> None:
 
     # Convergence criteria for geometry optimisation
 
-    self.geom_conv = constants.convergence_criteria_optimisation["medium"] 
+    self.geom_conv = constants.convergence_criteria_optimisation["medium"]
 
     self.geom_conv = constants.convergence_criteria_optimisation["tight"] if self.second_derivative_requested else self.geom_conv
-    
-    self.geom_conv = constants.convergence_criteria_optimisation["loose"] if "LOOSEOPT" in self.params else self.geom_conv 
+
+    self.geom_conv = constants.convergence_criteria_optimisation["loose"] if "LOOSEOPT" in self.params else self.geom_conv
     self.geom_conv = constants.convergence_criteria_optimisation["medium"] if "MEDIUMOPT" in self.params else self.geom_conv
     self.geom_conv = constants.convergence_criteria_optimisation["tight"] if "TIGHTOPT" in self.params else self.geom_conv
     self.geom_conv = constants.convergence_criteria_optimisation["extreme"] if "EXTREMEOPT" in self.params else self.geom_conv
@@ -532,11 +533,11 @@ def process_complex_keywords(self: Calculation) -> None:
 class Calculation:
 
     """
-    
+
     Processes and calculates from user-defined parameters specified at the start of a TUNA calculation.
 
     Various default values for parameters are specified here. This object is created once per TUNA calculation.
-    
+
     """
 
     # Type of calculation (SPE, OPT, FREQ, ANHARM, etc.)
@@ -548,7 +549,7 @@ class Calculation:
     method: Method
 
     # Start time for calculation, counted from after modules are imported
-    
+
     start_time: float
 
     # Keywords in simple input line
@@ -586,7 +587,7 @@ class Calculation:
             self.functional = exchange_correlation_functionals.get("HF")
 
         self.DFT_calculation = self.method.density_functional_method
-        
+
         # Interprets the keyword list and sets the calculation attributes
 
         interpret_keywords(self, self.params)
