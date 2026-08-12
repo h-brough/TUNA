@@ -5,7 +5,7 @@ import tuna_molecule as mol
 from tuna_molecule import Molecule
 from tuna_calc import Calculation
 
- 
+
 """
 
 This is the TUNA module for post energy evaluation properties, written first for version 0.2.0 and rewritten for version 0.10.1.
@@ -25,14 +25,14 @@ This module contains:
 
 
 
-def calculate_nuclear_dipole_moment(dipole_origin: float, charges: ndarray, coordinates: ndarray) -> float: 
+def calculate_nuclear_dipole_moment(dipole_origin: float, charges: ndarray, coordinates: ndarray) -> float:
 
     """
 
     Calculates the nuclear dipole moment.
 
-    Args:   
-        dipole_origin (float): Dipole origin in bohr 
+    Args:
+        dipole_origin (float): Dipole origin in bohr
         charges (array): Nuclear charges
         coordinates (array): Nuclear coordinates
 
@@ -43,10 +43,10 @@ def calculate_nuclear_dipole_moment(dipole_origin: float, charges: ndarray, coor
 
     nuclear_dipole_moment = 0
 
-    for i in range(len(charges)): 
+    for i in range(len(charges)):
 
         nuclear_dipole_moment += (coordinates[i][2] - dipole_origin) * charges[i]
-    
+
 
     return nuclear_dipole_moment
 
@@ -59,14 +59,14 @@ def calculate_nuclear_dipole_moment(dipole_origin: float, charges: ndarray, coor
 
 
 
-def calculate_nuclear_quadrupole_moment(quadrupole_origin: float, charges: ndarray, coordinates: ndarray) -> float: 
+def calculate_nuclear_quadrupole_moment(quadrupole_origin: float, charges: ndarray, coordinates: ndarray) -> float:
 
     """
 
     Calculates the nuclear quadrupole moment.
 
-    Args:   
-        quadrupole_origin (float): Quadrupole origin in bohr 
+    Args:
+        quadrupole_origin (float): Quadrupole origin in bohr
         charges (array): Nuclear charges
         coordinates (array): Nuclear coordinates
 
@@ -77,13 +77,13 @@ def calculate_nuclear_quadrupole_moment(quadrupole_origin: float, charges: ndarr
 
     nuclear_quadrupole_moment = 0
 
-    for i in range(len(charges)): 
+    for i in range(len(charges)):
 
         nuclear_quadrupole_moment += (coordinates[i][2] - quadrupole_origin) ** 2 * charges[i]
-    
+
 
     return nuclear_quadrupole_moment
-   
+
 
 
 
@@ -99,7 +99,7 @@ def calculate_analytical_dipole_moment(centre_of_mass: float, charges: ndarray, 
 
     Calculates the total dipole moment of a molecule.
 
-    Args:   
+    Args:
         centre_of_mass (float): Centre of mass
         charges (array): Nuclear charges
         coordinates (array): Nuclear coordinates
@@ -115,7 +115,7 @@ def calculate_analytical_dipole_moment(centre_of_mass: float, charges: ndarray, 
 
     # Extracts the z component of the dipole moment integrals
 
-    nuclear_dipole_moment = calculate_nuclear_dipole_moment(centre_of_mass, charges, coordinates)        
+    nuclear_dipole_moment = calculate_nuclear_dipole_moment(centre_of_mass, charges, coordinates)
     electronic_dipole_moment = -1 * np.einsum("ij,ij->", P, D[2], optimize = True)
 
     total_dipole_moment = nuclear_dipole_moment + electronic_dipole_moment
@@ -138,7 +138,7 @@ def calculate_analytical_quadrupole_moment(centre_of_mass: float, charges: ndarr
 
     Calculates the total quadrupole moment of a molecule.
 
-    Args:   
+    Args:
         centre_of_mass (float): Centre of mass
         charges (array): Nuclear charges
         coordinates (array): Nuclear coordinates
@@ -153,8 +153,8 @@ def calculate_analytical_quadrupole_moment(centre_of_mass: float, charges: ndarr
     """
 
 
-    nuclear_quadrupole_moment = calculate_nuclear_quadrupole_moment(centre_of_mass, charges, coordinates)       
-    
+    nuclear_quadrupole_moment = calculate_nuclear_quadrupole_moment(centre_of_mass, charges, coordinates)
+
     # Extracts the xx and zz components of quadrupole moment integrals
 
     electronic_quadrupole_moment_xx = -1 * np.einsum("ij,ij->", P, Q[0], optimize = True)
@@ -180,7 +180,7 @@ def calculate_analytical_quadrupole_moment(centre_of_mass: float, charges: ndarr
 def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_output: Output, calculation: Calculation) -> None:
 
     """
-    
+
     Calculates and prints the analytical dipole and quadrupole moments.
 
     Args:
@@ -188,7 +188,7 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
         molecule (Molecule): Molecule object
         SCF_output (Output): Output from SCF calculation
         calculation (Calculation): Calculation object
-    
+
     """
 
     # Calculates the centre of mass of the molecule
@@ -200,7 +200,7 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
     # Calculates the analytical dipole moment
 
     total_dipole_moment, nuclear_dipole_moment, electronic_dipole_moment = calculate_analytical_dipole_moment(centre_of_mass, molecule.charges, molecule.coordinates, P, SCF_output.D)
-    
+
     # Calculates the analytical quadrupole moment
 
     isotropic_quadrupole_moment, nuclear_quadrupole_moment, anisotropic_quadrupole_moment = calculate_analytical_quadrupole_moment(centre_of_mass, molecule.charges, molecule.coordinates, P, SCF_output.Q)
@@ -209,25 +209,25 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
 
 
     def format_moment_structure(value: float, positive_diagram: str, negative_diagram: str) -> str:
-        
+
         """
-        
+
         Formats the multipole moment molecular structure diagram consistently.
 
         """
 
         if value > constants.MOMENT_THRESH:
-            
+
             text = f"  {molecule.molecular_structure}  {positive_diagram}"
-        
+
         elif value < -constants.MOMENT_THRESH:
-            
+
             text = f"  {molecule.molecular_structure}  {negative_diagram}"
 
         else:
-            
+
             text = f"      {molecule.molecular_structure}      "
-        
+
         return text.center(25)
 
 
@@ -242,7 +242,7 @@ def calculate_and_print_multipole_moments(P: ndarray, molecule: Molecule, SCF_ou
     log("                    Dipole Moment                                        Quadrupole Moment", calculation, 2, colour = "white")
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
     log(f"  Nuclear: {nuclear_dipole_moment:11.7f}     Electronic: {electronic_dipole_moment:11.7f}       Nuclear: {nuclear_quadrupole_moment:11.7f}   Anisotropic: {anisotropic_quadrupole_moment:11.7f}\n", calculation, 2)
-    
+
     log(f"  Total: {total_dipole_moment:11.7f}      {dipole_molecular_structure}      Isotropic: {isotropic_quadrupole_moment:11.7f}  {quadrupole_molecular_structure}", calculation, 2)
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
 
@@ -264,7 +264,7 @@ def calculate_koopmans_parameters(epsilons: ndarray, n_occ: int, calculation: Ca
 
     Calculates the Koopmans' theorem parameters of a system (ionisation energy, electron affinity and HOMO-LUMO gap).
 
-    Args:   
+    Args:
         epsilons (array): Fock matrix eigenvalues
         n_occ (int): Number of occupied orbitals
         calculation (Calculation): Calculation object
@@ -280,33 +280,33 @@ def calculate_koopmans_parameters(epsilons: ndarray, n_occ: int, calculation: Ca
 
     ionisation_potential = -1 * epsilons[n_occ - 1]
 
-    # As long as LUMO exists, EA = -LUMO    
+    # As long as LUMO exists, EA = -LUMO
 
-    if len(epsilons) > n_occ: 
-    
+    if len(epsilons) > n_occ:
+
         electron_affinity = -1 * epsilons[n_occ]
 
         band_gap = ionisation_potential - electron_affinity
-        
-    else: 
-    
+
+    else:
+
         electron_affinity = band_gap = " --------"
-        
+
         warning("Size of basis is too small for electron affinity calculation!")
 
-    if not isinstance(electron_affinity, str): 
-        
+    if not isinstance(electron_affinity, str):
+
         electron_affinity = f"{electron_affinity:9.6f}"
         band_gap = f"{band_gap:9.6f}"
-       
+
     log(f"\n Koopmans' theorem ionisation potential:  {ionisation_potential:9.6f}", calculation, 2)
     log(f" Koopmans' theorem electron affinity:     {electron_affinity}", calculation, 2)
     log(f" Energy gap between HOMO and LUMO:        {band_gap}", calculation, 2)
 
 
     return ionisation_potential, electron_affinity, band_gap
- 
- 
+
+
 
 
 
@@ -321,7 +321,7 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
 
     Prints the various components of the self-consistent field energy to the terminal.
 
-    Args:   
+    Args:
         SCF_output (Output): Output object
         V_NN (float): Nuclear-nuclear repulsion energy
         calculation (Calculation): Calculation object
@@ -331,50 +331,50 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
 
     # Adds up different energy components
 
-    one_electron_energy = SCF_output.nuclear_electron_energy + SCF_output.kinetic_energy + SCF_output.electric_field_energy + SCF_output.electric_field_gradient_energy 
+    one_electron_energy = SCF_output.nuclear_electron_energy + SCF_output.kinetic_energy + SCF_output.electric_field_energy + SCF_output.electric_field_gradient_energy
     two_electron_energy = SCF_output.exchange_energy + SCF_output.coulomb_energy + SCF_output.correlation_energy
 
     electronic_energy = one_electron_energy + two_electron_energy
 
     total_energy = electronic_energy + V_NN
-    
+
     # Calculates Virial ratio between potential and kinetic energy
 
     virial_ratio = -1 * (total_energy - SCF_output.kinetic_energy) / SCF_output.kinetic_energy
-           
+
     log_spacer(calculation, priority=2, silent = silent)
     log("                  Energy Components       ", calculation, 2, colour = "white", silent = silent)
-    log_spacer(calculation, priority=2, silent = silent)    
+    log_spacer(calculation, priority=2, silent = silent)
 
     log(f"  Kinetic energy:                   {SCF_output.kinetic_energy:15.10f}", calculation, 2, silent = silent)
     log(f"  Coulomb energy:                   {SCF_output.coulomb_energy:15.10f}", calculation, 2, silent = silent)
     log(f"  Exchange energy:                  {SCF_output.exchange_energy:15.10f}", calculation, 2, silent = silent)
 
     if calculation.method.density_functional_method:
-        
+
         log(f"  Correlation energy:               {SCF_output.correlation_energy:15.10f}", calculation, 2, silent = silent)
 
     log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2, silent = silent)
-    log(f"  Nuclear attraction energy:        {SCF_output.nuclear_electron_energy:15.10f}", calculation, 2, silent = silent)      
+    log(f"  Nuclear attraction energy:        {SCF_output.nuclear_electron_energy:15.10f}", calculation, 2, silent = silent)
 
     if np.linalg.norm(calculation.electric_field) > 0:
-    
+
         log(f"  Electric field energy:            {SCF_output.electric_field_energy:15.10f}", calculation, 2, silent = silent)
-    
+
     if np.linalg.norm(calculation.electric_field_gradient) > 0:
-    
+
         log(f"  Electric field gradient energy:   {SCF_output.electric_field_gradient_energy:15.10f}", calculation, 2, silent = silent)
 
     log(f"\n  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent = silent)
     log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent = silent)
 
     if calculation.method.density_functional_method:
-        
+
         log(f"  Exchange-correlation energy:      {SCF_output.exchange_energy + SCF_output.correlation_energy:15.10f}", calculation, 2, silent = silent)
 
     log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2, silent = silent)
     log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2, silent = silent)
-            
+
     log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2, silent = silent)
 
     log_spacer(calculation, priority=2, silent = silent)
@@ -412,8 +412,8 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
 
     # Contraction to calculate spin contamination
 
-    spin_contamination = n_beta - np.trace(P_alpha.T @ S @ P_beta.T @ S)
-    
+    spin_contamination = n_beta - np.trace(P_alpha @ S @ P_beta @ S)
+
     s_squared = s_squared_exact + spin_contamination
 
     # Only print by default for unrestricted SCF
@@ -423,7 +423,7 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
     title = kind.title() if kind == "Coupled cluster" else kind
 
     space1, space2 = ("       ", "            ") if len(kind) == 3 else ("", "")
-    
+
     log_spacer(calculation, silent = silent, priority = priority)
     log(f"   {space1}       {title} Spin Contamination       ", calculation, priority, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent, priority = priority)
@@ -451,7 +451,7 @@ def calculate_and_print_population_analysis(P: ndarray, S: ndarray, R: ndarray, 
 
     Calculates the bond order, atomic charges and valences for Mulliken, Lowden and Mayer population analysis
 
-    Args:   
+    Args:
         P (array): Density matrix in AO basis
         S (array): Overlap matrix in AO basis
         R (array): Spin density matrix in AO basis
@@ -505,7 +505,7 @@ def calculate_and_print_population_analysis(P: ndarray, S: ndarray, R: ndarray, 
     atoms_formatted = []
 
     for atomic_symbol in atomic_symbols:
-    
+
         atomic_symbol = atomic_symbol.lower().capitalize()
         atomic_symbol = atomic_symbol + "  :" if len(atomic_symbol) == 1 else atomic_symbol + " :"
         atoms_formatted.append(atomic_symbol)
@@ -515,8 +515,8 @@ def calculate_and_print_population_analysis(P: ndarray, S: ndarray, R: ndarray, 
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
     log(f"  {atoms_formatted[0]} {charges_Mulliken[0]:8.5f}                  {atoms_formatted[0]} {charges_Lowdin[0]:8.5f}                  {atoms_formatted[0]} {free_valences[0]:8.5f},  {bond_order_Mayer:8.5f},  {total_valences[0]:8.5f}", calculation, 2)
     log(f"  {atoms_formatted[1]} {charges_Mulliken[1]:8.5f}                  {atoms_formatted[1]} {charges_Lowdin[1]:8.5f}                  {atoms_formatted[1]} {free_valences[1]:8.5f},  {bond_order_Mayer:8.5f},  {total_valences[1]:8.5f}", calculation, 2)
-    log(f"\n  Sum of charges: {total_charges_Mulliken:8.5f}       Sum of charges: {total_charges_Lowdin:8.5f}", calculation, 2) 
-    log(f"  Bond order: {bond_order_Mulliken:8.5f}           Bond order: {bond_order_Lowdin:8.5f}           Bond order: {bond_order_Mayer:8.5f}", calculation, 2) 
+    log(f"\n  Sum of charges: {total_charges_Mulliken:8.5f}       Sum of charges: {total_charges_Lowdin:8.5f}", calculation, 2)
+    log(f"  Bond order: {bond_order_Mulliken:8.5f}           Bond order: {bond_order_Lowdin:8.5f}           Bond order: {bond_order_Mayer:8.5f}", calculation, 2)
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
 
 
@@ -537,9 +537,9 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, SCF_output: Ou
 
     Prints the Fock matrix eigenvalues.
 
-    Args:   
+    Args:
         calculation (Calculation): Calculation object
-        SCF_output (Output): Output object   
+        SCF_output (Output): Output object
         occupancies (list): Orbital occupancies
         spin_labels (list): Orbital spin labels
 
@@ -558,11 +558,11 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, SCF_output: Ou
     # Prints the spin for unrestricted calculations
 
     if calculation.reference == "RHF":
-        
+
         spin_labels_words = ["----"] * len(orbital_energies)
 
     else:
-        
+
         spin_labels_words = [{"a": "Alpha", "b": "Beta"}.get(item, item) for item in spin_labels]
 
     # Prints out the molecular orbital information
@@ -570,7 +570,7 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, SCF_output: Ou
     for mo in range(len(orbital_energies)):
 
        log(f" {mo + 1:3.0f}         {occupancies[mo]:7.5f}            {spin_labels_words[mo]:<6}         {orbital_energies[mo]:16.10f}", calculation, priority)
-     
+
     log(f"", calculation, priority)
 
     return
@@ -584,7 +584,7 @@ def print_molecular_orbital_eigenvalues(calculation: Calculation, SCF_output: Ou
 
 
 def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Molecule, SCF_output: Output, occupancies: list, spin_labels: list, natural_orbitals: ndarray = None, natural_occupancies: ndarray = None) -> None:
-    
+
     """
     Prints out molecular orbital coefficients, formatted very carefully.
 
@@ -606,21 +606,21 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
     priority = 1 if calculation.print_molecular_orbitals else 3
 
     if do_natorbs:
-        
+
         log("                   Natural Orbital Coefficients", calculation, priority, colour = "white")
 
-    else: 
-        
+    else:
+
         log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority)
         log("                 Molecular Orbital Coefficients", calculation, priority, colour = "white")
-    
+
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, priority)
 
     # These are sorted by energy, so interleaved for unrestricted calculations - same as for plotting
 
     molecular_orbitals = SCF_output.molecular_orbitals
     orbital_energies = SCF_output.epsilons
-    
+
     orbitals = natural_orbitals if do_natorbs else molecular_orbitals
 
     # Mappings from Cartesian to spherical harmonic counting
@@ -637,7 +637,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
             "d": ["xx", "xy", "xz", "yy", "yz", "zz"],
             "f": ["xxx", "xxy", "xxz", "xyy", "xyz", "xzz", "yyy", "yyz", "yzz", "zzz"],
             "g": [f"c{i}" for i in range(1, 16)],
-            "h": [f"c{i}" for i in range(1, 22)], 
+            "h": [f"c{i}" for i in range(1, 22)],
 
         }
 
@@ -653,11 +653,11 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
             "h": ["-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4", "+5"],
 
         }
-    
+
     current_n = starting_n.copy()
     all_orbitals, all_components = [], []
     atom_1_cutoff = molecule.partition_ranges[0]
-    
+
     i = 0
 
     # Loops through atomic orbitals, transforming lists to spherical harmonic counting if needed
@@ -667,19 +667,19 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
         if len(all_orbitals) == atom_1_cutoff:
 
             current_n = starting_n.copy()
-            
+
         l = molecule.angular_momentum_list[i]
 
         n = current_n[l]
-        
+
         for comp in components[l]:
 
             # Creates orbital list as eg. "1s", "2s"
 
             all_orbitals.append(f"{n}{l}")
             all_components.append(comp)
-            
-        i += capacity[l] 
+
+        i += capacity[l]
 
         current_n[l] += 1
 
@@ -687,7 +687,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 
     orbitals_on_atom_1 = all_orbitals[:atom_1_cutoff]
     orbitals_on_atom_2 = all_orbitals[atom_1_cutoff:]
-    
+
     # Angular momenta - "", "", "x", "y", "z", etc.
 
     angular_momentum_on_atom_1 = all_components[:atom_1_cutoff]
@@ -715,27 +715,27 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
             log(f"{"~~~" if mo + 1 < 10 else "~~"} {occupancies[mo]}", calculation, priority, end = "")
 
         else:
-            
+
             log(f"{" " if mo + 1 < 10 else ""}", calculation, priority, end = "")
-        
+
         # Prints occupancy of molecular orbitals
 
         if calculation.reference == "UHF" and not do_natorbs:
 
             if occupancies[mo] == "Occupied":
-              
+
                 log(f" ~~~ {"Alpha"}", calculation, priority, end = "") if spin_labels[mo] == "a" else log(f" ~~~~ {"Beta"}", calculation, priority, end = "")
-            
+
             else:
 
                 log(f"~~~~ {"Alpha"}", calculation, priority, end = "") if spin_labels[mo] == "a" else log(f"~~~~~ {"Beta"}", calculation, priority, end = "")
- 
+
         else:
-      
+
             log(f"          ", calculation, priority, end = "")
 
         if do_natorbs:   # Prints natural orbital occupancy
-            
+
             log(f"                           N = {natural_occupancies[mo]:14.10f}", calculation, priority, end = "\n\n")
 
         else:   # Prints molecular orbital energy
@@ -753,7 +753,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
             first_atom = f"{molecule.atoms[0].symbol_formatted:<4}" if ao == 0 else "    "
 
             log(f"   {first_atom}", calculation, priority, end = "")
-            
+
             if ao < molecule.partition_ranges[0]:   # Only print orbitals on first atom
 
                 log(f"{orbitals_on_atom_1[ao]} {angular_momentum_on_atom_1[ao]:<4}  : ", calculation, priority, end = "")
@@ -763,11 +763,11 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
             else:
 
                 log("                    ", calculation, priority, end = "")
-            
+
             # Allows atomic calculations
-            
-            if len(molecule.atoms) > 1:   
-                
+
+            if len(molecule.atoms) > 1:
+
                 # Only look at the atomic orbitals on the second atom
 
                 orbital_2_coeff = orbitals.T[mo][molecule.partition_ranges[0]:]
@@ -775,7 +775,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
                 second_atom = f"{molecule.atoms[1].symbol_formatted:<4}" if ao == 0 else "    "
 
                 log(f"        {second_atom}", calculation, priority, end = "")
-        
+
                 if ao < molecule.partition_ranges[1]:   # Only print orbitals on second atom
 
                     log(f"{orbitals_on_atom_2[ao]} {angular_momentum_on_atom_2[ao]:<4}  : ", calculation, priority, end = "")
@@ -805,7 +805,7 @@ def print_molecular_orbital_coefficients(calculation: Calculation, molecule: Mol
 def print_density_information(calculation: Calculation) -> None:
 
     """
-    
+
     Prints the type of density matrix used in property calculations.
 
     Args:
@@ -818,10 +818,10 @@ def print_density_information(calculation: Calculation) -> None:
     density_type = "relaxed" if calculation.relaxed_density else "unrelaxed"
 
     # Specifies which density matrix is used for the property calculations
-    
+
     match calculation.method.name:
 
-        case "MP2" | "SCS-MP2": 
+        case "MP2" | "SCS-MP2":
 
             log(f"\n Using the MP2 {density_type} density for property calculations.", calculation, 1)
 
@@ -846,17 +846,17 @@ def print_density_information(calculation: Calculation) -> None:
         warning(f"Using the {density_type} MP2 density for property calculations.")
 
     elif method.coupled_cluster_method:
-    
+
         log("\n Using the linearised coupled cluster density for property calculations.", calculation, 1)
 
-    elif method.excited_state_method or calculation.time_dependent: 
-    
+    elif method.excited_state_method or calculation.time_dependent:
+
         if method.density_functional_method:
 
             log(f"\n Using the unrelaxed TD-DFT density for property calculations.", calculation, 1)
-        
+
         else:
-            
+
             log(f"\n Using the unrelaxed TD-HF density for property calculations.", calculation, 1)
 
     if method.density_functional_method and calculation.MPC_prop != 0 and not calculation.time_dependent:
@@ -881,7 +881,7 @@ def calculate_molecular_properties(molecule: Molecule, calculation: Calculation,
 
     Calculates various TUNA properties after an energy evaluation and prints them to the console.
 
-    Args:   
+    Args:
         molecule (Molecule): Molecule object
         calculation (Calculation): Calculation object
         P (array): Density matrix in AO basis
@@ -922,19 +922,19 @@ def calculate_molecular_properties(molecule: Molecule, calculation: Calculation,
         # Prints molecular orbital eigenvalues and coefficients
 
         print_molecular_orbital_eigenvalues(calculation, SCF_output, occupancies, spin_labels_sorted)
-        
+
         print_molecular_orbital_coefficients(calculation, molecule, SCF_output, occupancies, spin_labels_sorted)
 
         # Print natural orbital information
 
         if natural_orbitals is not None:
-            
+
             print_molecular_orbital_coefficients(calculation, molecule, SCF_output, occupancies, spin_labels_sorted, natural_orbitals, natural_occupancies)
 
         # Prints Koopmans' theorem parameters if RHF reference is used
 
         if calculation.reference == "RHF":
-            
+
             calculate_koopmans_parameters(SCF_output.epsilons, molecule.n_doubly_occ, calculation)
 
     # As long as there are two real atoms present, calculates rotational constant and dipole moment information
@@ -956,6 +956,6 @@ def calculate_molecular_properties(molecule: Molecule, calculation: Calculation,
         # Calculate population analysis, format all the data, then print to console
 
         calculate_and_print_population_analysis(P, S, R, molecule.partition_ranges, molecule.atomic_symbols, molecule.charges, calculation)
-        
+
 
     return
