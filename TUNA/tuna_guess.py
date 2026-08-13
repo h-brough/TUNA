@@ -244,40 +244,6 @@ def project_density_matrix(P_to_project: ndarray, S_cross: ndarray, S_target_inv
 
 
 
-def calculate_energy_guess(H_core: ndarray, X: ndarray) -> float:
-
-    """
-
-    Calculates the guess energy for a given core Hamiltonian.
-
-    Args:
-        H_core (array): Core Hamiltonian matrix in AO basis
-        X (array): Fock transformation matrix in AO basis
-
-    Returns:
-        E_guess (float): Guess energy
-
-    """
-
-    # Diagonalise Fock matrix
-
-    eigenvalues, _ = scf.diagonalise_Fock_matrix(H_core, X)
-
-    # The guess energy is the lowest one-electron eigenvalue in all cases
-
-    E_guess = np.min(eigenvalues)
-
-    return E_guess
-
-
-
-
-
-
-
-
-
-
 def calculate_superposition_guess(S_inverse: ndarray, atomic_symbols: list[str], molecule: Molecule, calculation: Calculation, rotate_guess_mos: bool, X: ndarray, silent=False) -> tuple[ndarray, ndarray, ndarray]:
 
     """
@@ -382,7 +348,6 @@ def calculate_core_guess(calculation: Calculation, H_core: ndarray, X: ndarray, 
     P_guess = P_guess_alpha + P_guess_beta
 
     log("[Done]\n", calculation, silent = silent)
-
 
     return P_guess, P_guess_alpha, P_guess_beta
 
