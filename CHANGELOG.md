@@ -17,6 +17,7 @@
 
 - More general guess energy is now calculated from guess density matrix
 - The 6-31G(d,p) basis was returning 6-311G(d,p) values
+- CCSDTQ and CCSDT(Q) were running erroneously on unrestricted references
 
 <br>
 
