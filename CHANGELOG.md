@@ -1,5 +1,21 @@
 # Changelog
 
+## TUNA 0.12.0 — 01/11/2026
+
+### Added
+
+- Support for Python 3.15
+
+### Changed
+
+-
+
+### Fixed
+
+-
+
+<br>
+
 ## TUNA 0.11.1 — 15/08/2026
 
 ### Added
