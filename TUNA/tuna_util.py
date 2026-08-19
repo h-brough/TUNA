@@ -70,27 +70,27 @@ class Constants:
 
     # Gradient correct to 9 sf. for "EXTREME" and "TIGHT", 8 sf. for "MEDIUM" and 7 sf. for "LOOSE"
 
-    FIRST_GEOM_DERIVATIVE_PROD = 0.00005
+    FIRST_GEOM_DERIVATIVE_STEP = 0.00005
 
     # Dipole moment correct to 9 sf. for "EXTREME" and "TIGHT", 7 sf. for "MEDIUM" and 6 sf. for "LOOSE"
 
-    FIRST_ELEC_DERIVATIVE_PROD = 0.00001
+    FIRST_ELEC_DERIVATIVE_STEP = 0.00001
 
     # Hessian correct to 8 sf. for "EXTREME", 7 sf. for "TIGHT", 6 sf. for "MEDIUM" and 5 sf. for "LOOSE" - which is still correct frequency to 0.01 per cm
 
-    SECOND_GEOM_DERIVATIVE_PROD = 0.01
+    SECOND_GEOM_DERIVATIVE_STEP = 0.01
 
     # Isotropic polarisability correct to 7 sf. for "EXTREME", 5 sf. for "TIGHT", 4 sf. for "MEDIUM" and 3 sf. for "LOOSE"
 
-    SECOND_ELEC_DERIVATIVE_PROD = 0.001
+    SECOND_ELEC_DERIVATIVE_STEP = 0.001
 
     # Second-order VPT is correct to 8 sf. for "EXTREME" and "TIGHT", 5 sf. for "MEDIUM" and 2 sf. for "LOOSE" - a compromise between third and fourth derivative precision
 
-    THIRD_GEOM_DERIVATIVE_PROD = 0.025
+    THIRD_GEOM_DERIVATIVE_STEP = 0.025
 
     # Parallel hyperpolarisability correct to 5 sf. for "EXTREME", 2sf for "TIGHT", "MEDIUM" and "LOOSE"
 
-    THIRD_ELEC_DERIVATIVE_PROD = 0.0015
+    THIRD_ELEC_DERIVATIVE_STEP = 0.0015
 
     # Constants for cleaning things on the DFT grid
 
@@ -707,7 +707,7 @@ def calculate_fourth_derivative(F_m_4: float, F_m_3: float, F_m_2: float, F_m_1:
 
     """
 
-    d4F_dx4 = (7 * F_m_4 - 96 * F_m_3 +676 * F_m_2 -1952 * F_m_1 +2730 * F - 1952 * F_p_1 + 676 * F_p_2 - 96 * F_p_3 + 7 * F_p_4) / (240 * dx ** 4)
+    d4F_dx4 = (7 * F_m_4 - 96 * F_m_3 +676 * F_m_2 - 1952 * F_m_1 + 2730 * F - 1952 * F_p_1 + 676 * F_p_2 - 96 * F_p_3 + 7 * F_p_4) / (240 * dx ** 4)
 
     return d4F_dx4
 

@@ -172,7 +172,7 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
 
     # Forward and backward coordinates are symmetrical by the mass weighting, to prevent influence of moving electric field origin in dipole moment calculations
 
-    prodding_coords = np.array([[0.0, 0.0, - molecule.masses[1] * constants.SECOND_GEOM_DERIVATIVE_PROD], [0.0, 0.0, molecule.masses[0] * constants.SECOND_GEOM_DERIVATIVE_PROD]]) / molecule.total_mass
+    prodding_coords = np.array([[0.0, 0.0, - molecule.masses[1] * constants.SECOND_GEOM_DERIVATIVE_STEP], [0.0, 0.0, molecule.masses[0] * constants.SECOND_GEOM_DERIVATIVE_STEP]]) / molecule.total_mass
     
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
@@ -195,7 +195,7 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
 
     # Calculates dipole derivative by central differences method
 
-    dipole_derivative = calculate_first_derivative(dipole_moment_backward, dipole_moment_forward, constants.SECOND_GEOM_DERIVATIVE_PROD)
+    dipole_derivative = calculate_first_derivative(dipole_moment_backward, dipole_moment_forward, constants.SECOND_GEOM_DERIVATIVE_STEP)
     
     # Converts to normal coordinates by mass weighting
 
@@ -740,7 +740,7 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
 
         # If VPT2 is requested, we need the second and third derivative prods to be identical - this only marginally reduces second derivative quality
 
-        constants.SECOND_GEOM_DERIVATIVE_PROD = constants.THIRD_GEOM_DERIVATIVE_PROD
+        constants.SECOND_GEOM_DERIVATIVE_STEP = constants.THIRD_GEOM_DERIVATIVE_STEP
     
 
     bond_length = molecule.bond_length
@@ -848,9 +848,9 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
     log("              VPT2 Frequency Correction", calculation) if calculation.second_order_vpt else log("              VPT1 Frequency Correction", calculation)
     log_spacer(calculation)
     
-    log(f"  Using finite difference of {constants.THIRD_GEOM_DERIVATIVE_PROD} a.u.   \n", calculation)
+    log(f"  Using finite difference of {constants.THIRD_GEOM_DERIVATIVE_STEP} a.u.   \n", calculation)
 
-    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.THIRD_GEOM_DERIVATIVE_PROD]])
+    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.THIRD_GEOM_DERIVATIVE_STEP]])
 
     super_far_backward_coords = coordinates - 4 * prodding_coords
     very_far_backward_coords = coordinates - 3 * prodding_coords
@@ -859,7 +859,7 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
     
     # Can't use the previously calculated energies if a different derivative step was used
 
-    if constants.THIRD_GEOM_DERIVATIVE_PROD != constants.SECOND_GEOM_DERIVATIVE_PROD:
+    if constants.THIRD_GEOM_DERIVATIVE_STEP != constants.SECOND_GEOM_DERIVATIVE_STEP:
 
         error("Mismatch in numerical derivatives for (an)harmonic frequency calculations!")
 
@@ -891,9 +891,9 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
 
     # Calculates the third and fourth derivatives with the harmonic energies, and the four additional energies
 
-    d3E_dR3 = calculate_third_derivative(energy_super_far_backward, energy_very_far_backward, energy_far_backward, energy_backward, energy_forward, energy_far_forward, energy_very_far_forward, energy_super_far_forward, constants.THIRD_GEOM_DERIVATIVE_PROD)
+    d3E_dR3 = calculate_third_derivative(energy_super_far_backward, energy_very_far_backward, energy_far_backward, energy_backward, energy_forward, energy_far_forward, energy_very_far_forward, energy_super_far_forward, constants.THIRD_GEOM_DERIVATIVE_STEP)
     
-    d4E_dR4 = calculate_fourth_derivative(energy_super_far_backward, energy_very_far_backward, energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, energy_very_far_forward, energy_super_far_forward, constants.THIRD_GEOM_DERIVATIVE_PROD)
+    d4E_dR4 = calculate_fourth_derivative(energy_super_far_backward, energy_very_far_backward, energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, energy_very_far_forward, energy_super_far_forward, constants.THIRD_GEOM_DERIVATIVE_STEP)
 
     # Distinct terms involving either the third or fourth derivative
 
