@@ -12,7 +12,7 @@ This is the TUNA module for coupled cluster theory, written first for version 0.
 
 All iterative coupled cluster calculations run through the same function, calculate_coupled_cluster_energy, which updates the amplitudes
 using damping and DIIS. For most methods, interleaved physicist's notation is used for the molecular orbital basis two-electron integrals. The
-einsum function of NumPy is used throughout with "optimize = True" to approximate the most efficient contraction path, leading to huge speedups and 
+einsum function of NumPy is used throughout with "optimize = True" to approximate the most efficient contraction path, leading to huge speedups and
 reductions in memory requirements.
 
 Updated in version 0.10.1 to add spin-restricted CC2 and CC3.
@@ -33,7 +33,7 @@ The module contains:
 
 
 def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, t_amplitudes: tuple, method: Method, F: ndarray) -> tuple:
-   
+
     """
 
     Calculates the spin-restricted coupled cluster energy.
@@ -65,7 +65,7 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
     E_connected_doubles = np.einsum("abij,ijab->", w[v, v, o, o], t_ijab, optimize = True)
 
     # Contribution to coupled cluster energy from disconnected double excitations (should be small at normal bond lengths)
-    
+
     E_disconnected_doubles = np.einsum("abij,ia,jb->", w[v, v, o, o], t_ia, t_ia, optimize = True) if t_ia is not None else 0
 
     # In linearised and QCI methods, the total energy does not have a disconnected contribution
@@ -90,7 +90,7 @@ def calculate_restricted_coupled_cluster_energy(o: slice, v: slice, w: ndarray, 
 def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray, t_amplitudes: tuple, method: Method, F: ndarray) -> tuple:
 
     """
-    
+
     Calculates the spin-unrestricted coupled cluster energy.
 
     Args:
@@ -100,13 +100,13 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
         t_amplitudes (tuple): Amplitudes
         method (Method): Electronic structure method
         F (array): spin orbital Fock matrix
-    
+
     Returns:
         E_CC (float): Unrestricted coupled cluster energy
         E_singles (float): Unrestricted coupled cluster energy from single excitations
         E_connected_doubles (float): Unrestricted coupled cluster energy from connected double excitations
         E_disconnected_doubles (float): Unrestricted coupled cluster energy from disconnected double excitations
-    
+
     """
 
     t_ia, t_ijab, _, _ = t_amplitudes
@@ -122,7 +122,7 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
     # Contribution to coupled cluster energy from disconnected double excitations (should be small at normal bond lengths)
 
     E_disconnected_doubles = (1 / 2) * np.einsum("ijab,ia,jb->", g[o, o, v, v], t_ia, t_ia, optimize = True) if t_ia is not None else 0
-    
+
     # In linearised and QCI methods, the total energy does not have a disconnected contribution
 
     if method.name in ["LCCD", "LCCSD", "QCISD", "QCISD[T]", "QCISD(T)", "CID", "CISD", "CISDT"]:
@@ -145,7 +145,7 @@ def calculate_unrestricted_coupled_cluster_energy(o: slice, v: slice, g: ndarray
 def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, reference: str, method: Method, calculation: Calculation, silent: bool) -> None:
 
     """
-    
+
     Prints common and prerequisite information for coupled cluster calculations.
 
     Args:
@@ -157,7 +157,7 @@ def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: 
         method (Method): Electronic structure method
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
-    
+
     """
 
     log_spacer(calculation, silent = silent, start = "\n")
@@ -172,21 +172,21 @@ def coupled_cluster_initial_print(g: ndarray, o: slice, v: slice, t_amplitudes: 
     _, t_ijab, _, _ = t_amplitudes
 
     if reference == "RHF":
-        
+
         E_MP2 = mp.calculate_restricted_MP2_energy(t_ijab, g[o, o, v, v])
 
     else:
-            
+
         E_MP2 = mp.calculate_unrestricted_MP2_energy(t_ijab, g[o, o, v, v])
 
 
     log(f"\n  Guess t-amplitude MP2 energy:       {E_MP2:.10f}\n", calculation, 1, silent = silent)
 
-    if calculation.correlated_damping_parameter != 0 : 
-        
+    if calculation.correlated_damping_parameter != 0 :
+
         log(f"  Using damping parameter of {calculation.correlated_damping_parameter:.2f} for convergence.", calculation, 1, silent = silent)
 
-    if calculation.DIIS: 
+    if calculation.DIIS:
 
         log(f"  Using DIIS, storing {calculation.max_DIIS_matrices} matrices, for convergence.", calculation, 1, silent = silent)
 
@@ -242,16 +242,16 @@ def permute(array: ndarray, idx_1: int, idx_2: int) -> ndarray:
 def is_coupled_cluster_converged(delta_E: float, t_amplitudes: tuple, t_amplitudes_old: tuple, calculation: Calculation) -> bool:
 
     """
-    
-    Checks if the coupled cluster iterations have converged. Only checks singles and doubles amplitudes, since these determine 
+
+    Checks if the coupled cluster iterations have converged. Only checks singles and doubles amplitudes, since these determine
     the energy and all properties in TUNA are numerical derivatives of the energy.
-    
+
     Args:
         delta_E (float): Change in energy from last iteration
         t_amplitudes (tuple): Amplitudes
         t_amplitudes_old (tuple): Amplitudes from last iteration
         calculation (Calculation): Calculation object
-    
+
     Returns:
         is_coupled_cluster_converged (bool): Has convergence been achieved
 
@@ -288,7 +288,7 @@ def is_coupled_cluster_converged(delta_E: float, t_amplitudes: tuple, t_amplitud
 def apply_damping(damping_factor: float, t_amplitudes: tuple, t_amplitudes_old: tuple) -> tuple:
 
     """
-    
+
     Applies a damping factor to the coupled cluster amplitudes.
 
     Args:
@@ -298,7 +298,7 @@ def apply_damping(damping_factor: float, t_amplitudes: tuple, t_amplitudes_old: 
 
     Returns:
         damped_amplitudes (tuple): New damped amplitudes
-    
+
     """
 
     damped_amplitudes = []
@@ -306,7 +306,7 @@ def apply_damping(damping_factor: float, t_amplitudes: tuple, t_amplitudes_old: 
     # Applies damping to the newly calculated t-amplitudes
 
     for amplitude, old_amplitude in zip(t_amplitudes, t_amplitudes_old):
-        
+
         if amplitude is None:
 
             damped_amplitude = None
@@ -334,7 +334,7 @@ def apply_damping(damping_factor: float, t_amplitudes: tuple, t_amplitudes_old: 
 def update_DIIS(t_vectors: tuple, DIIS_error_vector: list, calculation: Calculation, silent: bool) -> tuple:
 
     """
-    
+
     Extrapolates the t-amplitudes using DIIS.
 
     Args:
@@ -354,8 +354,8 @@ def update_DIIS(t_vectors: tuple, DIIS_error_vector: list, calculation: Calculat
 
         del DIIS_error_vector[0]
 
-        for vec in t_vectors: 
-            
+        for vec in t_vectors:
+
             del vec[0]
 
     # Converts to array to easily construct B matrix
@@ -366,7 +366,7 @@ def update_DIIS(t_vectors: tuple, DIIS_error_vector: list, calculation: Calculat
     # Builds B matrix and right hand side of Pulay equations
 
     B = np.empty((n_DIIS + 1, n_DIIS + 1))
-    B[:n_DIIS, :n_DIIS] = DIIS_errors @ DIIS_errors.T 
+    B[:n_DIIS, :n_DIIS] = DIIS_errors @ DIIS_errors.T
     B[:n_DIIS, -1] = -1
     B[-1, :n_DIIS] = -1
     B[-1, -1] = 0.0
@@ -422,7 +422,7 @@ def update_DIIS(t_vectors: tuple, DIIS_error_vector: list, calculation: Calculat
 def apply_DIIS(t_amplitudes: tuple, t_amplitudes_old: tuple, t_vectors: tuple, error_vector: ndarray, step: int, calculation: Calculation, silent: bool) -> tuple:
 
     """
-    
+
     Updates the t-amplitudes using DIIS.
 
     Args:
@@ -454,7 +454,7 @@ def apply_DIIS(t_amplitudes: tuple, t_amplitudes_old: tuple, t_vectors: tuple, e
             history.append(np.zeros(1))
 
             return None
-        
+
         history.append(t.copy())
 
         return (t - t_old).ravel()
@@ -472,7 +472,7 @@ def apply_DIIS(t_amplitudes: tuple, t_amplitudes_old: tuple, t_vectors: tuple, e
             store_block(t_ijklabcd, t_ijklabcd_old, t_ijklabcd_vector),
 
         ) if residual is not None
-        
+
     ]
 
     error_vector.append(np.concatenate(residuals))
@@ -536,30 +536,30 @@ def calculate_coupled_cluster_linearised_density(t_ia: ndarray, t_ijab: ndarray,
     # Correlated part of density matrix from squared connected doubles
 
     P_CC = np.zeros((n_orbitals, n_orbitals))
-    
-    
+
+
     if calculation.reference == "RHF":
 
-        u_ijab = t_ijab * 2 - t_ijab.swapaxes(2, 3) 
+        u_ijab = t_ijab * 2 - t_ijab.swapaxes(2, 3)
 
         P_CC[v, v] += np.einsum('ijbc,ijac->ab', t_ijab, u_ijab, optimize = True)
         P_CC[o, o] += -np.einsum('ikab,jkab->ij', t_ijab, u_ijab, optimize = True)
-        
-        P_CC[o, v] += t_ia + np.einsum("ijab,jb->ia", u_ijab, t_ia, optimize = True) 
+
+        P_CC[o, v] += t_ia + np.einsum("ijab,jb->ia", u_ijab, t_ia, optimize = True)
 
     else:
 
         P_CC[v, v] += (1 / 2) * np.einsum('ijbc,ijac->ab', t_ijab, t_ijab, optimize = True)
         P_CC[o, o] += - (1 / 2) * np.einsum('ikab,jkab->ij', t_ijab, t_ijab, optimize = True)
-        
-        P_CC[o, v] += t_ia + np.einsum("ijab,jb->ia", t_ijab, t_ia, optimize = True) 
+
+        P_CC[o, v] += t_ia + np.einsum("ijab,jb->ia", t_ijab, t_ia, optimize = True)
 
 
     # Linearised coupled-cluster density, only includes up to double excitations I think
 
     P_CC[v, o] = P_CC[o, v].T
 
-    P_CC[v, v] += np.einsum("ia,ib->ab", t_ia, t_ia, optimize = True) 
+    P_CC[v, v] += np.einsum("ia,ib->ab", t_ia, t_ia, optimize = True)
     P_CC[o, o] -= np.einsum("ia,ja->ij", t_ia, t_ia, optimize = True)
 
 
@@ -568,13 +568,13 @@ def calculate_coupled_cluster_linearised_density(t_ia: ndarray, t_ijab: ndarray,
     P_ref = np.zeros((n_orbitals, n_orbitals))
     P_ref[slice(0, n_occ), slice(0, n_occ)] = np.identity(n_occ)
 
-    P = P_ref + P_CC 
+    P = P_ref + P_CC
 
     if calculation.reference == "UHF":
 
         # Transforms the density matrix from spin orbital to atomic orbital basis
 
-        P, P_alpha, P_beta = ci.transform_P_SO_to_AO(P, molecular_orbitals, n_orbitals) 
+        P, P_alpha, P_beta = ci.transform_P_SO_to_AO(P, molecular_orbitals, n_orbitals)
 
     else:
 
@@ -605,7 +605,7 @@ def calculate_coupled_cluster_linearised_density(t_ia: ndarray, t_ijab: ndarray,
 def calculate_T1_diagnostic(molecule: Molecule, t_ia: ndarray, spin_labels_sorted: list, n_occ: int, n_alpha: int, n_beta: int, calculation: Calculation, silent: bool) -> None:
 
     """
-    
+
     Calculates the T1 diagnostic for a coupled cluster calculation.
 
     Args:
@@ -617,7 +617,7 @@ def calculate_T1_diagnostic(molecule: Molecule, t_ia: ndarray, spin_labels_sorte
         n_beta (int): Number of beta electrons
         calculation (Calculation): Calculation object
         silent (bool, optional): Cancel logging
-    
+
     """
 
 
@@ -650,7 +650,7 @@ def calculate_T1_diagnostic(molecule: Molecule, t_ia: ndarray, spin_labels_sorte
         # Calculates total norm of singles amplitudes
 
         t_ia_norm = t_ia_norm_alpha + t_ia_norm_beta
-    
+
     else:
 
         # Removes core orbitals from occupied count
@@ -660,7 +660,7 @@ def calculate_T1_diagnostic(molecule: Molecule, t_ia: ndarray, spin_labels_sorte
         # The T1 diagnostic always wants the number of spin orbitals (at least to match ORCA)
 
         n_occ *= 2
-       
+
         t_ia_norm = np.linalg.norm(t_ia)
 
     # Calculates the T1 diagnostic
@@ -683,9 +683,9 @@ def calculate_T1_diagnostic(molecule: Molecule, t_ia: ndarray, spin_labels_sorte
 
 
 def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int, calculation: Calculation, spin_orbital_labels_sorted: list, silent: bool) -> None:
-    
+
     """
-    
+
     Searches for and prints the largest singles and doubles amplitudes.
 
     Args:
@@ -695,7 +695,7 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
         calculation (Calculation): Calculation object
         spin_orbital_labels_sorted (list): Energy ordering of alpha and beta spin orbitals
         silent (bool): Cancel logging
-    
+
     """
 
     log("\n  Searching for largest amplitudes...        ", calculation, 2, end = "", silent = silent)
@@ -719,14 +719,14 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
 
     singles = np.full((idx_ia.shape[0], 4), -1, dtype=int)
     singles[:, 0] = idx_ia[:, 0]
-    singles[:, 2] = idx_ia[:, 1] 
+    singles[:, 2] = idx_ia[:, 1]
 
     # Combine amplitudes and indices, then sort once
 
     amplitudes = np.concatenate([t_ijab_flat, t_ia_flat])
     indices = np.vstack([idx_ijab, singles])
 
-    order = np.argsort(-amplitudes)       
+    order = np.argsort(-amplitudes)
     largest_amplitudes = amplitudes[order]
     indices_ordered = indices[order]
 
@@ -754,8 +754,8 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
 
         def fix_row(row):
 
-            if row[1].endswith("a") or row[0].endswith("b"): 
-                
+            if row[1].endswith("a") or row[0].endswith("b"):
+
                 row[0], row[1] = row[1], row[0]
                 row[2], row[3] = row[3], row[2]
 
@@ -775,8 +775,8 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
 
     # Convert from computer counting to human counting
 
-    if reference == "RHF": 
-        
+    if reference == "RHF":
+
         indices_ordered += 1
 
 
@@ -798,7 +798,7 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
 
         value = largest_amplitudes[i]
 
-        stars = "~~~~~~~~  " 
+        stars = "~~~~~~~~  "
 
         # Accounts for size difference with spin-appended indices
 
@@ -830,7 +830,7 @@ def find_and_print_largest_amplitudes(t_ia: ndarray, t_ijab: ndarray, n_occ: int
 def run_restricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple) -> tuple:
 
     """
-    
+
     Updates the amplitudes for restricted LCCD.
 
     Args:
@@ -848,11 +848,11 @@ def run_restricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
     _, t_ijab, _, _ = t_amplitudes
     _, e_ijab, _, _ = e_denominators
 
-    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True) 
+    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True)
     t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True)
-    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", g[o, v, v, o], t_ijab, optimize = True) 
-    t_ijab_temporary -= np.einsum("ciak,kjcb->ijab", g[v, o, v, o], t_ijab, optimize = True) 
-    t_ijab_temporary -= np.einsum("icak,kjbc->ijab", g[o, v, v, o], t_ijab, optimize = True) 
+    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", g[o, v, v, o], t_ijab, optimize = True)
+    t_ijab_temporary -= np.einsum("ciak,kjcb->ijab", g[v, o, v, o], t_ijab, optimize = True)
+    t_ijab_temporary -= np.einsum("icak,kjbc->ijab", g[o, v, v, o], t_ijab, optimize = True)
     t_ijab_temporary -= np.einsum("cibk,kjac->ijab", g[v, o, v, o], t_ijab, optimize = True)
 
     t_ijab_temporary += t_ijab_temporary.transpose(1, 0, 3, 2)
@@ -875,7 +875,7 @@ def run_restricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
 def run_unrestricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted LCCD.
 
     Args:
@@ -893,8 +893,8 @@ def run_unrestricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
     _, t_ijab, _, _ = t_amplitudes
     _, e_ijab, _, _ = e_denominators
 
-    t_ijab_temporary = g[o, o, v, v] + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True) 
-    t_ijab_temporary += (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True) 
+    t_ijab_temporary = g[o, o, v, v] + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True)
+    t_ijab_temporary += (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True)
     t_ijab_temporary += permute(permute(np.einsum("icak,jkbc->ijab", g[o, v, v, o], t_ijab, optimize = True), 2, 3), 0, 1)
 
     t_ijab = e_ijab * t_ijab_temporary
@@ -915,7 +915,7 @@ def run_unrestricted_LCCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
 def run_restricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, w: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for restricted CCD.
 
     Args:
@@ -935,20 +935,20 @@ def run_restricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: t
     _, e_ijab, _, _ = e_denominators
 
     F_ik = np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize = True)
-    F_ca = -1 * np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize = True) 
+    F_ca = -1 * np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize = True)
 
     # Intermediates based on two-electron integrals
 
     W_ijkl = g[o, o, o, o] + np.einsum("cdkl,ijcd->ijkl", g[v, v, o, o], t_ijab, optimize = True)
     W_icak = g[o, v, v, o] - (1 / 2) * np.einsum("dclk,ilda->icak", g[v, v, o, o], t_ijab, optimize = True) + (1 / 2) * np.einsum("dclk,ilad->icak", w[v, v, o, o], t_ijab, optimize = True)
-    W_ciak = g[v, o, v, o] - (1 / 2) * np.einsum("cdlk,ilda->ciak", g[v, v, o, o], t_ijab, optimize = True) 
+    W_ciak = g[v, o, v, o] - (1 / 2) * np.einsum("cdlk,ilda->ciak", g[v, v, o, o], t_ijab, optimize = True)
 
     # Updating doubles amplitudes
 
-    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", W_ijkl, t_ijab, optimize = True) 
-    t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True) 
+    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", W_ijkl, t_ijab, optimize = True)
+    t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True)
     t_ijab_temporary += np.einsum("ca,ijcb->ijab", F_ca , t_ijab, optimize = True) - np.einsum("ik,kjab->ijab", F_ik, t_ijab, optimize = True)
-    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", W_icak, t_ijab, optimize = True) - np.einsum("ciak,kjcb->ijab", W_ciak, t_ijab, optimize = True) 
+    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", W_icak, t_ijab, optimize = True) - np.einsum("ciak,kjcb->ijab", W_ciak, t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("icak,kjbc->ijab", W_icak, t_ijab, optimize = True) - np.einsum("cibk,kjac->ijab", W_ciak, t_ijab, optimize = True)
 
     t_ijab_temporary += t_ijab_temporary.transpose(1, 0, 3, 2)
@@ -971,7 +971,7 @@ def run_restricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: t
 def run_unrestricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted CCD.
 
     Args:
@@ -991,13 +991,13 @@ def run_unrestricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 
     # Calculates contribution from LCCD
 
-    t_ijab_temporary = g[o, o, v, v] + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True) 
-    t_ijab_temporary += (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True) 
+    t_ijab_temporary = g[o, o, v, v] + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True)
+    t_ijab_temporary += (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True)
     t_ijab_temporary += permute(permute(np.einsum("icak,jkbc->ijab", g[o, v, v, o], t_ijab, optimize = True), 2, 3), 0, 1)
 
     # Calculates contribution from full CCD
 
-    t_ijab_temporary += - (1 / 2) * permute(np.einsum("cdkl,ijac,klbd->ijab", g[v, v, o, o], t_ijab, t_ijab, optimize = True), 2, 3) 
+    t_ijab_temporary += - (1 / 2) * permute(np.einsum("cdkl,ijac,klbd->ijab", g[v, v, o, o], t_ijab, t_ijab, optimize = True), 2, 3)
     t_ijab_temporary += - (1 / 2) * permute(np.einsum("cdkl,ikab,jlcd->ijab", g[v, v, o, o], t_ijab, t_ijab, optimize = True), 0, 1)
     t_ijab_temporary += (1 / 4) * np.einsum("cdkl,ijcd,klab->ijab", g[v, v, o, o], t_ijab, t_ijab, optimize = True)
     t_ijab_temporary += permute(np.einsum("cdkl,ikac,jlbd->ijab", g[v, v, o, o], t_ijab, t_ijab, optimize = True), 0, 1)
@@ -1020,7 +1020,7 @@ def run_unrestricted_CCD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 def run_restricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, w: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for restricted LCCSD.
 
     Args:
@@ -1041,16 +1041,16 @@ def run_restricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 
     # Updates the singles amplitudes
 
-    t_ia_temporary = np.einsum("icak,kc->ia", w[o, v, v, o], t_ia, optimize = True) 
-    t_ia_temporary += np.einsum("cdak,ikcd->ia", w[v, v, v, o], t_ijab, optimize = True) 
-    t_ia_temporary += -1 * np.einsum("ickl,klac->ia", w[o, v, o, o], t_ijab, optimize = True) 
+    t_ia_temporary = np.einsum("icak,kc->ia", w[o, v, v, o], t_ia, optimize = True)
+    t_ia_temporary += np.einsum("cdak,ikcd->ia", w[v, v, v, o], t_ijab, optimize = True)
+    t_ia_temporary += -1 * np.einsum("ickl,klac->ia", w[o, v, o, o], t_ijab, optimize = True)
 
     # Updates the doubles amplitudes
 
-    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True) 
-    t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True) 
-    t_ijab_temporary += np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize = True) - np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize = True) 
-    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", g[o, v, v, o], t_ijab, optimize = True) - np.einsum("ciak,kjcb->ijab", g[v, o, v, o], t_ijab, optimize = True) 
+    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True)
+    t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True)
+    t_ijab_temporary += np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize = True) - np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize = True)
+    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", g[o, v, v, o], t_ijab, optimize = True) - np.einsum("ciak,kjcb->ijab", g[v, o, v, o], t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("icak,kjbc->ijab", g[o, v, v, o], t_ijab, optimize = True) - np.einsum("cibk,kjac->ijab", g[v, o, v, o], t_ijab, optimize = True)
 
     t_ijab_temporary += t_ijab_temporary.transpose(1, 0, 3, 2)
@@ -1074,8 +1074,8 @@ def run_restricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 def run_unrestricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
-    
-    Updates the amplitudes for unrestricted LCCSD. 
+
+    Updates the amplitudes for unrestricted LCCSD.
 
     Implementation of 10.1002/9780470125915.ch2, linearised.
 
@@ -1097,22 +1097,22 @@ def run_unrestricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
     # Equations from Crawford guide to coupled cluster, linearised, singles
 
-    t_ia_temporary = F[o, v] + np.einsum("ac,ic->ia", F[v, v], t_ia, optimize = True) 
+    t_ia_temporary = F[o, v] + np.einsum("ac,ic->ia", F[v, v], t_ia, optimize = True)
     t_ia_temporary += np.einsum("kc,ikac->ia", F[o, v], t_ijab, optimize = True) - np.einsum("ki,ka->ia", F[o, o], t_ia, optimize = True)
-    t_ia_temporary += np.einsum("kaci,kc->ia", g[o, v, v, o], t_ia, optimize = True) 
+    t_ia_temporary += np.einsum("kaci,kc->ia", g[o, v, v, o], t_ia, optimize = True)
     t_ia_temporary += (1 / 2) * np.einsum("kacd,kicd->ia", g[o, v, v, v], t_ijab, optimize = True) - (1 / 2) * np.einsum("klci,klca->ia", g[o, o, v, o], t_ijab, optimize = True)
 
     # Equations from Crawford guide to coupled cluster, linearised, connected doubles, shared with LCCD
 
-    t_ijab_temporary = g[o, o, v, v] + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True) 
-    t_ijab_temporary += (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True) 
+    t_ijab_temporary = g[o, o, v, v] + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True)
+    t_ijab_temporary += (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True)
     t_ijab_temporary += permute(permute(np.einsum("icak,jkbc->ijab", g[o, v, v, o], t_ijab, optimize = True), 2, 3), 0, 1)
 
     # Equations from Crawford guide to coupled cluster, linearised, doubles
 
-    t_ijab_temporary += permute(np.einsum("bc,ijac->ijab", F[v, v], t_ijab, optimize = True), 2, 3) 
+    t_ijab_temporary += permute(np.einsum("bc,ijac->ijab", F[v, v], t_ijab, optimize = True), 2, 3)
     t_ijab_temporary += -1 * permute(np.einsum("kj,ikab->ijab", F[o, o], t_ijab, optimize = True), 0, 1)
-    t_ijab_temporary += permute(np.einsum("abcj,ic->ijab", g[v, v, v, o], t_ia, optimize = True), 0, 1) 
+    t_ijab_temporary += permute(np.einsum("abcj,ic->ijab", g[v, v, v, o], t_ia, optimize = True), 0, 1)
     t_ijab_temporary += -1 * permute(np.einsum("kbij,ka->ijab", g[o, v, o, o], t_ia, optimize = True), 2, 3)
 
     t_ia += e_ia * t_ia_temporary
@@ -1132,9 +1132,9 @@ def run_unrestricted_LCCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
 
 def run_restricted_CID_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple) -> tuple:
- 
+
     """
-    
+
     Updates the amplitudes for restricted CID.
 
     Args:
@@ -1160,21 +1160,21 @@ def run_restricted_CID_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: t
     t_ijab_temporary += -1 * np.einsum("ciak,kjcb->ijab", g[v, o, v, o], t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("icak,kjbc->ijab", g[o, v, v, o], t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("cibk,kjac->ijab", g[v, o, v, o], t_ijab, optimize = True)
- 
+
     t_ijab_temporary += t_ijab_temporary.transpose(1, 0, 3, 2)
-    
+
     # Calculates the correlation energy here to use in the update
 
     correlation_energy = np.einsum("ijab,ijab->", g[o, o, v, v], 2 * t_ijab - t_ijab.swapaxes(2, 3))
-    
+
     # Contrary to coupled cluster, the update for configuration interaction involves the correlation energy
-    
+
     t_ijab_temporary -= correlation_energy * t_ijab
- 
+
     t_ijab = e_ijab * t_ijab_temporary
- 
+
     t_amplitudes = None, t_ijab, None, None
-    
+
 
     return t_amplitudes
 
@@ -1190,7 +1190,7 @@ def run_restricted_CID_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: t
 def run_unrestricted_CID_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted CID.
 
     Args:
@@ -1200,7 +1200,7 @@ def run_unrestricted_CID_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
         t_amplitudes (tuple): Amplitudes
         e_denominators (tuple): Epsilons tensors
         F (array): Fock matrix in spin orbital basis
-        
+
     Returns:
         t_amplitudes (tuple): Updated amplitudes
 
@@ -1212,23 +1212,23 @@ def run_unrestricted_CID_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
     kronecker_delta = np.eye(F.shape[1])
 
     F_ae = F[v, v] - kronecker_delta[v, v] * F[v, v]
-    
+
     # Builds t_ia tensor from intermediates - this function is just CCSD, linearised, then with an energy-inclusive update, then singles removed
 
     t_ia_temporary = F[o, v] + np.einsum("imae,me->ia", t_ijab, F[o, v], optimize = True)
     t_ia_temporary += - (1 / 2) * np.einsum("imef,maef->ia", t_ijab, g[o, v, v, v], optimize = True) - (1 / 2) * np.einsum("mnae,nmei->ia", t_ijab, g[o, o, v, o], optimize = True)
-    
+
     # Builds t_ijab tensor from intermediates, pairs of terms from Stanton, then linearised, then singles removed
 
-    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae, optimize = True), 2, 3) 
-    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", t_ijab, g[o, o, o, o], optimize = True) 
+    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae, optimize = True), 2, 3)
+    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", t_ijab, g[o, o, o, o], optimize = True)
     t_ijab_temporary += (1 / 2) * np.einsum("ijef,abef->ijab", t_ijab, g[v, v, v, v], optimize = True)
     t_ijab_temporary += permute(permute(np.einsum("imae,mbej->ijab", t_ijab, g[o, v, v, o], optimize = True), 2, 3), 0, 1)
-    
+
     # Calculates the correlation energy here to use in the update
 
     correlation_energy = (1 / 4) * np.einsum("ijab,ijab->", g[o, o, v, v], t_ijab, optimize = True)
-    
+
     # Contrary to coupled cluster, the update for configuration interaction involves the correlation energy
 
     t_ijab_temporary -= correlation_energy * t_ijab
@@ -1249,9 +1249,9 @@ def run_unrestricted_CID_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 
 
 def run_restricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, w: ndarray) -> tuple:
- 
+
     """
-    
+
     Updates the amplitudes for restricted CISD.
 
     Args:
@@ -1273,7 +1273,7 @@ def run_restricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
     # All terms are strictly linear in the coefficients
 
     t_ia_temporary = np.einsum("icak,kc->ia", w[o, v, v, o], t_ia, optimize = True)
- 
+
     t_ia_temporary += -1 * np.einsum("ickl,klac->ia", w[o, v, o, o], t_ijab, optimize = True)
     t_ia_temporary += np.einsum("cdak,ikcd->ia", w[v, v, v, o], t_ijab, optimize = True)
 
@@ -1281,7 +1281,7 @@ def run_restricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
 
     t_ijab_temporary = (1 / 2) * g[o, o, v, v] + np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize = True)
     t_ijab_temporary += -1 * np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize = True)
- 
+
     # Doubles–doubles coupling
 
     t_ijab_temporary += (1 / 2) * np.einsum("ijkl,klab->ijab", g[o, o, o, o], t_ijab, optimize = True)
@@ -1290,23 +1290,23 @@ def run_restricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
     t_ijab_temporary += -1 * np.einsum("ciak,kjcb->ijab", g[v, o, v, o], t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("icak,kjbc->ijab", g[o, v, v, o], t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("cibk,kjac->ijab", g[v, o, v, o], t_ijab, optimize = True)
- 
+
     t_ijab_temporary += t_ijab_temporary.transpose(1, 0, 3, 2)
-    
+
     # Calculates the correlation energy here to use in the update
 
     correlation_energy = np.einsum("ijab,ijab->", g[o, o, v, v], 2 * t_ijab - t_ijab.swapaxes(2, 3))
-    
+
     # Contrary to coupled cluster, the update for configuration interaction involves the correlation energy
-    
+
     t_ia_temporary -= correlation_energy * t_ia
     t_ijab_temporary -= correlation_energy * t_ijab
- 
+
     t_ia = e_ia * t_ia_temporary
     t_ijab = e_ijab * t_ijab_temporary
- 
+
     t_amplitudes = t_ia, t_ijab, None, None
-    
+
 
     return t_amplitudes
 
@@ -1322,7 +1322,7 @@ def run_restricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
 def run_unrestricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted CISD.
 
     Args:
@@ -1332,7 +1332,7 @@ def run_unrestricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
         t_amplitudes (tuple): Amplitudes
         e_denominators (tuple): Epsilons tensors
         F (array): Fock matrix in spin orbital basis
-        
+
     Returns:
         t_amplitudes (tuple): Updated amplitudes
 
@@ -1344,27 +1344,27 @@ def run_unrestricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
     kronecker_delta = np.eye(F.shape[1])
 
     F_ae = F[v, v] - kronecker_delta[v, v] * F[v, v]
-    F_mi = F[o, o] - kronecker_delta[o, o] * F[o, o] 
-    
+    F_mi = F[o, o] - kronecker_delta[o, o] * F[o, o]
+
     # Builds t_ia tensor from intermediates - this function is just CCSD, linearised, then with an energy-inclusive update
 
-    t_ia_temporary = F[o, v] + np.einsum("ie,ae->ia", t_ia, F_ae, optimize = True) - np.einsum("ma,mi->ia", t_ia, F_mi, optimize = True) 
-    t_ia_temporary += np.einsum("imae,me->ia", t_ijab, F[o, v], optimize = True) - np.einsum("nf,naif->ia", t_ia, g[o, v, o, v], optimize = True) 
+    t_ia_temporary = F[o, v] + np.einsum("ie,ae->ia", t_ia, F_ae, optimize = True) - np.einsum("ma,mi->ia", t_ia, F_mi, optimize = True)
+    t_ia_temporary += np.einsum("imae,me->ia", t_ijab, F[o, v], optimize = True) - np.einsum("nf,naif->ia", t_ia, g[o, v, o, v], optimize = True)
     t_ia_temporary += - (1 / 2) * np.einsum("imef,maef->ia", t_ijab, g[o, v, v, v], optimize = True) - (1 / 2) * np.einsum("mnae,nmei->ia", t_ijab, g[o, o, v, o], optimize = True)
-    
+
     # Builds t_ijab tensor from intermediates, pairs of terms from Stanton, then linearised
 
-    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae, optimize = True), 2, 3) 
-    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", t_ijab, g[o, o, o, o], optimize = True) 
+    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae, optimize = True), 2, 3)
+    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", t_ijab, g[o, o, o, o], optimize = True)
     t_ijab_temporary += (1 / 2) * np.einsum("ijef,abef->ijab", t_ijab, g[v, v, v, v], optimize = True)
     t_ijab_temporary += permute(permute(np.einsum("imae,mbej->ijab", t_ijab, g[o, v, v, o], optimize = True), 2, 3), 0, 1)
-    t_ijab_temporary += permute(np.einsum("ie,abej->ijab", t_ia, g[v, v, v, o], optimize = True), 0, 1) 
+    t_ijab_temporary += permute(np.einsum("ie,abej->ijab", t_ia, g[v, v, v, o], optimize = True), 0, 1)
     t_ijab_temporary += -1 * permute(np.einsum("ma,mbij->ijab", t_ia, g[o, v, o, o], optimize = True), 2, 3)
-    
+
     # Calculates the correlation energy here to use in the update
 
     correlation_energy = (1 / 4) * np.einsum("ijab,ijab->", g[o, o, v, v], t_ijab, optimize = True)
-    
+
     # Contrary to coupled cluster, the update for configuration interaction involves the correlation energy
 
     t_ia_temporary -= correlation_energy * t_ia
@@ -1389,7 +1389,7 @@ def run_unrestricted_CISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
 def run_unrestricted_CISDT_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted CISDT.
 
     Args:
@@ -1399,7 +1399,7 @@ def run_unrestricted_CISDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
         t_amplitudes (tuple): Amplitudes
         e_denominators (tuple): Epsilons tensors
         F (array): Fock matrix in spin orbital basis
-        
+
     Returns:
         t_amplitudes (tuple): Updated amplitudes
 
@@ -1426,9 +1426,9 @@ def run_unrestricted_CISDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ia_temporary += (1 / 4) * np.einsum('jkbc,ijkabc->ia', g[o, o, v, v], t_ijkabc, optimize = True)
 
     # Contributions from singles
-    
+
     t_ijab_temporary = g[o, o, v, v] + permute(np.einsum('abic,jc->ijab', g[v, v, o, v], t_ia, optimize = True), 1, 0) - permute(np.einsum('akij,kb->ijab', g[v, o, o, o], t_ia, optimize = True), 3, 2)
-    
+
     # Contributions from connected doubles
 
     t_ijab_temporary += (1 / 2) * np.einsum('klij,klab->ijab', g[o, o, o, o], t_ijab, optimize = True) + (1 / 2) * np.einsum('abcd,ijcd->ijab', g[v, v, v, v], t_ijab, optimize = True)
@@ -1451,7 +1451,7 @@ def run_unrestricted_CISDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(-np.einsum('clik,jlab->ijkabc', g[v, o, o, o], t_ijab, optimize = True), 1, 0)
     t_ijkabc_temporary += permute(permute(np.einsum('acid,jkbd->ijkabc', g[v, v, o, v], t_ijab, optimize = True), 1, 0), 4, 3)
     t_ijkabc_temporary += permute(permute(-np.einsum('alik,jlbc->ijkabc', g[v, o, o, o], t_ijab, optimize = True), 1, 0), 4, 3)
-    
+
     # Contributions from connected triples
 
     t_ijkabc_temporary += permute(np.einsum('alkd,ijlbcd->ijkabc', g[v, o, o, v], t_ijkabc, optimize = True), 4, 3)
@@ -1466,7 +1466,7 @@ def run_unrestricted_CISDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(-(1 / 2) * np.einsum('acde,ijkbde->ijkabc', g[v, v, v, v], t_ijkabc, optimize = True), 4, 3)
     t_ijkabc_temporary += permute(-(1 / 2) * np.einsum('lmik,jlmabc->ijkabc', g[o, o, o, o], t_ijkabc, optimize = True), 1, 0)
     t_ijkabc_temporary += permute(permute(np.einsum('alid,jklbcd->ijkabc', g[v, o, o, v], t_ijkabc, optimize = True), 1, 0), 4, 3)
-    
+
     # This is the only term not present in CCSDT, that needs to be introduced here
 
     singles_triples_term = np.einsum("abij,kc->ijkabc", g[v, v, o, o], t_ia, optimize = True)
@@ -1483,9 +1483,9 @@ def run_unrestricted_CISDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijab_temporary -= correlation_energy * t_ijab
     t_ijkabc_temporary -= correlation_energy * t_ijkabc
 
-    t_ia += e_ia * t_ia_temporary 
-    t_ijab += e_ijab * t_ijab_temporary 
-    t_ijkabc += e_ijkabc * t_ijkabc_temporary 
+    t_ia += e_ia * t_ia_temporary
+    t_ijab += e_ijab * t_ijab_temporary
+    t_ijkabc += e_ijkabc * t_ijkabc_temporary
 
     t_amplitudes = t_ia, t_ijab, t_ijkabc, None
 
@@ -1503,7 +1503,7 @@ def run_unrestricted_CISDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 def run_restricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, w: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for restricted QCISD.
 
     Args:
@@ -1524,15 +1524,15 @@ def run_restricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 
     # Curly F intermediates - formed from CCSD code
 
-    F_ik = np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize = True) 
-    F_ca = - np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize = True) 
+    F_ik = np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize = True)
+    F_ca = - np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize = True)
     F_ck = np.einsum("cdkl,ld->ck", w[v, v, o, o], t_ia, optimize = True)
 
     # Curly W intermediates - formed from CCSD code
 
-    W_ijkl = g[o, o, o, o] + np.einsum("cdkl,ijcd->ijkl", g[v, v, o, o], t_ijab, optimize = True) 
+    W_ijkl = g[o, o, o, o] + np.einsum("cdkl,ijcd->ijkl", g[v, v, o, o], t_ijab, optimize = True)
     W_icak = g[o, v, v, o] - (1 / 2) * np.einsum("dclk,ilda->icak", g[v, v, o, o], t_ijab, optimize = True)  + (1 / 2) * np.einsum("dclk,ilad->icak", w[v, v, o, o], t_ijab, optimize = True)
-    W_ciak = g[v, o, v, o] - (1 / 2) * np.einsum("cdlk,ilda->ciak", g[v, v, o, o], t_ijab, optimize = True) 
+    W_ciak = g[v, o, v, o] - (1 / 2) * np.einsum("cdlk,ilda->ciak", g[v, v, o, o], t_ijab, optimize = True)
 
     # Updating singles amplitudes
 
@@ -1542,9 +1542,9 @@ def run_restricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 
     # Updating doubles amplitudes
 
-    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", W_ijkl, t_ijab, optimize = True) + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True) 
+    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", W_ijkl, t_ijab, optimize = True) + (1 / 2) * np.einsum("cdab,ijcd->ijab", g[v, v, v, v], t_ijab, optimize = True)
     t_ijab_temporary += np.einsum("ca,ijcb->ijab", F_ca, t_ijab, optimize = True) - np.einsum("ik,kjab->ijab", F_ik, t_ijab, optimize = True)
-    t_ijab_temporary += np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize = True) - np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize = True) 
+    t_ijab_temporary += np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize = True) - np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize = True)
     t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", W_icak, t_ijab, optimize = True) - np.einsum("ciak,kjcb->ijab", W_ciak, t_ijab, optimize = True) - np.einsum("icak,kjbc->ijab", W_icak, t_ijab, optimize = True) - np.einsum("cibk,kjac->ijab", W_ciak, t_ijab, optimize = True)
 
     t_ijab_temporary += t_ijab_temporary.transpose(1, 0, 3, 2)
@@ -1568,7 +1568,7 @@ def run_restricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes:
 def run_unrestricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted QCISD.
 
     All equations from Stanton paper on DPD coupled cluster (10.1063/1.460620) - curtailed by me into QCISD.
@@ -1595,8 +1595,8 @@ def run_unrestricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
     F_ae = F[v, v] - kronecker_delta[v, v] * F[v, v]  - (1 / 2) * np.einsum("mnaf,mnef->ae", t_ijab, g[o, o, v, v], optimize = True)
     F_mi = F[o, o] - kronecker_delta[o, o] * F[o, o]  + (1 / 2) * np.einsum("inef,mnef->mi", t_ijab, g[o, o, v, v], optimize = True)
-    F_me = F[o, v] + np.einsum("nf,mnef->me", t_ia, g[o, o, v, v], optimize = True) 
-    
+    F_me = F[o, v] + np.einsum("nf,mnef->me", t_ia, g[o, o, v, v], optimize = True)
+
     # Builds curly W intermediates (two-electron intermediates)
 
     W_mnij = g[o, o, o, o]  + (1 / 4) * np.einsum("ijef,mnef->mnij", t_ijab, g[o, o, v, v], optimize = True)
@@ -1605,23 +1605,23 @@ def run_unrestricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
     # Builds t_ia tensor from intermediates
 
-    t_ia_temporary = F[o, v] + np.einsum("ie,ae->ia", t_ia, F_ae, optimize = True) - np.einsum("ma,mi->ia", t_ia, F_mi, optimize = True) 
-    t_ia_temporary += np.einsum("imae,me->ia", t_ijab, F_me, optimize = True) - np.einsum("nf,naif->ia", t_ia, g[o, v, o, v], optimize = True) 
+    t_ia_temporary = F[o, v] + np.einsum("ie,ae->ia", t_ia, F_ae, optimize = True) - np.einsum("ma,mi->ia", t_ia, F_mi, optimize = True)
+    t_ia_temporary += np.einsum("imae,me->ia", t_ijab, F_me, optimize = True) - np.einsum("nf,naif->ia", t_ia, g[o, v, o, v], optimize = True)
     t_ia_temporary += - (1 / 2) * np.einsum("imef,maef->ia", t_ijab, g[o, v, v, v], optimize = True) - (1 / 2) * np.einsum("mnae,nmei->ia", t_ijab, g[o, o, v, o], optimize = True)
 
     # Builds t_ijab tensor from intermediates, pairs of terms from Stanton
 
-    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae, optimize = True), 2, 3) 
+    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae, optimize = True), 2, 3)
     t_ijab_temporary += -1 * permute(np.einsum("imab,mj->ijab", t_ijab, F_mi, optimize = True), 0, 1)
-    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", t_ijab, W_mnij, optimize = True) 
+    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", t_ijab, W_mnij, optimize = True)
     t_ijab_temporary += (1 / 2) * np.einsum("ijef,abef->ijab", t_ijab, W_abef, optimize = True)
     t_ijab_temporary += permute(permute(np.einsum("ijmabe->ijab", np.einsum("imae,mbej->ijmabe", t_ijab, W_mbej, optimize = True), optimize = True), 2, 3), 0, 1)
-    t_ijab_temporary += permute(np.einsum("ie,abej->ijab", t_ia, g[v, v, v, o], optimize = True), 0, 1) 
+    t_ijab_temporary += permute(np.einsum("ie,abej->ijab", t_ia, g[v, v, v, o], optimize = True), 0, 1)
     t_ijab_temporary += -1 * permute(np.einsum("ma,mbij->ijab", t_ia, g[o, v, o, o], optimize = True), 2, 3)
 
     t_ia = e_ia * t_ia_temporary
     t_ijab = e_ijab * t_ijab_temporary
-    
+
     t_amplitudes = t_ia, t_ijab, None, None
 
     return t_amplitudes
@@ -1638,7 +1638,7 @@ def run_unrestricted_QCISD_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 def run_restricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, w: ndarray, F: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for restricted CCSD.
 
     Args:
@@ -1654,19 +1654,19 @@ def run_restricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
         t_amplitudes (tuple): Updated amplitudes
 
     """
-    
+
     t_ia, t_ijab, _, _ = t_amplitudes
     e_ia, e_ijab, _, _ = e_denominators
 
     # Intermediates based on the Fock matrix
 
-    F_ik = F[o, o] + np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize = True) + np.einsum("cdkl,ic,ld->ik", w[v, v, o, o], t_ia, t_ia, optimize = True) 
-    F_ca = F[v, v] - np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize = True) - np.einsum("cdkl,ka,ld->ca", w[v, v, o, o], t_ia, t_ia, optimize = True) 
+    F_ik = F[o, o] + np.einsum("cdkl,ilcd->ik", w[v, v, o, o], t_ijab, optimize = True) + np.einsum("cdkl,ic,ld->ik", w[v, v, o, o], t_ia, t_ia, optimize = True)
+    F_ca = F[v, v] - np.einsum("cdkl,klad->ca", w[v, v, o, o], t_ijab, optimize = True) - np.einsum("cdkl,ka,ld->ca", w[v, v, o, o], t_ia, t_ia, optimize = True)
     F_ck = np.einsum("cdkl,ld->ck", w[v, v, o, o], t_ia, optimize = True)
 
     L_ik = F_ik + np.einsum("cilk,lc->ik", w[v, o, o, o], t_ia, optimize = True)
     L_ca = F_ca + np.einsum("dcka,kd->ca", w[v, v, o, v], t_ia, optimize = True)
-    
+
     # Intermediates based on two-electron integrals
 
     W_ijkl = g[o, o, o, o] + np.einsum("cilk,jc->ijkl", g[v, o, o, o], t_ia, optimize = True) + np.einsum("cjkl,ic->ijkl", g[v, o, o, o], t_ia, optimize = True)
@@ -1675,37 +1675,37 @@ def run_restricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
     W_cdab = g[v, v, v, v] - np.einsum("dcka,kb->cdab", g[v, v, o, v], t_ia, optimize = True) - np.einsum("cdkb,ka->cdab", g[v, v, o, v], t_ia, optimize = True)
 
     W_icak = g[o, v, v, o] - np.einsum("cikl,la->icak", g[v, o, o, o], t_ia, optimize = True) + np.einsum("cdka,id->icak", g[v, v, o, v], t_ia, optimize = True)
-    W_icak += - (1 / 2) * np.einsum("dclk,ilda->icak", g[v, v, o, o], t_ijab, optimize = True) - np.einsum("dclk,id,la->icak", g[v, v, o, o], t_ia, t_ia, optimize = True) 
+    W_icak += - (1 / 2) * np.einsum("dclk,ilda->icak", g[v, v, o, o], t_ijab, optimize = True) - np.einsum("dclk,id,la->icak", g[v, v, o, o], t_ia, t_ia, optimize = True)
     W_icak += (1 / 2) * np.einsum("dclk,ilad->icak", w[v, v, o, o], t_ijab, optimize = True)
-    
+
     W_ciak = g[v, o, v, o] - np.einsum("cilk,la->ciak", g[v, o, o, o], t_ia, optimize = True) + np.einsum("dcka,id->ciak", g[v, v, o, v], t_ia, optimize = True)
     W_ciak += - (1 / 2) * np.einsum("cdlk,ilda->ciak", g[v, v, o, o], t_ijab, optimize = True) - np.einsum("cdlk,id,la->ciak", g[v, v, o, o], t_ia, t_ia, optimize = True)
 
     # Updating singles amplitudes
 
-    t_ia_temporary = np.einsum("ca,ic->ia", F_ca - F[v, v], t_ia, optimize = True) - np.einsum("ik,ka->ia", F_ik - F[o, o], t_ia, optimize = True) 
+    t_ia_temporary = np.einsum("ca,ic->ia", F_ca - F[v, v], t_ia, optimize = True) - np.einsum("ik,ka->ia", F_ik - F[o, o], t_ia, optimize = True)
     t_ia_temporary += -1 * np.einsum("ickl,klac->ia", w[o, v, o, o], t_ijab, optimize = True) - np.einsum("ickl,ka,lc->ia", w[o, v, o, o], t_ia, t_ia, optimize = True)
     t_ia_temporary += np.einsum("ck,kica->ia", F_ck, 2 * t_ijab - t_ijab.swapaxes(0, 1), optimize = True)
-    t_ia_temporary += np.einsum("ck,ic,ka->ia", F_ck, t_ia, t_ia, optimize = True) 
-    t_ia_temporary += np.einsum("icak,kc->ia", w[o, v, v, o], t_ia, optimize = True) 
+    t_ia_temporary += np.einsum("ck,ic,ka->ia", F_ck, t_ia, t_ia, optimize = True)
+    t_ia_temporary += np.einsum("icak,kc->ia", w[o, v, v, o], t_ia, optimize = True)
     t_ia_temporary += np.einsum("cdak,ikcd->ia", w[v, v, v, o], t_ijab, optimize = True)
-    t_ia_temporary += np.einsum("cdak,ic,kd->ia", w[v, v, v, o], t_ia, t_ia, optimize = True) 
+    t_ia_temporary += np.einsum("cdak,ic,kd->ia", w[v, v, v, o], t_ia, t_ia, optimize = True)
 
     # Updating doubles amplitudes
 
-    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", W_ijkl, t_ijab, optimize = True) 
+    t_ijab_temporary = (1 / 2) * g[o, o, v, v] + (1 / 2) * np.einsum("ijkl,klab->ijab", W_ijkl, t_ijab, optimize = True)
     t_ijab_temporary += (1 / 2) * np.einsum("ijkl,ka,lb->ijab", W_ijkl, t_ia, t_ia, optimize = True)
-    t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", W_cdab, t_ijab, optimize = True) 
+    t_ijab_temporary += (1 / 2) * np.einsum("cdab,ijcd->ijab", W_cdab, t_ijab, optimize = True)
     t_ijab_temporary += (1 / 2) * np.einsum("cdab,ic,jd->ijab", W_cdab, t_ia, t_ia, optimize = True)
-    t_ijab_temporary += np.einsum("ca,ijcb->ijab", L_ca - F[v, v], t_ijab, optimize = True) 
+    t_ijab_temporary += np.einsum("ca,ijcb->ijab", L_ca - F[v, v], t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("ik,kjab->ijab", L_ik - F[o, o], t_ijab, optimize = True)
-    t_ijab_temporary += np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize = True) 
-    t_ijab_temporary += -1 * np.einsum("ickb,ka,jc->ijab", g[o, v, o, v], t_ia, t_ia, optimize = True) 
-    t_ijab_temporary += -1 * np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize = True) 
+    t_ijab_temporary += np.einsum("icab,jc->ijab", g[o, v, v, v], t_ia, optimize = True)
+    t_ijab_temporary += -1 * np.einsum("ickb,ka,jc->ijab", g[o, v, o, v], t_ia, t_ia, optimize = True)
+    t_ijab_temporary += -1 * np.einsum("ijak,kb->ijab", g[o, o, v, o], t_ia, optimize = True)
     t_ijab_temporary += -1 * np.einsum("icak,jc,kb->ijab", g[o, v, v, o], t_ia, t_ia, optimize = True)
-    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", W_icak, t_ijab, optimize = True) 
-    t_ijab_temporary += -1 * np.einsum("ciak,kjcb->ijab", W_ciak, t_ijab, optimize = True) 
-    t_ijab_temporary += -1 * np.einsum("icak,kjbc->ijab", W_icak, t_ijab, optimize = True) 
+    t_ijab_temporary += 2 * np.einsum("icak,kjcb->ijab", W_icak, t_ijab, optimize = True)
+    t_ijab_temporary += -1 * np.einsum("ciak,kjcb->ijab", W_ciak, t_ijab, optimize = True)
+    t_ijab_temporary += -1 * np.einsum("icak,kjbc->ijab", W_icak, t_ijab, optimize = True)
     t_ijab_temporary += -1 * np.einsum("cibk,kjac->ijab", W_ciak, t_ijab, optimize = True)
 
     t_ijab_temporary += t_ijab_temporary.transpose(1, 0, 3, 2)
@@ -1729,7 +1729,7 @@ def run_restricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: 
 def run_unrestricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted CCSD.
 
     All equations from Stanton paper on DPD coupled cluster (10.1063/1.460620).
@@ -1759,45 +1759,45 @@ def run_unrestricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
 
     # Builds curly F intermediates (Fock matrix intermediates)
 
-    F_ae = F[v, v] - kronecker_delta[v, v] * F[v, v] - (1 / 2) * np.einsum("me,ma->ae", F[o, v], t_ia, optimize = True) 
+    F_ae = F[v, v] - kronecker_delta[v, v] * F[v, v] - (1 / 2) * np.einsum("me,ma->ae", F[o, v], t_ia, optimize = True)
     F_ae += np.einsum("mf,mafe->ae", t_ia, g[o, v, v, v], optimize = True) - (1 / 2) * np.einsum("mnaf,mnef->ae", tau_tilde_ijab, g[o, o, v, v], optimize = True)
 
     F_mi = F[o, o] - kronecker_delta[o, o] * F[o, o]  + (1 / 2) * np.einsum("ie,me->mi", t_ia, F[o, v], optimize = True)
     F_mi += np.einsum("ne,mnie->mi", t_ia, g[o, o, o, v], optimize = True) + (1 / 2) * np.einsum("inef,mnef->mi", tau_tilde_ijab, g[o, o, v, v], optimize = True)
 
-    F_me = F[o, v] + np.einsum("nf,mnef->me", t_ia, g[o, o, v, v], optimize = True) 
-    
+    F_me = F[o, v] + np.einsum("nf,mnef->me", t_ia, g[o, o, v, v], optimize = True)
+
     # Builds curly W intermediates (two-electron intermediates)
 
-    W_mnij = g[o, o, o, o] + permute(np.einsum("je,mnie->mnij", t_ia, g[o, o, o, v], optimize = True), 2, 3) 
+    W_mnij = g[o, o, o, o] + permute(np.einsum("je,mnie->mnij", t_ia, g[o, o, o, v], optimize = True), 2, 3)
     W_mnij += (1 / 4) * np.einsum("ijef,mnef->mnij", tau_ijab, g[o, o, v, v], optimize = True)
 
-    W_abef = g[v, v, v, v] - permute(np.einsum("mb,amef->abef", t_ia, g[v, o, v, v], optimize = True), 0, 1) 
+    W_abef = g[v, v, v, v] - permute(np.einsum("mb,amef->abef", t_ia, g[v, o, v, v], optimize = True), 0, 1)
     W_abef += (1 / 4) * np.einsum("mnab,mnef->abef", tau_ijab, g[o, o, v, v], optimize = True)
 
-    W_mbej = g[o, v, v, o] + np.einsum("jf,mbef->mbej", t_ia, g[o, v, v, v], optimize = True) 
-    W_mbej += -1 * np.einsum("nb,mnej->mbej", t_ia, g[o, o, v, o], optimize = True) 
+    W_mbej = g[o, v, v, o] + np.einsum("jf,mbef->mbej", t_ia, g[o, v, v, v], optimize = True)
+    W_mbej += -1 * np.einsum("nb,mnej->mbej", t_ia, g[o, o, v, o], optimize = True)
     W_mbej += -1 * np.einsum("jnfb,mnef->mbej", (1 / 2) * t_ijab + np.einsum("jf,nb->jnfb", t_ia, t_ia, optimize = True), g[o, o, v, v], optimize = True)
 
     # Builds t_ia tensor from intermediates
 
-    t_ia_temporary = F[o, v] + np.einsum("ie,ae->ia", t_ia, F_ae, optimize = True) - np.einsum("ma,mi->ia", t_ia, F_mi, optimize = True) 
-    t_ia_temporary += np.einsum("imae,me->ia", t_ijab, F_me, optimize = True) - np.einsum("nf,naif->ia", t_ia, g[o, v, o, v], optimize = True) 
+    t_ia_temporary = F[o, v] + np.einsum("ie,ae->ia", t_ia, F_ae, optimize = True) - np.einsum("ma,mi->ia", t_ia, F_mi, optimize = True)
+    t_ia_temporary += np.einsum("imae,me->ia", t_ijab, F_me, optimize = True) - np.einsum("nf,naif->ia", t_ia, g[o, v, o, v], optimize = True)
     t_ia_temporary += - (1 / 2) * np.einsum("imef,maef->ia", t_ijab, g[o, v, v, v], optimize = True) - (1 / 2) * np.einsum("mnae,nmei->ia", t_ijab, g[o, o, v, o], optimize = True)
-    
+
     # Builds t_ijab tensor from intermediates, pairs of terms from Stanton
 
-    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae - (1 / 2) * np.einsum("mb,me->be", t_ia, F_me,optimize = True), optimize = True), 2, 3) 
+    t_ijab_temporary = g[o, o, v, v] + permute(np.einsum("ijae,be->ijab", t_ijab, F_ae - (1 / 2) * np.einsum("mb,me->be", t_ia, F_me,optimize = True), optimize = True), 2, 3)
     t_ijab_temporary += -1 * permute(np.einsum("imab,mj->ijab", t_ijab, F_mi + (1 / 2) * np.einsum("je,me->mj", t_ia, F_me, optimize = True),optimize = True), 0, 1)
-    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", tau_ijab, W_mnij, optimize = True) 
+    t_ijab_temporary += (1 / 2) * np.einsum("mnab,mnij->ijab", tau_ijab, W_mnij, optimize = True)
     t_ijab_temporary += (1 / 2) * np.einsum("ijef,abef->ijab", tau_ijab, W_abef, optimize = True)
     t_ijab_temporary += permute(permute(np.einsum("ijmabe->ijab", np.einsum("imae,mbej->ijmabe", t_ijab, W_mbej, optimize = True) - np.einsum("ie,ma,mbej->ijmabe", t_ia, t_ia, g[o, v, v, o], optimize = True), optimize = True), 2, 3), 0, 1)
-    t_ijab_temporary += permute(np.einsum("ie,abej->ijab", t_ia, g[v, v, v, o], optimize = True), 0, 1) 
+    t_ijab_temporary += permute(np.einsum("ie,abej->ijab", t_ia, g[v, v, v, o], optimize = True), 0, 1)
     t_ijab_temporary += -1 * permute(np.einsum("ma,mbij->ijab", t_ia, g[o, v, o, o], optimize = True), 2, 3)
 
     t_ia = e_ia * t_ia_temporary
     t_ijab = e_ijab * t_ijab_temporary
-    
+
     t_amplitudes = t_ia, t_ijab, None, None
 
     return t_amplitudes
@@ -1812,9 +1812,9 @@ def run_unrestricted_CCSD_iteration(g: ndarray, o: slice, v: slice, t_amplitudes
 
 
 def run_restricted_CC2_iteration(o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, molecular_orbitals: ndarray, integrals: Integrals) -> tuple:
-    
+
     """
-    
+
     Updates the amplitudes for restricted CC2. Uses T1 dressing.
 
     Taken from the Jiang2024 version of T1-dressed CCSDT then curtailed by me into CC2.
@@ -1829,7 +1829,7 @@ def run_restricted_CC2_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
 
     Returns:
         t_amplitudes (tuple): Updated amplitudes
-    
+
     """
 
     t_ia, _, _, _ = t_amplitudes
@@ -1841,7 +1841,7 @@ def run_restricted_CC2_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
 
     X[:, v] -= molecular_orbitals[:, o] @ t_ia
     Y[:, o] += molecular_orbitals[:, v] @ t_ia.T
-    
+
     # Full H_core transformation
 
     h_hat = np.einsum("ap,bq,ab->pq", X, Y, integrals.H_core, optimize = True)
@@ -1862,7 +1862,7 @@ def run_restricted_CC2_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
     # CC2 doubles amplitudes are perturbative, not iteratively updated like CCSD, uses MP2-like expression
 
     t_ijab = ci.build_MP2_t_amplitudes(g_vovo.transpose(1, 3, 0, 2), e_ijab)
-    
+
     # Antisymmetrised doubles combination used in the CC2 singles residual
 
     u_ijab = 2 * t_ijab - t_ijab.swapaxes(2, 3)
@@ -1897,7 +1897,7 @@ def run_restricted_CC2_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
 def run_restricted_CC3_iteration(o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, molecular_orbitals: ndarray, integrals: Integrals) -> tuple:
 
     """
-    
+
     Updates the amplitudes for restricted CC3. Uses T1 dressing.
 
     Taken from the Jiang2024 version of T1-dressed CCSDT then curtailed by me into CC3.
@@ -1912,7 +1912,7 @@ def run_restricted_CC3_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
 
     Returns:
         t_amplitudes (tuple): Updated amplitudes
-    
+
     """
 
     t_ia, t_ijab, _, _ = t_amplitudes
@@ -1924,7 +1924,7 @@ def run_restricted_CC3_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
 
     X[:, v] -= molecular_orbitals[:, o] @ t_ia
     Y[:, o] += molecular_orbitals[:, v] @ t_ia.T
-    
+
     # Transforms the atomic orbital basis molecular integrals with T1 dressing into chemists' notation
 
     g_hat = np.einsum("ap,bq,gr,ds,abgd->pqrs", X, Y, X, Y, integrals.ERI_AO, optimize = True)
@@ -1950,12 +1950,12 @@ def run_restricted_CC3_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
     beta_ijkl = g_hat[o, o, o, o].transpose(1, 3, 0, 2) + np.einsum("ijcd,kcld->ijkl", t_ijab, g_hat[o, v, o, v], optimize = True)
     gamma_kiac = g_hat[o, o, v, v] - (1 / 2) * np.einsum("liad,kdlc->kiac", t_ijab, g_hat[o, v, o, v], optimize = True)
 
-    delta_aikc = 2 * g_hat[v, o, o, v] - g_hat[o, o, v, v].transpose(2, 1, 0, 3) 
+    delta_aikc = 2 * g_hat[v, o, o, v] - g_hat[o, o, v, v].transpose(2, 1, 0, 3)
     delta_aikc += (1 / 2) * np.einsum("ilad,ldkc->aikc", u_ijab, 2 * g_hat[o, v, o, v] - g_hat[o, v, o, v].swapaxes(1, 3), optimize = True)
-    
+
     F_tilde_tilde_bc = F_hat[v, v] - np.einsum("klbd,ldkc->bc", u_ijab, g_hat[o, v, o, v], optimize = True)
     F_tilde_tilde_kj = F_hat[o, o] + np.einsum("ljcd,kdlc->kj", u_ijab, g_hat[o, v, o, v], optimize = True)
-    
+
     A_ijab = np.einsum("ijcd,acbd->ijab", t_ijab, g_hat[v, v, v, v], optimize = True)
     B_ijab = np.einsum("klab,ijkl->ijab", t_ijab, beta_ijkl, optimize = True)
     C_ijab = -1 * np.einsum("kjbc,kiac->ijab", t_ijab, gamma_kiac, optimize = True)
@@ -1979,13 +1979,13 @@ def run_restricted_CC3_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
 
     residual_ia = F_hat[v, o].swapaxes(0, 1) + A_ia + B_ia + C_ia
 
-    residual_ijab = g_hat[v, o, v, o].transpose(1, 3, 0, 2) + A_ijab + B_ijab 
+    residual_ijab = g_hat[v, o, v, o].transpose(1, 3, 0, 2) + A_ijab + B_ijab
     residual_ijab += mp.permute_symmetric((1 / 2) * C_ijab + C_ijab.swapaxes(0, 1) + D_ijab + E_ijab + G_ijab, (0, 1), (2, 3))
 
     # Connected-triples contributions for CC3
 
-    residual_ia += np.einsum("jbkc,ijkabc->ia", l_hat[o, v, o, v], t_ijkabc - t_ijkabc.swapaxes(3, 4), optimize = True) 
-    residual_ijab += mp.permute_symmetric(temp_ijab, (0, 1), (2, 3)) 
+    residual_ia += np.einsum("jbkc,ijkabc->ia", l_hat[o, v, o, v], t_ijkabc - t_ijkabc.swapaxes(3, 4), optimize = True)
+    residual_ijab += mp.permute_symmetric(temp_ijab, (0, 1), (2, 3))
 
     # Updates amplitudes
 
@@ -2019,7 +2019,7 @@ def project_triples_onto_physical_space(t_ijkabc: ndarray) -> ndarray:
 
     # All five non-identity permutations of the occupied indices
 
-    t_ijkabc_projected += (-1 / 6) * (t_ijkabc.transpose(0, 2, 1, 3, 4, 5) + t_ijkabc.transpose(1, 0, 2, 3, 4, 5) 
+    t_ijkabc_projected += (-1 / 6) * (t_ijkabc.transpose(0, 2, 1, 3, 4, 5) + t_ijkabc.transpose(1, 0, 2, 3, 4, 5)
                                     + t_ijkabc.transpose(2, 1, 0, 3, 4, 5) + t_ijkabc.transpose(1, 2, 0, 3, 4, 5)
                                     + t_ijkabc.transpose(2, 0, 1, 3, 4, 5))
 
@@ -2037,7 +2037,7 @@ def project_triples_onto_physical_space(t_ijkabc: ndarray) -> ndarray:
 def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, molecular_orbitals: ndarray, integrals: Integrals) -> tuple:
 
     """
-    
+
     Updates the amplitudes for restricted CCSDT. Uses T1 dressing.
 
     Implementation of 10.26434/chemrxiv-2024-xbnmh (CCSDT) via 10.26434/chemrxiv-2024-cvs8h (CCSD).
@@ -2055,9 +2055,9 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
         g_hat (array): Two-electron integrals with T1 dressing
         F_hat (array): Fock matrix with T1 dressing
         u_ijab (array): Antisymmetrised spin-restricted T2 amplitudes
-    
+
     """
-    
+
     def permute_short(array):
 
         # Corrected definition of the short permutation operator from 10.26434/chemrxiv-2024-xbnmh (the paper has a typo)
@@ -2074,7 +2074,7 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
 
     X[:, v] -= molecular_orbitals[:, o] @ t_ia
     Y[:, o] += molecular_orbitals[:, v] @ t_ia.T
-    
+
     # Transforms the atomic orbital basis molecular integrals with T1 dressing into chemists' notation
     g_hat = np.einsum("ap,bq,gr,ds,abgd->pqrs", X, Y, X, Y, integrals.ERI_AO, optimize = True)
     h_hat = np.einsum("ap,bq,ab->pq", X, Y, integrals.H_core, optimize = True)
@@ -2100,12 +2100,12 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
     beta_ijkl = g_hat[o, o, o, o].transpose(1, 3, 0, 2) + np.einsum("ijcd,kcld->ijkl", t_ijab, g_hat[o, v, o, v], optimize = True)
     gamma_kiac = g_hat[o, o, v, v] - (1 / 2) * np.einsum("liad,kdlc->kiac", t_ijab, g_hat[o, v, o, v], optimize = True)
 
-    delta_aikc = 2 * g_hat[v, o, o, v] - g_hat[o, o, v, v].transpose(2, 1, 0, 3) 
+    delta_aikc = 2 * g_hat[v, o, o, v] - g_hat[o, o, v, v].transpose(2, 1, 0, 3)
     delta_aikc += (1 / 2) * np.einsum("ilad,ldkc->aikc", u_ijab, 2 * g_hat[o, v, o, v] - g_hat[o, v, o, v].swapaxes(1, 3), optimize = True)
-    
+
     F_tilde_tilde_bc = F_hat[v, v] - np.einsum("klbd,ldkc->bc", u_ijab, g_hat[o, v, o, v], optimize = True)
     F_tilde_tilde_kj = F_hat[o, o] + np.einsum("ljcd,kdlc->kj", u_ijab, g_hat[o, v, o, v], optimize = True)
-    
+
     A_ijab = np.einsum("ijcd,acbd->ijab", t_ijab, g_hat[v, v, v, v], optimize = True)
     B_ijab = np.einsum("klab,ijkl->ijab", t_ijab, beta_ijkl, optimize = True)
     C_ijab = -1 * np.einsum("kjbc,kiac->ijab", t_ijab, gamma_kiac, optimize = True)
@@ -2117,7 +2117,7 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
 
     chi_li = F_hat[o, o] + np.einsum("meld,imde->li", g_hat[o, v, o, v], u_ijab, optimize = True)
     chi_ad = F_hat[v, v] - np.einsum("meld,lmae->ad", g_hat[o, v, o, v], u_ijab, optimize = True)
-    
+
     chi_ljmk = g_hat[o, o, o, o] + np.einsum("ldme,jkde->ljmk", g_hat[o, v, o, v], t_ijab, optimize = True)
     chi_bdce = g_hat[v, v, v, v] + np.einsum("ldme,lmbc->bdce", g_hat[o, v, o, v], t_ijab, optimize = True)
     chi_adli = g_hat[v, v, o, o] - np.einsum("lemd,miae->adli", g_hat[o, v, o, v], t_ijab, optimize = True)
@@ -2132,9 +2132,9 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
     xi_cklj += np.einsum("ldme,mkjecd->cklj", g_hat[o, v, o, v], u_ijkabc, optimize = True)
 
     xi_ckbd = g_hat[v, o, v, v] - np.einsum("ld,lkbc->ckbd", F_hat[o, v], t_ijab, optimize = True)
-    xi_ckbd += np.einsum("lkmd,lmcb->ckbd", g_hat[o, o, o, v], t_ijab, optimize = True) 
+    xi_ckbd += np.einsum("lkmd,lmcb->ckbd", g_hat[o, o, o, v], t_ijab, optimize = True)
     xi_ckbd += -1 * np.einsum("beld,lkec->ckbd", g_hat[v, v, o, v], t_ijab, optimize = True)
-    xi_ckbd += np.einsum("bdle,lkec->ckbd", g_hat[v, v, o, v], u_ijab, optimize = True) 
+    xi_ckbd += np.einsum("bdle,lkec->ckbd", g_hat[v, v, o, v], u_ijab, optimize = True)
     xi_ckbd += -1 * np.einsum("celd,lkbe->ckbd", g_hat[v, v, o, v], t_ijab, optimize = True)
     xi_ckbd += -1 * np.einsum("ldme,mklecb->ckbd", g_hat[o, v, o, v], u_ijkabc, optimize = True)
 
@@ -2142,36 +2142,36 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
     temp_ijab += np.einsum("ackd,ijkcbd->ijab", g_hat[v, v, o, v], 2 * t_ijkabc - t_ijkabc.swapaxes(4, 5) - t_ijkabc.swapaxes(3, 5), optimize = True)
     temp_ijab += -1 * np.einsum("kilc,ljkcba->ijab", g_hat[o, o, o, v], u_ijkabc, optimize = True)
 
-    temp_ijkabc = np.einsum("ad,ijkdbc->ijkabc", chi_ad, t_ijkabc, optimize = True) 
-    temp_ijkabc += -1 * np.einsum("li,ljkabc->ijkabc", chi_li, t_ijkabc, optimize = True) 
-    temp_ijkabc += np.einsum("ljmk,ilmabc->ijkabc", chi_ljmk, t_ijkabc, optimize = True) 
-    temp_ijkabc += -1 * np.einsum("adli,ljkdbc->ijkabc", chi_adli, t_ijkabc, optimize = True) 
-    temp_ijkabc += np.einsum("bdce,ijkade->ijkabc", chi_bdce, t_ijkabc, optimize = True) 
-    temp_ijkabc += -1 * np.einsum("bdli,ljkadc->ijkabc", chi_adli, t_ijkabc, optimize = True) 
+    temp_ijkabc = np.einsum("ad,ijkdbc->ijkabc", chi_ad, t_ijkabc, optimize = True)
+    temp_ijkabc += -1 * np.einsum("li,ljkabc->ijkabc", chi_li, t_ijkabc, optimize = True)
+    temp_ijkabc += np.einsum("ljmk,ilmabc->ijkabc", chi_ljmk, t_ijkabc, optimize = True)
+    temp_ijkabc += -1 * np.einsum("adli,ljkdbc->ijkabc", chi_adli, t_ijkabc, optimize = True)
+    temp_ijkabc += np.einsum("bdce,ijkade->ijkabc", chi_bdce, t_ijkabc, optimize = True)
+    temp_ijkabc += -1 * np.einsum("bdli,ljkadc->ijkabc", chi_adli, t_ijkabc, optimize = True)
     temp_ijkabc += -1 * np.einsum("cdli,ljkabd->ijkabc", chi_adli, t_ijkabc, optimize = True)
     temp_ijkabc += np.einsum("aild,ljkdbc->ijkabc", chi_aild, u_ijkabc, optimize = True)
-    
+
     # Contributions to CCSD amplitudes
 
     residual_ia = F_hat[v, o].swapaxes(0, 1) + A_ia + B_ia + C_ia
 
-    residual_ijab = g_hat[v, o, v, o].transpose(1, 3, 0, 2) + A_ijab + B_ijab 
+    residual_ijab = g_hat[v, o, v, o].transpose(1, 3, 0, 2) + A_ijab + B_ijab
     residual_ijab += mp.permute_symmetric((1 / 2) * C_ijab + C_ijab.swapaxes(0, 1) + D_ijab + E_ijab + G_ijab, (0, 1), (2, 3))
 
     # Contributions to CCSDT amplitudes
 
-    residual_ia += np.einsum("jbkc,ijkabc->ia", l_hat[o, v, o, v], t_ijkabc - t_ijkabc.swapaxes(3, 4), optimize = True) 
-    residual_ijab += mp.permute_symmetric(temp_ijab, (0, 1), (2, 3)) 
+    residual_ia += np.einsum("jbkc,ijkabc->ia", l_hat[o, v, o, v], t_ijkabc - t_ijkabc.swapaxes(3, 4), optimize = True)
+    residual_ijab += mp.permute_symmetric(temp_ijab, (0, 1), (2, 3))
 
-    residual_ijkabc = mp.permute_three_column_indices(np.einsum("ijad,ckbd->ijkabc", t_ijab, xi_ckbd, optimize = True) - np.einsum("ilab,cklj->ijkabc", t_ijab, xi_cklj, optimize = True)) 
+    residual_ijkabc = mp.permute_three_column_indices(np.einsum("ijad,ckbd->ijkabc", t_ijab, xi_ckbd, optimize = True) - np.einsum("ilab,cklj->ijkabc", t_ijab, xi_cklj, optimize = True))
     residual_ijkabc += permute_short(temp_ijkabc)
 
     # Updates amplitudes
 
     t_ia += e_ia * residual_ia
     t_ijab += e_ijab * residual_ijab
-    t_ijkabc += e_ijkabc * residual_ijkabc 
-    
+    t_ijkabc += e_ijkabc * residual_ijkabc
+
     # Removes redundant components, improves convergence
 
     t_ijkabc = project_triples_onto_physical_space(t_ijkabc)
@@ -2192,7 +2192,7 @@ def run_restricted_CCSDT_iteration(o: slice, v: slice, t_amplitudes: tuple, e_de
 def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray) -> tuple:
 
     """
-    
+
     Updates the amplitudes for unrestricted CCSDT.
 
     Args:
@@ -2221,11 +2221,11 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
     # Contributions from connected doubles
     t_ia_temporary += (1 / 2) * np.einsum('ajbc,ijbc->ia', g[v, o, v, v], t_ijab, optimize = True) - (1 / 2) * np.einsum('jkib,jkab->ia', g[o, o, o, v], t_ijab, optimize = True)
-    
+
     # Contributions from disconnected doubles
     t_ia_temporary += -np.einsum('jb,ja,ib->ia', F[o, v], t_ia, t_ia, optimize = True)
     t_ia_temporary += np.einsum('jkib,ka,jb->ia', g[o, o, o, v], t_ia, t_ia, optimize = True) - np.einsum('ajbc,jb,ic->ia', g[v, o, v, v], t_ia, t_ia, optimize = True)
-    
+
     # Contributions from connected triples
     t_ia_temporary += (1 / 4) * np.einsum('jkbc,ijkabc->ia', g[o, o, v, v], t_ijkabc, optimize = True)
 
@@ -2303,7 +2303,7 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
     t_ijkabc_temporary += permute(-np.einsum('clik,jlab->ijkabc', g[v, o, o, o], t_ijab, optimize = True), 1, 0)
     t_ijkabc_temporary += permute(permute(np.einsum('acid,jkbd->ijkabc', g[v, v, o, v], t_ijab, optimize = True), 1, 0), 4, 3)
     t_ijkabc_temporary += permute(permute(-np.einsum('alik,jlbc->ijkabc', g[v, o, o, o], t_ijab, optimize = True), 1, 0), 4, 3)
-    
+
     # Contributions from connected triples
 
     t_ijkabc_temporary += permute(np.einsum('alkd,ijlbcd->ijkabc', g[v, o, o, v], t_ijkabc, optimize = True), 4, 3)
@@ -2480,9 +2480,9 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
     # Updates t-amplitudes with epsilons tensors
 
-    t_ia += e_ia * t_ia_temporary 
-    t_ijab += e_ijab * t_ijab_temporary 
-    t_ijkabc += e_ijkabc * t_ijkabc_temporary 
+    t_ia += e_ia * t_ia_temporary
+    t_ijab += e_ijab * t_ijab_temporary
+    t_ijkabc += e_ijkabc * t_ijkabc_temporary
 
     t_amplitudes = t_ia, t_ijab, t_ijkabc, None
 
@@ -2498,9 +2498,9 @@ def run_unrestricted_CCSDT_iteration(g: ndarray, o: slice, v: slice, t_amplitude
 
 
 def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, molecular_orbitals: ndarray, integrals: Integrals) -> tuple:
-  
+
     """
-    
+
     Updates the amplitudes for restricted CCSDTQ.
 
     Implementation of 10.26434/chemrxiv-2025-qgc1q (CCSDTQ).
@@ -2515,16 +2515,16 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
 
     Returns:
         t_amplitudes (tuple): Updated amplitudes
-    
+
     """
-    
+
 
     def project_quadruples_onto_physical_space(t_ijklabcd: ndarray) -> ndarray:
 
         """
 
         Projects the pair-symmetric quadruples amplitudes onto the physical (singlet CSF) subspace of the
-        redundant spin-free representation, removing the null-space components that prevent convergence. 
+        redundant spin-free representation, removing the null-space components that prevent convergence.
 
         Args:
             t_ijklabcd (ndarray): Quadruples amplitudes
@@ -2558,7 +2558,7 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
                                           + t_ijklabcd.transpose(3, 2, 0, 1, 4, 5, 6, 7))
 
         return t_ijklabcd_projected
-    
+
 
     t_ia, t_ijab, t_ijkabc, t_ijklabcd = t_amplitudes
     e_ia, e_ijab, e_ijkabc, e_ijklabcd = e_denominators
@@ -2627,28 +2627,28 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
 
     M_ekjacb = (1 / 2) * np.einsum("aebf,jkfc->ekjacb", H_aebf, t_ijab, optimize = True) - (1 / 2) * np.einsum("menf,nmjkfabc->ekjacb", g_hat[o, v, o, v], alpha, optimize = True)
     M_ejkabc = M_ekjacb + M_ekjacb.swapaxes(1, 2).swapaxes(4, 5)
-    
+
     # The quadruple amplitudes don't mix with the singles - first to be updated are the doubles
 
     residual_ijab += mp.permute_symmetric((1 / 4) * np.einsum("menf,mnijefab->ijab", g_hat[o, v, o, v], beta, optimize = True), (0, 1), (2, 3))
-    
+
     # Triples residuals updated with quadruples influence
 
     residual_ijkabc += mp.permute_three_column_indices((1 / 6) * np.einsum("me,mijkeabc->ijkabc", F_hat[o, v], alpha, optimize = True) + (1 / 2) * np.einsum("aemf,mijkfebc->ijkabc", g_hat[v, v, o, v], alpha, optimize = True) - (1 / 2) * np.einsum("menj,minkeabc->ijkabc", g_hat[o, v, o, o], alpha, optimize = True))
 
     # Builds complicated quadruples residual
 
-    residual_ijklabcd = (1 / 2) * np.einsum("aebj,iklecd->ijklabcd", A_aebj, t_ijkabc, optimize = True) 
+    residual_ijklabcd = (1 / 2) * np.einsum("aebj,iklecd->ijklabcd", A_aebj, t_ijkabc, optimize = True)
     residual_ijklabcd += - (1 / 2) * np.einsum("aimj,mklbcd->ijklabcd", B_aimj, t_ijkabc, optimize = True)
     residual_ijklabcd += (1 / 6) * np.einsum("ae,ijklebcd->ijklabcd", F_tilde_tilde_ae, t_ijklabcd, optimize = True)
     residual_ijklabcd += -1 * (1 / 6) * np.einsum("mi,mjklabcd->ijklabcd", F_tilde_tilde_mi, t_ijklabcd, optimize = True)
     residual_ijklabcd += (1 / 12) * np.einsum("meai,mjklebcd->ijklabcd", E_meai, alpha, optimize = True)
-    residual_ijklabcd += -1 * (1 / 4) * np.einsum("miae,jmklebcd->ijklabcd", F_miae, t_ijklabcd, optimize = True) 
+    residual_ijklabcd += -1 * (1 / 4) * np.einsum("miae,jmklebcd->ijklabcd", F_miae, t_ijklabcd, optimize = True)
     residual_ijklabcd += - (1 / 2) * np.einsum("miae,jmklebcd->ijklabcd", F_miae, t_ijklabcd, optimize = True).swapaxes(4, 5)
     residual_ijklabcd += (1 / 4) * np.einsum("minj,mnklabcd->ijklabcd", G_minj, t_ijklabcd, optimize = True)
     residual_ijklabcd += (1 / 4) * np.einsum("aebf,ijklefcd->ijklabcd", H_aebf, t_ijklabcd, optimize = True)
     residual_ijklabcd += (1 / 8) * np.einsum("eijmab,mklecd->ijklabcd", I_eijmab, z_ijkabc, optimize = True)
-    residual_ijklabcd += -1 * (1 / 2) * np.einsum("iejmab,kmlecd->ijklabcd", J_iejmab, t_ijkabc, optimize = True) 
+    residual_ijklabcd += -1 * (1 / 2) * np.einsum("iejmab,kmlecd->ijklabcd", J_iejmab, t_ijkabc, optimize = True)
     residual_ijklabcd += -1 * np.einsum("iejmab,kmlecd->ijklabcd", J_iejmab, t_ijkabc, optimize = True).swapaxes(4, 6)
     residual_ijklabcd += (1 / 2) * np.einsum("ijkamn,mnlbcd->ijklabcd", K_ijkamn, t_ijkabc, optimize = True)
     residual_ijklabcd += -1 * (1 / 2) * np.einsum("ijkabm,mlcd->ijklabcd", L_ijkabm, t_ijab, optimize = True)
@@ -2667,7 +2667,7 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
     t_ijkabc = project_triples_onto_physical_space(t_ijkabc)
 
     t_ijklabcd += e_ijklabcd * residual_ijklabcd
-    
+
     # Projects out null-space components of quadruples amplitudes
 
     t_ijklabcd = project_quadruples_onto_physical_space(t_ijklabcd)
@@ -2688,8 +2688,8 @@ def run_restricted_CCSDTQ_iteration(o: slice, v: slice, t_amplitudes: tuple, e_d
 def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndarray, t_ijab: ndarray, o: slice, v: slice, method: Method, calculation: Calculation, silent: bool) -> float:
 
 
-    """ 
-    
+    """
+
     Calculates the perturbative triples energy for restricted CCSD(T).
 
     Args:
@@ -2732,8 +2732,8 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
     space = " "
 
-    if "QCISD" in method.name: 
-        
+    if "QCISD" in method.name:
+
         # This factor of two arises because part of the MP5 disconnected triples are included in the CCSD equations, but not the QCISD equations
 
         V_ijkabc *= 2
@@ -2746,14 +2746,14 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
     W_ijkabc = P_ijkabc(np.einsum("ibaf,kjcf->ijkabc", g[o, v, v, v], t_ijab, optimize = True) - np.einsum("ijam,mkbc->ijkabc", g[o, o, v, o], t_ijab, optimize = True))
 
     W = 4 * W_ijkabc + W_ijkabc.transpose(2, 0, 1, 3, 4, 5) + W_ijkabc.transpose(1, 2, 0, 3, 4, 5) - 4 * W_ijkabc.transpose(2, 1, 0, 3, 4, 5) - W_ijkabc.transpose(0, 2, 1, 3, 4, 5) - W_ijkabc.transpose(1, 0, 2, 3, 4, 5)
-    
+
     log(f"[Done]", calculation, 1, silent = silent)
 
     log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end = "", silent = silent)
 
     E_CCSD_T = (1 / 3) * np.einsum("ijkabc,ijkabc,ijkabc->", W_ijkabc + V_ijkabc, W, e_ijkabc, optimize = True)
-    
-    log(f"[Done]\n\n  {method.name} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent = silent) 
+
+    log(f"[Done]\n\n  {method.name} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent = silent)
 
     return E_CCSD_T
 
@@ -2768,8 +2768,8 @@ def calculate_restricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndar
 
 def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: ndarray, t_ijab: ndarray, o: slice, v: slice, method: Method, calculation: Calculation, silent: bool) -> float:
 
-    """ 
-    
+    """
+
     Calculates the perturbative triples energy for CCSD(T).
 
     Args:
@@ -2795,44 +2795,44 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
     log_spacer(calculation, silent = silent)
 
     def permute_three_indices(array_ijab, idx1, idx2, idx3):
-        
+
         # Three-index permutation operator per Crawford
 
         return array_ijab - array_ijab.swapaxes(idx1, idx2) - array_ijab.swapaxes(idx1, idx3)
 
     log("  Forming disconnected amplitudes...         ", calculation, 1, end = "", silent = silent)
-        
+
     # Temporary disconnected (d_ijkabc) and connected (t_ijkabc) triples tensors before permutation, from Crawford
 
     d_ijkabc = np.einsum("ia,jkbc->ijkabc", t_ia, g[o, o, v, v], optimize = True)
     t_ijkabc_d = np.einsum("ijkabc,ijkabc->ijkabc", e_ijkabc, permute_three_indices(permute_three_indices(d_ijkabc, 3, 4, 5), 0, 1, 2), optimize = True)
-    
+
     space = " "
 
     # This factor of two arises because part of the MP5 disconnected triples are included in the CCSD equations, but not the QCISD equations
 
-    if "QCISD" in method.name: 
-        
+    if "QCISD" in method.name:
+
         t_ijkabc_d *= 2
         space = ""
 
     log(f"[Done]", calculation, 1, silent = silent)
 
     log("  Forming connected amplitudes...            ", calculation, 1, end = "", silent = silent)
-        
+
     t_ijkabc = np.einsum("jkae,eibc->ijkabc", t_ijab, g[v, o, v, v], optimize = True) - np.einsum("imbc,majk->ijkabc", t_ijab, g[o, v, o, o], optimize = True)
     t_ijkabc_c = np.einsum("ijkabc,ijkabc->ijkabc", e_ijkabc, permute_three_indices(permute_three_indices(t_ijkabc, 3, 4, 5), 0, 1, 2), optimize = True)
 
     log(f"[Done]", calculation, 1, silent = silent)
 
     log(f"\n  Calculating {method.name} correlation energy... {space}", calculation, 1, end = "", silent = silent)
-        
+
     # Final contraction for the CCSD(T) energy using the connected and disconnected approximate triples amplitudes
 
     E_CCSD_T = (1 / 36) * np.einsum("ijkabc,ijkabc->", t_ijkabc_c / e_ijkabc, t_ijkabc_c + t_ijkabc_d, optimize = True)
 
-    log(f"[Done]\n\n  {method.name} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent = silent) 
-    
+    log(f"[Done]\n\n  {method.name} correlation energy:       {space} {E_CCSD_T:13.10f}", calculation, 1, silent = silent)
+
 
     return E_CCSD_T
 
@@ -2847,8 +2847,8 @@ def calculate_unrestricted_CCSD_T_energy(g: ndarray, e_ijkabc: ndarray, t_ia: nd
 
 def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab: ndarray, t_ijkabc: ndarray, o: slice, v: slice, calculation: Calculation, silent: bool) -> float:
 
-    """ 
-    
+    """
+
     Calculates the perturbative quadruples energy for CCSDT(Q).
 
     Args:
@@ -2871,7 +2871,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
     log_spacer(calculation, silent = silent)
 
     log("  Forming quadruples amplitudes...           ", calculation, 1, end = "", silent = silent)
-    
+
     # Now shape <pr|qs> -> (pq|rs) in chemist's notation
 
     g = g.swapaxes(1, 2)
@@ -2882,11 +2882,11 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
     L_ijab = 2 * K_ijab - K_ijab.swapaxes(2, 3)
 
-    G = np.einsum("iabe,jklecd->ijklabcd", g[o, v, v, v], t_ijkabc, optimize = True) 
+    G = np.einsum("iabe,jklecd->ijklabcd", g[o, v, v, v], t_ijkabc, optimize = True)
     G += -1 * np.einsum("iamj,mklbcd->ijklabcd", g[o, v, o, o], t_ijkabc, optimize = True)
-    G += np.einsum("minj,mkac,nlbd->ijklabcd", g[o, o, o, o], t_ijab, t_ijab, optimize = True) 
+    G += np.einsum("minj,mkac,nlbd->ijklabcd", g[o, o, o, o], t_ijab, t_ijab, optimize = True)
     G += - 2 * np.einsum("iame,kjeb,mlcd->ijklabcd", g[o, v, o, v], t_ijab, t_ijab, optimize = True)
-    G += np.einsum("cfae,ijeb,klfd->ijklabcd", g[v, v, v, v], t_ijab, t_ijab, optimize = True) 
+    G += np.einsum("cfae,ijeb,klfd->ijklabcd", g[v, v, v, v], t_ijab, t_ijab, optimize = True)
     G += - 2 * np.einsum("bemi,kjce,mlad->ijklabcd", g[v, v, o, o], t_ijab, t_ijab, optimize = True)
 
     G = (1 / 2) * mp.permute_four_column_indices(G)
@@ -2903,7 +2903,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
     E_CCSDT_Q_MP5 += -2 * np.einsum("ijklbdac,kldc,ijba->", t_ijklabcd, u_ijab, L_ijab, optimize = True)
     E_CCSDT_Q_MP5 += np.einsum("ijklabcd,klcd,ijab->", t_ijklabcd, u_ijab, L_ijab, optimize = True)
 
-    log(f"[Done]", calculation, 1, silent = silent) 
+    log(f"[Done]", calculation, 1, silent = silent)
 
     log(f"  Calculating MP6 contribution to energy...  ", calculation, 1, end = "", silent = silent)
 
@@ -2915,10 +2915,10 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
     term2 = np.einsum("kjieba,ldce->ijklabcd", t_ijkabc, g[o, v, v, v], optimize = True)
 
     alpha = 2 * term - term.swapaxes(6, 7) - 2 * term2 + term2.swapaxes(2, 3)
-    
+
     term = np.einsum("mjicba,kdlm->ijklabcd", t_ijkabc, g[o, v, o, o], optimize = True)
     term2 = np.einsum("ljieba,kdce->ijklabcd", t_ijkabc, g[o, v, v, v], optimize = True)
- 
+
     beta = 2 * term - term.swapaxes(6, 7) - 2 * term2 + term2.swapaxes(2, 3)
 
     # Determines the MP6 contribution
@@ -2928,13 +2928,13 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 
     E_CCSDT_Q = E_CCSDT_Q_MP5 + E_CCSDT_Q_MP6
 
-    log(f"[Done]", calculation, 1, silent = silent) 
+    log(f"[Done]", calculation, 1, silent = silent)
 
-    log(f"\n  Contribution from MP5:              {E_CCSDT_Q_MP5:13.10f}", calculation, 2, silent = silent) 
-    log(f"  Contribution from MP6:              {E_CCSDT_Q_MP6:13.10f}", calculation, 2, silent = silent) 
+    log(f"\n  Contribution from MP5:              {E_CCSDT_Q_MP5:13.10f}", calculation, 2, silent = silent)
+    log(f"  Contribution from MP6:              {E_CCSDT_Q_MP6:13.10f}", calculation, 2, silent = silent)
 
-    log(f"\n  CCSDT(Q) correlation energy:        {E_CCSDT_Q:13.10f}", calculation, 1, silent = silent) 
-    
+    log(f"\n  CCSDT(Q) correlation energy:        {E_CCSDT_Q:13.10f}", calculation, 1, silent = silent)
+
 
     return E_CCSDT_Q
 
@@ -2950,7 +2950,7 @@ def calculate_restricted_CCSDT_Q_energy(g: ndarray, e_ijklabcd: ndarray, t_ijab:
 def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitudes: tuple, e_denominators: tuple, F: ndarray, method: Method, calculation: Calculation, silent: bool, SCF_output: Output, integrals: Integrals) -> tuple:
 
     """
-    
+
     Calculates the coupled cluster energy in an iterative procedure.
 
     Args:
@@ -2969,7 +2969,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
     Returns:
         E_CC (float): Coupled cluster energy
         t_amplitudes (tuple): Converged amplitudes
-    
+
     """
 
     E_CC = 0.0
@@ -2978,8 +2978,8 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
     calculate_iterative_triples = "CCSDT" in method.name or "CISDT" in method.name
     calculate_iterative_quadruples = "CCSDTQ" in method.name
 
-    # Chops of "[T]" or "[Q]" in the method name 
-    
+    # Chops of "[T]" or "[Q]" in the method name
+
     original_method_name = method.name
 
     method.name = method.name.split("[T]")[0] if "[T]" in method.name else method.name
@@ -2996,7 +2996,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
     coupled_cluster_initial_print(g, o, v, t_amplitudes, calculation.reference, method, calculation, silent)
 
     if calculation.reference == "RHF":
-        
+
         # Useful intermediate quantity for restricted coupled cluster
 
         w = 2 * g - g.swapaxes(0, 1)
@@ -3007,7 +3007,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
         # Easier just to set singles amplitudes to zero than keep checking if it's present
 
-        t_ia_old = t_ia.copy() if calculate_iterative_singles else np.zeros_like(e_denominators[0]) 
+        t_ia_old = t_ia.copy() if calculate_iterative_singles else np.zeros_like(e_denominators[0])
         t_ijab_old = t_ijab.copy()
         t_ijkabc_old = t_ijkabc.copy() if calculate_iterative_triples else None
         t_ijklabcd_old = t_ijklabcd.copy() if calculate_iterative_quadruples else None
@@ -3042,15 +3042,15 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
                 case "CCSD":
 
                     t_amplitudes = run_restricted_CCSD_iteration(g, o, v, t_amplitudes, e_denominators, w, F)
-                
+
                 case "CID":
 
                     t_amplitudes = run_restricted_CID_iteration(g, o, v, t_amplitudes, e_denominators)
-                                 
+
                 case "CISD":
 
                     t_amplitudes = run_restricted_CISD_iteration(g, o, v, t_amplitudes, e_denominators, w)
-                
+
                 case "QCISD":
 
                     t_amplitudes = run_restricted_QCISD_iteration(g, o, v, t_amplitudes, e_denominators, w)
@@ -3058,16 +3058,19 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
                 case "CCSDT":
 
                     t_amplitudes, _, _, _ = run_restricted_CCSDT_iteration(o, v, t_amplitudes, e_denominators, SCF_output.molecular_orbitals, integrals)
-            
+
                 case "CCSDTQ":
 
                     t_amplitudes = run_restricted_CCSDTQ_iteration(o, v, t_amplitudes, e_denominators, SCF_output.molecular_orbitals, integrals)
-            
 
+                case _:
+
+                    error("Illegal coupled cluster method!")
+                    
             # Use the energy expression from restricted coupled cluster
 
             E_CC, E_CC_singles, E_CC_connected_doubles, E_CC_disconnected_doubles = calculate_restricted_coupled_cluster_energy(o, v, w, t_amplitudes, method, F)
-            
+
 
         elif calculation.reference == "UHF":
 
@@ -3088,7 +3091,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
                 case "CCSD":
 
                     t_amplitudes = run_unrestricted_CCSD_iteration(g, o, v, t_amplitudes, e_denominators, F)
-                
+
                 case "CID":
 
                     t_amplitudes = run_unrestricted_CID_iteration(g, o, v, t_amplitudes, e_denominators, F)
@@ -3104,11 +3107,15 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
                 case "CCSDT":
 
                     t_amplitudes = run_unrestricted_CCSDT_iteration(g, o, v, t_amplitudes, e_denominators, F)
-                
+
                 case "CISDT":
 
                     t_amplitudes = run_unrestricted_CISDT_iteration(g, o, v, t_amplitudes, e_denominators, F)
-                
+
+                case _:
+
+                    error("Illegal coupled cluster method!")
+
 
             # Use the energy expression from unrestricted coupled cluster
 
@@ -3133,15 +3140,15 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
         # If convergence criteria has been reached, exit loop
 
-        if is_coupled_cluster_converged(delta_E, t_amplitudes, t_amplitudes_old, calculation): 
-            
+        if is_coupled_cluster_converged(delta_E, t_amplitudes, t_amplitudes_old, calculation):
+
             break
 
-        if step >= calculation.correlated_max_iter: 
-            
+        if step >= calculation.correlated_max_iter:
+
             error(f"The {method.name} iterations failed to converge! Try increasing the maximum iterations with CORRMAXITER?")
 
-        # Update amplitudes with DIIS                   
+        # Update amplitudes with DIIS
 
         t_amplitudes, DIIS_t_vector, DIIS_error_vector = apply_DIIS(t_amplitudes, t_amplitudes_old, DIIS_t_vector, DIIS_error_vector, step, calculation, silent)
 
@@ -3179,7 +3186,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_output: Output, integrals: Integrals, X: ndarray, calculation: Calculation, silent: bool) -> tuple:
 
     """
-    
+
     Sets off a coupled cluster calculation.
 
     Depending on whether a RHF or UHF reference is present, calculates the relevant intermediates and sets off the iterative calculation, then runs
@@ -3201,7 +3208,7 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
         natural_orbitals (array): Natural orbitals
 
     """
-    
+
     timer("Coupled cluster", 0)
 
     E_CC, E_perturbative = 0, 0
@@ -3216,7 +3223,7 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
         n_occ = molecule.n_doubly_occ
 
         g, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, integrals.ERI_AO, SCF_output, calculation, silent = silent)
-        
+
         # All coupled cluster calculations use non-interleaved physicists' notation, (pr|qs) -> <pq|rs>
 
         g = g.swapaxes(1, 2)
@@ -3231,11 +3238,11 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
 
 
     else:
-        
+
         n_occ = molecule.n_occ
-        
+
         g, molecular_orbitals, epsilons, _, o, v, spin_labels_sorted, spin_orbital_labels_sorted, _ = ci.begin_spin_orbital_calculation(molecule, integrals.ERI_AO, SCF_output, calculation, silent = silent)
-        
+
         # Builds spin orbital core Hamiltonian
 
         H_core_spin_block = ci.spin_block_core_Hamiltonian(integrals.H_core)
@@ -3288,11 +3295,11 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
     # Calculates the unrelaxed density matrix in the AO basis
 
     density_matrices = calculate_coupled_cluster_linearised_density(t_ia, t_ijab, molecule.n_orbitals, n_occ, o, v, calculation, molecular_orbitals, silent = silent)
-    
+
     # If "NATORBS" is used, calculate and print the natural orbitals
 
-    if calculation.natural_orbitals: 
-        
+    if calculation.natural_orbitals:
+
         occupancies, natural_orbitals = mp.calculate_natural_orbitals(density_matrices[0], X, calculation, silent = silent)
 
     if "[T]" in method.name:
