@@ -340,8 +340,8 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     # This allows polarisability calculations within applied electric fields
 
-    electric_field_x = np.array([constants.SECOND_ELEC_DERIVATIVE_PROD, 0.0, 0.0]) 
-    electric_field_z = np.array([0.0, 0.0, constants.SECOND_ELEC_DERIVATIVE_PROD])
+    electric_field_x = np.array([constants.SECOND_ELEC_DERIVATIVE_STEP, 0.0, 0.0]) 
+    electric_field_z = np.array([0.0, 0.0, constants.SECOND_ELEC_DERIVATIVE_STEP])
 
     log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent = silent)
 
@@ -349,7 +349,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
     log(f"                    Polarisability", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite field magnitude of {constants.SECOND_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
+    log(f"  Using a finite field magnitude of {constants.SECOND_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)
 
 
     def calculate_second_electric_field_derivative(electric_field: ndarray) -> tuple:
@@ -374,7 +374,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
         
         # Calculates numerical second derivative for component of polarisability
 
-        polarisability_component = -1 * calculate_second_derivative(E_backward_far, E_backward, energy, E_forward, E_forward_far, constants.SECOND_ELEC_DERIVATIVE_PROD)
+        polarisability_component = -1 * calculate_second_derivative(E_backward_far, E_backward, energy, E_forward, E_forward_far, constants.SECOND_ELEC_DERIVATIVE_STEP)
 
         return polarisability_component, E_backward, E_forward
     
@@ -387,7 +387,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
     
     # Calculates numerical dipole moment - this can be done for all electronic structure methods
 
-    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.SECOND_ELEC_DERIVATIVE_PROD)
+    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.SECOND_ELEC_DERIVATIVE_STEP)
 
     log(f"[Done]", calculation, 1, silent = silent)
 
@@ -463,8 +463,8 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
 
     # This allows polarisability calculations within applied electric fields
 
-    electric_field_x = np.array([constants.THIRD_ELEC_DERIVATIVE_PROD, 0.0, 0.0]) 
-    electric_field_z = np.array([0.0, 0.0, constants.THIRD_ELEC_DERIVATIVE_PROD])
+    electric_field_x = np.array([constants.THIRD_ELEC_DERIVATIVE_STEP, 0.0, 0.0]) 
+    electric_field_z = np.array([0.0, 0.0, constants.THIRD_ELEC_DERIVATIVE_STEP])
 
     log(f"\n Beginning dipole-dipole-dipole hyperpolarisability calculation... ", calculation, 1, silent = silent)
 
@@ -472,7 +472,7 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
     log(f"                 Hyperpolarisability", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite field magnitude of {constants.THIRD_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
+    log(f"  Using a finite field magnitude of {constants.THIRD_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)
 
     # Only two components of hyperpolarisability are indepdendent for diatomics
 
@@ -514,7 +514,7 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
     
     # Calculates numerical third derivative for parallel component of hyperpolarisability
     
-    parallel_hyperpolarisability = -1 * calculate_third_derivative(E_backward_super_far, E_backward_very_far, E_backward_far, E_backward, E_forward, E_forward_far, E_forward_very_far, E_forward_super_far, constants.THIRD_ELEC_DERIVATIVE_PROD)
+    parallel_hyperpolarisability = -1 * calculate_third_derivative(E_backward_super_far, E_backward_very_far, E_backward_far, E_backward, E_forward, E_forward_far, E_forward_very_far, E_forward_super_far, constants.THIRD_ELEC_DERIVATIVE_STEP)
 
 
     log(f"[Done]", calculation, 1, silent = silent)
@@ -541,13 +541,13 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
     
     # Calculates numerical third derivative for perpendicular component of hyperpolarisability
 
-    perpendicular_hyperpolarisability = -(E_backward_plus - 2 * E_forward + E_forward_plus - E_backward_minus + 2 * E_backward - E_forward_minus) / (2 * constants.THIRD_ELEC_DERIVATIVE_PROD ** 3)
+    perpendicular_hyperpolarisability = -(E_backward_plus - 2 * E_forward + E_forward_plus - E_backward_minus + 2 * E_backward - E_forward_minus) / (2 * constants.THIRD_ELEC_DERIVATIVE_STEP ** 3)
 
     log(f"[Done]", calculation, 1, silent = silent)
 
     # Calculates numerical dipole moment - this can be done for all electronic structure methods
 
-    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward, E_forward, constants.THIRD_ELEC_DERIVATIVE_PROD)
+    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward, E_forward, constants.THIRD_ELEC_DERIVATIVE_STEP)
 
     # Restores the electric field to baseline
     
@@ -606,7 +606,7 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
 
     # This allows dipole moment calculations within applied electric fields
 
-    electric_field_z = np.array([0.0, 0.0, constants.FIRST_ELEC_DERIVATIVE_PROD])
+    electric_field_z = np.array([0.0, 0.0, constants.FIRST_ELEC_DERIVATIVE_STEP])
 
     log(f"\n Beginning dipole moment calculation... ", calculation, 1, silent = silent)
 
@@ -614,7 +614,7 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
     log(f"                    Dipole Moment", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite field magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
+    log(f"  Using a finite field magnitude of {constants.FIRST_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)
 
     log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end = "")
 
@@ -630,7 +630,7 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
     
     # Calculates numerical first derivative for dipole moment
 
-    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_PROD)
+    electronic_dipole_moment = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_STEP)
 
     log(f"[Done]", calculation, 1, silent = silent)
 
@@ -687,8 +687,8 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
 
     original_electric_field_gradient = calculation.electric_field_gradient.copy()
 
-    electric_field_gradient_x = np.array([constants.FIRST_ELEC_DERIVATIVE_PROD, 0.0, 0.0])
-    electric_field_gradient_z = np.array([0.0, 0.0, constants.FIRST_ELEC_DERIVATIVE_PROD])
+    electric_field_gradient_x = np.array([constants.FIRST_ELEC_DERIVATIVE_STEP, 0.0, 0.0])
+    electric_field_gradient_z = np.array([0.0, 0.0, constants.FIRST_ELEC_DERIVATIVE_STEP])
 
     log(f"\n Beginning quadrupole moment calculation... ", calculation, 1, silent = silent)
 
@@ -696,7 +696,7 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     log(f"                   Quadrupole Moment", calculation, 1, silent = silent)
     log_spacer(calculation, 1, silent = silent)
 
-    log(f"  Using a finite gradient magnitude of {constants.FIRST_ELEC_DERIVATIVE_PROD:.5f} au.", calculation, 1, silent = silent)
+    log(f"  Using a finite gradient magnitude of {constants.FIRST_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)
 
     log(f"\n  Calculating parallel derivative...         ", calculation, 1, silent = silent, end = "")
 
@@ -712,7 +712,7 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     
     # Calculates numerical first derivative for z-component of quadrupole moment
 
-    electronic_quadrupole_moment_z = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_PROD)
+    electronic_quadrupole_moment_z = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_STEP)
     
     log(f"[Done]", calculation, 1, silent = silent)
 
@@ -730,7 +730,7 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     
     # Calculates numerical first derivative for x-component of quadrupole moment
 
-    electronic_quadrupole_moment_x = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_PROD)
+    electronic_quadrupole_moment_x = -1 * calculate_first_derivative(E_backward_parallel, E_forward_parallel, constants.FIRST_ELEC_DERIVATIVE_STEP)
     
     log(f"[Done]", calculation, 1, silent = silent)
     

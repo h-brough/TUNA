@@ -51,7 +51,7 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
 
     """
 
-    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.FIRST_GEOM_DERIVATIVE_PROD]])  
+    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.FIRST_GEOM_DERIVATIVE_STEP]])  
 
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
@@ -70,7 +70,7 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
 
     # Calculates numerical first derivative
 
-    gradient = calculate_first_derivative(energy_backward, energy_forward, constants.FIRST_GEOM_DERIVATIVE_PROD)
+    gradient = calculate_first_derivative(energy_backward, energy_forward, constants.FIRST_GEOM_DERIVATIVE_STEP)
 
 
     return gradient
@@ -107,7 +107,7 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
 
     """
 
-    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.SECOND_GEOM_DERIVATIVE_PROD]])  
+    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.SECOND_GEOM_DERIVATIVE_STEP]])  
 
     far_forward_coords = coordinates + 2 * prodding_coords
     forward_coords = coordinates + prodding_coords
@@ -140,7 +140,7 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
 
     # Calculates numerical second derivative
 
-    hessian = calculate_second_derivative(energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, constants.SECOND_GEOM_DERIVATIVE_PROD)
+    hessian = calculate_second_derivative(energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, constants.SECOND_GEOM_DERIVATIVE_STEP)
     
     displaced_energies = energy_far_backward, energy_backward, energy_forward, energy_far_forward
 
