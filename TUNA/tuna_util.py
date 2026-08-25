@@ -1253,18 +1253,15 @@ def finish_calculation(calculation: any) -> None:
             hours = total_time // 3600
             extra_minutes = (total_time % 3600) // 60
 
-            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in \
-                        {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
         else:
 
-            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in \
-                        {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
     else:
 
-        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in \
-                    {total_time:.2f} seconds.  :)\n", "white"), calculation, 1)
+        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n", "white"), calculation, 1)
 
 
     # Exits the program
