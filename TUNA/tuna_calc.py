@@ -470,7 +470,7 @@ def process_complex_keywords(self: Calculation) -> None:
 
     # Determines the level of numerical derivative to be calculated
 
-    self.third_derivative_requested = self.second_order_vpt or self.hyperpolarisability
+    self.third_derivative_requested = self.second_order_vpt or self.hyperpolarisability or self.first_order_vpt
     self.second_derivative_requested = self.calculation_type in ["FREQ", "OPTFREQ", "ANHARM"] or self.polarisability or self.do_ZPE_correction or self.third_derivative_requested
     self.first_derivative_requested = self.calculation_type in ["OPT", "IP", "EA", "BDE", "MD"] or self.dipole or self.quadrupole or self.second_derivative_requested
 

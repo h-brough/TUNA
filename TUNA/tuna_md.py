@@ -12,7 +12,7 @@ from tuna_calc import Calculation
 
 This is the TUNA module for ab initio molecular dynamics, written first for version 0.5.0 and rewritten for version 0.10.0.
 
-The implementation of molecular dynamics here is Born-Oppenheimer molecular dynamics - where the nuclei are treated classically for the VelocityVerlet integration step, 
+The implementation of molecular dynamics here is Born-Oppenheimer molecular dynamics - where the nuclei are treated classically for the VelocityVerlet integration step,
 which uses Newton's second law, but the forces are calculated quantum mechanically. These forces can be calculated by numerical differentiation with any implemented
 electronic structure method. The molecule is free to rotate in three-dimensional space. To allow this, the molecule is rotated onto the z-axis for the energy evaluations
 and then back-transformed to its original coordinates to continue its trajectory. As having a constant temperature would explode a diatomic molecule, all MD calculations
@@ -31,7 +31,7 @@ The module contains:
 
 
 
-def calculate_accelerations(forces: ndarray, masses: ndarray) -> ndarray: 
+def calculate_accelerations(forces: ndarray, masses: ndarray) -> ndarray:
 
     """
 
@@ -61,8 +61,8 @@ def calculate_accelerations(forces: ndarray, masses: ndarray) -> ndarray:
 
 
 
-def calculate_kinetic_energy(masses: ndarray, velocities: ndarray) -> float: 
-    
+def calculate_kinetic_energy(masses: ndarray, velocities: ndarray) -> float:
+
     """
 
     Calculates the classical nuclear kinetic energy.
@@ -177,7 +177,7 @@ def calculate_forces(coordinates: ndarray, calculation: Calculation, atomic_symb
         rotation_matrix (array): Rotation matrix to place molecule along z axis
 
     Returns:
-        forces (array): Force vectors for both atoms in 3D
+        forces (array): Force vectors for both atoms in 3D bas
 
     """
 
@@ -210,7 +210,7 @@ def rotate_coordinates_to_z_axis(difference_vector: ndarray) -> tuple[ndarray, n
 
     Calculates axis of rotation and rotates difference vector using Rodrigues' formula.
 
-    Args:   
+    Args:
         difference_vector (array): Difference vector between atoms
 
     Returns:
@@ -220,15 +220,15 @@ def rotate_coordinates_to_z_axis(difference_vector: ndarray) -> tuple[ndarray, n
     """
 
     normalised_vector = difference_vector / np.linalg.norm(difference_vector)
-    
+
     z_axis = np.array([0.0, 0.0, 1.0])
-    
+
     # Calculate the axis of rotation by the cross product
 
     rotation_axis = np.cross(normalised_vector, z_axis)
-    
+
     axis_norm = np.linalg.norm(rotation_axis)
-    
+
     if axis_norm < 1e-10:
 
         # If the axis is too small, the vector is almost aligned with the z-axis
@@ -240,23 +240,23 @@ def rotate_coordinates_to_z_axis(difference_vector: ndarray) -> tuple[ndarray, n
         # Normalize the rotation axis
 
         rotation_axis /= axis_norm
-        
+
         # Calculate the angle of rotation by the dot product
 
         cos_theta = np.dot(normalised_vector, z_axis)
         sin_theta = axis_norm
-        
+
         # Rodrigues' rotation formula
 
         K = np.array([[0.0, -rotation_axis[2], rotation_axis[1]], [rotation_axis[2], 0.0, -rotation_axis[0]], [-rotation_axis[1], rotation_axis[0], 0.0]])
-        
+
         rotation_matrix = np.eye(3) + sin_theta * K + (1 - cos_theta) * np.dot(K, K)
-    
-    
+
+
     # Rotate the difference vector to align it with the z-axis
 
     difference_vector_rotated = np.dot(rotation_matrix, difference_vector)
-    
+
     return difference_vector_rotated, rotation_matrix
 
 
@@ -269,7 +269,7 @@ def rotate_coordinates_to_z_axis(difference_vector: ndarray) -> tuple[ndarray, n
 
 
 def print_molecular_dynamics_energy_components(time: float, iteration: int, masses: ndarray, velocities: ndarray, starting_energy: float, degrees_of_freedom: int, electronic_energy: float, calculation: Calculation, molecule: Molecule) -> None:
-   
+
     """
 
     Prints information about the current iteration of a molecular dynamics simulation.
@@ -286,7 +286,7 @@ def print_molecular_dynamics_energy_components(time: float, iteration: int, mass
         molecule (Molecule): Molecule object
 
     """
-    
+
     # Potential energy of the nuclei is the total electronic energy, kinetic energy is calculated classically
 
     kinetic_energy = calculate_kinetic_energy(masses, velocities)
@@ -297,12 +297,12 @@ def print_molecular_dynamics_energy_components(time: float, iteration: int, mass
 
     # Unphysical change in total energy over course of simulation (lower for lower timestep)
 
-    drift = total_energy - starting_energy 
+    drift = total_energy - starting_energy
 
     log(f" {(iteration + 1):4.0f}    {time:5.2f}     {bohr_to_angstrom(molecule.bond_length):.4f}    {temperature:10.2f}     {electronic_energy:12.6f}   {kinetic_energy:12.6f}     {total_energy:12.6f}   {drift:12.6f}", calculation, 1)
-        
 
-    return 
+
+    return
 
 
 
@@ -329,7 +329,7 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
     time = 0.0
 
     # Linear molecules lose one rotational degree of freedom
-    
+
     degrees_of_freedom = 5
 
     # Convert to atomic units from femtoseconds for integration
@@ -343,7 +343,7 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
     # Prints trajectory to XYZ file by default, unless "NOTRAJ" keyword used
 
-    if calculation.trajectory: 
+    if calculation.trajectory:
 
         log(f"Printing trajectory data to \"{calculation.trajectory_path}\".", calculation, 1)
 
@@ -368,7 +368,7 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
     forces = calculate_forces(coordinates, calculation, atomic_symbols, np.eye(3))
 
-    accelerations = calculate_accelerations(forces, masses) 
+    accelerations = calculate_accelerations(forces, masses)
 
     velocities = calculate_initial_velocities(masses, calculation.temperature, degrees_of_freedom)
 
@@ -392,8 +392,8 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
         # Optional (default) reading in of orbitals from previous MD step - turn off with "NOMOREAD"
 
-        if calculation.MO_read: 
-            
+        if calculation.MO_read:
+
             P_guess = SCF_output.P
             P_guess_alpha = SCF_output.P_alpha
             P_guess_beta = SCF_output.P_beta
@@ -414,9 +414,9 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
         forces = calculate_forces(aligned_coordinates, calculation, atomic_symbols, rotation_matrix)
 
-        accelerations_new = calculate_accelerations(forces, masses) 
+        accelerations_new = calculate_accelerations(forces, masses)
 
-        velocities += (1 / 2) * timestep_au * (accelerations + accelerations_new) 
+        velocities += (1 / 2) * timestep_au * (accelerations + accelerations_new)
 
         # Updates accelerations and increments timestep
 
@@ -429,10 +429,10 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
         # By default prints trajectory to file, can be viewed with visualisation programs - turn this off with "NOTRAJ"
 
-        if calculation.trajectory: 
-            
+        if calculation.trajectory:
+
             out.save_trajectory_to_file(molecule, electronic_energy, coordinates, calculation.trajectory_path)
-        
+
 
     log_big_spacer(calculation)
 
