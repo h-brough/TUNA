@@ -8,11 +8,12 @@
 
 ### Changed
 
--
+- Removed accidental dependence on psutil
 
 ### Fixed
 
--
+- Step counter for MD starts at 1
+- Quadrupole moment was printing incorrectly
 
 <br>
 

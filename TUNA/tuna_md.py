@@ -187,7 +187,7 @@ def calculate_forces(coordinates: ndarray, calculation: Calculation, atomic_symb
 
     # Uses rotation matrix to bring forces back to original coordinate system
 
-    force_array_3D = force_array_1D @ rotation_matrix
+    force_array_3D = rotation_matrix.T @ force_array_1D 
 
     # Applies equal and opposite to other atom
 
@@ -357,12 +357,15 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
     log("  Step    Time    Distance    Temperature    Pot. Energy     Kin. Energy        Energy          Drift", calculation, 1)
     log_big_spacer(calculation)
 
+    # Calculates inverse mass array for acceleration calculation
+
+    masses = molecule.masses
+
+    velocities = calculate_initial_velocities(masses, calculation.temperature, degrees_of_freedom)
+
     # Remains silent to prevent too much printing, just prints to table
 
     SCF_output, molecule, electronic_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True)
-
-    # Calculates inverse mass array for acceleration calculation
-    masses = molecule.masses
 
     # Calculates forces without rotation, so uses identity matrix as rotation matrix
 
@@ -370,15 +373,13 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
     accelerations = calculate_accelerations(forces, masses)
 
-    velocities = calculate_initial_velocities(masses, calculation.temperature, degrees_of_freedom)
-
     # Total energy of molecule is nuclear potential energy (electronic total energy) and classically calculated kinetic energy
 
     initial_energy = electronic_energy + calculate_kinetic_energy(masses, velocities)
 
     # Calculates various energy components and MD quantities, then prints these
 
-    print_molecular_dynamics_energy_components(0, 1, masses, velocities, initial_energy, degrees_of_freedom, electronic_energy, calculation, molecule)
+    print_molecular_dynamics_energy_components(0, 0, masses, velocities, initial_energy, degrees_of_freedom, electronic_energy, calculation, molecule)
 
     P_guess, P_guess_alpha, P_guess_beta, E_guess = None, None, None, None
 

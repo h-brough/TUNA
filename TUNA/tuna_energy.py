@@ -346,7 +346,7 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
     log(f"\n Beginning dipole-dipole polarisability calculation... ", calculation, 1, silent = silent)
 
     log_spacer(calculation, 1, silent = silent, start = "\n")
-    log(f"                    Polarisability", calculation, 1, silent = silent)
+    log(f"                    Polarisability", calculation, 1, silent = silent, colour="white")
     log_spacer(calculation, 1, silent = silent)
 
     log(f"  Using a finite field magnitude of {constants.SECOND_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)
@@ -410,12 +410,12 @@ def calculate_polarisability(molecule: Molecule, calculation: Calculation, energ
 
     total_dipole_moment = electronic_dipole_moment + nuclear_dipole_moment
 
-    log(f"\n  Dipole moment:                         {total_dipole_moment:10.4f}", calculation, 1, silent = silent)
+    log(f"\n  Total dipole moment:                   {total_dipole_moment:10.4f}", calculation, 1, silent = silent)
 
     log(f"\n  Parallel component:                    {polarisability_parallel:10.4f}", calculation, 3, silent = silent)
     log(f"  Perpendicular component:               {polarisability_perpendicular:10.4f}", calculation, 3, silent = silent) 
 
-    log(f"\n  Ansotropic polarisability:             {anisotropic_polarisability:10.4f}", calculation, 1, silent = silent)
+    log(f"\n  Anisotropic polarisability:            {anisotropic_polarisability:10.4f}", calculation, 1, silent = silent)
     log(f"  Isotropic polarisability:              {isotropic_polarisability:10.4f}", calculation, 1, silent = silent)
 
     log_spacer(calculation, 1, silent = silent)
@@ -469,7 +469,7 @@ def calculate_hyperpolarisability(molecule: Molecule, calculation: Calculation, 
     log(f"\n Beginning dipole-dipole-dipole hyperpolarisability calculation... ", calculation, 1, silent = silent)
 
     log_spacer(calculation, 1, silent = silent, start = "\n")
-    log(f"                 Hyperpolarisability", calculation, 1, silent = silent)
+    log(f"                 Hyperpolarisability", calculation, 1, silent = silent, colour="white")
     log_spacer(calculation, 1, silent = silent)
 
     log(f"  Using a finite field magnitude of {constants.THIRD_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)
@@ -611,7 +611,7 @@ def calculate_numerical_dipole_moment(molecule: Molecule, calculation: Calculati
     log(f"\n Beginning dipole moment calculation... ", calculation, 1, silent = silent)
 
     log_spacer(calculation, 1, silent = silent, start = "\n")
-    log(f"                    Dipole Moment", calculation, 1, silent = silent)
+    log(f"                    Dipole Moment", calculation, 1, silent = silent, colour="white")
     log_spacer(calculation, 1, silent = silent)
 
     log(f"  Using a finite field magnitude of {constants.FIRST_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)
@@ -693,7 +693,7 @@ def calculate_numerical_quadrupole_moment(molecule: Molecule, calculation: Calcu
     log(f"\n Beginning quadrupole moment calculation... ", calculation, 1, silent = silent)
 
     log_spacer(calculation, 1, silent = silent, start = "\n")
-    log(f"                   Quadrupole Moment", calculation, 1, silent = silent)
+    log(f"                   Quadrupole Moment", calculation, 1, silent = silent, colour="white")
     log_spacer(calculation, 1, silent = silent)
 
     log(f"  Using a finite gradient magnitude of {constants.FIRST_ELEC_DERIVATIVE_STEP:.5f} au.", calculation, 1, silent = silent)

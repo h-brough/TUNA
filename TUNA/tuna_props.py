@@ -158,7 +158,7 @@ def calculate_analytical_quadrupole_moment(centre_of_mass: float, charges: ndarr
     # Extracts the xx and zz components of quadrupole moment integrals
 
     electronic_quadrupole_moment_xx = -1 * np.einsum("ij,ij->", P, Q[0], optimize = True)
-    electronic_quadrupole_moment_zz = -1 * np.einsum("ij,ij->", P, Q[1], optimize = True)
+    electronic_quadrupole_moment_zz = -1 * np.einsum("ij,ij->", P, Q[2], optimize = True)
 
     anisotropic_quadrupole_moment = electronic_quadrupole_moment_zz + nuclear_quadrupole_moment - electronic_quadrupole_moment_xx
 

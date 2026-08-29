@@ -14,7 +14,6 @@ import tuna_props as props
 import tuna_mp as mp
 import tuna_cc as cc
 import tuna_out as out
-import psutil
 
 
 """
@@ -395,16 +394,6 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     log(f" Molecular integral calculations are running on {calculation.number_of_threads} OpenMP threads.\n", calculation, 3, silent)
 
-    try:
-
-        if psutil.virtual_memory().available < memory_for_two_electron_integrals_bytes:
-
-            error("Not enough memory to store two-electron integrals! Try a smaller basis set or bigger computer.")
-
-    except RuntimeError:
-
-        log("Could not confirm there is enough memory for two-electron integrals!", calculation, 4)
-
     # Calculates the one-electron integrals
 
     log(" Calculating one-electron integrals...     ", calculation, 1, end = "", silent = silent)
@@ -702,7 +691,7 @@ def apply_electric_field_gradient(Q: ndarray, electric_field_gradient: ndarray) 
 
     # There are only two independent components of the quadrupole tensor for diatomics
 
-    Q = np.array([Q[0], Q[0], Q[1]])
+    Q = np.array([Q[0], Q[1], Q[2]])
 
     G = np.einsum("i,ijk->jk", electric_field_gradient, Q, optimize = True)
 

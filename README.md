@@ -18,6 +18,7 @@ The program contains a collection of quantum chemistry methods, and considerable
 The repository includes:
 
 * This README file
+* A CONTRIBUTING guide
 * The TUNA logo
 * The file LICENSE with the MIT license
 * The folder TUNA containing Python files
