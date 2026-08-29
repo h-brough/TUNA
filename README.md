@@ -30,7 +30,7 @@ The repository includes:
 
 ## Documentation
 
-The <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
+The <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
 
 ## Using TUNA
 
@@ -79,7 +79,7 @@ For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms wi
 TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
-Read <a href="https://github.com/h-brough/TUNA/blob/main/TUNA%20Manual.pdf">the manual</a> for details!
+Read <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">the manual</a> for details!
 
 ## Citation
 
