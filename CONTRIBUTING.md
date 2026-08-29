@@ -1,6 +1,6 @@
 # Contributing to TUNA
 
-Thanks for your interest in TUNA. Bug reports, questions and pull requests are all welcome.
+Thanks for your interest in TUNA! Bug reports, questions and pull requests are all welcome.
 
 ## Ways to help
 
