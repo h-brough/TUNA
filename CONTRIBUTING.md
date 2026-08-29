@@ -25,7 +25,7 @@ TUNA needs Python 3.12 or higher, a C compiler with OpenMP, and `numpy`, `scipy`
 ```
 git clone https://github.com/h-brough/TUNA.git
 cd TUNA
-pip install numpy scipy matplotlib termcolor cython
+pip install numpy scipy matplotlib termcolor cython pytest
 python setup.py build_ext --inplace
 ```
 
@@ -69,7 +69,18 @@ def calculate_coulomb_matrix(P: ndarray, ERI_AO: ndarray) -> ndarray:
 
 ## Verifying changes
 
-There is no automated test suite, so anything touching the numbers has to be checked by hand. Cross-check against an established program and quote the numbers in your pull request. For example:
+Run the test suite from the repository root before opening a pull request:
+
+```
+pytest                  # Everything
+pytest -m "not slow"    # Skips the ten slowest tests
+```
+
+Everything should pass. See `tests/README.md`
+for what the suite covers and how to add a case.
+
+The suite is not a substitute for checking new numbers. Cross-check those against an established
+program and quote them in your pull request. For example:
 
 ```python
 from pyscf import gto, scf
@@ -88,7 +99,8 @@ Some things worth checking, depending on what you changed:
 
 - Energies and properties against PySCF, Psi4, ORCA or the literature, ideally in more than one basis and for both closed- and open-shell cases.
 - Analytic derivatives against finite differences.
-- That existing calculations still give the same answers — a change to shared machinery like the SCF or integral code can move results far from where you were working.
+- That existing calculations still give the same answers — this is what `pytest` is for, since a change to shared machinery like the SCF or integral code can move results far from where you were working.
+- New methods and keywords should gain a test. For a method that is usually one line added to the tables in `tests/test_energies.py`.
 
 ## Pull requests
 

@@ -22,10 +22,11 @@ The repository includes:
 * The TUNA logo
 * The file LICENSE with the MIT license
 * The folder TUNA containing Python files
+* The `tests` folder containing the test suite
 * A folder with the GitHub workflows for publishing
-* The installation file pyproject.toml
-* The installation file setup.py
-* The TUNA manual
+* The installation file `pyproject.toml`
+* The installation file `setup.py`
+* The TUNA manual within `docs`
 * A changelog
 
 ## Documentation
@@ -53,7 +54,6 @@ pip install quantumtuna
 Find the path to where TUNA is installed, `*/TUNA/`, with the other Python site packages.
 
 On Windows, add this folder to PATH by editing the system environment variables.
-
 
 On MacOS and Linux, find this folder's path and from a terminal, run
 

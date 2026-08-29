@@ -4,10 +4,10 @@ __pycache__/
 *.so
 *.pyd
 build/
+.pytest_cache/
 dist/
 wheelhouse/
 *.egg-info/
 .venv/
 venv/
 .DS_Store
-EOF

@@ -1602,7 +1602,7 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
 
     # Only calculates triples contributions for MP4 and MP4[SDTQ]
 
-    if calculation.method.name in ["MP4", "MP4[SDTQ]"]:
+    if calculation.method.name in ["MP4", "MP4[SDTQ]", "MP4(SDTQ)"]:
 
         # Builds second-order triples epsilons tensor and singles t-amplitudes
 
@@ -1629,7 +1629,7 @@ def run_restricted_MP4(e_ijab: ndarray, t_ijab: ndarray, t_tilde_ijab: ndarray, 
     D_ijab = (1 / 2) * np.einsum("ijcd,acbd->ijab", t_ijab_2, g[v, v, v, v], optimize = True) + (1 / 2) * np.einsum("klab,kilj->ijab", t_ijab_2, g[o, o, o, o], optimize = True)
     D_ijab += np.einsum("ikac,bjkc->ijab", t_ijab_2, L[v, o, o, v], optimize = True) - np.einsum("kjac,bcki->ijab", t_ijab_2, g[v, v, o, o], optimize = True) - np.einsum("kiac,bjkc->ijab", t_ijab_2, g[v, o, o, v], optimize = True)
 
-    if calculation.method.name in ["MP4", "MP4[SDTQ]"]:
+    if calculation.method.name in ["MP4", "MP4[SDTQ]", "MP4(SDTQ)"]:
 
         # Triples contribution to MP4 energy (slowest step)
 

@@ -1,19 +1,22 @@
 # Changelog
 
-## TUNA 0.12.0 — 01/11/2026
+## TUNA 0.11.2 — 01/10/2026
 
 ### Added
 
 - Support for Python 3.15
+- Set of unit tests
 
 ### Changed
 
-- Removed accidental dependence on psutil
+- Removed undocumented dependence on psutil library
+- Refined and more consistent printing
 
 ### Fixed
 
-- Step counter for MD starts at 1
-- Quadrupole moment was printing incorrectly
+- Step counter for MD now starts at 1, rather than 2
+- The quadrupole moment was printing incorrectly
+- Round brackets were not working with coupled cluster methods
 
 <br>
 

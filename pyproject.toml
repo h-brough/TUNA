@@ -27,19 +27,19 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: MacOS",
-    "Operating System :: Unix",
-	"Programming Language :: Python",
-    "Programming Language :: Cython",
-	"Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.12",
-	"Programming Language :: Python :: 3.13",
-	"Programming Language :: Python :: 3.14",
-	"Intended Audience :: Science/Research",
+  "Development Status :: 4 - Beta",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: MacOS",
+  "Operating System :: Unix",
+  "Programming Language :: Python",
+  "Programming Language :: Cython",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Intended Audience :: Science/Research",
   "Intended Audience :: Education",
-	"Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering",
 ]
 
 
@@ -51,6 +51,11 @@ include = ["TUNA", "TUNA.tuna_integrals*"]
 [tool.setuptools.package-data]
 "TUNA" = ["*.pdf", "*.bat"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "slow: takes many energy evaluations, deselect with -m 'not slow'",
+]
 
 [project.urls]
 Repository = "https://github.com/h-brough/TUNA"

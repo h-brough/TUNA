@@ -2983,7 +2983,9 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
     original_method_name = method.name
 
     method.name = method.name.split("[T]")[0] if "[T]" in method.name else method.name
+    method.name = method.name.split("(T)")[0] if "(T)" in method.name else method.name
     method.name = method.name.split("[Q]")[0] if "[Q]" in method.name else method.name
+    method.name = method.name.split("(Q)")[0] if "(Q)" in method.name else method.name
 
     # Sets up DIIS vectors
 
@@ -3302,7 +3304,7 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
 
         occupancies, natural_orbitals = mp.calculate_natural_orbitals(density_matrices[0], X, calculation, silent = silent)
 
-    if "[T]" in method.name:
+    if "[T]" in method.name or "(T)" in method.name:
 
         if calculation.reference == "UHF":
 
@@ -3313,7 +3315,7 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
             E_perturbative = calculate_restricted_CCSD_T_energy(g, e_ijkabc, t_ia, t_ijab, o, v, method, calculation, silent)
 
 
-    elif "[Q]" in method.name:
+    elif "[Q]" in method.name or "(Q)" in method.name:
 
         E_perturbative = calculate_restricted_CCSDT_Q_energy(g, e_ijklabcd, t_ijab, t_ijkabc, o, v, calculation, silent)
 
