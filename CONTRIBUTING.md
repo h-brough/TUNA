@@ -1,10 +1,10 @@
 # Contributing to TUNA
 
-Thanks for your interest in TUNA. Bug reports, questions and pull requests are all welcome.
+Thanks for your interest in TUNA! Bug reports, questions and pull requests are all welcome.
 
 ## Ways to help
 
-- **Bug reports** — open an [issue](https://github.com/h-brough/TUNA/issues).
+- **Bug reports or feature ideas** — open an [issue](https://github.com/h-brough/TUNA/issues).
 - **Code** — new methods, keywords, performance work, or fixes, via a pull request.
 
 If you are planning something substantial, please open an issue first so we can agree on the approach before you write the code.
