@@ -6,11 +6,13 @@
 
 - Support for Python 3.15
 - Set of unit tests
+- Automatically adding TUNA to path on install
 
 ### Changed
 
 - Removed undocumented dependence on psutil library
 - Refined and more consistent printing
+- Improved and professionalised directory structure
 
 ### Fixed
 
