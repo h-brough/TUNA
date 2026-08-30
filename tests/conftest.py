@@ -35,7 +35,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 TUNA_DIRECTORY = REPOSITORY_ROOT / "TUNA"
 TUNA_SCRIPT = TUNA_DIRECTORY / "tuna.py"
 
-sys.path.insert(0, str(TUNA_DIRECTORY))
+sys.path.insert(0, str(REPOSITORY_ROOT))
 
 
 # TUNA prints its banner while being imported, and tuna.py reads sys.argv looking for "--version" at
@@ -369,7 +369,7 @@ class TunaRunner:
 
         """
 
-        completed_process = subprocess.run([sys.executable, str(TUNA_SCRIPT)] + input_line.split(), capture_output = True, text = True, timeout = 300)
+        completed_process = subprocess.run([sys.executable, "-m", "TUNA.tuna"] + input_line.split(), capture_output = True, text = True, timeout = 300)
 
         output = ANSI_ESCAPE_PATTERN.sub("", completed_process.stdout + completed_process.stderr)
 

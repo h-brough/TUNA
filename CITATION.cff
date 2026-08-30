@@ -1,5 +1,7 @@
 cff-version: 1.2.0
 
+message: "If you use TUNA in your work, please cite the paper listed under preferred-citation."
+
 title: "TUNA: A streamlined quantum chemistry program for atoms and diatomics"
 type: software
 
@@ -22,6 +24,7 @@ date-released: "2026-08-16"
 license: MIT
 
 repository-code: "https://github.com/h-brough/TUNA"
+url: "https://github.com/h-brough/TUNA"
 
 keywords:
   - quantum chemistry

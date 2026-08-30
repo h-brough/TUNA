@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import __init__ as init
 import sys
-VERSION = init.__version__
+from TUNA import __version__ as VERSION
 from termcolor import colored
 
 
@@ -15,14 +14,24 @@ things, including a big fish logo, are printed to the terminal during this. The 
 
 Updated in version 0.10.1 to process electronic structure methods as objects rather than strings.
 Updated in version 0.11.0 to enable running programatically, not just from the command line.
+Updated in version 0.11.2 to import through the TUNA package and to expose a main function for the console script.
 
 The module contains:
 
 1. A function for parsing the input line (parse_input)
 2. A function to run the requested calculation type (run_calculation)
-3. The main function, calling these two previous ones
+3. A function to process the requested method (process_method)
+4. A function that ties these together for one calculation (run)
+5. The entry point for the command line (main)
 
 """
+
+if len(sys.argv) > 1 and sys.argv[1] in ["-version", "--version"]:
+
+    print(f"TUNA {VERSION}")
+
+    sys.exit(0)
+
 
 # Prints the big fish logo
 
@@ -387,30 +396,38 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
 
 
 
+
+
+
+
 def main() -> int:
 
-    if len(sys.argv) > 1 and sys.argv[1] in ("-version", "--version"):
-    
-        print(f"TUNA {__version__}")
-        return 0
-        
-    print_banner()
-    
+    """
+
+    Entry point for the command line, used by the "tuna" and "TUNA" commands. Runs the requested
+    calculation and turns an error into an exit code rather than a traceback.
+
+    Returns:
+        exit_code (int): Zero if the calculation finished, non-zero otherwise
+
+    """
+
     try:
+
         run()
-        
+
     except KeyboardInterrupt:
-    
-        print("\nInterrupted.")
-        
+
+        print(colored("\nThe TUNA calculation has been interrupted by the user. Goodbye!\n", "light_red"))
+
         return 130
-        
+
     except TunaError as tuna_error:
-    
+
         print(tuna_error)
-        
+
         return 1
-        
+
     return 0
 
 
@@ -424,5 +441,4 @@ def main() -> int:
 
 if __name__ == "__main__":
 
-    main()
-
+    sys.exit(main())
