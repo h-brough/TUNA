@@ -1,14 +1,13 @@
 
-from tuna_util import log, error, Integrals
-import tuna_scf as scf
-from tuna_calc import Calculation
+from TUNA.tuna_util import log, error, Integrals
+import TUNA.tuna_scf as scf
+from TUNA.tuna_calc import Calculation
 from scipy.linalg import block_diag
-from tuna_integrals import tuna_integral as ints
-from tuna_molecule import Molecule, Atom
-from tuna_mp import calculate_natural_orbitals
+from TUNA.tuna_integrals import tuna_integral as ints
+from TUNA.tuna_molecule import Molecule, Atom
+from TUNA.tuna_mp import calculate_natural_orbitals
 import numpy as np
 from numpy import ndarray
-import sys
 
 
 """

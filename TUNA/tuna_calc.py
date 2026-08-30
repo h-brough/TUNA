@@ -1,5 +1,5 @@
 from __future__ import annotations
-from tuna_util import error, exchange_correlation_functionals, constants, Method
+from TUNA.tuna_util import error, exchange_correlation_functionals, constants, Method
 from dataclasses import dataclass
 import numpy as np
 

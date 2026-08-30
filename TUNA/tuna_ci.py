@@ -1,9 +1,9 @@
 import numpy as np
-from tuna_util import *
-from tuna_calc import Calculation
-from tuna_molecule import Molecule
-from tuna_dft import calculate_restricted_exchange_correlation_kernel_matrices, calculate_unrestricted_exchange_correlation_kernel_matrices
-from tuna_out import generate_absorbance_spectrum
+from TUNA.tuna_util import *
+from TUNA.tuna_calc import Calculation
+from TUNA.tuna_molecule import Molecule
+from TUNA.tuna_dft import calculate_restricted_exchange_correlation_kernel_matrices, calculate_unrestricted_exchange_correlation_kernel_matrices
+from TUNA.tuna_out import generate_absorbance_spectrum
 
 
 """

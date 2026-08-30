@@ -1,7 +1,7 @@
-from tuna_util import log, warning, symmetrise, constants, timer, log_spacer, check
-from tuna_calc import Calculation
-import tuna_xc as xc
-from tuna_molecule import Molecule
+from TUNA.tuna_util import log, warning, symmetrise, constants, timer, log_spacer, check
+from TUNA.tuna_calc import Calculation
+import TUNA.tuna_xc as xc
+from TUNA.tuna_molecule import Molecule
 import numpy as np
 from numpy import ndarray
 from scipy.integrate import lebedev_rule

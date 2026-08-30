@@ -47,6 +47,9 @@ classifiers = [
 where = ["."]
 include = ["TUNA", "TUNA.tuna_integrals*"]
 
+[project.scripts]
+tuna = "TUNA.tuna:main"
+TUNA = "TUNA.tuna:main"
 
 [tool.setuptools.package-data]
 "TUNA" = ["*.pdf", "*.bat"]
@@ -60,4 +63,4 @@ markers = [
 [project.urls]
 Repository = "https://github.com/h-brough/TUNA"
 Documentation = "https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf"
-Changelog = "https://github.com/h-brough/TUNA/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/h-brough/TUNA/blob/main/docs/CHANGELOG.md"

@@ -1,0 +1,567 @@
+# Changelog
+
+## TUNA 0.11.2 — 01/10/2026
+
+### Added
+
+- Support for Python 3.15
+- Set of unit tests
+
+### Changed
+
+- Removed undocumented dependence on psutil library
+- Refined and more consistent printing
+
+### Fixed
+
+- Step counter for MD now starts at 1, rather than 2
+- The quadrupole moment was printing incorrectly
+- Round brackets were not working with coupled cluster methods
+
+<br>
+
+## TUNA 0.11.1 — 15/08/2026
+
+### Added
+
+- Much better convergence of CCSDT and CCSDTQ by projecting null-space amplitudes
+- `PRINTLEVEL` keyword for fine control over output, from 1 (minimal) to 4 (maximal)
+
+### Changed
+
+- Fock transformation matrix has been reworded to orthogonalisation matrix
+- Final correlation energy is now printed for correlated methods with sub-parts
+- More vibrant, bolder white text in output
+
+### Fixed
+
+- More general guess energy is now calculated from guess density matrix
+- The 6-31G(d,p) basis was returning 6-311G(d,p) values
+- CCSDTQ and CCSDT(Q) were running erroneously on unrestricted references
+
+<br>
+
+## TUNA 0.11.0 — 18/07/2026
+
+### Added
+
+- Spin-adapted and unrestricted time-dependent Hartree-Fock and CIS
+- Time-dependent DFT with LSDA functionals with `TD` keyword, and optional `TDA`
+- Perturbative doubles for all TD methods with `[D]`
+- Plot absorbance spectra for `TD` calculations with `ABSPLOT`, change width with `PEAKWIDTH`
+- Configuration interaction methods CID, CISD (spin-adapted and spin orbital) and CISDT (spin orbital)
+- Non-local dispersion energy with VV10 with functional-optimised parameters with `NL` keyword
+- Response density for (SCS-)MP2 and double-hybrids with `RELAXED` keyword
+- Stability analysis for restricted and unrestricted SCF with `STAB`
+- Calculations use spherical harmonics, leading to 30-200% speedups and smoother SCF convergence
+- Go back to Cartesian harmonics with the `CARTHARM` keyword
+- Molecular integrals are 3-15x faster due to better memory allocation and OpenMP parallelisation
+- Choose a number of OpenMP threads with the `THREADS` keyword (4 by default)
+- New (meta-)GGA functionals: B97-D, B97M-V, revPBE, RPBE, revTPSS, SCAN, rSCAN, and r2SCAN
+- New hybrid functionals: revPBE0, revPBE38, SCAN0, r2SCANh, r2SCAN0, r2SCAN50, and B97
+- New double-hybrid functionals: r2SCAN0-DH, r2SCAN-CIDH, r2SCAN-QIDH, r2SCAN0-2, Pr2SCAN50, and Pr2SCAN69
+- Basis set extrapolation between quintuple- and sextuple-zeta basis sets
+- The `DIPOLE` keyword with harmonic frequency calculations gives fully numerical intensities
+- Calculations in an applied electric field gradient with `EGX`, `EGY` and `EGZ`
+- Change the number of molecular orbitals printed with `PRINTMOS`
+- Keywords for precise SCF convergence control: `ECONV`, `MAXDP`, `RMSDP` and `DIISERR`
+- Use `COLOUR` followed by a hexadecimal, like #FF00FF, to get a specific colour for plotting
+- Greatly improved molecular orbital output, including type of orbital (2px, 3dz^2, 4dxy etc.)
+- Natural orbital coefficients and occupancies now print with `NATORBS` and `PRINTMOS` or `P`
+
+### Changed
+
+- Basis set extrapolation QZ/5Z and 5Z/6Z parameters optimised to reproduce the hydrogen atom energy
+- The DFT module has been split off into tuna_xc, housing the exchange-correlation functionals
+- The `ECONV` keyword now also affects SCF energy convergence, not just correlated calculations
+- Modules are now easily timed and with `P`, a sorted output for used modules is printed
+- The transformation of two-electron integrals to the molecular orbital basis is now 20% faster
+- Speed of AO-MP2 calculations is around 3x faster, with clarified output
+- First-order vibrational perturbation theory can now be enabled with `VPT1`
+- An error will now prevent trying to calculate two-electron integrals without enough memory
+- Gaussian basis sets now only support up to "H" shells
+- The `CISTHRESH` keyword is now `EXTHRESH`
+- The `MPGRID` keyword now defaults to 10 quadrature points rather than 20
+- Curved brackets are now also accepted as well as square brackets for keywords on Linux and MacOS
+- The `PRINTMOS` keyword will always print molecular orbital information
+- CISD and CISDT are now picked for automatic full CI rather than coupled cluster methods
+- Default colour for plots is now black, rather than blue
+- The `PLOTVIB` keyword is now `VIBPLOT`
+- Huge revamp of the manual
+
+### Fixed
+
+- Some error messages were referencing deprecated keywords
+- A term in the MP5 component of the CCSDT(Q) energy was incorrect
+- The `SADGUESS` and `SCFGUESS` keywords were not working for atomic calculations
+- The MP2 unrelaxed density matrix was not correct with `FREEZECORE`
+- Some excited states were missed with the previous CIS code
+- Basis set extrapolation was not working with semi-empirical dispersion
+- An ancient version of SciPy was being installed on installing TUNA
+- Erroneous printing of guess information for `SCFGUESS` calciulations
+
+<br>
+
+## TUNA 0.10.1 — 02/04/2026
+
+### Added
+
+- Approximate anharmonic frequencies with second-order vibrational perturbation theory, `VPT2`
+- Analytical and numerical quadrupole moment with `QUADRUPOLE`
+- Spin-restricted CC2 and CC3 energy and linearised density
+- Counterpoise-corrected bond dissociation energy calculation type, `BDE`
+- Turn off counterpoise correction with `NOCP`, use zero-point energy with `ZPE`
+- Correlated methods now avoid redundant calculations when full configuration interaction is achieved
+- Much more robust handling of user-supplied keywords
+
+### Changed
+
+- Numerical derivatives are now much more consistent and stable, allowing looser SCF convergence
+- Ionisation potential and electron affinity calculations now use `TIGHT` SCF criteria by default
+- For `ANHARM` and `VPT2` calculations, `TIGHTOPT` is now the default
+- Eight energy evaluations are now used in parallel hyperpolarisability calculations rather than six
+- Energy convergence criteria for iterative correlated calculations are now the same as for the SCF by default
+- Correlated calculations with insufficient virtual orbitals will no longer exit with an error
+- Removed `CCDAMP`, `CCMAXITER`, `MPMAXITER`, `MPCONV` and `NOSINGLES` keywords
+- Replaced with new unified correlation keywords: `CORRDAMP`, `CORRMAXITER` and `ECONV`
+- Separated the keyword manager into its own module, tuna_calc
+- All code is now modernised, consistent in style and type-hinted
+
+### Fixed
+
+- Numerical electric properties were not working for unrestricted references
+- Using a decontracted basis set was broken for self-consistent guesses
+- The coordinate axis of a vibrational wavefunctions plot was in bohr, rather than angstroms
+- Spin component scaling of the density matrix wasn't working for double-hybrid functionals
+- Improved consistency of logging throughout program
+
+<br>
+
+## TUNA 0.10.0 — 15/03/2026
+
+### Added
+
+- Spin-restricted CCSDT, CCSDT(Q) and CCSDTQ energy
+- Anharmonic vibrational frequencies by solving the nuclear Schrodinger equation on the full PES via the `ANHARM` calculation type
+- Anharmonic transition intensities using either analytical or numerical dipole moment
+- Plot vibrational wavefunctions with `PLOTVIB`, control transition energy convergence with `ANHARMCONV`
+- Numerical calculation of dipole moments for all electronic structure methods via `DIPOLE`
+- Numerical calculation of polarisability and hyperpolarisability via `POLAR` and `HYPER`
+- Calculations in applied electric field with `EX`, `EY`, and `EZ` keywords
+- Adiabatic (or `VERTICAL`) ionisation potential and electron affinity calculation types, `IP` and `EA` for ionisation with `NELEC` electrons
+- Superposition of atomic densities and self-consistent minimal basis guess strategies, making SCF up to 50% faster
+- Keywords for core Hamiltonian guess, `COREGUESS`, superposition guess, `SADGUESS` or self-consistent guess, `SCFGUESS`
+- Electronic contribution to entropy is now calculated
+- New `DEBUG` keyword, for extreme levels of printing
+- Took advantage of more diatomic symmetry in the molecular integrals, making calculations up to 10x faster
+- New D2 dispersion parameters for DFT methods including PBE, BLYP, B3LYP, BP86, TPSS and B2PLYP
+- Basis set extrapolation with triple/quadruple-zeta basis sets, and quadruple/quintuple-zeta basis sets
+- New triply-augmented basis sets, t-aug-cc-pVDZ, t-aug-cc-pVTZ, t-aug-cc-pVQZ, t-aug-cc-pV5Z, and t-aug-cc-pV6Z
+
+### Changed
+
+- Default SCF guess strategy is now a self-consistent minimal basis guess, via superposition of atomic densities
+- Restructured code for Hessian evaluation, reducing cost by 20% with identical results
+- Density matrix idempotency is now forced after the guess density, to increase stability
+- Natural orbitals are no longer calculated by default for MP2
+- Minimum requestable bond length decreased from 0.05 angstroms to 0.01 angstroms
+- Atomic masses can now be printed in frequency calculations with additional print, `P`
+- Coupled cluster maximum iterations default increased from 30 to 50
+- A coupled cluster damping parameter now must be given when `CCDAMP` is used
+- The input for the `HFX`, `DFX`, `MPC` and `DFC` keywords are now given as proportions, not percentages
+- The exponent for corrrelated basis extrapolation is now always the theoretical value
+- Trying to calculate a correlated method on a system with insufficient electrons no longer throws an error
+- You can now request same and opposite spin scaling on all double-hybrid functionals with `SSS` and `OSS`
+- Major refactors to code, including new modules written with type hints, made code more object-oriented
+
+### Fixed
+
+- Only some molecular orbital information was printing with RHF/RKS calculations
+- The unrestricted CCSDT energy was not including the disconnected doubles contribution
+- Small basis sets would sometimes cause a crash for large diatomics
+- PBE was giving the wrong energy for the hydrogen atom due to issues with cleaning the spin density
+- Spin-component scaling keywords were not working for double-hybrid functionals
+- Natural orbitals were not being transformed back to the atomic orbital basis correctly
+- The `NONATORBS` keyword was causing crashes with MP2
+- The CEPA method keywords were not working correctly
+- The CEPA method keywords were not working correctly
+- Negative spin densities were not being plotted with `SPINDENSPLOT`
+
+<br>
+
+## TUNA 0.9.0 — 01/01/2026
+
+### Added
+
+- Density functional theory energy and density including (meta-)GGA, hybrid and double-hybrid exchange-correlation functionals
+- Local density methods including SVWN3, SVWN5, SPW and HFS and `XA` keyword for X-alpha method
+- (Meta-)Generalised gradient methods including PBE, BLYP, BP86, mPWLYP, PWP and TPSS
+- Hybrid exchange-correlation functionals including PBE0, B3LYP, BHLYP, TPSS0, mPW3LYP and B3P86
+- Double-hybrid exchange-correlation functionals including PBE0-DH, PBE0-QIDH, B2PLYP, B2NC-PLYP, mPW2PLYP and DSD-BLYP
+- Keywords for proportion of DFT and Hartree—Fock exchange, `DFX` and `HFX`
+- Keywords for proportion of DFT and MP2 correlation, `DFC` and `MPC`
+- Turn off correlation and exchange via `NOC` and `NOX` keywords
+- Change DFT integration grid tightness with `LOOSEGRID`, `MEDIUMGRID`, `TIGHTGRID` and `EXTREMEGRID` keywords
+- Fine control over integration accuracy with `INTACC` keyword
+- Iterative MP2 theory for calculations on non-canonical molecular orbitals, control with `MPMAXITER` and `MPCONV` keywords
+- Numerical Laplace transform MP2 theory with controlling `MPGRID` keyword
+- New output module, plotting orbitals, densities and spin densities
+- Plot molecular orbitals with `PLOTMO`, `PLOTHOMO` and `PLOTLUMO` keywords
+- Plot natural orbitals with `PLOTNO` keyword
+- Plot density, spin density and difference densities with `DENSPLOT`, `SPINDENSPLOT`, `DIFFDENSPLOT`, `DIFFSPINDENSPLOT` keywords
+- Hartree method with no Fock exchange, `H`
+- Force calculation type, `FORCE`
+
+### Changed
+
+- Increased two-electron integral speed by 2—10x through leveraging diatomic symmetry and code optimisations
+- Keyword `OMP2MAXITER` is now `MPMAXITER`
+- Keyword `OMP2CONV` is now `MPCONV`
+- Major changes to SCF module, more robust convergence and stability
+- Removed level shift
+- Updated manual with acknowledgements and further detail
+
+### Fixed
+
+- First SCF guess cycle energy now prints properly
+- The `MAXITER` keyword was off by one
+- Freezing core electrons was broken for unrestricted MP2
+- Rotating guess orbitals was on by default for triplets
+- Calling an atom "X" broke everything
+
+<br>
+
+## TUNA 0.8.1 — 11/10/2025
+
+### Added
+
+- Spin-adapted closed shell LCCD, LCCSD, CCD, CCSD and CCSD(T), speeding up correlated calculations on RHF references
+- Spin-unrestricted and spin-adapted QCISD and QCISD(T)
+- The additional print keyword, `P`, now gives a more detailed breakdown of time taken throughout a calculation
+- Choose the number of the largest amplitudes to print with the `PRINTAMPS` keyword
+- Significant speed improvements using new methods to find largest amplitudes in coupled cluster calculations
+- Dynamic damping factor will now now exceed 70% by default, changeable with `MAXDAMP` keyword
+
+### Changed
+
+- Dynamic damping now only starts after the second SCF step, to prevent issues with rotated guesses and overdamping
+- For frequency calculations, the default SCF convergence is now `EXTREME` to prevent numerical issues
+- Optimised and refactored coupled cluster module
+- Improved formatting in output for consistency
+- An error is now given before the SCF calculation if a correlated calculation is not possible
+
+### Fixed
+
+- The disconnected doubles contribution to the coupled cluster energy was sometimes calculated incorrectly
+- During geometry optimisation, the current bond length was not printing correctly
+- Suppressed warnings for Matplotlib not being able to find a particular font
+- Matplotlib graphs where `ADDPLOT` is used successively no longer get exponentially bigger on MacOS
+- The TUNA manual is now distributed using PyPI
+- Improved PyPI page formatting
+
+<br>
+
+## TUNA 0.8.0 — 28/09/2025
+
+### Added
+
+- Restricted MP4, MP4(SDQ) and MP4(DQ) energy
+- Spatial orbital (SCS-)MP2 energy and density and (SCS-)MP3 energy, speeds up calculations on RHF references
+- Core electrons can now be frozen for correlated calculations using the `FREEZECORE` keyword, with optional number of orbitals to freeze
+- Amplitude convergence for coupled cluster calculations via `AMPCONV` keyword
+- Improved (non-arbitrary) dynamic damping scheme, now uses Zerner-Hehenberger scheme based on Mulliken gross populations
+- New `DAMP` keyword, followed by a number between 0 and 1 to define a static damping parameter
+- Custom basis sets using `CUSTOM` basis with `BASIS [filename.tuna]` keyword
+- Extrapolation to complete basis set limit compatible with all calculations via `EXTRAPOLATE` keyword
+- New basis sets: STO-2G, STO-4G, STO-5G, 6-31+G*, 6-31++G*, 6-31+G**, 6-31++G**, 6-311+G*, 6-311++G*, 6-311+G**, 6-311++G**
+- New basis sets: def2-SVP, def2-SVPD, def2-TZVP, def2-TZVPD, def2-TZVPP, def2-TZVPPD, def2-QZVP, def2-QZVPD, def2-QZVPP, def2-QZVPPD
+- New basis sets: 6-31G(d,p), 6-31G(2df,p), 6-31G(3df,3pd), 6-311G(d,p), 6-311G(2df,2pd), 6-311+G(2d,p), 6-311++G(2d,2p), 6-311++G(3df,3pd)
+- New basis sets: pc-0, pc-1, pc-2, pc-3, pc-4, aug-pc-0, aug-pc-1, aug-pc-2, aug-pc-3, aug-pc-4
+- New basis sets: pcseg-0, pcseg-1, pcseg-2, pcseg-3, pcseg-4, aug-pcseg-0, aug-pcseg-1, aug-pcseg-2, aug-pcseg-3, aug-pcseg-4
+- New basis sets: aug-cc-pVDZ, aug-cc-pVTZ, aug-cc-pVQZ, aug-cc-pV5Z, aug-cc-pV6Z, d-aug-cc-pVDZ, d-aug-cc-pVTZ, d-aug-cc-pVQZ, d-aug-cc-pV5Z, d-aug-cc-pV6Z
+- New basis sets: cc-pCVDZ, cc-pCVTZ, cc-pCVQZ, cc-pCV5Z, aug-cc-pCVDZ, aug-cc-pCVTZ, aug-cc-pCVQZ, aug-cc-pCV5Z
+- New basis sets: cc-pwCVDZ, cc-pwCVTZ, cc-pwCVQZ, cc-pwCV5Z, aug-cc-pwCVDZ, aug-cc-pwCVTZ, aug-cc-pwCVQZ, aug-cc-pwCV5Z
+- New basis sets: ano-pVDZ, ano-pVTZ, ano-pVQZ, ano-pV5Z, aug-ano-pVDZ, aug-ano-pVTZ, aug-ano-pVQZ, aug-ano-pV5Z
+- New basis sets: 6-31G(d), 6-31G(d,p), 6-31+G(d), 6-31+G(d,p), 6-31++G(d), 6-31++G(d,p), 6-311G(d), 6-311G(d,p), 6-311+G(d), 6-311+G(d,p), 6-311++G(d), 6-311++G(d,p)
+
+### Changed
+
+- Dunning basis sets have been rotated and had redundant functions removed, increasing computational efficiency
+- Decimals points now align nicely for all calculations with all elements
+- Removed repeated logging of transforming integrals in MP2
+- Nicer logging at the start of a geometry optimisation
+- Basis information is now printed with the additional print keyword, `P`
+- Design of logging is now more consistent
+- Increased default orbital-optimised MP2 iterations to 30 (originally 20)
+- Improved PyPI publishing page, README and manual
+- For rotated guesses, the degrees by which the HOMO and LUMO are rotated is now printed
+- Only the first 10 virtual orbitals are now printed when `P` is used
+
+### Fixed
+
+- Distributions for MacOS and Linux now work correctly
+- Python 3.13 and Python 3.14 are now supported in addition to Python 3.12
+- Frequency calculations on a fixed geometry were not working at all
+- Ghost atoms were not working correctly under some circumstances
+- Convergence acceleration logging was sometimes contradictory
+
+<br>
+
+## TUNA 0.7.0 — 27/08/2025
+
+### Added
+
+- Energy and linearised density from CEPA0, LCCD, LCCSD, CCD, CCSD, CCSD(T) and CCSDT
+- Convergence control for coupled cluster calculations with damping via `CCDAMP` keyword (default off)
+- Convergence control for coupled cluster calculations and DIIS via `DIIS` keyword (default on)
+- Support for atoms beyond the first period — atoms up to argon are now implemented
+- Cython-based Gaussian integral engine via the McMurchie-Davidson algorithm allows higher angular momentum orbitals
+- New basis sets: 6-31G*, 6-31G**, 6-311G*, 6-311G**, cc-pVDZ, cc-pVTZ, cc-pVQZ, cc-pV5Z, cc-pV6Z
+- Largest coupled cluster amplitudes are found and printed with the T1 diagnostic
+- Keyword `CCCONV` for coupled cluster convergence control, `CCMAXITER` for maximum iterations
+- Keyword `NOSINGLES` to turn off single excitations in coupled cluster
+- Population analysis, dipole moment, natural orbitals using coupled cluster linearised density matrices
+- Keyword for changing the number of DIIS matrices to store (for SCF and coupled cluster), `DIIS [Num. Matrices]`
+- Keywords to turn on and off natural orbital calculations, `NATORBS` and `NONATORBS`
+- Optional natural orbital calculation for UHF
+- Keywords for custom atomic masses in AMU, `M1` and `M2`
+- The overlap matrix eigenvalues are now checked, use the `STHRESH` keyword to change the threshold
+- Warning message for small overlap matrix eigenvalues that are close to the threshold
+- Redesigned plotting functions in TUNA, various methods can be plotted on the same axes with the `ADDPLOT` keyword
+- Keywords `SAVEPLOT` and `DELPLOT` to save and delete plots
+- Dashed lines on plot via `DASH` and dotted lines via `DOT`
+- Option to change colour in `SCANPLOT` with `RED`, `BLUE`, `GREEN`, `CYAN`, `MAGENTA`, `YELLOW`, `BLACK`, `WHITE` keywords
+
+### Changed
+
+- By default, DIIS now remembers 6 matrices instead of 10
+- The number of MD steps, `MDNUMBER` or `NUM`, now defaults to 50 rather than 30
+- Orbital-optimised MP2 can now be accessed via `(U)OOMP2` in addition to `(U)OMP2`
+- TUNA now prints the number of minutes, in addition to the number of seconds, for long calculations
+- Removed `DENSPLOT` and `SPINDENSPLOT` keywords, and the ability to generate a three-dimensional electron density plot
+- Default atomic masses slightly altered
+- Calculations with zero electrons now exit with error
+- Molecule and basis information now includes number of occupied and virtual orbitals
+- Condensed additional printing of molecular orbitals and eigenvalues for UHF
+- TUNA now exits gracefully if interrupted by the user with Ctrl+C
+- New tuna_molecule and tuna_cc modules; removed tuna_plot module; renamed tuna_mpn into tuna_mp
+- Information is now printed during the spin-orbital transformation for post-Hartree-Fock
+- Keywords `SCANNUMBER` and `MDNUMBER` replaced by simpler keyword `NUM`
+- Keywords `SCANSTEP` and `TIMESTEP` replaced by simpler keyword `STEP`
+- Major code improvements and restructuring
+
+### Fixed
+
+- Fixed error handling of requesting RHF calculation on a molecule with an odd number of electrons
+- You can no longer put more electrons in a molecule than the number of spin-orbitals
+- Incorrect unit conversions in `SCANSTEP`
+- Incorrect unit conversions in `SCANPLOT`
+- The `GEOMMAXITER` keyword was not working correctly
+- The SCF convergence keyword was being overridden if an optimisation is requested
+- The geometry convergence keyword was being overridden if an subsequent frequency calculation is requested
+
+<br>
+
+## TUNA 0.6.1 — 26/01/2025
+
+### Added
+
+- Keyword for splotting the spin density, `SPINDENSPLOT`
+- Virial ratio is calculated and printed, which indicates the proximity to an optimised geometry
+- Degenerate excited states are now grouped and averaged before printing
+- The singlet or triplet character of excited states is now printed for RHF references
+
+### Changed
+
+- The default SCF convergence criteria for CIS calculations is now `TIGHT`
+- Threshold for CIS contributions decreased from 5% to 1%
+- Removed printing weights for RHF references, as these are calculated in a spin-orbital basis
+
+### Fixed
+
+- Requested orbital rotation with a tiny basis no longer causes a crash
+- Electron affinity calculation was crashing when no virtual orbitals were present
+- Excited state calculations were crashing when no virtual orbitals were present
+- Spin density matrix for one-electron systems was calculated incorrectly
+- Error handling for non-existent root in CIS calculations
+
+<br>
+
+## TUNA 0.6.0 — 11/01/2025
+
+### Added
+
+- Transition intensities for harmonic frequency calculations
+- Excited state energy and density by configuration interaction singles, `CIS`
+- Perturbative doubles correction to the CIS excitation energy with CIS(D) via `CIS[D]` keyword
+- Excited state coordinate scans, geometry optimisations, harmonic frequencies and MD simulations
+- Orbital-optimised MP2 energy and density, `OMP2`
+- Support for unrestricted references for SCS-MP2, SCS-MP3 and OMP2
+- Unrelaxed density matrix for unrestricted MP2, SCS-MP2 and OMP2
+- Keywords for same-spin, opposite-spin and MP3 scaling for SCS-MP3; `SSS`, `OSS` and `MP3S`
+- Keywords for orbital-optimised MP2 convergence criteria and maximum iterations; `OMP2CONV` and `OMP2MAXITER`
+- Keywords for state of interest in CIS, threshold for printing contributions, and number of states to print; `ROOT`, `CISTHRESH` and `NSTATES`
+- Optional spin contamination calculation for MP2 calculations
+- Optional population analysis and dipole moment calculations using CIS unrelaxed density matrix
+- Faster one- and two-electron integrals
+
+### Changed
+
+- Rotational constant is now printed in both GHz and cm<sup>—1</sup>
+- Molecular information at the beginning of a calculation now prints number of alpha and beta electrons
+- Reorganised and improved prettiness of console log
+- Maximum SCF iterations is now 100 by default, instead of 50
+- Various and widespread low level optimisations, and all code is now fully documented
+- Keywords `NORMALSCF` and `NORMALOPT` for SCF and geometry convergence replaced by `MEDIUMSCF` and `MEDIUMOPT`
+- Default geometry convergence criteria set to `MEDIUMOPT` rather than `TIGHTOPT` by default, except for `OPTFREQ` calculations
+- Absorbed tuna_dispersion module into tuna_energy, and added new tuna_ci module for current and future spin orbital calculations
+- Used more colour in the console log
+
+### Fixed
+
+- Density matrix is now read in from previous optimisation step, except when initial guess orbitals are rotated, as previously intended
+- Unrestricted MP2 was not working correctly for esoteric charge and multiplicity combinations
+- Absolute change in density matrix is now checked, rather than signed change, for SCF convergence
+- DIIS now works much more reliably for UHF, by combining the alpha and beta error vectors, converges faster for both RHF and UHF
+- One extra SCF cycle is no longer undertaken for no reason
+- Various miscellaneous bug fixes and improvements to error handling
+
+<br>
+
+## TUNA 0.5.1 — 14/11/2024
+
+### Added
+
+- Keyword for the default Hessian used in geometry optimisations, `DEFAULTHESS`
+- Keyword for the maximum step size for geometry optimisations, `MAXSTEP`
+- Optional parameter can be used with the `LEVELSHIFT` keyword to adjust the degree of level shift
+
+### Changed
+
+- Improved logging to console for a more consistent user experience
+- Molecular dynamics simulations now read in the density matrix from the previous step by default
+- Refactored and optimised all the code, ready for future updates and added comments and docstrings
+- Separated two- and three-dimensional plotting functions into new tuna_plot module
+- Keyword for the angle with which to rotate orbitals for initial guess, `THETA` has been removed and replaced by `ROTATE [Angle]`
+- Reading in orbitals from previous coordinate scan step now turned off by default for UHF calculations
+
+### Fixed
+
+- Point group and molecular structure are now detected correctly for ghost atom calculations
+- Nuclear repulsion energy is now not calculated for ghost atoms
+- Individual energy components now work correctly for UHF energies
+- Removed Koopmans' theorem parameter calculations for UHF references
+- Molecular orbital eigenvalues and coefficients are now printed correctly for UHF, split into alpha and beta orbitals
+- Stopped reading in orbitals for one-electron systems in coordinate scans, as there is no SCF cycle
+- Orbitals are now rotated correctly by the requested angle for UHF initial guesses
+- DIIS for UHF now works as intended when the equations can't be solved
+
+<br>
+
+## TUNA 0.5.0 — 21/09/2024
+
+### Added
+
+- *Ab initio* molecular dynamics
+- Unrestricted Hartree-Fock energy and density
+- Unrestricted MP2 energies
+- Restricted and unrestricted MP3 energies
+- Spin-component-scaled MP3 energies
+- Keyword to decontract basis functions, `DECONTRACT`
+- New basis sets: 4-31G, 6-31+G, 6-31++G, and 6-311+G
+- Mayer bond order, free and total valences
+- Spin contamination for UHF calculations
+- Orbital rotation and `ROTATE` and `NOROTATE` keywords for UHF guess density
+- Optimisations and molecular dynamics simulations optionally print to XYZ file with `TRAJ` and `NOTRAJ` keywords
+- Option to optimize to a maximum with `OPTMAX` keyword
+- Terminal output now has colour for warning and errors
+- Increased speed of all TUNA calculations by 50–95% through making full use of permutational symmetry in the two-electron integrals
+- Much better error handling and clear errors and warnings
+- New changelog, manual, GitHub and PyPI pages
+- TUNA can now be installed simply by `pip install QuantumTUNA`
+
+### Changed
+
+- Rewrote all the code to make things object-oriented, improve efficiency and reduce redundancy
+- Slimmed down the fish logo :(
+- Optimised and simplified integral engine
+- Reduced default SCF and optimisation convergence criteria by fixing associated bug
+- Better handling of print levels; optimizations now only calculate properties at the end by default
+- Now use more energy evaluations for gradients and Hessians, making them more robust but slower
+- Generally refined the output, making information more precise and clear
+
+### Fixed
+
+- When its equations can't be solved, DIIS now resets instead of crashing the program
+- Fixed frequency calculations being far too sensitive to SCF convergence when guess density was read in
+- SCF convergence was checking that DeltaE was less than the criteria, rather than its magnitude leading to too early convergence
+- Fixed the thermochemistry module mixing up the temperature and pressure variables
+- Formatting issues with population analysis
+- Fixed handling of ghost atoms, accessible by `XH` or `XHe`
+
+<br>
+
+## TUNA 0.4.0 — 29/05/2024
+
+### Added
+
+- Fock matrix extrapolation for SCF convergence (DIIS)
+- Electronic and total dipole moment
+- Unrelaxed MP2 density and natural orbitals
+- Thermochemistry after frequency calculations, `TEMPERATURE` and `PRESSURE` keywords
+- New 3-21G basis set
+
+### Changed
+
+- Density matrix is now read by default from previous step in coordinate scans and optimisations
+
+### Fixed
+
+- Unbroke level shift, added keywords
+
+<br>
+
+## TUNA 0.3.0 — 21/05/2024
+
+### Added
+
+- Geometry optimisations
+- Harmonic frequencies, optionally linked with prior optimisation with `OPTFREQ` calculation type
+- Rotational constants
+- Nuclear dipole moment
+- Optional exact or approximate (default) Hessian for optimisation
+- Keywords for geometry convergence tolerance and maximum iterations
+- High static damping option for difficult SCF convergence cases, `SLOWCONV`
+
+<br>
+
+## TUNA 0.2.0 — 02/05/2024
+
+### Added
+
+- Conventional and spin-component-scaled MP2
+- Mulliken and Löwdin population analysis
+- Keywords for additional print, `P`, and SCF damping, `DAMP`
+- Identification of point group
+
+### Changed
+
+- Updated to Python 3.12
+- Significantly increased integral efficiency using vectorised operations
+
+<br>
+
+## TUNA 0.1.0 — 02/04/2024
+
+### Added
+
+- Restricted Hartree–Fock
+- Single point energy and coordinate scans
+- New basis sets: STO-3G, STO-6G, 6-31G, 6-311G, 6-311++G
+- Dynamic damping and level shift
+- Ghost atoms
+- Molecular orbitals and energies, Koopman's theorem parameters
+- Electron density 3D plots
+- Dispersion correction with semi-empirical D2 scheme
+- Convergence criteria keywords for SCF
+- Interface with matplotlib for coordinate scan via `SCANPLOT` keyword

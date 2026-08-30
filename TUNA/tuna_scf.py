@@ -1,10 +1,10 @@
 import numpy as np
-from tuna_util import log, error, symmetrise, log_big_spacer, Output, exchange_correlation_functionals, Integrals, timer
-from tuna_molecule import Molecule
-from tuna_calc import Calculation
+from TUNA.tuna_util import log, error, symmetrise, log_big_spacer, Output, exchange_correlation_functionals, Integrals, timer
+from TUNA.tuna_molecule import Molecule
+from TUNA.tuna_calc import Calculation
 from numpy import ndarray
-import tuna_dft as dft
-import tuna_xc as xc
+import TUNA.tuna_dft as dft
+import TUNA.tuna_xc as xc
 
 
 """

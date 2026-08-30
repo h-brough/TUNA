@@ -1,9 +1,9 @@
 import numpy as np
 from numpy import ndarray
-from tuna_util import *
-import tuna_molecule as mol
-from tuna_molecule import Molecule
-from tuna_calc import Calculation
+from TUNA.tuna_util import *
+import TUNA.tuna_molecule as mol
+from TUNA.tuna_molecule import Molecule
+from TUNA.tuna_calc import Calculation
 
 
 """

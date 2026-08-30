@@ -47,15 +47,15 @@ try:
 
     with contextlib.redirect_stdout(io.StringIO()):
 
-        import tuna as tuna_main
-        import tuna_energy as energy_module
-        import tuna_freq as frequency_module
-        import tuna_opt as optimisation_module
-        import tuna_props as properties_module
-        import tuna_thermo as thermochemistry_module
+        import TUNA.tuna as tuna_main
+        import TUNA.tuna_energy as energy_module
+        import TUNA.tuna_freq as frequency_module
+        import TUNA.tuna_opt as optimisation_module
+        import TUNA.tuna_props as properties_module
+        import TUNA.tuna_thermo as thermochemistry_module
 
-        from tuna_calc import Calculation
-        from tuna_util import TunaError, constants, electronic_structure_methods
+        from TUNA.tuna_calc import Calculation
+        from TUNA.tuna_util import TunaError, constants, electronic_structure_methods
 
 except ImportError as import_error:
 

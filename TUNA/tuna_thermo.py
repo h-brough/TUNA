@@ -1,7 +1,7 @@
 import numpy as np
-from tuna_util import *
-from tuna_molecule import Molecule
-from tuna_calc import Calculation
+from TUNA.tuna_util import *
+from TUNA.tuna_molecule import Molecule
+from TUNA.tuna_calc import Calculation
 
 
 """

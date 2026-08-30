@@ -1,5 +1,5 @@
-from tuna_util import *
-from tuna_calc import Calculation
+from TUNA.tuna_util import *
+from TUNA.tuna_calc import Calculation
 import re
 import ast
 

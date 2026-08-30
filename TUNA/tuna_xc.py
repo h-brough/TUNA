@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import ndarray
-from tuna_calc import Calculation
-from tuna_util import constants
+from TUNA.tuna_calc import Calculation
+from TUNA.tuna_util import constants
 
 
 """

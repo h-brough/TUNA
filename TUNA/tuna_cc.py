@@ -1,9 +1,9 @@
 import numpy as np
-import tuna_ci as ci
-import tuna_mp as mp
-from tuna_util import *
-from tuna_molecule import Molecule
-from tuna_calc import Calculation
+import TUNA.tuna_ci as ci
+import TUNA.tuna_mp as mp
+from TUNA.tuna_util import *
+from TUNA.tuna_molecule import Molecule
+from TUNA.tuna_calc import Calculation
 
 
 """

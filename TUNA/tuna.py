@@ -24,12 +24,6 @@ The module contains:
 
 """
 
-
-if len(sys.argv) > 1 and sys.argv[1] in ["-version", "--version"]:
-
-    sys.exit(f"TUNA {VERSION}")
-
-
 # Prints the big fish logo
 
 print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white",attrs=["bold"], force_color = True) + colored(" ~~~~~~","light_grey", force_color = True)+colored(" | |  | |  | |  \\| |  /  \\","white",attrs=["bold"], force_color = True)+colored(" ~~~~~~~~","light_grey", force_color = True)+colored(" / .      \\/ ) ","white",attrs=["bold"], force_color = True)+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white",attrs=["bold"], force_color = True)+colored(" ~~~~~~","light_grey", force_color = True)+colored(" (     ))    (","white",attrs=["bold"], force_color = True)+colored(" ~~~~~\n ~~~~~~","light_grey", force_color = True)+colored(" | |  | |__| | |\\  |/ ____ \\ ","white",attrs=["bold"], force_color = True)+colored("~~~~~~","light_grey", force_color = True)+colored(" \\___  ___/\\_) ","white",attrs=["bold"], force_color = True)+colored("~~~~","light_grey", force_color = True)+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white",attrs=["bold"], force_color = True))
@@ -40,13 +34,13 @@ print(colored("Importing required libraries...  ", "light_grey", force_color = T
 import numpy as np
 from numpy import ndarray
 import time
-from tuna_util import error, TunaError, Method, timer, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation, log, log_spacer
-from tuna_calc import Calculation
-import tuna_energy as energ
-import tuna_opt as opt
-import tuna_md as md
-import tuna_freq as freq
-import tuna_kernel as kern
+from TUNA.tuna_util import error, TunaError, Method, timer, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation, log, log_spacer
+from TUNA.tuna_calc import Calculation
+import TUNA.tuna_energy as energ
+import TUNA.tuna_opt as opt
+import TUNA.tuna_md as md
+import TUNA.tuna_freq as freq
+import TUNA.tuna_kernel as kern
 
 
 print(colored("[Done]\n", "light_grey", force_color=True))
@@ -393,24 +387,42 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
 
 
 
+def main() -> int:
+
+    if len(sys.argv) > 1 and sys.argv[1] in ("-version", "--version"):
+    
+        print(f"TUNA {__version__}")
+        return 0
+        
+    print_banner()
+    
+    try:
+        run()
+        
+    except KeyboardInterrupt:
+    
+        print("\nInterrupted.")
+        
+        return 130
+        
+    except TunaError as tuna_error:
+    
+        print(tuna_error)
+        
+        return 1
+        
+    return 0
+
+
+
+
+
+
 
 
 
 
 if __name__ == "__main__":
 
-    try:
+    main()
 
-        while True:
-
-            run()
-
-    except KeyboardInterrupt:
-
-        error("The TUNA calculation has been interrupted by the user. Goodbye!")
-
-    except TunaError as tuna_error:
-
-        print(tuna_error)
-
-        sys.exit(1)

@@ -1,14 +1,14 @@
-from tuna_util import *
+from TUNA.tuna_util import *
 import numpy as np
 from numpy import ndarray
-import tuna_energy as energ
+import TUNA.tuna_energy as energ
 import sys
 from termcolor import colored
-import tuna_props as props
-import tuna_out as out
-import tuna_freq as freq
-import tuna_kernel as kern
-from tuna_calc import Calculation
+import TUNA.tuna_props as props
+import TUNA.tuna_out as out
+import TUNA.tuna_freq as freq
+import TUNA.tuna_kernel as kern
+from TUNA.tuna_calc import Calculation
 
 
 """

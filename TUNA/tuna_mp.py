@@ -1,12 +1,11 @@
 import numpy as np
-import sys
 import scipy
-import tuna_scf as scf
-import tuna_ci as ci
-import tuna_dft as dft
-from tuna_util import *
-from tuna_calc import Calculation
-from tuna_molecule import Molecule
+import TUNA.tuna_scf as scf
+import TUNA.tuna_ci as ci
+import TUNA.tuna_dft as dft
+from TUNA.tuna_util import *
+from TUNA.tuna_calc import Calculation
+from TUNA.tuna_molecule import Molecule
 
 
 """

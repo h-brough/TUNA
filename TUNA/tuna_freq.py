@@ -1,14 +1,14 @@
-from tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer, calculate_first_derivative, Output, calculate_fourth_derivative, calculate_third_derivative, timer
-import tuna_energy as energ
-from tuna_calc import Calculation
-import tuna_out as out
-import tuna_props as props
-import tuna_opt as opt
-import tuna_thermo as thermo
+from TUNA.tuna_util import log, log_big_spacer, error, warning, constants, angstrom_to_bohr, bohr_to_angstrom, log_spacer, calculate_first_derivative, Output, calculate_fourth_derivative, calculate_third_derivative, timer
+import TUNA.tuna_energy as energ
+from TUNA.tuna_calc import Calculation
+import TUNA.tuna_out as out
+import TUNA.tuna_props as props
+import TUNA.tuna_opt as opt
+import TUNA.tuna_thermo as thermo
 from scipy import linalg, interpolate
 import numpy as np
 from numpy import ndarray
-from tuna_molecule import Molecule
+from TUNA.tuna_molecule import Molecule
 
 
 """

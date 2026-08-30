@@ -1,15 +1,15 @@
 import numpy as np
-import tuna_scf as scf
-from tuna_util import *
-from tuna_calc import Calculation
-import tuna_props as props
+import TUNA.tuna_scf as scf
+from TUNA.tuna_util import *
+from TUNA.tuna_calc import Calculation
+import TUNA.tuna_props as props
 from numpy import ndarray
-from tuna_molecule import Molecule
-import tuna_dft as dft
-from tuna_integrals import tuna_integral as ints
-import tuna_guess as guess
-import tuna_kernel as kern
-import tuna_out as out
+from TUNA.tuna_molecule import Molecule
+import TUNA.tuna_dft as dft
+from TUNA.tuna_integrals import tuna_integral as ints
+import TUNA.tuna_guess as guess
+import TUNA.tuna_kernel as kern
+import TUNA.tuna_out as out
 
 
 

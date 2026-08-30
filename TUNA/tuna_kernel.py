@@ -1,19 +1,19 @@
 
-from tuna_integrals import tuna_integral as ints
-from tuna_molecule import Molecule, Atom
-from tuna_util import *
-from tuna_calc import Calculation
+from TUNA.tuna_integrals import tuna_integral as ints
+from TUNA.tuna_molecule import Molecule, Atom
+from TUNA.tuna_util import *
+from TUNA.tuna_calc import Calculation
 import numpy as np
 from scipy.linalg import block_diag
 import scipy.sparse as sp
 from numpy import ndarray
-import tuna_dft as dft
+import TUNA.tuna_dft as dft
 import sys
-import tuna_ci as ci
-import tuna_props as props
-import tuna_mp as mp
-import tuna_cc as cc
-import tuna_out as out
+import TUNA.tuna_ci as ci
+import TUNA.tuna_props as props
+import TUNA.tuna_mp as mp
+import TUNA.tuna_cc as cc
+import TUNA.tuna_out as out
 
 
 """

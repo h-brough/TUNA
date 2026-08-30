@@ -1,14 +1,14 @@
-from tuna_util import *
+from TUNA.tuna_util import *
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-import tuna_dft as dft
+import TUNA.tuna_dft as dft
 import matplotlib
 import pickle
 from matplotlib import font_manager as fm
 import warnings, logging, os
 from numpy import ndarray
-from tuna_molecule import Molecule
-from tuna_calc import Calculation
+from TUNA.tuna_molecule import Molecule
+from TUNA.tuna_calc import Calculation
 
 
 """

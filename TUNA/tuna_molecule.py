@@ -1,9 +1,9 @@
-from tuna_integrals import tuna_integral as ints
-from tuna_util import *
+from TUNA.tuna_integrals import tuna_integral as ints
+from TUNA.tuna_util import *
 from numpy import ndarray
-import tuna_basis as bas
+import TUNA.tuna_basis as bas
 import numpy as np
-from tuna_calc import Calculation
+from TUNA.tuna_calc import Calculation
 
 
 

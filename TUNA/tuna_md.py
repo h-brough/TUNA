@@ -1,11 +1,11 @@
-import tuna_opt as opt
-import tuna_energy as energ
+import TUNA.tuna_opt as opt
+import TUNA.tuna_energy as energ
 import numpy as np
 from numpy import ndarray
-from tuna_util import *
-import tuna_out as out
-from tuna_molecule import Molecule
-from tuna_calc import Calculation
+from TUNA.tuna_util import *
+import TUNA.tuna_out as out
+from TUNA.tuna_molecule import Molecule
+from TUNA.tuna_calc import Calculation
 
 
 """
