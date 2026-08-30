@@ -1,16 +1,62 @@
-name: Build and publish wheels
+name: Test, build and publish
+
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
+  pull_request:
   workflow_dispatch:
+
+# Least privilege by default. The publish job asks for id-token separately.
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  build-wheels:
+
+  test:
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, windows-latest]
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install libomp
+        if: runner.os == 'macOS'
+        run: brew install libomp
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip "setuptools>=77" wheel
+          python -m pip install cython numpy scipy matplotlib termcolor pytest
+
+      - name: Build the integral extension in place
+        run: python setup.py build_ext --inplace
+
+      - name: Run the test suite
+        run: python -m pytest -v --durations=10
+
+  build-wheels:
+    name: Wheels (${{ matrix.os }})
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -24,13 +70,16 @@ jobs:
             cibw_build: "cp312-win_amd64 cp313-win_amd64 cp314-win_amd64 cp314t-win_amd64 cp315-win_amd64 cp315t-win_amd64"
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: "x64"
+
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel
+
       - name: Build wheels
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
@@ -39,40 +88,62 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=15.0
           CIBW_SKIP: "*-win32"
           CIBW_BEFORE_BUILD: >
-            python -m pip install -U pip setuptools wheel cython &&
+            python -m pip install -U pip "setuptools>=77" wheel cython &&
             python -m pip install --only-binary=:all: numpy>=1.26 scipy>=1.11.0
+          # Smoke test every wheel on the interpreter it was built for. This is
+          # what catches a wheel that imports on the build machine but not on a
+          # clean one, which for TUNA means a missing or unbundled libomp.
+          CIBW_TEST_COMMAND: python -c "import TUNA; from TUNA.tuna_integrals import tuna_integral; print(TUNA.__version__, tuna_integral.__file__)"
+          # Once TUNA's modules import each other by package-relative name, the
+          # installed wheel can run the real suite instead, and these two lines
+          # replace the one above:
+          #   CIBW_TEST_REQUIRES: pytest
+          #   CIBW_TEST_COMMAND: pytest {project}/tests
         run: python -m cibuildwheel --output-dir wheelhouse
+
       - name: Upload built wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
           if-no-files-found: error
+
       - name: Build sdist
         if: runner.os == 'Linux'
         run: |
           python -m pip install build
           python -m build --sdist
+
       - name: Upload sdist
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
           name: sdist
           path: dist/*.tar.gz
-          if-no-files-found: ignore
+          if-no-files-found: error
+
   publish:
+    name: Publish to PyPI
     needs: build-wheels
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    # Recommended for trusted publishing, but create the environment in the
+    # repository settings first or the job will fail to start:
+    # environment: pypi
     steps:
       - uses: actions/download-artifact@v4
         with:
           pattern: wheels-*
           merge-multiple: true
           path: dist
+
       - uses: actions/download-artifact@v4
         with:
           name: sdist
           path: dist
+
       - name: Publish to PyPI (Trusted Publisher)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
