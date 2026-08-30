@@ -1,0 +1,49 @@
+cff-version: 1.2.0
+title: "TUNA: A streamlined quantum chemistry program for atoms and diatomics"
+message: "If you use TUNA in your work, please cite the paper listed under preferred-citation."
+type: software
+authors:
+  - family-names: Brough
+    given-names: Harry
+    email: harry.brough@manchester.ac.uk
+    affiliation: "Department of Chemistry, The University of Manchester"
+    # orcid: "https://orcid.org/0009-0000-8373-4023"
+abstract: >-
+  An open-source quantum chemistry program specifically designed for atoms and
+  diatomic molecules. Energies, geometry optimisations, vibrational frequencies,
+  response properties, coordinate scans and ab initio molecular dynamics are
+  available through a command-line interface, with reference implementations of
+  density functional theory, many-body perturbation theory and coupled cluster
+  theory.
+version: 0.11.2
+date-released: "2026-10-01"
+license: MIT
+repository-code: "https://github.com/h-brough/TUNA"
+url: "https://github.com/h-brough/TUNA"
+keywords:
+  - quantum chemistry
+  - computational chemistry
+  - electronic structure
+  - Hartree-Fock
+  - density functional theory
+  - coupled cluster
+  - diatomic molecules
+preferred-citation:
+  type: article
+  title: "TUNA: A streamlined quantum chemistry program for atoms and diatomics"
+  authors:
+    - family-names: Brough
+      given-names: Harry
+      email: harry.brough@manchester.ac.uk
+      affiliation: "Department of Chemistry, The University of Manchester"
+  journal: "arXiv"
+  year: 2026
+  month: 4
+  url: "https://arxiv.org/abs/2604.01471"
+  identifiers:
+    - type: other
+      value: "arXiv:2604.01471"
+      description: "arXiv identifier"
+    - type: doi
+      value: "10.48550/arXiv.2604.01471"
+      description: "DOI assigned by arXiv"
