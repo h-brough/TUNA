@@ -100,7 +100,7 @@ jobs:
             cibw_build: "cp312-macosx_* cp313-macosx_* cp314-macosx_* cp314t-macosx_* cp315-macosx_* cp315t-macosx_*"
           - os: windows-latest
             python-version: 3.12
-            cibw_build: "cp312-win_amd64 cp313-win_amd64 cp314-win_amd64 cp314t-win_amd64 cp315-win_amd64 cp315t-win_amd64"
+            cibw_build: "cp312-win_amd64 cp313-win_amd64 cp314-win_amd64 cp314t-win_amd64"
     steps:
       - uses: actions/checkout@v4
 
