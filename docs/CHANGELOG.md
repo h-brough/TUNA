@@ -6,7 +6,7 @@
 
 - Support for Python 3.15
 - A suite of unit tests, run with `pytest`
-- TUNA is now added to the system path automatically on pip install install
+- TUNA is now added to the system path automatically on pip install
 
 ### Changed
 
