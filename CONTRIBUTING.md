@@ -25,11 +25,12 @@ TUNA needs Python 3.12 or higher, a C compiler with OpenMP, and `numpy`, `scipy`
 ```
 git clone https://github.com/h-brough/TUNA.git
 cd TUNA
-pip install .
-python setup.py build_ext --inplace
+pip install -e .
 ```
 
-The last step compiles `TUNA/tuna_integrals/tuna_integral.pyx`. Rerun it whenever you change the `.pyx` file; pure Python changes need no rebuild.
+The editable install compiles `TUNA/tuna_integrals/tuna_integral.pyx` in place and points the `TUNA` command at your checkout, so edits to the Python files take effect immediately. A plain `pip install .` would install a snapshot into site-packages instead, and your changes would be invisible when you run `TUNA`.
+
+After changing the `.pyx` file, rebuild the extension with `python setup.py build_ext --inplace`; pure Python changes need no rebuild.
 
 Run from the checkout with:
 
@@ -38,6 +39,16 @@ TUNA SPE : H H 0.74 : HF STO-3G
 ```
 
 On macOS you will need `libomp` (`brew install libomp`), or set `LIBOMP_PREFIX` to point at your own build.
+
+If a build fails with a compiler error inside `tuna_integral.c`, the cause is almost always a stale copy of
+that generated file. `python -m build` cythonises the extension in an isolated environment and leaves the
+result in your tree, where it is newer than the `.pyx` and so never regenerated, and invisible to
+`git status` because `.gitignore` covers `*.c`. Clear it and rebuild:
+
+```
+rm -rf build TUNA/tuna_integrals/tuna_integral.c
+pip install -e .
+```
 
 ## Code style
 
@@ -104,7 +115,7 @@ Some things worth checking, depending on what you changed:
 
 - One logical change per pull request, kept as small as it can reasonably be.
 - Say what you changed, why, and how you checked it.
-- Add an entry to `CHANGELOG.md` under the current unreleased version, in the existing *Added / Changed / Fixed* format.
+- Add an entry to `docs/CHANGELOG.md` under the current unreleased version, in the existing *Added / Changed / Fixed* format.
 - New methods, keywords or defaults need documenting. The manual source is not in the repository, so note in your pull request what should be written up and it will be folded into the next release.
 
 ## Licence

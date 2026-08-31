@@ -37,6 +37,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Intended Audience :: Science/Research",
   "Intended Audience :: Education",
   "Topic :: Scientific/Engineering",
@@ -52,7 +53,7 @@ tuna = "TUNA.tuna:main"
 TUNA = "TUNA.tuna:main"
 
 [tool.setuptools.package-data]
-"TUNA" = ["*.pdf", "*.bat"]
+"TUNA" = ["*.pdf"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

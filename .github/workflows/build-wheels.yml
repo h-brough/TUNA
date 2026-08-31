@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-15, windows-latest]
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
 
@@ -50,9 +50,42 @@ jobs:
       - name: Run the test suite
         run: python -m pytest -v --durations=10
 
+  sdist:
+    name: Build and verify the sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the sdist
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --sdist
+
+      # An sdist that cannot be installed is worse than no sdist at all, because pip
+      # falls back to it on every platform and interpreter without a matching wheel.
+
+      - name: Install from the sdist and run the suite against it
+        run: |
+          python -m pip install pytest
+          python -m pip install dist/*.tar.gz
+          cd "$(mktemp -d)"
+          pytest -q "$GITHUB_WORKSPACE/tests"
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
   build-wheels:
     name: Wheels (${{ matrix.os }})
-    needs: test
+    needs: [test, sdist]
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
@@ -90,15 +123,12 @@ jobs:
           CIBW_BEFORE_BUILD: >
             python -m pip install -U pip "setuptools>=77" wheel cython &&
             python -m pip install --only-binary=:all: numpy>=1.26 scipy>=1.11.0
-          # Smoke test every wheel on the interpreter it was built for. This is
-          # what catches a wheel that imports on the build machine but not on a
-          # clean one, which for TUNA means a missing or unbundled libomp.
-          CIBW_TEST_COMMAND: python -c "import TUNA; from TUNA.tuna_integrals import tuna_integral; print(TUNA.__version__, tuna_integral.__file__)"
-          # Once TUNA's modules import each other by package-relative name, the
-          # installed wheel can run the real suite instead, and these two lines
-          # replace the one above:
-          #   CIBW_TEST_REQUIRES: pytest
-          #   CIBW_TEST_COMMAND: pytest {project}/tests
+          # Run the real suite against every wheel, on the interpreter it was built
+          # for and from a temporary directory. This is what catches a wheel that
+          # imports on the build machine but not on a clean one, which for TUNA
+          # means a missing or unbundled libomp.
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: pytest -q {project}/tests
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload built wheels
@@ -108,23 +138,9 @@ jobs:
           path: wheelhouse/*.whl
           if-no-files-found: error
 
-      - name: Build sdist
-        if: runner.os == 'Linux'
-        run: |
-          python -m pip install build
-          python -m build --sdist
-
-      - name: Upload sdist
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: sdist
-          path: dist/*.tar.gz
-          if-no-files-found: error
-
   publish:
     name: Publish to PyPI
-    needs: build-wheels
+    needs: [build-wheels, sdist]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

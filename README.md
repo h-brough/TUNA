@@ -13,26 +13,6 @@ The program contains a collection of quantum chemistry methods, and considerable
 <br>
 <p align="center"><img src="https://raw.githubusercontent.com/h-brough/TUNA/refs/heads/main/TUNA%20Logo.svg" alt="Fish swimming through a wavepacket." width=400 /></p>
 
-## Contents
-
-The repository includes:
-
-* This README file
-* A CONTRIBUTING guide
-* The TUNA logo
-* The file LICENSE with the MIT license
-* The folder TUNA containing Python files
-* The `tests` folder containing the test suite
-* A folder with the GitHub workflows for publishing
-* The installation file `pyproject.toml`
-* The installation file `setup.py`
-* The TUNA manual within `docs`
-* A changelog
-
-## Documentation
-
-The <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
-
 ## Using TUNA
 
 ### Prerequisites
@@ -51,7 +31,7 @@ The simplest way to install TUNA and its dependencies is by running
 pip install quantumtuna
 ```
 
-Then, in a new terminal, run ```TUNA --version``` which should print the correct version if TUNA has installed correctly.
+Then, in a new terminal, run ```TUNA --version``` which should print the current version if TUNA has installed correctly.
 
 ### Running
 
@@ -68,6 +48,10 @@ TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
 Read <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">the manual</a> for many more examples!
+
+## Documentation
+
+The <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
 
 ## Citation
 

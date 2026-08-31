@@ -1,4 +1,5 @@
 import contextlib
+import importlib.util
 import io
 import re
 import subprocess
@@ -14,9 +15,9 @@ from numpy import ndarray
 
 This is the shared configuration module for the TUNA test suite, written for version 0.11.2.
 
-TUNA's modules import each other by bare name, so the TUNA folder has to be on the path before anything
-can be imported. That happens here, once, together with the helpers that the test modules use to run a
-calculation and get numbers back out of it. Tests never import anything from TUNA themselves - they ask
+The suite runs against whichever TUNA is importable: an installed package if there is one, otherwise the
+checkout this file sits in. That choice is made here, once, together with the helpers that the test modules
+use to run a calculation and get numbers back out of it. Tests never import anything from TUNA themselves - they ask
 for the "tuna" fixture and go through the runner object, so there is only one place to fix if the way
 TUNA is driven ever changes.
 
@@ -33,9 +34,14 @@ The module contains:
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 TUNA_DIRECTORY = REPOSITORY_ROOT / "TUNA"
-TUNA_SCRIPT = TUNA_DIRECTORY / "tuna.py"
 
-sys.path.insert(0, str(REPOSITORY_ROOT))
+# Only fall back to the checkout when TUNA is not already installed. Inserting it unconditionally would
+# shadow an installed package with an unbuilt source tree, which is exactly what happens when cibuildwheel
+# runs the suite against a freshly built wheel.
+
+if importlib.util.find_spec("TUNA") is None:
+
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 
 # TUNA prints its banner while being imported, and tuna.py reads sys.argv looking for "--version" at

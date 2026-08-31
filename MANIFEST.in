@@ -1,0 +1,14 @@
+
+recursive-include TUNA *.pyx *.pxd
+
+recursive-include tests *.py
+include tests/README.md
+
+include LICENSE README.md CONTRIBUTING.md CITATION.cff
+include docs/CHANGELOG.md
+
+# Never ship build products
+
+prune build
+prune wheelhouse
+global-exclude *.py[cod] *.so *.pyd *.o *.obj .DS_Store

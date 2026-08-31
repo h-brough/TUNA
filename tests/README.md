@@ -15,7 +15,7 @@ pytest tests/test_energies.py    # One file
 
 | File | What it covers |
 | --- | --- |
-| `tuna_test.py` | Path setup and the `tuna` fixture that every test uses to run calculations |
+| `conftest.py` | Path setup and the `tuna` fixture that every test uses to run calculations |
 | `test_energies.py` | Total energies for HF, DFT, MP*N*, CI, coupled cluster and excited states |
 | `test_invariants.py` | Relations that must hold whatever the numbers are |
 | `test_input.py` | Input line parsing, keywords, error handling, and the command line |
