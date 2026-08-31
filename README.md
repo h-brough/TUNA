@@ -1,10 +1,10 @@
 # TUNA
 
+[![Tests](https://github.com/h-brough/TUNA/actions/workflows/build-wheels.yml/badge.svg)](https://github.com/h-brough/TUNA/actions/workflows/build-wheels.yml)
 [![PyPI version](https://img.shields.io/pypi/v/quantumtuna.svg?logo=pypi&logoColor=FFE873)](https://pypi.org/project/QuantumTUNA)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/quantumtuna.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/QuantumTUNA)
 [![License](https://img.shields.io/github/license/h-brough/TUNA.svg)](LICENSE)
 [![PyPI downloads](https://img.shields.io/pypi/dm/quantumtuna.svg)](https://pypi.org/project/QuantumTUNA/)
-[![Tests](https://github.com/h-brough/TUNA/actions/workflows/build-wheels.yml/badge.svg)](https://github.com/h-brough/TUNA/actions/workflows/build-wheels.yml)
 [![arXiv](https://img.shields.io/badge/arXiv-2604.01471-blue)](https://arxiv.org/abs/2604.01471)
 
 Welcome to TUNA! A streamlined quantum chemistry program for atoms and diatomics. 
