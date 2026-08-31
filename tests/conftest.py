@@ -70,16 +70,11 @@ finally:
     sys.argv = _saved_argv
 
 
-# Several TUNA functions edit the Method objects in the global "electronic_structure_methods" list in
-# place. Calculation.__post_init__ renames the CEPA methods to LCCSD, and the coupled cluster module
-# swaps square brackets for round ones. From the command line that never matters, because a process
-# runs one calculation and exits, but a test session runs hundreds in one process, so the original
-# names and flags are recorded here and put back before every calculation.
+# Several TUNA functions edit the Method objects in the global "electronic_structure_methods" list in place
 
 _ORIGINAL_METHOD_STATE = [(method, method.name, method.unrestricted) for method in electronic_structure_methods]
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
-
 
 
 

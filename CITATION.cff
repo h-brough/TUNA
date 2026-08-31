@@ -13,14 +13,18 @@ authors:
     orcid: "https://orcid.org/0009-0000-8373-4023"
 
 abstract: >-
-  TUNA is an open-source quantum chemistry program for atoms and diatomic
-  molecules. It provides energies, geometry optimisations, vibrational
-  frequencies, response properties, coordinate scans and ab initio molecular
-  dynamics through a command-line interface, with implementations of density
-  functional theory, many-body perturbation theory and coupled-cluster theory.
+  We present TUNA, an open-source quantum chemistry program specifically designed for atoms and diatomic molecules. 
+  Within this narrow molecular domain, a broad and consistent set of electronic structure methods and calculation types is available. 
+  Energies, optimisations, vibrational frequencies, response properties, coordinate scans and ab initio molecular dynamics trajectories 
+  can all be accessed through an intuitive command-line interface. A single principle underlies TUNA: once a method can be used to 
+  evaluate the energy, all properties follow from numerical differentiation. This makes the program both a transparent teaching platform 
+  and a compact environment for benchmarking methods on diatomic molecules — among the most simple yet instructive systems in quantum 
+  chemistry. Reference implementations including density functional theory, many-body perturbation theory and coupled cluster theory, 
+  supported by detailed theoretical documentation, make TUNA an accessible foundation for developing improved methods and algorithms in 
+  electronic structure.
 
 version: 0.11.2
-date-released: "2026-08-16"
+date-released: "2026-08-31"
 license: MIT
 
 repository-code: "https://github.com/h-brough/TUNA"

@@ -1,6 +1,6 @@
 # Contributing to TUNA
 
-Thanks for your interest in TUNA! Bug reports, questions and pull requests are all welcome.
+Thanks for your interest in TUNA! Bug reports, questions and pull requests are always welcome.
 
 ## Ways to help
 
@@ -14,7 +14,7 @@ If you are planning something substantial, please open an issue first so we can 
 Please include:
 
 - The output of `TUNA --version`, plus your OS and Python version.
-- The exact input line, e.g. `TUNA OPT : H H 1.0 : B3LYP 6-31G`.
+- The exact input line, eg. `TUNA OPT : H H 1.0 : B3LYP 6-31G`.
 - What you expected, and what actually happened. For wrong numbers, give the reference value and where it came from.
 - The relevant part of the output, or the full traceback if TUNA crashed.
 
@@ -25,7 +25,7 @@ TUNA needs Python 3.12 or higher, a C compiler with OpenMP, and `numpy`, `scipy`
 ```
 git clone https://github.com/h-brough/TUNA.git
 cd TUNA
-pip install numpy scipy matplotlib termcolor cython pytest
+pip install .
 python setup.py build_ext --inplace
 ```
 
@@ -34,7 +34,7 @@ The last step compiles `TUNA/tuna_integrals/tuna_integral.pyx`. Rerun it wheneve
 Run from the checkout with:
 
 ```
-python TUNA/tuna.py SPE : H H 0.74 : HF STO-3G
+TUNA SPE : H H 0.74 : HF STO-3G
 ```
 
 On macOS you will need `libomp` (`brew install libomp`), or set `LIBOMP_PREFIX` to point at your own build.
@@ -69,15 +69,13 @@ def calculate_coulomb_matrix(P: ndarray, ERI_AO: ndarray) -> ndarray:
 
 ## Verifying changes
 
-Run the test suite from the repository root before opening a pull request:
+Run the test suite from the repository root before opening a pull request simply by:
 
 ```
-pytest                  # Everything
-pytest -m "not slow"    # Skips the ten slowest tests
+pytest
 ```
 
-Everything should pass. See `tests/README.md`
-for what the suite covers and how to add a case.
+Everything should pass. See `tests/README.md` for what the suite covers and how to add a case.
 
 The suite is not a substitute for checking new numbers. Cross-check those against an established
 program and quote them in your pull request. For example:

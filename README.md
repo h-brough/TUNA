@@ -51,18 +51,6 @@ The simplest way to install TUNA and its dependencies is by running
 pip install quantumtuna
 ```
 
-Find the path to where TUNA is installed, `*/TUNA/`, with the other Python site packages.
-
-On Windows, add this folder to PATH by editing the system environment variables.
-
-On MacOS and Linux, find this folder's path and from a terminal, run
-
-```
-echo "alias tuna='noglob python3 /*/TUNA/tuna.py'" >> ~/.zshrc
-echo "alias TUNA='noglob python3 /*/TUNA/tuna.py'" >> ~/.zshrc
-source ~/.zshrc
-```
-
 Then, in a new terminal, run ```TUNA --version``` which should print the correct version if TUNA has installed correctly.
 
 ### Running
@@ -79,7 +67,7 @@ For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms wi
 TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
-Read <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">the manual</a> for details!
+Read <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">the manual</a> for many more examples!
 
 ## Citation
 

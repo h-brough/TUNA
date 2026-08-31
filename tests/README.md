@@ -63,6 +63,3 @@ The `tuna` fixture gives you:
 | `tuna.frequency(line)` | Force constant, reduced mass, frequency and zero-point energy |
 | `tuna.charged_state_energies(line, charge_delta)` | Reference and charged state energies, for IP and EA |
 | `tuna.command_line(line)` | Exit code and output from running `tuna.py` as a subprocess |
-
-Input lines are upper-cased for you, so write them in whichever case reads best. All output is
-suppressed.

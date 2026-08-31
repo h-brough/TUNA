@@ -31,6 +31,7 @@ elif platform.system() == "Darwin":
     # comes from libomp. LIBOMP_PREFIX can point at a libomp built for an older
     # macOS (e.g. from conda-forge) when building redistributable wheels; otherwise
     # fall back to Homebrew's keg-only libomp (paths must be given explicitly).
+    
     libomp = os.environ.get("LIBOMP_PREFIX", "")
 
     if not libomp and shutil.which("brew"):

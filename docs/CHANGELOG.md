@@ -1,18 +1,18 @@
 # Changelog
 
-## TUNA 0.11.2 — 01/10/2026
+## TUNA 0.11.2 — 31/08/2026
 
 ### Added
 
 - Support for Python 3.15
-- Set of unit tests
-- Automatically adding TUNA to path on install
+- A suite of unit tests, run with `pytest`
+- TUNA is now added to the system path automatically on pip install install
 
 ### Changed
 
 - Removed undocumented dependence on psutil library
 - Refined and more consistent printing
-- Improved and professionalised directory structure
+- Improved GitHub directory structure
 
 ### Fixed
 
