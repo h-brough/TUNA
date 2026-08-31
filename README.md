@@ -47,11 +47,16 @@ For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms wi
 TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
-Read <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">the manual</a> for many more examples!
+And a single point energy calculation on the beryllium atom with minimal basis CCSDTQ is 
+
+```
+TUNA SPE : Be : CCSDTQ STO-3G
+```
+
 
 ## Documentation
 
-The <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
+The <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. Many copy-and-pasteable examples for how to use TUNA are found there. A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
 
 ## Citation
 
