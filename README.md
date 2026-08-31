@@ -26,7 +26,7 @@ The program requires Python 3.12 or higher and the following packages:
 
 ### Installation
 
-The simplest way to install TUNA and its dependencies is by running
+The simplest way to install TUNA and its dependencies is by running:
 
 ```
 pip install quantumtuna
@@ -36,19 +36,19 @@ Then, in a new terminal, run ```TUNA --version``` which should print the current
 
 ### Running
 
-The syntax of the command to run a TUNA calculation is
+The syntax of the command to run a TUNA calculation is:
 
 ```
 TUNA [Calculation] : [Atom A] [Atom B] [Distance] : [Method] [Basis]
 ```
 
-For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms with B3LYP/6-31G is
+For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms with B3LYP/6-31G is:
 
 ```
 TUNA OPT : H H 1.0 : B3LYP 6-31G
 ```
 
-And a single point energy calculation on the beryllium atom with minimal basis CCSDTQ is 
+And a single point energy calculation on the beryllium atom with minimal basis CCSDTQ is:
 
 ```
 TUNA SPE : Be : CCSDTQ STO-3G
