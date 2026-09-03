@@ -1142,16 +1142,12 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_occupancies, natural_orbitals = mp.run_perturbation_theory_calculation(method, molecule, SCF_output, integrals, calculation, V_NN, grid_container, silent = silent)
 
-        props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "MP2", silent)
-
 
     # If a coupled-cluster calculation is requested, calculates the energy and density matrices
 
     elif method.method_base == "CC":
 
         E_CC, E_CC_perturbative, (P, P_alpha, P_beta), natural_occupancies, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
-
-        props.calculate_spin_contamination(P_alpha, P_beta, molecule.n_alpha, molecule.n_beta, integrals.S, calculation, "Coupled cluster", silent = silent)
 
 
     # Prints post SCF information, as long as its not an optimisation that hasn't finished yet

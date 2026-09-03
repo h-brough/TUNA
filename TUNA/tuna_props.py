@@ -403,7 +403,7 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
         n_beta (int): Number of beta electrons
         S (array): Overlap matrix in AO basis
         calculation (Calculation): Calculation object
-        kind (str): Either "UHF", "UKS", "MP2" or "Coupled cluster"
+        kind (str): Either UHF and UKS
         silent (bool, optional): Should anything be printed
 
     """
@@ -416,23 +416,15 @@ def calculate_spin_contamination(P_alpha: ndarray, P_beta: ndarray, n_alpha: int
 
     s_squared = s_squared_exact + spin_contamination
 
-    # Only print by default for unrestricted SCF
+    log_spacer(calculation, silent = silent, priority = 2)
+    log(f"                 {kind} Spin Contamination       ", calculation, 2, silent = silent, colour = "white")
+    log_spacer(calculation, silent = silent, priority = 2)
 
-    priority = 2 if kind in ["UHF", "UKS"] else 3
+    log(f"  Exact S^2 expectation value:            {s_squared_exact:9.6f}", calculation, 2, silent = silent)
+    log(f"  {kind} S^2 expectation value:              {s_squared:9.6f}", calculation, 2, silent = silent)
+    log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, 2, silent = silent)
 
-    title = kind.title() if kind == "Coupled cluster" else kind
-
-    space1, space2 = ("       ", "            ") if len(kind) == 3 else ("", "")
-
-    log_spacer(calculation, silent = silent, priority = priority)
-    log(f"   {space1}       {title} Spin Contamination       ", calculation, priority, silent = silent, colour = "white")
-    log_spacer(calculation, silent = silent, priority = priority)
-
-    log(f"  Exact S^2 expectation value:            {s_squared_exact:9.6f}", calculation, priority, silent = silent)
-    log(f"  {kind} S^2 expectation value:  {space2}{s_squared:9.6f}", calculation, priority, silent = silent)
-    log(f"\n  Spin contamination:                     {spin_contamination:9.6f}", calculation, priority, silent = silent)
-
-    log_spacer(calculation, silent = silent, priority = priority, end="\n")
+    log_spacer(calculation, silent = silent, priority = 2, end="\n")
 
     return
 

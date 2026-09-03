@@ -1,5 +1,7 @@
 # Changelog
 
+Removed spin contamination for coupled cluster and MP2 calculations
+
 ## TUNA 0.11.2 — 31/08/2026
 
 ### Added
