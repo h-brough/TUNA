@@ -1,6 +1,8 @@
 # Changelog
 
 Removed spin contamination for coupled cluster and MP2 calculations
+Actually enforces dependency versions on pip install
+Now require at least NumPy 2.1
 
 ## TUNA 0.11.2 — 31/08/2026
 

@@ -7,7 +7,7 @@
 [![PyPI downloads](https://img.shields.io/pypi/dm/quantumtuna.svg)](https://pypi.org/project/QuantumTUNA/)
 [![arXiv](https://img.shields.io/badge/arXiv-2604.01471-blue)](https://arxiv.org/abs/2604.01471)
 
-Welcome to TUNA! A streamlined quantum chemistry program for atoms and diatomics. 
+Welcome to TUNA! A streamlined quantum chemistry program for atoms and diatomics.
 
 The program contains a collection of quantum chemistry methods, and considerable effort has been taken to document everything. The manual provides numerous examples and explanations for how TUNA works.
 
@@ -17,7 +17,7 @@ The program contains a collection of quantum chemistry methods, and considerable
 ## Using TUNA
 
 ### Prerequisites
-The program requires Python 3.12 or higher and the following packages:
+The program requires Python 3.12 or higher and recent versionf of the following packages:
 
 * numpy
 * scipy
@@ -57,7 +57,7 @@ TUNA SPE : Be : CCSDTQ STO-3G
 
 ## Documentation
 
-The <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. Many copy-and-pasteable examples for how to use TUNA are found there. 
+The <a href="https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf">TUNA Manual</a> can be found in this repository, and in the directory where the Python files are installed. Many copy-and-pasteable examples for how to use TUNA are found there.
 
 A concise description of the program can be found in the <a href="https://arxiv.org/abs/2604.01471">arXiv paper</a>.
 
