@@ -8,6 +8,7 @@ from TUNA.tuna_molecule import Molecule
 import TUNA.tuna_dft as dft
 from TUNA.tuna_integrals import tuna_integral as ints
 import TUNA.tuna_guess as guess
+import TUNA.tuna_mp as mp
 import TUNA.tuna_kernel as kern
 import TUNA.tuna_out as out
 
@@ -227,6 +228,10 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
     if not silent and calculation.hyperpolarisability:
 
         calculate_hyperpolarisability(molecule_small, calculation, silent, atomic_symbols, coordinates, None)
+
+    if not silent and calculation.g0w0:
+
+        mp.calculate_G0W0()
 
     calculation.basis = small_basis
 
@@ -959,6 +964,10 @@ def calculate_energy(calculation: Calculation, atomic_symbols: list, coordinates
         if calculation.hyperpolarisability:
 
             calculate_hyperpolarisability(molecule, calculation, False, atomic_symbols, coordinates, integrals)
+
+        if calculation.g0w0:
+
+            mp.calculate_G0W0()
         
 
     return SCF_output, molecule, final_energy, P

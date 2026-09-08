@@ -119,6 +119,7 @@ KEYWORDS = [
     Keyword("NOTRIPLETS", "calculate_no_triplets"),
     Keyword("NOSINGLETS", "calculate_no_singlets"),
     Keyword(("[D]", "(D)"), "do_perturbative_doubles",),
+    Keyword(("G0W0", "GW"), "g0w0"),
 
     Keyword("SCANPLOT", "scan_plot"),
     Keyword("DASH", "plot_dashed_lines"),

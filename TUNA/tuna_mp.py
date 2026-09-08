@@ -1840,3 +1840,19 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
 
     return E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_orbital_occupancies, natural_orbitals
+
+
+
+
+
+
+
+
+
+
+def calculate_G0W0():
+
+
+
+
+    return
