@@ -330,7 +330,7 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
 
     # Linear molecules lose one rotational degree of freedom
 
-    degrees_of_freedom = 5
+    degrees_of_freedom = 3
 
     # Convert to atomic units from femtoseconds for integration
 
@@ -357,15 +357,15 @@ def run_molecular_dynamics_simulation(calculation: Calculation, atomic_symbols: 
     log("  Step    Time    Distance    Temperature    Pot. Energy     Kin. Energy        Energy          Drift", calculation, 1)
     log_big_spacer(calculation)
 
+    # Remains silent to prevent too much printing, just prints to table
+
+    SCF_output, molecule, electronic_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True)
+
     # Calculates inverse mass array for acceleration calculation
 
     masses = molecule.masses
 
     velocities = calculate_initial_velocities(masses, calculation.temperature, degrees_of_freedom)
-
-    # Remains silent to prevent too much printing, just prints to table
-
-    SCF_output, molecule, electronic_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True)
 
     # Calculates forces without rotation, so uses identity matrix as rotation matrix
 
