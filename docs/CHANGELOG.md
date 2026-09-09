@@ -2,8 +2,12 @@
 
 Removed spin contamination for coupled cluster and MP2 calculations
 Actually enforces dependency versions on pip install
+<<<<<<< Updated upstream
 Now require at least NumPy 2.1
 Correct degrees of freedom for MD
+=======
+Now require at least NumPy 2.1. Unbroke molecular dynamics...
+>>>>>>> Stashed changes
 
 ## TUNA 0.11.2 — 31/08/2026
 
