@@ -187,7 +187,7 @@ def calculate_forces(coordinates: ndarray, calculation: Calculation, atomic_symb
 
     # Uses rotation matrix to bring forces back to original coordinate system
 
-    force_array_3D = rotation_matrix.T @ force_array_1D 
+    force_array_3D = rotation_matrix.T @ force_array_1D
 
     # Applies equal and opposite to other atom
 
