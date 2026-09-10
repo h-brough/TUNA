@@ -15,13 +15,15 @@ This is the TUNA module for many-body perturbation theory, written first for ver
 Functions for many-body perturbation theory, including MP2, MP3 and MP4 are found here.
 
 Updated in version 0.11.0 to add the MP2 relaxed density matrix.
+Updated in version 0.12.0 with calculations using the GW approximation for quasiparticle energies.
 
 The module contains:
 
 1. Functions permute high rank tensors, used here and in tuna_cc (permute_symmetric, permute_three_column_indices, etc.)
 2. Functions to calculate the MP2 energy (calculate_restricted_MP2_energy, calculate_unrestricted_MP2_energy)
-2. Functions to calculate the MP3 and MP4 energy (calculate_restricted_MP3_energy, calculate_unrestricted_MP4_energym, etc.)
-2. The main function, run_perturbation_theory_calculation, which sets off the requested MP calculation
+3. Functions to calculate the MP3 and MP4 energy (calculate_restricted_MP3_energy, calculate_unrestricted_MP4_energy, etc.)
+4. The main function, run_perturbation_theory_calculation, which sets off the requested MP calculation
+5. Functions for the GW approximation (print_G0W0_results, etc.)
 
 """
 
@@ -1744,7 +1746,7 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
     # Calculates useful quantities for all spin orbital or spatial orbital calculations
 
     if calculation.reference == "UHF" or method.name == "OMP2":
-        
+
         g, C_spin_block, epsilons_sorted, ERI_spin_block, o, v, spin_labels, _, ERI_SO = ci.begin_spin_orbital_calculation(molecule, ERI_AO, SCF_output, calculation, silent = silent)
 
         # Calculates the exchange-correlation kernel matrices for double-hybrids
@@ -1850,9 +1852,223 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
 
 
-def calculate_G0W0():
+def print_G0W0_results(calculation: Calculation, molecule: Molecule, quasiparticle_energies: ndarray, correlated: slice, epsilons: ndarray, silent: bool) -> None:
 
+    """
 
+    Prints the G0W0 quasiparticle energies and updated Koopmans' parameters.
 
+    Args:
+        calculation (Calculation): Calculation object
+        molecule (Molecule): Molecule object
+        quasiparticle_energies (array): Array of quasiparticle energies
+        correlated (slice): Indices of orbitals involved in correlation
+        epsilons (array): Array of orbital energies
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        quasiparticle_energies (array): Quasiparticle energies
+
+    """
+
+    log_big_spacer(calculation, silent = silent, start = "\n")
+    log("  Orbital          Orbital Energy             Correction           Quasiparticle          Energy (eV)", calculation, 1, silent = silent)
+    log_big_spacer(calculation, silent = silent)
+
+    for orbital in correlated:
+
+        correction = quasiparticle_energies[orbital] - epsilons[orbital]
+
+        log(f"   {(orbital + 1):3}          {epsilons[orbital]:16.10f}         {correction:16.10f}       {quasiparticle_energies[orbital]:16.10f}        {quasiparticle_energies[orbital] * constants.eV_in_hartree:12.5f}", calculation, 1, silent = silent)
+
+    log_big_spacer(calculation, silent = silent)
+
+    # The ionisation potential and electron affinity are minus the quasiparticle energies of the HOMO and LUMO
+
+    ip_original = -1 * epsilons[molecule.n_doubly_occ - 1]
+    ip_corrected = -1 * quasiparticle_energies[molecule.n_doubly_occ - 1]
+
+    ea_original = -1 * epsilons[molecule.n_doubly_occ]
+    ea_corrected = -1 * quasiparticle_energies[molecule.n_doubly_occ]
+
+    band_gap_original = ip_original - ea_original
+    band_gap_corrected = ip_corrected - ea_corrected
+
+    log(f"\n  Original ionisation potential:   {ip_original:16.10f}", calculation, 1, silent = silent)
+    log(f"  Corrected ionisation potential:  {ip_corrected:16.10f}", calculation, 1, silent = silent)
+
+    log(f"\n  Original electron affinity:      {ea_original:16.10f}", calculation, 1, silent = silent)
+    log(f"  Corrected electron affinity:     {ea_corrected:16.10f}", calculation, 1, silent = silent)
+
+    log(f"\n  Original HOMO-LUMO gap:          {band_gap_original:16.10f}", calculation, 1, silent = silent)
+    log(f"  Corrected HOMO-LUMO gap:         {band_gap_corrected:16.10f}", calculation, 1, silent = silent)
+
+    log_spacer(calculation, silent = silent, start = "\n")
 
     return
+
+
+
+
+
+
+
+
+
+
+def calculate_G0W0(molecule: Molecule, SCF_output: Output, calculation: Calculation, silent: bool = False) -> ndarray:
+
+    """
+
+    Calculates the G0W0 quasiparticle energies of a spin-restricted reference.
+
+    Args:
+        molecule (Molecule): Molecule object
+        SCF_output (Output): SCF output object
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        quasiparticle_energies (array): Quasiparticle energies
+
+    """
+
+    check(calculation.reference == "RHF", "The GW approximation is not yet available for unrestricted references!")
+    check(molecule.n_virt > 0, "The GW approximation requested on system with no virtual orbitals!")
+    check(molecule.n_doubly_occ > molecule.n_core_orbitals, "The GW approximation requested with every occupied orbital frozen!")
+
+    timer("G0W0", 0)
+
+    integrals = SCF_output.integrals
+
+    # Transforms the two-electron integrals into the spatial orbital basis
+
+    g, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, integrals.ERI_AO, SCF_output, calculation, silent = silent)
+
+    # Convert to physicists' notation
+
+    g = g.transpose(0, 2, 1, 3)
+
+    # Allows frozen core calculations
+
+    n_occ, n_virt = o.stop - o.start, molecule.n_doubly_virt
+
+    # Only these orbitals have quasiparticle energies
+
+    correlated = range(o.start, len(epsilons))
+
+    log_spacer(calculation, silent = silent, start = "\n")
+    log("                  GW Approximation", calculation, 1, silent, colour = "white")
+    log_spacer(calculation, silent = silent)
+
+    log("\n  Building exicited state Hamiltonian...     ", calculation, 1, silent, end = "")
+
+    # The screening in GW is direct RPA, so the excitation matrices are built with a Hartree-only kernel
+
+    HFX_prop = calculation.HFX_prop
+
+    calculation.HFX_prop = 0
+
+    A_ia_jb = ci.calculate_A_matrix(calculation, g, epsilons, o, v, None, "singlet")
+    B_ia_jb = ci.calculate_B_matrix(calculation, g, o, v, None, "singlet")
+
+    calculation.HFX_prop = HFX_prop
+
+    log("[Done]", calculation, 1, silent)
+
+    log("  Diagonalising Hamiltonian...               ", calculation, 1, silent, end = "")
+
+    # Solves the full RPA problem, which normalises the state vectors and throws away the negative roots
+
+    excitation_energies, state_vectors = ci.calculate_time_dependent_hartree_fock_states(A_ia_jb, B_ia_jb)
+
+    log("[Done]\n", calculation, 1, silent)
+
+    log("  Building screened Coulomb couplings...     ", calculation, 1, silent, end = "")
+
+    # These are couplings between molecular orbital pairs and amplitude-weighted excitation densities
+
+    couplings = np.zeros((len(epsilons), len(epsilons), len(excitation_energies)))
+
+    for state in range(len(excitation_energies)):
+
+        # The transition density coefficients is X + Y
+
+        X, Y = ci.split_state_vector(state_vectors[:, state], n_occ, n_virt)
+
+        # Coupling between molecular orbital pair pq and transition density jb of each state
+
+        couplings[:, :, state] = np.einsum("pjqb,jb->pq", g[:, o, :, v], X + Y, optimize = True)
+
+    log("[Done]", calculation, 1, silent)
+
+    # The exchange self-energy is full exact exchange regardless of reference
+
+    F_x, _, _ = scf.construct_restricted_Fock_matrix(integrals, SCF_output.P, 1, None)
+
+    epsilons_x = np.diag(ci.transform_matrix_AO_to_SO(F_x, molecular_orbitals))
+
+    log("  Solving quasiparticle equations...         ", calculation, 1, silent, end = "")
+
+    quasiparticle_energies = epsilons.copy()
+
+    for orbital in correlated:
+
+        # The couplings are frequency independent, so their squares are formed once for this orbital
+
+        quasiparticle_energy = epsilons[orbital]
+
+        # Squares the couplings of this orbital's product density to every plasmon's transition density
+
+        occupied_couplings = couplings[orbital, o, :] ** 2
+        virtual_couplings = couplings[orbital, v, :] ** 2
+
+        # Solves the quasiparticle equation by Newton's method, starting from the reference orbital energy
+
+        for _ in range(calculation.correlated_max_iter):
+
+            # Poles below the Fermi level are shifted up in frequency by the excitation energies, and those above are shifted down
+
+            occupied_denominators = quasiparticle_energy - epsilons[o][:, None] + excitation_energies[None, :]
+            virtual_denominators = quasiparticle_energy - epsilons[v][:, None] - excitation_energies[None, :]
+
+            # The factor of two accounts for the two spin channels of the spin-summed screened interaction
+
+            sigma = 2 * (np.sum(occupied_couplings / occupied_denominators) + np.sum(virtual_couplings / virtual_denominators))
+
+            sigma_derivative = -2 * (np.sum(occupied_couplings / occupied_denominators ** 2) + np.sum(virtual_couplings / virtual_denominators ** 2))
+
+            # Quasiparticle energy = quasiparticle energy - self-exchange - self-correlation
+
+            energy_change = 1 / (1 - sigma_derivative) * (quasiparticle_energy - epsilons_x[orbital] - sigma)
+
+            quasiparticle_energy -= energy_change
+
+            if abs(energy_change) < calculation.energy_convergence:
+
+                break
+
+        else:
+
+            warning(f"Quasiparticle equation did not converge for orbital {orbital + 1}!", space = 2)
+
+        quasiparticle_energies[orbital] = quasiparticle_energy
+
+    # Degenerate orbitals must share a quasiparticle energy, so the splitting is averaged
+
+    for orbital in correlated:
+
+        # A frozen orbital has no quasiparticle energy, so it never joins an average
+
+        degenerate = np.abs(epsilons - epsilons[orbital]) < 1e-5
+        degenerate[:o.start] = False
+
+        quasiparticle_energies[degenerate] = np.mean(quasiparticle_energies[degenerate])
+
+    log("[Done]", calculation, 1, silent)
+
+    print_G0W0_results(calculation, molecule, quasiparticle_energies, correlated, epsilons, silent)
+
+    timer("G0W0", 1)
+
+    return quasiparticle_energies
