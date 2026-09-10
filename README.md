@@ -22,7 +22,6 @@ The program requires Python 3.12 or higher and recent versionf of the following 
 * numpy
 * scipy
 * matplotlib
-* termcolor
 
 ### Installation
 

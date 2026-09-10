@@ -2,7 +2,6 @@
 
 import sys
 from TUNA import __version__ as VERSION
-from termcolor import colored
 
 
 """
@@ -35,15 +34,17 @@ if len(sys.argv) > 1 and sys.argv[1] in ["-version", "--version"]:
 
 # Prints the big fish logo
 
-print(colored("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white",attrs=["bold"], force_color = True) + colored(" ~~~~~~","light_grey", force_color = True)+colored(" | |  | |  | |  \\| |  /  \\","white",attrs=["bold"], force_color = True)+colored(" ~~~~~~~~","light_grey", force_color = True)+colored(" / .      \\/ ) ","white",attrs=["bold"], force_color = True)+colored("~~~~\n ~~~~~~","light_grey")+colored(" | |  | |  | | . ` | / /\\ \\","white",attrs=["bold"], force_color = True)+colored(" ~~~~~~","light_grey", force_color = True)+colored(" (     ))    (","white",attrs=["bold"], force_color = True)+colored(" ~~~~~\n ~~~~~~","light_grey", force_color = True)+colored(" | |  | |__| | |\\  |/ ____ \\ ","white",attrs=["bold"], force_color = True)+colored("~~~~~~","light_grey", force_color = True)+colored(" \\___  ___/\\_) ","white",attrs=["bold"], force_color = True)+colored("~~~~","light_grey", force_color = True)+colored("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white",attrs=["bold"], force_color = True))
+from TUNA.tuna_util import coloured
 
-print(colored(f"\n\nWelcome to version {VERSION} of TUNA!\n", "light_grey", force_color = True))
-print(colored("Importing required libraries...  ", "light_grey", force_color = True), end = ""); sys.stdout.flush()
+print(coloured("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white") + coloured(" ~~~~~~","light_grey")+coloured(" | |  | |  | |  \\| |  /  \\","white")+coloured(" ~~~~~~~~","light_grey")+coloured(" / .      \\/ ) ","white")+coloured("~~~~\n ~~~~~~","light_grey")+coloured(" | |  | |  | | . ` | / /\\ \\","white")+coloured(" ~~~~~~","light_grey")+coloured(" (     ))    (","white")+coloured(" ~~~~~\n ~~~~~~","light_grey")+coloured(" | |  | |__| | |\\  |/ ____ \\ ","white")+coloured("~~~~~~","light_grey")+coloured(" \\___  ___/\\_) ","white")+coloured("~~~~","light_grey")+coloured("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white"))
+
+print(coloured(f"\n\nWelcome to version {VERSION} of TUNA!\n", "light_grey"))
+print(coloured("Importing required libraries...  ", "light_grey"), end = ""); sys.stdout.flush()
 
 import numpy as np
 from numpy import ndarray
 import time
-from TUNA.tuna_util import error, TunaError, Method, timer, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation, log, log_spacer
+from TUNA.tuna_util import error, TunaError, Method, timer, atomic_properties, calculation_types, angstrom_to_bohr, one_dimension_to_three, electronic_structure_methods, basis_types, finish_calculation
 from TUNA.tuna_calc import Calculation
 import TUNA.tuna_energy as energ
 import TUNA.tuna_opt as opt
@@ -52,7 +53,7 @@ import TUNA.tuna_freq as freq
 import TUNA.tuna_kernel as kern
 
 
-print(colored("[Done]\n", "light_grey", force_color=True))
+print(coloured("[Done]\n", "light_grey"))
 
 # The time starts counting after modules are imported
 
@@ -363,9 +364,9 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
 
     if not suppress_output:
 
-        print(colored(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set requested.", "light_grey", force_color=True))
+        print(coloured(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set requested.", "light_grey"))
 
-        print(colored(f"Electronic structure method is {method.long_name}.\n", "light_grey", force_color=True))
+        print(coloured(f"Electronic structure method is {method.long_name}.\n", "light_grey"))
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
 
@@ -377,9 +378,9 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
 
     if not suppress_output:
 
-        print(colored(f"Setting up calculation using {contraction} basis set.", "light_grey", force_color=True))
+        print(coloured(f"Setting up calculation using {contraction} basis set.", "light_grey"))
 
-        print(colored(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey", force_color=True))
+        print(coloured(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey"))
 
     # Sets off the desired calculation with the requested parameters
 
@@ -418,7 +419,7 @@ def main() -> int:
 
     except KeyboardInterrupt:
 
-        print(colored("\nThe TUNA calculation has been interrupted by the user. Goodbye!\n", "light_red"))
+        print(coloured("\nThe TUNA calculation has been interrupted by the user. Goodbye!\n", "light_red"))
 
         return 130
 

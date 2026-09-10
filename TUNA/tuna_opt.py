@@ -3,7 +3,6 @@ import numpy as np
 from numpy import ndarray
 import TUNA.tuna_energy as energ
 import sys
-from termcolor import colored
 import TUNA.tuna_props as props
 import TUNA.tuna_out as out
 import TUNA.tuna_freq as freq
@@ -15,9 +14,9 @@ from TUNA.tuna_calc import Calculation
 
 This is the TUNA module for geometry optimisation, written first for version 0.3.0 and rewritten for version 0.10.0.
 
-For a one-dimensional system, there is an exact "best" way to converge the geometry, using the approximate Hessian (which is not a matrix, but a number). This 
+For a one-dimensional system, there is an exact "best" way to converge the geometry, using the approximate Hessian (which is not a matrix, but a number). This
 module implements this optimisation method with numerical derivatives of the total molecular energy to find the force. Several options are available, including
-calculating an "exact" Hessian instead of the approximate one - which becomes more worthwhile further from the optimisation endpoint. The optimisation can 
+calculating an "exact" Hessian instead of the approximate one - which becomes more worthwhile further from the optimisation endpoint. The optimisation can
 optionally be printed to an ".xyz" output file with the "TRAJ" keyword.
 
 Updated in version 0.10.1 to include the bond dissociation energy calculation type.
@@ -40,7 +39,7 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
 
     Calculates the numerical derivative of the molecular energy with respect to bond length.
 
-    Args:   
+    Args:
         coordinates (array): Atomic coordinates
         calculation (Calculation): Calculation object
         atomic_symbols (list): List of atomic symbols
@@ -51,13 +50,13 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
 
     """
 
-    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.FIRST_GEOM_DERIVATIVE_STEP]])  
+    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.FIRST_GEOM_DERIVATIVE_STEP]])
 
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
 
     log(" Calculating energy on displaced geometry 1 of 2...   ", calculation, 1, end = "", silent = silent)
-    
+
     _, _, energy_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent = True)
 
     log("[Done]", calculation, 1, silent = silent)
@@ -74,7 +73,7 @@ def calculate_gradient(coordinates: ndarray, calculation: Calculation, atomic_sy
 
 
     return gradient
-    
+
 
 
 
@@ -92,7 +91,7 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
 
     Also provides wavefunction information for seminumerical dipole moment derivatives.
 
-    Args:   
+    Args:
         coordinates (array): Atomic coordinates
         calculation (Calculation): Calculation object
         atomic_symbols (list): Atomic symbol list
@@ -107,41 +106,41 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
 
     """
 
-    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.SECOND_GEOM_DERIVATIVE_STEP]])  
+    prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.SECOND_GEOM_DERIVATIVE_STEP]])
 
     far_forward_coords = coordinates + 2 * prodding_coords
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
-    far_backward_coords = coordinates - 2 * prodding_coords  
+    far_backward_coords = coordinates - 2 * prodding_coords
 
     log("\n Calculating energy on displaced geometry 1 of 4...   ", calculation, 1, end = "", silent = silent)
 
     _, _, energy_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_forward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent = silent)   
+    log("[Done]", calculation, 1, silent = silent)
 
     log(" Calculating energy on displaced geometry 2 of 4...   ", calculation, 1, end = "", silent = silent)
 
     SCF_output_forward, _, energy_forward, P_forward = energ.evaluate_molecular_energy(calculation, atomic_symbols, forward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent = silent)   
+    log("[Done]", calculation, 1, silent = silent)
 
     log(" Calculating energy on displaced geometry 3 of 4...   ", calculation, 1, end = "", silent = silent)
 
     SCF_output_backward, _, energy_backward, P_backward = energ.evaluate_molecular_energy(calculation, atomic_symbols, backward_coords, silent = True)
 
-    log("[Done]", calculation, 1, silent = silent)   
+    log("[Done]", calculation, 1, silent = silent)
 
     log(" Calculating energy on displaced geometry 4 of 4...   ", calculation, 1, end = "", silent = silent)
 
     _, _, energy_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, far_backward_coords, silent = True)
 
-    log("[Done]\n", calculation, 1, silent = silent)   
+    log("[Done]\n", calculation, 1, silent = silent)
 
     # Calculates numerical second derivative
 
     hessian = calculate_second_derivative(energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, constants.SECOND_GEOM_DERIVATIVE_STEP)
-    
+
     displaced_energies = energy_far_backward, energy_backward, energy_forward, energy_far_forward
 
     return hessian, SCF_output_forward, P_forward, SCF_output_backward, P_backward, displaced_energies
@@ -155,13 +154,13 @@ def calculate_hessian(coordinates: ndarray, calculation: Calculation, atomic_sym
 
 
 
-def calculate_approximate_hessian(delta_bond_length: float, delta_grad: float) -> float: 
+def calculate_approximate_hessian(delta_bond_length: float, delta_grad: float) -> float:
 
     """
 
     Calculates the approximate hessian.
 
-    Args:   
+    Args:
         delta_bond_length (float): Change in bond length
         delta_grad (float): Change in gradient
 
@@ -184,9 +183,9 @@ def calculate_approximate_hessian(delta_bond_length: float, delta_grad: float) -
 
 
 def optimisation_is_converged(iteration: int, gradient: float, step: float, calculation: Calculation) -> bool:
-    
+
     """
-    
+
     Checks if the optimisation is converged.
 
     Args:
@@ -194,10 +193,10 @@ def optimisation_is_converged(iteration: int, gradient: float, step: float, calc
         gradient (float): Gradient of electronic energy
         step (float): Change in nuclear positions in bohr
         calculation (Calculation): Calculation object
-    
+
     Returns:
         converged (bool): Is the optimisation converged
-    
+
     """
 
     converged_grad = abs(gradient) < calculation.geom_conv.get("gradient")
@@ -207,11 +206,11 @@ def optimisation_is_converged(iteration: int, gradient: float, step: float, calc
     # Require convergence in both force and step size
 
     converged = converged_grad and converged_step
-    
+
     if converged:
 
         log_spacer(calculation, start = "\n",space="")
-        log(colored(f"      Optimisation converged in {iteration} iterations!","white"), calculation, 1)
+        log(f"      Optimisation converged in {iteration} iterations!", calculation, 1, colour="white")
         log_spacer(calculation,space="")
 
 
@@ -229,7 +228,7 @@ def optimisation_is_converged(iteration: int, gradient: float, step: float, calc
 def update_hessian(calculation: Calculation, coordinates: ndarray, atomic_symbols: list, energy: float, bond_length: float, old_bond_length: float, gradient: float, old_gradient: float) -> float:
 
     """
-    
+
     Calculates an updated Hessian during a geometry optimisation.
 
     Args:
@@ -249,13 +248,13 @@ def update_hessian(calculation: Calculation, coordinates: ndarray, atomic_symbol
 
     hessian = calculation.default_hessian
 
-    if calculation.calc_hess: 
+    if calculation.calc_hess:
 
         log("\n Beginning calculation of exact hessian...    ", calculation, 1)
 
         candidate_hessian, _, _, _, _, _ = calculate_hessian(coordinates, calculation, atomic_symbols, energy, silent=False)
 
-    else: 
+    else:
 
         # Calculates approximate hessian if "CALCHESS" keyword not used
 
@@ -263,13 +262,13 @@ def update_hessian(calculation: Calculation, coordinates: ndarray, atomic_symbol
 
 
     # Checks if region is convex or concave, if in the correct region for opt to min/max, sets the hessian to the second derivative
-    
+
     if calculation.opt_max and candidate_hessian < -0.01:
 
         hessian = -candidate_hessian
 
     elif candidate_hessian > 0.01:
-        
+
         hessian = candidate_hessian
 
 
@@ -287,14 +286,14 @@ def update_hessian(calculation: Calculation, coordinates: ndarray, atomic_symbol
 def print_optimisation_convergence_information(gradient: float, step: float, calculation: Calculation) -> None:
 
     """
-    
+
     Prints the progress of the geometry optimisation.
 
     Args:
         gradient (float): Electronic energy gradient
         step (float): Step size in bohr
         calculation (Calculation): Calculation object
-    
+
     """
 
     gradient_convergence_criteria = calculation.geom_conv.get("gradient")
@@ -316,7 +315,7 @@ def print_optimisation_convergence_information(gradient: float, step: float, cal
 
     log_spacer(calculation)
 
-    return 
+    return
 
 
 
@@ -328,12 +327,12 @@ def print_optimisation_convergence_information(gradient: float, step: float, cal
 
 
 def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinates: ndarray, multiple_iterations: bool = True) -> tuple | None:
-    
+
     """
 
     Optimises the geometry of the molecule to a stationary point on the potential energy surface.
 
-    Args:   
+    Args:
         calculation (Calculation): Calculation object
         atomic_symbols (list): List of atomic symbols
         coordinates (array): Atomic coordinates
@@ -344,7 +343,7 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
         bond_length (float) : Optimised bond length
 
     """
-    
+
     timer("Geometry optimisation", 0)
 
     geom_conv_criteria = calculation.geom_conv
@@ -354,8 +353,8 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
     # If "TRAJ" keyword is used, prints trajectory to file - opening and closing it here clears it
 
-    if calculation.trajectory: 
-        
+    if calculation.trajectory:
+
         log(f"Printing trajectory data to \"{calculation.trajectory_path}\"\n", calculation, 1)
 
         open(calculation.trajectory_path, "w").close()
@@ -374,13 +373,13 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
 
     for iteration in range(1, max_geom_iter + 1):
-        
+
         # A "FORCE" calculation only runs a single iteration
 
-        if iteration > 1 and not multiple_iterations: 
-            
+        if iteration > 1 and not multiple_iterations:
+
             break
-        
+
         # Calculates bond length from current coordinates
 
         bond_length = calculate_bond_length(coordinates)
@@ -394,11 +393,11 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
         terse = not calculation.additional_print
 
         # Evaluates the energy and density
-        
+
         timer("Energy evaluation", 0)
 
         SCF_output, molecule, energy, P = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, P_guess, P_guess_alpha=P_guess_alpha, P_guess_beta=P_guess_beta, E_guess=E_guess, terse=terse)
-        
+
         timer("Energy evaluation", 1)
 
         # By default, reads in the density from the last step as a guess - can be turned off with "NOMOREAD"
@@ -420,7 +419,7 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
         # Updates bond length
 
         bond_length = molecule.bond_length
-     
+
         # Calculates either the exact or approximate Hessian - avoid the first iteration as there's no old bond length
 
         hessian = update_hessian(calculation, coordinates, atomic_symbols, energy, bond_length, old_bond_length, gradient, old_gradient) if iteration > 1 else calculation.default_hessian
@@ -435,25 +434,25 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
         # Prints trajectory to file if "TRAJ" keyword has been used
 
-        if calculation.trajectory: 
+        if calculation.trajectory:
 
             out.save_trajectory_to_file(molecule, energy, coordinates, calculation.trajectory_path)
 
         # If optimisation is converged, begin post SCF output and print to console, then finish calculation
 
-        if optimisation_is_converged(iteration, gradient, step, calculation): 
+        if optimisation_is_converged(iteration, gradient, step, calculation):
 
             props.calculate_molecular_properties(molecule, calculation, P, SCF_output.S, SCF_output, SCF_output.P_alpha, SCF_output.P_beta)
 
             log(f"\n Optimisation converged in {iteration} iterations to bond length of {bohr_to_angstrom(bond_length):.5f} angstroms!", calculation, 1)
             log(f"\n Final single point energy: {energy:.10f}", calculation, 1)
-            
+
             timer("Geometry optimisation", 1)
 
             return molecule, energy
 
         else:
-            
+
             if np.abs(step) > calculation.max_step:
 
                 step = np.sign(step) * calculation.max_step
@@ -461,15 +460,15 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
                 warning("Calculated step is outside of trust radius, taking maximum step instead.")
 
             # Checks direction in which step should be taken, depending on whether "OPTMAX" keyword has been used
-            
+
             direction = -1 if calculation.opt_max else 1
 
             # Builds new coordinates - a minus sign here for direction as we are minimising
 
             coordinates = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, coordinates[1][2] - direction * step]])
 
-            if coordinates[1][2] < 0.01: 
-                
+            if coordinates[1][2] < 0.01:
+
                 error("Optimisation generated negative bond length! Decrease maximum step!")
 
             # Updates "old" quantities to be used for comparison to check convergence
@@ -495,7 +494,7 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: list[str], coordinates: ndarray, charge_delta: int) -> tuple:
 
     """
-    
+
     Calculates the reference-state and charged-state energies needed for ionisation energy or electron affinity calculations.
 
     Args:
@@ -515,7 +514,7 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
     # Optimise the molecule unless it's an atom, or "VERTICAL" is used
 
     if calculation.vertical or calculation.monatomic:
-        
+
         log_spacer(calculation, start = "\n", space="")
         log("Calculating energy of original system...", calculation)
         log_spacer(calculation, space="")
@@ -525,7 +524,7 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
         reference_SCF_output, reference_molecule, reference_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
 
         calculation.charge += charge_delta * calculation.n_electrons_for_ip_or_ea
-        
+
         log_spacer(calculation, start = "\n", space="")
         log("Calculating energy of charged system...", calculation)
         log_spacer(calculation, space="")
@@ -575,14 +574,14 @@ def calculate_charged_state_energies(calculation: Calculation, atomic_symbols: l
 def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols: list, coordinates: ndarray) -> None:
 
     """
-    
+
     Calculates the counterpoise corrected, optionally zero-point energy corrected, bond dissociation energy.
 
     Args:
         calculation (Calculation): Calculation object
         atomic_symbols (list): List of atomic symbols
         coordinates (array): Atomic coordinates in bohr
-    
+
     """
 
     timer("Bond dissociation energy", 0)
@@ -606,13 +605,13 @@ def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols:
     # Define the new coordinates, with a ghost atom in the equilibrium geometry position by default for counterpoise correction
 
     if calculation.no_counterpoise_correction:
-        
-        atomic_coordinates = np.array([[0.0, 0.0, 0.0]]) 
+
+        atomic_coordinates = np.array([[0.0, 0.0, 0.0]])
 
     else:
-        
+
         atomic_coordinates = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, optimised_molecule.bond_length]])
-    
+
     # Update the calculation object, turning on core Hamiltonian guess rather than SCF/SAD guess which doesn't work with ghost atoms
 
     calculation.monatomic, calculation.diatomic, calculation.core_guess = True, False, True
@@ -634,7 +633,7 @@ def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols:
     if optimised_molecule.heteronuclear:
 
         atomic_symbols = [original_symbols[1]] if calculation.no_counterpoise_correction else [original_symbols[1], "X" + original_symbols[0]]
-        
+
         _, _, second_atom_energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, atomic_coordinates)
 
     else:
@@ -644,7 +643,7 @@ def calculate_bond_dissociation_energy(calculation: Calculation, atomic_symbols:
     # Prints out the bond dissociation energy information
 
     kern.print_bond_dissociation_energy_information(first_atom_energy, second_atom_energy, optimised_energy, zero_point_energy, optimised_molecule, calculation)
-    
+
     timer("Bond dissociation energy", 1)
 
     return

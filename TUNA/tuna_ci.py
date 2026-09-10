@@ -13,6 +13,8 @@ This is the TUNA module for configuration interaction, written first for version
 Methods needed to transform the atomic orbital basis molecular integrals to either the spatial orbital or spin orbital basis are stored here,
 as well as functions to calculate excited states with configuration interaction singles and time-dependent Hartree-Fock.
 
+Updated in version 0.12.0 to include helper functions for the GW approximation.
+
 The module contains:
 
 1. Some utility functions to transform molecular integrals (spin_block_core_Hamiltonian, build_spin_orbital_Fock_matrix, etc.)
@@ -1830,7 +1832,7 @@ def print_excited_state_contributions(calculation: Calculation, silent: bool, ex
 
         X, Y = split_state_vector(excitation_vectors[:, state], n_occ, n_virt)
 
-        # This normalisation is necessary to match THDF
+        # This normalisation is necessary to match THDF in ORCA
 
         contributions = 100 * (X ** 2 - Y ** 2)
 
@@ -2137,6 +2139,64 @@ def run_perturbative_doubles(state: int, n_occ: int, n_virt: int, excitation_vec
     timer("Perturbative doubles", 1)
 
     return state_of_interest_energies_and_densities
+
+
+
+
+
+
+
+
+
+
+def build_direct_RPA_matrices(calculation: Calculation, g: ndarray, epsilons: ndarray, o: slice, v: slice, spin_labels: list = None) -> tuple:
+
+    """
+
+    Builds the direct RPA matrices which define the screened Coulomb interaction in GW.
+
+    Args:
+        calculation (Calculation): Calculation object
+        g (array): Two-electron integrals in physicists' notation, not antisymmetrised
+        epsilons (array): Fock matrix eigenvalues
+        o (slice): Active occupied orbital slice
+        v (slice): Virtual orbital slice
+        spin_labels (list, optional): Spin of each spin orbital, for unrestricted references
+
+    Returns:
+        A_ia_jb (array): Excitation matrix
+        B_ia_jb (array): De-excitation matrix
+        spin_conserving (array): Mask of spin-conserving excitations, or None for a restricted reference
+
+    """
+
+    # Temporarily switching off exact exchange builds the restricted matrices with a Hartree-only kernel
+
+    HFX_prop = calculation.HFX_prop
+
+    calculation.HFX_prop = 0
+
+    A_ia_jb = calculate_A_matrix(calculation, g, epsilons, o, v, None, "singlet")
+    B_ia_jb = calculate_B_matrix(calculation, g, o, v, None, "singlet")
+
+    calculation.HFX_prop = HFX_prop
+
+    spin_conserving = None
+
+    if calculation.reference == "UHF":
+
+        # The Coulomb interaction only couples excitations which conserve spin, so the spin-flip block is thrown away
+
+        spin_occupied = np.array(spin_labels)[o]
+        spin_virtual = np.array(spin_labels)[v]
+
+        spin_conserving = (spin_occupied[:, None] == spin_virtual[None, :]).ravel()
+
+        A_ia_jb = A_ia_jb[np.ix_(spin_conserving, spin_conserving)]
+        B_ia_jb = B_ia_jb[np.ix_(spin_conserving, spin_conserving)]
+
+
+    return A_ia_jb, B_ia_jb, spin_conserving
 
 
 

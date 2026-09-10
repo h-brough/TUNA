@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip "setuptools>=77" wheel
-          python -m pip install cython numpy scipy matplotlib termcolor pytest
+          python -m pip install cython numpy scipy matplotlib pytest
 
       - name: Build the integral extension in place
         run: python setup.py build_ext --inplace

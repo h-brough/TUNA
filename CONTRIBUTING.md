@@ -20,7 +20,7 @@ Please include:
 
 ## Development setup
 
-TUNA needs Python 3.12 or higher, a C compiler with OpenMP, and `numpy`, `scipy`, `matplotlib` and `termcolor`.
+TUNA needs Python 3.12 or higher, a C compiler with OpenMP, and `numpy`, `scipy`, and `matplotlib`.
 
 ```
 git clone https://github.com/h-brough/TUNA.git

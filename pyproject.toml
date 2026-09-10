@@ -19,7 +19,6 @@ dependencies = [
   "numpy>=2.1",
   "scipy>=1.15.0",
   "matplotlib",
-  "termcolor",
 ]
 
 description = "A streamlined quantum chemistry program for atoms and diatomics."

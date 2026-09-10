@@ -1,6 +1,5 @@
 import numpy as np
-import time, sys
-from termcolor import colored
+import time, sys, os
 from numpy import ndarray
 from dataclasses import dataclass
 
@@ -106,7 +105,7 @@ class Constants:
 
     # Convergence criteria for self-consistent field
 
-    convergence_criteria_SCF = {
+    convergence_criteria_SCF: dict[str, dict[str, float | str]] = {
 
         "loose" : {"delta_E": 0.000001, "max_DP": 0.00001, "RMS_DP": 0.000001, "commutator": 0.0001, "name": "loose"},
         "medium" : {"delta_E": 0.0000001, "max_DP": 0.000001, "RMS_DP": 0.0000001, "commutator": 0.00001, "name": "medium"},
@@ -117,7 +116,7 @@ class Constants:
 
     # Convergence criteria for geometry optimisation
 
-    convergence_criteria_optimisation = {
+    convergence_criteria_optimisation: dict[str, dict[str, float | str]] = {
 
         "loose" : {"gradient": 0.001, "step": 0.01, "name": "loose"},
         "medium" : {"gradient": 0.0001, "step": 0.0001, "name": "medium"},
@@ -128,7 +127,7 @@ class Constants:
 
     # Tightness criteria for the DFT grid
 
-    convergence_criteria_grid = {
+    convergence_criteria_grid: dict[str, dict[str, float | str]] = {
 
         "loose" : {"integral_accuracy": 3, "extent_multiplier": 0.7, "name": "loose"},
         "medium" : {"integral_accuracy": 4, "extent_multiplier": 0.9, "name": "medium"},
@@ -930,6 +929,76 @@ class TunaError(Exception):
 
 
 
+def coloured(text: str, colour: str | None, bold: bool = False) -> str:
+
+    """
+
+    Colours a string for pretty output.
+
+    Args:
+        text (str): Text to colour
+        colour (str): The colour to make the text
+
+    Returns:
+        text (str): Colourful text
+
+    """
+
+    # Codes for various supported colours
+
+    COLOURS: dict[str, int] = {
+
+        "red": 31,
+        "yellow": 33,
+        "light_grey": 37,
+        "white": 97,
+        "light_red": 91
+
+    }
+
+    try:
+
+        # Makes sure TUNA is running from a terminal, not programmatically
+
+        if not os.isatty(sys.stdout.fileno()):
+
+            return text
+
+    except OSError:
+
+        # Be on the safe side and don't colourise
+
+        return text
+
+    if colour is not None:
+
+        check(colour in COLOURS, f"Requested colour \"{colour}\" is not supported for printing!")
+
+        # Adds format string to colour text
+
+        text = "\033[%dm%s" % (COLOURS[colour], text)
+
+    if bold:
+
+        # Adds format string to make text bold
+
+        text = "\033[1m" + text
+
+    # Reset text formatting
+
+    text += "\033[0m"
+
+    return text
+
+
+
+
+
+
+
+
+
+
 def error(message: str) -> None:
 
     """
@@ -941,7 +1010,7 @@ def error(message: str) -> None:
 
     """
 
-    raise TunaError(colored(f"\nERROR: {message}  :(\n", "light_red"))
+    raise TunaError(coloured(f"\nERROR: {message}  :(\n", "light_red"))
 
 
 
@@ -991,7 +1060,7 @@ def warning(message: str, space: int = 1) -> None:
 
     """
 
-    print(colored(f"\n{" " * space}WARNING: {message}", "light_yellow"))
+    print(coloured(f"\n{" " * space}WARNING: {message}", "light_yellow"))
 
     return
 
@@ -1038,25 +1107,25 @@ def log(message: str, calculation: any, priority: int = 1, silent: bool = False,
 
             # For information that should always be printed
 
-            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
+            print(coloured(message, colour, bold), end = end, flush = True)
 
         elif priority == 2 and print_level > 1:
 
             # Print unless the "T" keyword is used
 
-            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
+            print(coloured(message, colour, bold), end = end, flush = True)
 
         elif priority == 3 and print_level > 2:
 
             # Print only if the "P" keyword is used
 
-            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
+            print(coloured(message, colour, bold), end = end, flush = True)
 
         elif priority == 4 and print_level > 3:
 
             # Print only if the "DEBUG" keyword is used
 
-            print(colored(message, colour, force_color = True, attrs = bold), end = end, flush = True)
+            print(coloured(message, colour, bold), end = end, flush = True)
 
     return
 
@@ -1253,15 +1322,15 @@ def finish_calculation(calculation: any) -> None:
             hours = total_time // 3600
             extra_minutes = (total_time % 3600) // 60
 
-            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+            log(coloured(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {hours:.0f} hours, {extra_minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
         else:
 
-            log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
+            log(coloured(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {minutes:.0f} minutes and {seconds:.2f} seconds.  :)\n","white"), calculation, 1)
 
     else:
 
-        log(colored(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n", "white"), calculation, 1)
+        log(coloured(f"\n{calculation_types.get(calculation.calculation_type)} calculation in TUNA completed successfully in {total_time:.2f} seconds.  :)\n", "white"), calculation, 1)
 
 
     # Exits the program
@@ -1279,7 +1348,7 @@ def finish_calculation(calculation: any) -> None:
 
 
 
-calculation_types = {
+calculation_types: dict[str, str] = {
 
     "SPE"       :     "Single point energy",
     "OPT"       :     "Geometry optimisation",
@@ -1304,7 +1373,7 @@ calculation_types = {
 
 
 
-electronic_structure_methods = [
+electronic_structure_methods: list[Method] = [
 
     Method("H", "Hartree theory"),
     Method("HF", "Hartree-Fock theory"),
@@ -1440,7 +1509,7 @@ electronic_structure_methods = [
 
 
 
-exchange_correlation_functionals = {
+exchange_correlation_functionals: dict[str, Functional] = {
 
     "HF"           :     Functional(None, None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
     "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
@@ -1521,7 +1590,7 @@ exchange_correlation_functionals = {
 
 
 
-basis_types = {
+basis_types: dict[str, str] = {
 
     "CUSTOM" : "custom",
     "STO-2G" : "STO-2G",
@@ -1673,7 +1742,7 @@ basis_types = {
 
 
 
-atomic_properties = {
+atomic_properties: dict[str, dict[str, float | str | ndarray | None]] = {
 
     "X" : {
 
