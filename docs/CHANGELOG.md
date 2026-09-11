@@ -1,11 +1,34 @@
 # Changelog
 
-Removed spin contamination for coupled cluster and MP2 calculations
-Actually enforces dependency versions on pip install
-Now require at least NumPy 2.1
-Correct degrees of freedom for MD
-Remove termcolor dependency
-RPA correlation energy
+Wishlist for next update:
+
+Support for Python 3.15
+Full CI
+Fix quadrupole moments
+Excited state spin contamination for CIS
+Fix bumpy SCFGUESS scans
+CASSCF
+XC kernels for (m)GGA functionals - try numerical derivatives for all including mGGA or Claude?
+
+## TUNA 0.12.0
+
+### Added
+
+- Random phase approximation correlation energy with `RPA`
+- Corrections to quasiparticle orbital energies with one-shot `GW`
+
+### Changed
+
+- Removed termcolor dependency
+- Now require at least NumPy 2.1
+- Recent and compatible versions of dependencies are forced on pip install
+
+### Fixed
+
+- Now use correct number of degrees of freedom for molecular dynamics
+- Removed spin contamination for coupled cluster and perturbative calculations
+
+<br>
 
 ## TUNA 0.11.2 — 31/08/2026
 

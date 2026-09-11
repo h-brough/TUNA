@@ -24,6 +24,7 @@ Here live various fairly random functions, that are used within an energy calcul
 
 Updated in version 0.10.1 to begin implementation of D3 dispersion correction.
 Updated in version 0.11.0 to enable calculations to be run with spherical, rather than Cartesian, harmonics and enable 5Z/6Z extrapolation.
+Updated in version 0.12.0 to plumb in RPA and GW calculations.
 
 This module contains:
 

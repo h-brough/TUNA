@@ -18,6 +18,7 @@ reductions in memory requirements.
 Updated in version 0.10.1 to add spin-restricted CC2 and CC3.
 Updated in version 0.11.0 to include spin-restricted and unrestricted CISD, CID, and unrestricted CISDT.
 Updated in version 0.11.1 to improve CCSDT and CCSDTQ convergence dramatically by projecting out null space amplitudes.
+Updated in version 0.12.0 to add EOM-CCSD excited state calculations.
 
 The module contains:
 
@@ -3068,7 +3069,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
                 case _:
 
                     error("Illegal coupled cluster method!")
-                    
+
             # Use the energy expression from restricted coupled cluster
 
             E_CC, E_CC_singles, E_CC_connected_doubles, E_CC_disconnected_doubles = calculate_restricted_coupled_cluster_energy(o, v, w, t_amplitudes, method, F)
@@ -3325,3 +3326,4 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
     timer("Coupled cluster", 1)
 
     return E_CC, E_perturbative, density_matrices, occupancies, natural_orbitals
+

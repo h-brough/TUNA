@@ -16,7 +16,7 @@ from TUNA.tuna_molecule import Molecule
 This is the TUNA module for calculating harmonic and anharmonic vibrational frequencies, written first for version 0.10.0 of TUNA.
 
 Harmonic frequencies are calculated from the numerical Hessian at a particular bond length, and intensities are determined through numerical dipole moment
-derivatives. Anharmonic frequencies are solved by numerical solution of the nuclear Schrodinger equation on a grid. The coordinates on either side of the 
+derivatives. Anharmonic frequencies are solved by numerical solution of the nuclear Schrodinger equation on a grid. The coordinates on either side of the
 optimised bond length are scanned, and the nuclear Hamiltonian diagonalised iteratively, until a large enough section of the potential energy surface has
 been sampled such that the fundamental transition frequency is converged to within a hundreth of a per cm. Then, the absorption spectrum is printed.
 
@@ -35,7 +35,7 @@ The module contains:
 
 
 def calculate_transition_intensity(frequency_matrix: ndarray, dipole_matrix: ndarray) -> ndarray:
-    
+
     """
 
     Calculates transition intensities from frequency and dipole matrices.
@@ -43,14 +43,14 @@ def calculate_transition_intensity(frequency_matrix: ndarray, dipole_matrix: nda
     Args:
         frequency_matrix (array): Matrix of transition frequencies in per cm
         dipole_matrix (array): Matrix of dipole moment integrals in atomic units
-    
+
     Returns:
         intensity_matrix (array): Matrix of transition intensities in km per mol
-    
+
     """
 
     # This equation comes from Neugebauer2002
-    
+
     prefactor = constants.elementary_charge_in_coulombs ** 2 / constants.electron_mass_in_kilograms * constants.avogadro / (6000 * constants.permittivity_in_farad_per_metre * constants.c_in_metres_per_second ** 2)
 
     # Converts frequency matrix from per cm to hartree
@@ -60,7 +60,7 @@ def calculate_transition_intensity(frequency_matrix: ndarray, dipole_matrix: nda
     # Intensities depend on the square of the dipole matrix elements
 
     intensity_matrix = prefactor * dipole_matrix ** 2 * frequency_hartree
-    
+
     return intensity_matrix
 
 
@@ -81,7 +81,7 @@ def check_sign_of_hessian(hessian: ndarray, reduced_mass: float) -> tuple:
     Args:
         hessian (float): Hessian matrix
         reduced_mass (float): Reduced mass in au
-    
+
     Returns:
         frequency_hartree (float): Harmonic frequency
         zero_point_energy (float): Harmonic zero-point energy
@@ -91,17 +91,17 @@ def check_sign_of_hessian(hessian: ndarray, reduced_mass: float) -> tuple:
     # Checks if an imaginary mode is present, and if so zero-point energy is set to zero
 
     if hessian > 0:
-    
+
         frequency_hartree = np.sqrt(hessian / reduced_mass)
 
         zero_point_energy = frequency_hartree / 2
-        
-    else:   
-    
+
+    else:
+
         frequency_hartree = np.sqrt(-hessian / reduced_mass)
 
         zero_point_energy = 0
-        
+
         warning("Imaginary frequency calculated! Zero-point energy and vibrational thermochemical parameters set to zero!\n")
 
     return frequency_hartree, zero_point_energy
@@ -124,7 +124,7 @@ def calculate_anharmonicity_constant(transition_matrix: ndarray, harmonic_freque
     Args:
         transition_matrix (array): Matrix of transition energies in hartree
         harmonic_frequency (float): Harmonic frequency in hartree
-    
+
     Returns:
         chi (float): Anharmonicity constant
 
@@ -153,7 +153,7 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
 
     This is the numerical geometric derivative of the analytical or numerical dipole moment.
 
-    Args:   
+    Args:
         coordinates (array): Atomic coordinates
         molecule (Molecule): Molecule object
         SCF_output_forward (Output): SCF output from prodded forward coordinates
@@ -173,21 +173,21 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
     # Forward and backward coordinates are symmetrical by the mass weighting, to prevent influence of moving electric field origin in dipole moment calculations
 
     prodding_coords = np.array([[0.0, 0.0, - molecule.masses[1] * constants.SECOND_GEOM_DERIVATIVE_STEP], [0.0, 0.0, molecule.masses[0] * constants.SECOND_GEOM_DERIVATIVE_STEP]]) / molecule.total_mass
-    
+
     forward_coords = coordinates + prodding_coords
     backward_coords = coordinates - prodding_coords
-    
+
     # Calculates forward and backward dipole moments, using dipole integrals calculated from centre of mass
 
     if calculation.dipole:
-        
+
         log(" Calculating fully numerical dipole derivative...     ", calculation, 1, end = "")
 
         dipole_moment_forward = energ.calculate_numerical_dipole_moment(molecule, calculation, True, calculation.atomic_symbols, forward_coords, SCF_output_forward.integrals)
         dipole_moment_backward = energ.calculate_numerical_dipole_moment(molecule, calculation, True, calculation.atomic_symbols, backward_coords, SCF_output_backward.integrals)
 
     else:
-        
+
         log(" Calculating seminumerical dipole derivative...       ", calculation, 1, end = "")
 
         dipole_moment_forward, _, _ = props.calculate_analytical_dipole_moment(molecule.centre_of_mass, molecule.charges, forward_coords, P_forward, SCF_output_forward.integrals.D)
@@ -196,7 +196,7 @@ def calculate_dipole_derivative(coordinates: ndarray, molecule: Molecule, SCF_ou
     # Calculates dipole derivative by central differences method
 
     dipole_derivative = calculate_first_derivative(dipole_moment_backward, dipole_moment_forward, constants.SECOND_GEOM_DERIVATIVE_STEP)
-    
+
     # Converts to normal coordinates by mass weighting
 
     dipole_derivative /= np.sqrt(molecule.reduced_mass)
@@ -233,7 +233,7 @@ def calculate_dipole_matrix(vibrational_wavefunctions: ndarray, dipole_moments_i
 
     # No dx term here as its already included due to continuum normalisation of vibrational_wavefunctions
 
-    dipole_matrix = np.einsum("ni,n,nj->ij", vibrational_wavefunctions, dipole_moments_interpolated, vibrational_wavefunctions, optimize = True) 
+    dipole_matrix = np.einsum("ni,n,nj->ij", vibrational_wavefunctions, dipole_moments_interpolated, vibrational_wavefunctions, optimize = True)
 
     return dipole_matrix
 
@@ -347,7 +347,7 @@ def construct_nuclear_hamiltonian(x_interpolated: ndarray, V_interpolated: ndarr
 
     # Kinetic term
 
-    T = 1 / (reduced_mass * dx ** 2) 
+    T = 1 / (reduced_mass * dx ** 2)
 
     # The potential energy surface affects the diagonal term only, the off-diagonal includes coupling between grid points in the kinetic term
 
@@ -412,7 +412,7 @@ def diagonalise_hamiltonian_tridiagonal(main_diag: ndarray, off_diag: ndarray, n
         main_diag (array): Main diagonal of the Hamiltonian
         off_diag (array): Off-diagonal of the Hamiltonian
         n_states (int, optional): How many vibrational states to be calculated
-    
+
     Returns:
         vibrational_energy_levels (array): Vibrational energy levels (eigenvalues)
         vibrational_wavefunctions (array): Vibrational wavefunctions (eigenvectors)
@@ -460,7 +460,7 @@ def print_absorption_spectrum(calculation: Calculation, transition_matrix: ndarr
     for i in range(3):
 
         for j in range(i + 1, 4):
-                
+
                 log(f"    {i} -> {j}    {transition_matrix[i][j]:16.10f}    {frequency_matrix[i][j]:16.2f}       {wavelength_matrix[i][j]:16.2f}       {intensity_matrix[i][j]:16.2f}", calculation, 1)
 
     log_big_spacer(calculation, 1)
@@ -495,7 +495,7 @@ def frequency_is_converged(frequency: float, frequency_old: float, calculation: 
     if np.abs(frequency - frequency_old) < calculation.anharm_convergence:
 
         return True
-    
+
     return False
 
 
@@ -538,7 +538,7 @@ def process_anharmonic_output(calculation: Calculation, vibrational_wavefunction
 
     log(f"\n Zero-point energy:   {zero_point_energy:13.10f}", calculation, 1)
     log(f" Equilibrium energy:  {vibrational_energy_levels[0]:13.10f}", calculation, 1)
-    
+
     # Calculates the matrix of transition dipole moments between nuclear vibrational states
 
     dipole_matrix = calculate_dipole_matrix(vibrational_wavefunctions, dipole_moments_interpolated)
@@ -588,7 +588,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
         vibrational_energy_levels (array): Eigenvalues from nuclear Hamiltonian
 
     """
-    
+
     timer("Anharmonic frequency", 0)
 
     # This value is more than enough for accuracy and extrapolation is not going to be the rate limiting step
@@ -602,7 +602,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
     # Chooses a 0.05 angstrom step length if none has been chosen
 
     calculation.step = 0.05 if calculation.step is None else calculation.step
-    
+
     # Initialises fundamental transition frequency for loop
 
     transition_per_cm = 0
@@ -640,7 +640,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
     log_big_spacer(calculation, 1)
     log("  Step       Fundamental Freq. (per cm)         Chi        Harmonic Freq. (per cm)     Bond Length Range", calculation, 1)
     log_big_spacer(calculation, 1)
-    
+
     for iteration in range(30):
 
         transition_per_cm_old = transition_per_cm
@@ -653,7 +653,7 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
 
         coordinates_right[1][2] = np.max(x_values)
         coordinates_left[1][2] = np.min(x_values)
-        
+
         # Performs the forward and backwards scans
 
         new_x_values_right, new_V_values_right, new_dipole_moments_right = energ.scan_coordinate(calculation, atomic_symbols, coordinates_right, silent = True)
@@ -667,8 +667,8 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
         # Updates the dipole moments by concatenating the left and right scan results
 
         dipole_moments = np.concatenate((np.array(new_dipole_moments_left[1:][::-1]), np.array(dipole_moments), np.array(new_dipole_moments_right[1:])))
-        
-        # Interpolates the energy and dipole moments, and solves the eigenvalue equation 
+
+        # Interpolates the energy and dipole moments, and solves the eigenvalue equation
 
         vibrational_energy_levels, vibrational_wavefunctions, dipole_moments_interpolated, x, V = interpolate_and_build_hamiltonian(x_values, V_values, molecule.reduced_mass, SCAN_EXTENT, EXTRAPOLATION_GRID_DENSITY, dipole_moments)
 
@@ -682,17 +682,17 @@ def calculate_anharmonic_frequency(calculation: Calculation, atomic_symbols: lis
         log(f"    {iteration + 1}               {transition_per_cm:8.2f}                 {chi:8.5f}             {harmonic_frequency_per_cm:8.2f}             {bohr_to_angstrom(min(x_values)):.5f} - {bohr_to_angstrom(max(x_values)):.5f}", calculation, 1)
 
         if frequency_is_converged(transition_per_cm, transition_per_cm_old, calculation):
-            
+
             log_big_spacer(calculation, 1)
 
             process_anharmonic_output(calculation, vibrational_wavefunctions, vibrational_energy_levels, transition_matrix, chi, dipole_moments_interpolated, x, V, molecule)
-            
+
             timer("Anharmonic frequency", 1)
 
             return vibrational_energy_levels
 
     error("Anharmonic frequency calculation did not converge!")
-    
+
 
 
 
@@ -708,7 +708,7 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
 
     Calculates the harmonic frequency of a molecule.
 
-    Args:   
+    Args:
         calculation (Calculation): Calculation object
         atomic_symbols (list, optional): List of atomic symbols
         coordinates (array, optional): Atomic coordinates
@@ -722,26 +722,25 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
         zero_point_energy (float): Zero point energy in hartree
 
     """
-    
+
     timer("Harmonic frequency", 0)
 
     # If "FREQ" keyword has been used, calculates the energy using the supplied atoms and coordinates, otherwise uses the supplied molecule and energy
 
     if calculation.calculation_type == "FREQ":
-        
+
         timer("Energy evaluation", 0)
 
         _, molecule, energy, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, coordinates)
-        
-        timer("Energy evaluation", 1)
 
+        timer("Energy evaluation", 1)
 
     if calculation.first_order_vpt or calculation.second_order_vpt:
 
         # If VPT2 is requested, we need the second and third derivative prods to be identical - this only marginally reduces second derivative quality
 
         constants.SECOND_GEOM_DERIVATIVE_STEP = constants.THIRD_GEOM_DERIVATIVE_STEP
-    
+
 
     bond_length = molecule.bond_length
     atomic_symbols = molecule.atomic_symbols
@@ -752,9 +751,9 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
     log_spacer(calculation, 1, start = "\n", space="")
     log(" Beginning harmonic frequency calculation...", calculation, 1, colour = "white")
     log_spacer(calculation, 1, space="")
-    
+
     log(f"\n Hessian will be calculated at a bond length of {bohr_to_angstrom(bond_length):.5f} angstroms.", calculation, 1)
-    
+
     # Spring stiffness is calculated as the Hessian, through numerical second derivatives
 
     hessian, SCF_output_forward, P_forward, SCF_output_backward, P_backward, displaced_energies = opt.calculate_hessian(coordinates, calculation, atomic_symbols, energy)
@@ -781,9 +780,9 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
     # Converts the dipole derivative into a transition intensity
 
     transition_intensity_km_per_mol = calculate_transition_intensity(frequency_per_cm, dipole_derivative)
-       
+
     log(f" Using atomic mass of {(masses[0] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[0].capitalize()}, {(masses[1] / constants.atomic_mass_unit_in_electron_mass):.6f} amu for {atomic_symbols[1].capitalize()}.", calculation, 3)
-    
+
     log(" Dipole moment derivative already includes vibrational overlap.\n", calculation, 1)
 
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
@@ -795,17 +794,17 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1)
 
     # Checks if the "VPT2" keyword has been used
-    
+
     timer("Harmonic frequency", 1)
 
     if calculation.first_order_vpt or calculation.second_order_vpt:
 
         frequency_hartree, zero_point_energy = calculate_vibrational_perturbation_theory_frequency(frequency_hartree, energy, calculation, atomic_symbols, coordinates, molecule, displaced_energies)
-    
+
     # Calculates and prints thermochemical corrections
 
     thermo.calculate_thermochemical_corrections(molecule, calculation, frequency_hartree, energy, zero_point_energy)
-    
+
 
 
     return hessian, reduced_mass, frequency_per_cm, zero_point_energy
@@ -820,9 +819,9 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
 
 
 def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float, energy: float, calculation: Calculation, atomic_symbols: list, coordinates: ndarray, molecule: Molecule, displaced_energies: tuple) -> tuple:
- 
+
     """
-    
+
     Calculates the vibrational perturbation theory fundamental frequency.
 
     Args:
@@ -833,13 +832,13 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
         coordinates (array): Atomic coordinates
         molecule (Molecule): Molecule object
         displaced_energies (tuple): Energies from harmonic frequency calculation
-    
+
     Returns:
         fundamental_frequency (float): Perturbative fundamental vibrational frequency
         zero_point_energy (float): Anharmonic perturbative Zero-point energy
-    
+
     """
-    
+
     timer("Perturbative anharmonic frequency", 0)
 
     log("\n Initialising vibrational perturbation theory..   \n", calculation)
@@ -847,7 +846,7 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
     log_spacer(calculation)
     log("              VPT2 Frequency Correction", calculation) if calculation.second_order_vpt else log("              VPT1 Frequency Correction", calculation)
     log_spacer(calculation)
-    
+
     log(f"  Using finite difference of {constants.THIRD_GEOM_DERIVATIVE_STEP} a.u.   \n", calculation)
 
     prodding_coords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, constants.THIRD_GEOM_DERIVATIVE_STEP]])
@@ -856,7 +855,7 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
     very_far_backward_coords = coordinates - 3 * prodding_coords
     very_far_forward_coords = coordinates + 3 * prodding_coords
     super_far_forward_coords = coordinates + 4 * prodding_coords
-    
+
     # Can't use the previously calculated energies if a different derivative step was used
 
     if constants.THIRD_GEOM_DERIVATIVE_STEP != constants.SECOND_GEOM_DERIVATIVE_STEP:
@@ -868,31 +867,31 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
     log("  Calculating displaced energy 1 of 4...     ", calculation, end = "")
 
     _, _, energy_super_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_backward_coords, silent = True)
-    
-    log("[Done]", calculation)  
+
+    log("[Done]", calculation)
 
     log("  Calculating displaced energy 2 of 4...     ", calculation, end = "")
 
     _, _, energy_very_far_backward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_backward_coords, silent = True)
 
-    log("[Done]", calculation)  
+    log("[Done]", calculation)
 
     log("  Calculating displaced energy 3 of 4...     ", calculation, end = "")
 
     _, _, energy_very_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, very_far_forward_coords, silent = True)
-    
-    log("[Done]", calculation)  
+
+    log("[Done]", calculation)
 
     log("  Calculating displaced energy 4 of 4...     ", calculation, end = "")
 
     _, _, energy_super_far_forward, _ = energ.evaluate_molecular_energy(calculation, atomic_symbols, super_far_forward_coords, silent = True)
-    
-    log("[Done]", calculation)  
+
+    log("[Done]", calculation)
 
     # Calculates the third and fourth derivatives with the harmonic energies, and the four additional energies
 
     d3E_dR3 = calculate_third_derivative(energy_super_far_backward, energy_very_far_backward, energy_far_backward, energy_backward, energy_forward, energy_far_forward, energy_very_far_forward, energy_super_far_forward, constants.THIRD_GEOM_DERIVATIVE_STEP)
-    
+
     d4E_dR4 = calculate_fourth_derivative(energy_super_far_backward, energy_very_far_backward, energy_far_backward, energy_backward, energy, energy_forward, energy_far_forward, energy_very_far_forward, energy_super_far_forward, constants.THIRD_GEOM_DERIVATIVE_STEP)
 
     # Distinct terms involving either the third or fourth derivative
@@ -907,12 +906,12 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
 
         # Harmonic contribution
 
-        E_n = frequency_hartree * (n + 1 / 2) 
-        
+        E_n = frequency_hartree * (n + 1 / 2)
+
         # First-order (VPT1) contribution
 
-        E_n += (1 / 16) * fourth_derivative_term * (n ** 2 + n + 1 / 2) 
-        
+        E_n += (1 / 16) * fourth_derivative_term * (n ** 2 + n + 1 / 2)
+
         # Second-order (VPT2) contribution
 
         E_n += third_derivative_term * (15 / 144 * (n + 1 / 2) ** 2 + 7 / 576)
@@ -929,32 +928,32 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
     # Calculates the anharmonicity parameter
 
     anharmonicity = (5 / 48) * third_derivative_term + (1 / 16) * fourth_derivative_term
-    
+
     chi = -anharmonicity / frequency_hartree
 
     # The perturbative anharmonic zero-point energy
 
     zero_point_energy = nth_energy_level_vpt(0)
     equilibrium_energy = energy + zero_point_energy
-    
+
     # The perturbative anharmonic absorption frequencies
 
     fundamental_frequency = nth_energy_level_vpt(1) - nth_energy_level_vpt(0)
     first_overtone = nth_energy_level_vpt(2) - nth_energy_level_vpt(0)
     second_overtone = nth_energy_level_vpt(3) - nth_energy_level_vpt(0)
 
-    log(f"\n  Anharmonicity constant:                {chi:10.5f}", calculation)   
-    log(f"  Anharmonicity parameter:               {anharmonicity:10.5f}", calculation, priority=3)   
+    log(f"\n  Anharmonicity constant:                {chi:10.5f}", calculation)
+    log(f"  Anharmonicity parameter:               {anharmonicity:10.5f}", calculation, priority=3)
 
-    log(f"\n  Zero-point energy:               {zero_point_energy:16.10f}", calculation)   
-    log(f"  Equilibrium energy:              {equilibrium_energy:16.10f}", calculation)   
+    log(f"\n  Zero-point energy:               {zero_point_energy:16.10f}", calculation)
+    log(f"  Equilibrium energy:              {equilibrium_energy:16.10f}", calculation)
 
-    log(f"\n  Fundamental frequency (per cm):        {fundamental_frequency * constants.per_cm_in_hartree:10.2f}", calculation)   
-    log(f"  First overtone (per cm):               {first_overtone * constants.per_cm_in_hartree:10.2f}", calculation)   
-    log(f"  Second overtone (per cm):              {second_overtone * constants.per_cm_in_hartree:10.2f}", calculation, priority=3)   
-    
+    log(f"\n  Fundamental frequency (per cm):        {fundamental_frequency * constants.per_cm_in_hartree:10.2f}", calculation)
+    log(f"  First overtone (per cm):               {first_overtone * constants.per_cm_in_hartree:10.2f}", calculation)
+    log(f"  Second overtone (per cm):              {second_overtone * constants.per_cm_in_hartree:10.2f}", calculation, priority=3)
+
     log_spacer(calculation)
-    
+
     timer("Perturbative anharmonic frequency", 0)
 
     return fundamental_frequency, zero_point_energy
