@@ -31,7 +31,7 @@ The simplest way to install TUNA and its dependencies is by running:
 pip install quantumtuna
 ```
 
-Then, in a new terminal, run ```TUNA --version``` which should print the current version if TUNA has installed correctly.
+Then run ```TUNA --version``` which should print the current version if TUNA has installed correctly.
 
 ### Running
 
