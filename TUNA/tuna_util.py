@@ -354,7 +354,7 @@ class Method:
     @property
     def correlated_method(self) -> bool:
 
-        return self.coupled_cluster_method or self.perturbative_method
+        return self.coupled_cluster_method or self.perturbative_method or self.method_base == "RPA"
 
     @property
     def density_functional_method(self) -> bool:
@@ -952,7 +952,8 @@ def coloured(text: str, colour: str | None, bold: bool = False) -> str:
         "yellow": 33,
         "light_grey": 37,
         "white": 97,
-        "light_red": 91
+        "light_red": 91,
+        "light_yellow": 93
 
     }
 
@@ -1404,7 +1405,7 @@ electronic_structure_methods: list[Method] = [
     Method("CISD", "configuration interaction singles and doubles", method_base = "CC"),
     Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", restricted_available = False),
     Method("TDHF", "time-dependent Hartree-Fock theory", excited_state_method = True),
-    Method("RPA", "random phase approximation", excited_state_method = True),
+    Method("RPA", "random phase approximation", method_base = "RPA"),
 
     Method("CCD", "coupled cluster doubles", method_base = "CC"),
     Method("CEPA", "coupled electron pair approximation", method_base = "CC"),

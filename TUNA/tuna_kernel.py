@@ -1142,13 +1142,17 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         E_MP2, E_MP3, E_MP4, P, P_alpha, P_beta, natural_occupancies, natural_orbitals = mp.run_perturbation_theory_calculation(method, molecule, SCF_output, integrals, calculation, V_NN, grid_container, silent = silent)
 
-
     # If a coupled-cluster calculation is requested, calculates the energy and density matrices
 
     elif method.method_base == "CC":
 
         E_CC, E_CC_perturbative, (P, P_alpha, P_beta), natural_occupancies, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
 
+    # If a direct RPA calculation is requested, calculates the ground state correlation energy
+
+    elif method.method_base == "RPA" or calculation.do_rpa:
+
+        E_RPA = mp.calculate_RPA_energy(molecule, SCF_output, calculation, silent = silent)
 
     # Prints post SCF information, as long as its not an optimisation that hasn't finished yet
 
@@ -1183,7 +1187,6 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
     # Prints Hartree-Fock or Kohn-Sham energy
 
     print_SCF_energy(final_energy, reference, method, calculation, silent)
-
 
     # Adds up and prints MP2 energies
 
@@ -1270,6 +1273,17 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         method.name = method.name.replace("(", "[").replace(")", "]")
 
+    elif method.method_base == "RPA" or calculation.do_rpa:
+
+        if do_DFT:
+
+            # Correlation is handled by RPA and added onto exact exchange so the DFT exchange-correlation energy is removed
+
+            final_energy = mp.calculate_exact_exchange_energy(SCF_output, calculation, V_NN)
+
+        final_energy += E_RPA
+
+        log(f" Correlation energy from RPA:      " + f"{E_RPA:16.10f}\n", calculation, 1, silent = silent)
 
     # Prints CIS energy of state of interest
 

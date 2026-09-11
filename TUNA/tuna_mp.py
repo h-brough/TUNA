@@ -1868,6 +1868,10 @@ def print_G0W0_results(calculation: Calculation, molecule: Molecule, quasipartic
 
     """
 
+    # The HOMO and LUMO are either side of the occupied spin orbitals, or of the doubly occupied spatial orbitals
+
+    n_occupied = molecule.n_occ if calculation.reference == "UHF" else molecule.n_doubly_occ
+
     log_big_spacer(calculation, silent = silent, start = "\n")
     log("  Orbital          Orbital Energy             Correction           Quasiparticle          Energy (eV)", calculation, 1, silent = silent)
     log_big_spacer(calculation, silent = silent)
@@ -1876,17 +1880,17 @@ def print_G0W0_results(calculation: Calculation, molecule: Molecule, quasipartic
 
         correction = quasiparticle_energies[orbital] - epsilons[orbital]
 
-        log(f"   {(orbital + 1):3}          {epsilons[orbital]:16.10f}         {correction:16.10f}       {quasiparticle_energies[orbital]:16.10f}        {quasiparticle_energies[orbital] * constants.eV_in_hartree:12.5f}", calculation, 1, silent = silent)
+        log(f"   {orbital + 1:>3}          {epsilons[orbital]:16.10f}         {correction:16.10f}       {quasiparticle_energies[orbital]:16.10f}        {quasiparticle_energies[orbital] * constants.eV_in_hartree:12.5f}", calculation, 1, silent = silent)
 
     log_big_spacer(calculation, silent = silent)
 
     # The ionisation potential and electron affinity are minus the quasiparticle energies of the HOMO and LUMO
 
-    ip_original = -1 * epsilons[molecule.n_doubly_occ - 1]
-    ip_corrected = -1 * quasiparticle_energies[molecule.n_doubly_occ - 1]
+    ip_original = -1 * epsilons[n_occupied - 1]
+    ip_corrected = -1 * quasiparticle_energies[n_occupied - 1]
 
-    ea_original = -1 * epsilons[molecule.n_doubly_occ]
-    ea_corrected = -1 * quasiparticle_energies[molecule.n_doubly_occ]
+    ea_original = -1 * epsilons[n_occupied]
+    ea_corrected = -1 * quasiparticle_energies[n_occupied]
 
     band_gap_original = ip_original - ea_original
     band_gap_corrected = ip_corrected - ea_corrected
@@ -1914,7 +1918,7 @@ def print_G0W0_results(calculation: Calculation, molecule: Molecule, quasipartic
 
 
 def solve_quasiparticle_equations(calculation: Calculation, silent: bool, epsilons: ndarray, couplings: ndarray, \
-                                  correlated: range, o: slice, v: slice, excitation_energies: ndarray, epsilons_x: ndarray) -> ndarray:
+                                  correlated: range, o: slice, v: slice, excitation_energies: ndarray, epsilons_x: ndarray, spin_factor: int = 2) -> ndarray:
 
     """
 
@@ -1930,6 +1934,7 @@ def solve_quasiparticle_equations(calculation: Calculation, silent: bool, epsilo
         v (slice): Virtual orbital slice
         excitation_energies (slice): Excitation energies of plasmons
         epsilons_x (array): Orbital energies from HFX
+        spin_factor (int, optional): Two for a spin-summed screened interaction, one for a spin-resolved one
 
     Returns:
         quasiparticle_energies (array): Quasiparticle energies
@@ -1960,11 +1965,11 @@ def solve_quasiparticle_equations(calculation: Calculation, silent: bool, epsilo
             occupied_denominators = quasiparticle_energy - epsilons[o][:, None] + excitation_energies[None, :]
             virtual_denominators = quasiparticle_energy - epsilons[v][:, None] - excitation_energies[None, :]
 
-            # The factor of two accounts for the two spin channels of the spin-summed screened interaction
+            # The factor of two accounts for the two spin channels of the spin-summed screened interaction, which spin orbitals sum over explicitly
 
-            sigma = 2 * (np.sum(occupied_couplings / occupied_denominators) + np.sum(virtual_couplings / virtual_denominators))
+            sigma = spin_factor * (np.sum(occupied_couplings / occupied_denominators) + np.sum(virtual_couplings / virtual_denominators))
 
-            sigma_derivative = -2 * (np.sum(occupied_couplings / occupied_denominators ** 2) + np.sum(virtual_couplings / virtual_denominators ** 2))
+            sigma_derivative = -spin_factor * (np.sum(occupied_couplings / occupied_denominators ** 2) + np.sum(virtual_couplings / virtual_denominators ** 2))
 
             # Quasiparticle energy = quasiparticle energy - self-exchange - self-correlation
 
@@ -1994,7 +1999,7 @@ def solve_quasiparticle_equations(calculation: Calculation, silent: bool, epsilo
 
 
 def build_screened_coulomb_couplings(calculation: Calculation, silent: bool, epsilons: ndarray, excitation_energies: ndarray, \
-                                     state_vectors: ndarray, n_occ: int, n_virt: int, g: ndarray, o: slice, v: slice):
+                                     state_vectors: ndarray, n_occ: int, n_virt: int, g: ndarray, o: slice, v: slice, spin_conserving: ndarray = None):
 
     """
 
@@ -2011,6 +2016,7 @@ def build_screened_coulomb_couplings(calculation: Calculation, silent: bool, eps
         g (array): Two-electron integrals in MO basis
         o (slice): Occupied orbital slice
         v (slice): Virtual orbital slice
+        spin_conserving (array, optional): Mask of spin-conserving excitations, for unrestricted references
 
     Returns:
         couplings (array): Screened Coulomb couplings
@@ -2025,9 +2031,25 @@ def build_screened_coulomb_couplings(calculation: Calculation, silent: bool, eps
 
     for state in range(len(excitation_energies)):
 
+        state_vector = state_vectors[:, state]
+
+        # An unrestricted reference only solves the spin-conserving block, so the spin-flip amplitudes are all zero
+
+        if spin_conserving is not None:
+
+            n_ia = n_occ * n_virt
+            half = len(state_vector) // 2
+
+            padded_state_vector = np.zeros(2 * n_ia)
+
+            padded_state_vector[:n_ia][spin_conserving] = state_vector[:half]
+            padded_state_vector[n_ia:][spin_conserving] = state_vector[half:]
+
+            state_vector = padded_state_vector
+
         # The transition density coefficients is X + Y
 
-        X, Y = ci.split_state_vector(state_vectors[:, state], n_occ, n_virt)
+        X, Y = ci.split_state_vector(state_vector, n_occ, n_virt)
 
         # Coupling between molecular orbital pair pq and transition density jb of each state
 
@@ -2046,11 +2068,72 @@ def build_screened_coulomb_couplings(calculation: Calculation, silent: bool, eps
 
 
 
+def begin_direct_RPA_calculation(molecule: Molecule, SCF_output: Output, calculation: Calculation, silent: bool = False) -> tuple:
+
+    """
+
+    Transforms the integrals and orbital energies needed to build the direct RPA matrices, for either reference.
+
+    Args:
+        molecule (Molecule): Molecule object
+        SCF_output (Output): SCF output object
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        g (array): Two-electron integrals in physicists' notation, not antisymmetrised
+        epsilons (array): Fock matrix eigenvalues
+        o (slice): Active occupied orbital slice
+        v (slice): Virtual orbital slice
+        n_occ (int): Number of active occupied orbitals
+        n_virt (int): Number of virtual orbitals
+        spin_labels (list): Spin of each spin orbital, or None for a restricted reference
+        molecular_orbitals (array): Molecular orbitals in AO basis, spin-blocked for an unrestricted reference
+
+    """
+
+    if calculation.reference == "UHF":
+
+        # Transforms into the spin orbital basis - the Coulomb integrals are needed here, not the antisymmetrised ones
+
+        _, molecular_orbitals, epsilons, _, o, v, spin_labels, _, g = ci.begin_spin_orbital_calculation(molecule, SCF_output.integrals.ERI_AO, SCF_output, calculation, silent = silent)
+
+        n_virt = molecule.n_virt
+
+    else:
+
+        # Transforms into the spatial orbital basis
+
+        g, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, SCF_output.integrals.ERI_AO, SCF_output, calculation, silent = silent)
+
+        # Converts to physicists' notation
+
+        g = g.transpose(0, 2, 1, 3)
+
+        spin_labels = None
+
+        n_virt = molecule.n_doubly_virt
+
+    # Allows frozen core calculations
+
+    n_occ = o.stop - o.start
+
+    return g, epsilons, o, v, n_occ, n_virt, spin_labels, molecular_orbitals
+
+
+
+
+
+
+
+
+
+
 def calculate_G0W0(molecule: Molecule, SCF_output: Output, calculation: Calculation, silent: bool = False) -> ndarray:
 
     """
 
-    Calculates the G0W0 quasiparticle energies of a spin-restricted reference.
+    Calculates the G0W0 quasiparticle energies for either a HF or KS reference.
 
     Args:
         molecule (Molecule): Molecule object
@@ -2063,27 +2146,23 @@ def calculate_G0W0(molecule: Molecule, SCF_output: Output, calculation: Calculat
 
     """
 
-    check(molecule.n_virt > 0, "The GW approximation requested on system with no virtual orbitals!")
+    check(molecule.n_virt > 0, "The GW approximation was requested on a system with no virtual orbitals!")
 
     timer("G0W0", 0)
 
     integrals = SCF_output.integrals
 
-    # Transforms the two-electron integrals into the spatial orbital basis
+    # Transforms the two-electron integrals, in physicists' notation without antisymmetrisation
 
-    g, molecular_orbitals, epsilons, o, v = ci.begin_spatial_orbital_calculation(molecule, integrals.ERI_AO, SCF_output, calculation, silent = silent)
-
-    # Convert to physicists' notation
-
-    g = g.transpose(0, 2, 1, 3)
-
-    # Allows frozen core calculations
-
-    n_occ, n_virt = o.stop - o.start, molecule.n_doubly_virt
+    g, epsilons, o, v, n_occ, n_virt, spin_labels, molecular_orbitals = begin_direct_RPA_calculation(molecule, SCF_output, calculation, silent = silent)
 
     # Only these orbitals have quasiparticle energies
 
     correlated = range(o.start, len(epsilons))
+
+    # Spin orbitals sum over both spin channels explicitly, while the restricted screened interaction is spin-summed already
+
+    spin_factor = 1 if calculation.reference == "UHF" else 2
 
     log_spacer(calculation, silent = silent, start = "\n")
     log("                  GW Approximation", calculation, 1, silent, colour = "white")
@@ -2091,9 +2170,7 @@ def calculate_G0W0(molecule: Molecule, SCF_output: Output, calculation: Calculat
 
     log("\n  Building excited state Hamiltonian...      ", calculation, 1, silent, end = "")
 
-    # Builds the (de)excitation matrices
-
-    spin_labels = None
+    # Builds the (de)excitation matrices, throwing away the spin-flip block for an unrestricted reference
 
     A_ia_jb, B_ia_jb, spin_conserving = ci.build_direct_RPA_matrices(calculation, g, epsilons, o, v, spin_labels)
 
@@ -2107,17 +2184,29 @@ def calculate_G0W0(molecule: Molecule, SCF_output: Output, calculation: Calculat
 
     log("[Done]\n", calculation, 1, silent)
 
-    couplings = build_screened_coulomb_couplings(calculation, silent, epsilons, excitation_energies, state_vectors, n_occ, n_virt, g, o, v)
+    couplings = build_screened_coulomb_couplings(calculation, silent, epsilons, excitation_energies, state_vectors, n_occ, n_virt, g, o, v, spin_conserving)
 
     # The exchange self-energy is full exact exchange regardless of reference
 
-    F_x, _, _ = scf.construct_restricted_Fock_matrix(integrals, SCF_output.P, 1, None)
+    if calculation.reference == "UHF":
+
+        F_x_alpha, F_x_beta, _, _, _, _ = scf.construct_unrestricted_Fock_matrices(integrals, SCF_output.P_alpha, SCF_output.P_beta, 1, None, None)
+
+        # Spin-blocks the Fock matrices in the same order as the spin-blocked molecular orbitals
+
+        zeros = np.zeros_like(F_x_alpha)
+
+        F_x = np.block([[F_x_alpha, zeros], [zeros, F_x_beta]])
+
+    else:
+
+        F_x, _, _ = scf.construct_restricted_Fock_matrix(integrals, SCF_output.P, 1, None)
 
     epsilons_x = np.diag(ci.transform_matrix_AO_to_SO(F_x, molecular_orbitals))
 
     # Uses Newton's method to solve the quasiparticle equations
 
-    quasiparticle_energies = solve_quasiparticle_equations(calculation, silent, epsilons, couplings, correlated, o, v, excitation_energies, epsilons_x)
+    quasiparticle_energies = solve_quasiparticle_equations(calculation, silent, epsilons, couplings, correlated, o, v, excitation_energies, epsilons_x, spin_factor)
 
     # Degenerate orbitals must share a quasiparticle energy, so the splitting is averaged
 
@@ -2139,3 +2228,132 @@ def calculate_G0W0(molecule: Molecule, SCF_output: Output, calculation: Calculat
     timer("G0W0", 1)
 
     return quasiparticle_energies
+
+
+
+
+
+
+
+
+
+
+def calculate_exact_exchange_energy(SCF_output: Output, calculation: Calculation, V_NN: float) -> float:
+
+    """
+
+    Calculates the Hartree-Fock energy expression, evaluated with whichever orbitals the self-consistent field converged to.
+
+    Args:
+        SCF_output (Output): SCF output object
+        calculation (Calculation): Calculation object
+        V_NN (float): Nuclear repulsion energy
+
+    Returns:
+        electronic_energy_from_hf (float): Exact exchange energy of the reference determinant
+
+    """
+
+    integrals = SCF_output.integrals
+
+    HFX_prop = calculation.HFX_prop
+
+    # Evaluating the Hartree-Fock energy
+
+    calculation.HFX_prop = 1
+
+    if calculation.reference == "UHF":
+
+        # Passing None for the DFT parameters ensures only the Hartree-Fock expression is evaluated, on the Kohn-Sham converged orbitals
+
+        _, _, J_alpha, J_beta, K_alpha, K_beta = scf.construct_unrestricted_Fock_matrices(integrals, SCF_output.P_alpha, SCF_output.P_beta, 1, None, None)
+
+        electronic_energy, _ = scf.calculate_unrestricted_electronic_energy(integrals, SCF_output.P_alpha, SCF_output.P_beta, J_alpha, J_beta, K_alpha, K_beta, calculation, None, None, None, None, None, None)
+
+    else:
+
+        _, J, K = scf.construct_restricted_Fock_matrix(integrals, SCF_output.P, 1, None)
+
+        electronic_energy, _ = scf.calculate_restricted_electronic_energy(integrals, SCF_output.P, J, K, calculation, None, None, None, None)
+
+    # Restores the original exact exchange proportion
+
+    calculation.HFX_prop = HFX_prop
+
+    electronic_energy_from_hf = electronic_energy + V_NN
+
+    return electronic_energy_from_hf
+
+
+
+
+
+
+
+
+
+
+def calculate_RPA_energy(molecule: Molecule, SCF_output: Output, calculation: Calculation, silent: bool = False) -> float:
+
+    """
+
+    Calculates the direct RPA ground state correlation energy.
+
+    Args:
+        molecule: Molecule object
+        SCF_output: SCF output object
+        calculation: Calculation object
+        silent: Should anything be printed
+
+    Returns:
+        E_RPA: Direct RPA correlation energy
+
+    """
+
+    # No TDA here as that would give exactly zero correlation energy
+
+    timer("Random phase approximation", 0)
+
+    # Transforms the two-electron integrals, in physicists' notation without antisymmetrisation
+
+    g, epsilons, o, v, _, _, spin_labels, _, _ = begin_direct_RPA_calculation(molecule, SCF_output, calculation, silent = silent)
+
+    log_spacer(calculation, silent = silent, start = "\n")
+    log("              Random Phase Approximation", calculation, 1, silent, colour = "white")
+    log_spacer(calculation, silent = silent)
+
+    log("  Building direct RPA matrices...            ", calculation, 1, silent, end = "")
+
+    # These are the same Hartree-only matrices which screen the Coulomb interaction in GW
+
+    A_ia_jb, B_ia_jb, _ = ci.build_direct_RPA_matrices(calculation, g, epsilons, o, v, spin_labels)
+
+    log("[Done]", calculation, 1, silent)
+
+    log("  Diagonalising RPA Hamiltonian...           ", calculation, 1, silent, end = "")
+
+    # Solves the full RPA problem, which keeps one positive root for each single excitation
+
+    excitation_energies, _ = ci.calculate_time_dependent_hartree_fock_states(A_ia_jb, B_ia_jb)
+
+    log("[Done]\n", calculation, 1, silent)
+
+    check(len(excitation_energies) == len(A_ia_jb), "Not all RPA excitation energies are real - the reference is unstable!")
+
+    # The plasmon formula, the change in zero-point energy of the coupled particle-hole oscillators
+
+    excitation_energy_sum = np.sum(excitation_energies)
+    excitation_matrix_trace = np.trace(A_ia_jb)
+
+    E_RPA = (excitation_energy_sum - excitation_matrix_trace) / 2
+
+    log(f"  Sum of excitation energies:      {excitation_energy_sum:16.10f}", calculation, 3, silent = silent)
+    log(f"  Trace of excitation matrix:      {excitation_matrix_trace:16.10f}\n", calculation, 3, silent = silent)
+
+    log(f"  RPA correlation energy:             {E_RPA:13.10f}", calculation, 1, silent = silent)
+
+    log_spacer(calculation, silent = silent, start = "")
+
+    timer("Random phase approximation", 1)
+
+    return E_RPA
