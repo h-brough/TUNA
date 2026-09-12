@@ -3,6 +3,7 @@
 Wishlist for next update:
 
 CASSCF
+CASCI
 XC kernels for (m)GGA functionals - try numerical derivatives for all including mGGA or Claude?
 Relaxed density matrix for double-hybrid functionals
 

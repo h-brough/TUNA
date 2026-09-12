@@ -2703,7 +2703,7 @@ def calculate_FCI_density_matrix(determinants: list, CI_vector: ndarray, n_SO: i
 
 
 
-def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals, SCF_output: Output, calculation: Calculation, silent: bool = False) -> float:
+def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals, SCF_output: Output, calculation: Calculation, silent: bool = False) -> tuple:
 
     """
 
@@ -2803,5 +2803,5 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
     log(f"\n  Weight of reference determinant:       {reference_weight:10.5f}", calculation, 2, silent)
 
     log_spacer(calculation, 1, silent)
-
+    
     return E_FCI, density_matrices

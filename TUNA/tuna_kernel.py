@@ -1155,6 +1155,14 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         E_FCI, (P, P_alpha, P_beta) = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
 
+        # If "NATORBS" is used, calculate and print the natural orbitals
+
+        if calculation.natural_orbitals:
+
+            natural_occupancies, natural_orbitals = mp.calculate_natural_orbitals(P, X, calculation, silent = silent)
+
+            log_spacer(calculation, 1, silent)
+
     # Calculates the full configuration interaction energy
     
     elif method.method_base == "RPA" or calculation.do_rpa:
