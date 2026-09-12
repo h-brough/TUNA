@@ -2,7 +2,6 @@
 
 Wishlist for next update:
 
-Support for Python 3.15
 CASSCF
 XC kernels for (m)GGA functionals - try numerical derivatives for all including mGGA or Claude?
 Relaxed density matrix for double-hybrid functionals
@@ -12,11 +11,12 @@ FCI density
 
 ### Added
 
-- Full configuration interaction with `FCI`
+- Full configuration interaction energy with `FCI`
 - Random phase approximation correlation energy with `RPA`
 - Corrections to quasiparticle orbital energies with one-shot `GW`
 - Excited state spin contamination for CIS and TDA-KS states
 - Avoid auto-full-CI with `FORCEMETHOD` keyword
+- Support for Python 3.15
 
 ### Changed
 
