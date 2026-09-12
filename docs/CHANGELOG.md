@@ -3,19 +3,20 @@
 Wishlist for next update:
 
 Support for Python 3.15
-Full CI
-Fix quadrupole moments
-Excited state spin contamination for CIS
-Fix bumpy SCFGUESS scans
 CASSCF
 XC kernels for (m)GGA functionals - try numerical derivatives for all including mGGA or Claude?
+Relaxed density matrix for double-hybrid functionals
+FCI density
 
 ## TUNA 0.12.0
 
 ### Added
 
+- Full configuration interaction with `FCI`
 - Random phase approximation correlation energy with `RPA`
 - Corrections to quasiparticle orbital energies with one-shot `GW`
+- Excited state spin contamination for CIS and TDA-KS states
+- Avoid auto-full-CI with `FORCEMETHOD` keyword
 
 ### Changed
 
@@ -27,6 +28,8 @@ XC kernels for (m)GGA functionals - try numerical derivatives for all including 
 
 - Now use correct number of degrees of freedom for molecular dynamics
 - Removed spin contamination for coupled cluster and perturbative calculations
+- Unrestricted surface scans with `SCFGUESS` are no longer bumpy
+- Quadrupole moments were calculated incorrectly for pi-symmetry states
 
 <br>
 

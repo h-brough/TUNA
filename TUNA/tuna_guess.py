@@ -400,11 +400,11 @@ def setup_initial_guess(P_guess: ndarray, P_guess_alpha: ndarray, P_guess_beta: 
 
         log("\n Using density matrix from previous step for guess. \n", calculation, 1, silent = silent)
 
+    # If we are handed a spin-symmetric guess and doing an unrestricted calculation, rotate it
 
-    elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None and calculation.calculation_type != "SPE":
+    elif calculation.reference == "UHF" and P_guess_alpha is not None and P_guess_beta is not None and calculation.calculation_type != "SPE" and not (rotate_guess_mos and np.linalg.norm(P_guess_alpha - P_guess_beta) < 1e-3):
 
         log("\n Using density matrices from previous step for guess. \n", calculation, silent = silent)
-
 
     elif calculation.core_guess:
 

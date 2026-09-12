@@ -158,13 +158,14 @@ def calculate_analytical_quadrupole_moment(centre_of_mass: float, charges: ndarr
     # Extracts the xx and zz components of quadrupole moment integrals
 
     electronic_quadrupole_moment_xx = -1 * np.einsum("ij,ij->", P, Q[0], optimize = True)
+    electronic_quadrupole_moment_yy = -1 * np.einsum("ij,ij->", P, Q[1], optimize = True)
     electronic_quadrupole_moment_zz = -1 * np.einsum("ij,ij->", P, Q[2], optimize = True)
 
     anisotropic_quadrupole_moment = electronic_quadrupole_moment_zz + nuclear_quadrupole_moment - electronic_quadrupole_moment_xx
 
     # Calculates the trace of the quadrupole moment tensor, leveraging diatomic symmetry
 
-    isotropic_quadrupole_moment = (1 / 3) * (nuclear_quadrupole_moment + electronic_quadrupole_moment_zz + electronic_quadrupole_moment_xx * 2)
+    isotropic_quadrupole_moment = (1 / 3) * (nuclear_quadrupole_moment + electronic_quadrupole_moment_xx + electronic_quadrupole_moment_yy + electronic_quadrupole_moment_zz)
 
     return isotropic_quadrupole_moment, nuclear_quadrupole_moment, anisotropic_quadrupole_moment
 

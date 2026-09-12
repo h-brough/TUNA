@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import combinations
 from TUNA.tuna_util import *
 from TUNA.tuna_calc import Calculation
 from TUNA.tuna_molecule import Molecule
@@ -13,7 +14,7 @@ This is the TUNA module for configuration interaction, written first for version
 Methods needed to transform the atomic orbital basis molecular integrals to either the spatial orbital or spin orbital basis are stored here,
 as well as functions to calculate excited states with configuration interaction singles and time-dependent Hartree-Fock.
 
-Updated in version 0.12.0 to include helper functions for the GW approximation.
+Updated in version 0.12.0 to include helper functions for the GW approximation and add full configuration interaction.
 
 The module contains:
 
@@ -1797,7 +1798,80 @@ def print_excited_state_absorption_spectrum(molecule: Molecule, excitation_energ
 
 
 
-def print_excited_state_contributions(calculation: Calculation, silent: bool, excitation_energies: ndarray, excitation_vectors: ndarray, state_types: ndarray, n_occ: int, n_virt: int, o: slice, orbital_labels: ndarray = None) -> None:
+def calculate_excited_state_spin_contamination(SCF_output: Output, C_spin_block: ndarray, excitation_vectors: ndarray, n_alpha: int, n_beta: int, n_occ: int, n_virt: int, o: slice, v: slice) -> ndarray:
+
+    """
+
+    Calculates the spin squared expectation value of each CIS excited state.
+
+    Args:
+        SCF_output (Output): Output object
+        C_spin_block (array): Spin blocked molecular orbitals in AO basis
+        excitation_vectors (array): Weight vectors over the occupied-virtual spin orbital space
+        n_alpha (int): Number of alpha electrons
+        n_beta (int): Number of beta electrons
+        n_occ (int): Number of active occupied spin orbitals
+        n_virt (int): Number of virtual spin orbitals
+        o (slice): Active occupied spin orbital slice
+        v (slice): Virtual spin orbital slice
+
+    Returns:
+        s_squared_states (array): Spin squared expectation value of each excited state
+
+    """
+
+    n_AO = SCF_output.S.shape[0]
+
+    # Spatial overlap between molecular orbitals, which is zero unless the first is alpha and the second beta
+
+    D = C_spin_block[:n_AO].T @ SCF_output.S @ C_spin_block[n_AO:]
+
+    # Antisymmetrised two-electron part of S^2 in the spin orbital basis, in physicists' notation
+
+    g_spin = np.einsum("qs,rp->pqrs", D, D, optimize = True) + np.einsum("pr,sq->pqrs", D, D, optimize = True) \
+           - np.einsum("qr,sp->pqrs", D, D, optimize = True) - np.einsum("ps,rq->pqrs", D, D, optimize = True)
+
+    # Frozen core orbitals are still occupied, so the closed shell sums run over every occupied spin orbital
+
+    o_all = slice(0, o.stop)
+
+    S_z = (n_alpha - n_beta) / 2
+
+    # Expectation value over the reference determinant, which is the usual UHF spin contamination result
+
+    s_squared_reference = S_z * (S_z + 1) + n_beta + 0.5 * np.einsum("klkl->", g_spin[o_all, o_all, o_all, o_all], optimize = True)
+
+    # Fock-like matrix of the S^2 operator
+
+    F_spin = np.einsum("pkqk->pq", g_spin[:, o_all, :, o_all], optimize = True)
+
+    # Matrix elements between singly excited determinants, in the same form as the unrestricted A matrix
+
+    s_squared = np.array(g_spin[v, o, o, v].transpose(2, 0, 1, 3))
+
+    s_squared += np.einsum("ij,ab->iajb", np.eye(n_occ), F_spin[v, v], optimize = True)
+    s_squared -= np.einsum("ab,ij->iajb", np.eye(n_virt), F_spin[o, o], optimize = True)
+
+    s_squared_ia_jb = s_squared.reshape(n_occ * n_virt, -1)
+
+    s_squared_ia_jb[np.diag_indices_from(s_squared_ia_jb)] += s_squared_reference
+
+    # Expectation value for each normalised state vector
+
+    s_squared_states = np.einsum("pn,pq,qn->n", excitation_vectors, s_squared_ia_jb, excitation_vectors, optimize = True)
+
+    return s_squared_states
+
+
+
+
+
+
+
+
+
+
+def print_excited_state_contributions(calculation: Calculation, silent: bool, excitation_energies: ndarray, excitation_vectors: ndarray, state_types: ndarray, n_occ: int, n_virt: int, o: slice, orbital_labels: ndarray = None, s_squared: ndarray = None) -> None:
 
     """
 
@@ -1811,6 +1885,7 @@ def print_excited_state_contributions(calculation: Calculation, silent: bool, ex
         state_types (array): Either "triplet" or "singlet" for restricted references
         n_occ (int): Number of occupied orbitals
         n_virt (int): Number of virtual orbitals
+        s_squared (array): Expectation value of S^2 for states
 
     """
 
@@ -1824,7 +1899,14 @@ def print_excited_state_contributions(calculation: Calculation, silent: bool, ex
 
     for state in range(min(len(excitation_energies), calculation.n_states)):
 
-        log(f"\n  ~~~~~ State {state + 1} ~~~~~  {state_types[state].capitalize()}", calculation, 2, silent = silent)
+        if calculation.reference == "RHF" or s_squared is None:
+
+            log(f"\n  ~~~~~ State {state + 1} ~~~~~  {state_types[state].capitalize()}", calculation, 2, silent = silent)
+
+        else:
+
+            log(f"\n  ~~~~~ State {state + 1} ~~~~~    <S^2> = {s_squared[state]:.5f}", calculation, 2, silent = silent)
+      
 
         log(f"\n  Excitation energy: {excitation_energies[state]:16.10f}\n", calculation, 2, silent = silent)
 
@@ -1844,7 +1926,9 @@ def print_excited_state_contributions(calculation: Calculation, silent: bool, ex
 
             # The list is sorted, so once one transition falls below the threshold the rest do too
 
-            if contributions[i, a] <= calculation.excited_state_contribution_threshold: break
+            if contributions[i, a] <= calculation.excited_state_contribution_threshold: 
+
+                break
 
             # Prints occupied orbital i and virtual orbital a in one-indexed molecular orbital numbering
 
@@ -2340,9 +2424,13 @@ def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, 
 
     log("[Done]", calculation, 1, silent)
 
+    # Restricted states are spin pure by construction, and the expectation value only applies to a CIS-like state vector
+
+    s_squared = calculate_excited_state_spin_contamination(SCF_output, C_spin_block, excitation_vectors, molecule.n_alpha, molecule.n_beta, n_occ, n_virt, o, v) if calculation.reference == "UHF" and calculation.tamm_dancoff_approximation else None
+
     # Print excited state information
 
-    print_excited_state_contributions(calculation, silent, excitation_energies, excitation_vectors, state_types, n_occ, n_virt, o, spin_orbital_labels)
+    print_excited_state_contributions(calculation, silent, excitation_energies, excitation_vectors, state_types, n_occ, n_virt, o, spin_orbital_labels, s_squared)
 
     # Prints excited state absorption spectrum
 
@@ -2362,3 +2450,284 @@ def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, 
 
 
     return state_of_interest_energies_and_densities
+
+
+
+
+
+
+
+
+
+
+def build_FCI_determinants(alpha_orbitals: list, beta_orbitals: list, n_alpha: int, n_beta: int, frozen_orbitals: tuple = ()) -> list:
+
+    """
+
+    Builds every determinant with a given number of alpha and beta electrons.
+
+    Args:
+        alpha_orbitals (list): Alpha spin orbitals available to the alpha electrons
+        beta_orbitals (list): Beta spin orbitals available to the beta electrons
+        n_alpha (int): Number of alpha electrons to distribute
+        n_beta (int): Number of beta electrons to distribute
+        frozen_orbitals (tuple, optional): Spin orbitals which are occupied in every determinant
+
+    Returns:
+        determinants (list): Occupied spin orbitals of each determinant, in ascending order
+
+    """
+
+    determinants = []
+
+    # Every way of putting the alpha electrons into alpha spin orbitals, with every way of putting the beta electrons into beta spin orbitals
+
+    for alpha_occupied in combinations(alpha_orbitals, n_alpha):
+
+        for beta_occupied in combinations(beta_orbitals, n_beta):
+
+            # Listing the occupied spin orbitals in ascending order makes the sign of a matrix element easy to find
+
+            determinants.append(tuple(sorted(frozen_orbitals + alpha_occupied + beta_occupied)))
+
+
+    return determinants
+
+
+
+
+
+
+
+
+
+
+def calculate_FCI_matrix_element(determinant_1: tuple, determinant_2: tuple, H_core_SO: ndarray, g: ndarray) -> float:
+
+    """
+
+    Calculates a Hamiltonian matrix element between two determinants with the Slater-Condon rules.
+
+    Args:
+        determinant_1 (tuple): Occupied spin orbitals of the bra determinant, in ascending order
+        determinant_2 (tuple): Occupied spin orbitals of the ket determinant, in ascending order
+        H_core_SO (array): Core Hamiltonian in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
+
+    Returns:
+        matrix_element (float): Hamiltonian matrix element between the two determinants
+
+    """
+
+    # Spin orbitals occupied in one determinant but not the other
+
+    holes = [p for p in determinant_1 if p not in determinant_2]
+    particles = [p for p in determinant_2 if p not in determinant_1]
+
+    n_excitations = len(holes)
+
+    # Determinants differing by more than two spin orbitals never interact
+
+    if n_excitations > 2:
+
+        return 0
+
+    # Sign from moving the excited spin orbitals to the front of each determinant, from their positions in the ordered lists
+
+    sign = (-1) ** (sum(determinant_1.index(p) for p in holes) + sum(determinant_2.index(p) for p in particles))
+
+    if n_excitations == 2:
+
+        i, j = holes
+        a, b = particles
+
+        matrix_element = sign * g[i, j, a, b]
+
+    elif n_excitations == 1:
+
+        i = holes[0]
+        a = particles[0]
+
+        # Spin orbitals occupied in both determinants, which the excited electron interacts with
+
+        common_orbitals = [p for p in determinant_1 if p in determinant_2]
+
+        matrix_element = sign * (H_core_SO[i, a] + np.sum(g[i, common_orbitals, a, common_orbitals]))
+
+    else:
+
+        # Diagonal elements are just the energy expectation value of a single determinant
+
+        occupied_orbitals = np.array(determinant_1)
+
+        # This sums over all the shared two-electron integrals
+
+        matrix_element = np.sum(H_core_SO[occupied_orbitals, occupied_orbitals]) 
+        matrix_element += 0.5 * np.sum(g[occupied_orbitals[:, None], occupied_orbitals, occupied_orbitals[:, None], occupied_orbitals])
+
+
+    return matrix_element
+
+
+
+
+
+
+
+
+
+
+def build_FCI_Hamiltonian(determinants: list, H_core_SO: ndarray, g: ndarray, n_SO: int, n_electrons: int) -> ndarray:
+
+    """
+
+    Builds the full configuration interaction Hamiltonian in the basis of determinants.
+
+    Args:
+        determinants (list): Occupied spin orbitals of each determinant, in ascending order
+        H_core_SO (array): Core Hamiltonian in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
+        n_SO (int): Number of spin orbitals
+        n_electrons (int): Number of electrons in each determinant
+
+    Returns:
+        H (array): Full configuration interaction Hamiltonian
+
+    """
+
+    n_determinants = len(determinants)
+
+    H = np.zeros((n_determinants, n_determinants))
+
+    # Occupation number vector of each determinant, used to count how many spin orbitals two determinants have in common
+
+    occupations = np.zeros((n_determinants, n_SO))
+
+    for I, determinant in enumerate(determinants):
+
+        occupations[I, list(determinant)] = 1
+
+    # Only the upper triangle is built, as the Hamiltonian is symmetric
+
+    for I in range(n_determinants):
+
+        # Number of excitations separating determinant I from every determinant after it
+
+        n_excitations = n_electrons - occupations[I:] @ occupations[I]
+
+        # The Slater-Condon rules give zero unless two determinants differ by two spin orbitals or fewer
+
+        for J in I + np.flatnonzero(n_excitations <= 2):
+
+            H[I, J] = H[J, I] = calculate_FCI_matrix_element(determinants[I], determinants[J], H_core_SO, g)
+
+
+    return H
+
+
+
+
+
+
+
+
+
+
+def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals, SCF_output: Output, calculation: Calculation, silent: bool = False) -> float:
+
+    """
+
+    Calculates the full configuration interaction correlation energy, by full diagonalisation of the Hamiltonian in the
+    basis of all the determinants with the same number of alpha and beta electrons as the reference.
+
+    Args:
+        molecule (Molecule): Molecule object
+        integrals (Integrals): Molecular integrals
+        SCF_output (Output): SCF output object
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        E_FCI (float): Full configuration interaction correlation energy
+
+    """
+
+    # Transforms the two-electron integrals into the antisymmetrised spin orbital basis, in physicists' notation
+
+    g, C_spin_block, _, _, _, _, spin_labels, _, _ = begin_spin_orbital_calculation(molecule, integrals.ERI_AO, SCF_output, calculation, silent=silent)
+
+    log_spacer(calculation, 1, silent, start = "\n")
+    log("           Full Configuration Interaction", calculation, 1, silent, colour = "white")
+    log_spacer(calculation, 1, silent)
+
+    # Transforms the core Hamiltonian into the spin orbital basis
+
+    H_core_SO = transform_matrix_AO_to_SO(spin_block_core_Hamiltonian(integrals.H_core), C_spin_block)
+
+    # Spin orbitals of each spin, in order of increasing orbital energy
+
+    alpha_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "a"]
+    beta_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "b"]
+
+    # The Hartree-Fock determinant occupies the lowest energy spin orbitals of each spin
+
+    reference_determinant = tuple(sorted(alpha_orbitals[:molecule.n_alpha] + beta_orbitals[:molecule.n_beta]))
+
+    # Frozen spin orbitals are occupied in every determinant, so their electrons are not correlated
+
+    frozen_orbitals = tuple(range(molecule.n_core_spin_orbitals)) if calculation.freeze_core else ()
+
+    n_frozen_alpha = len([p for p in frozen_orbitals if spin_labels[p] == "a"])
+    n_frozen_beta = len(frozen_orbitals) - n_frozen_alpha
+
+    log("  Building determinants...                   ", calculation, 1, silent, end="")
+
+    determinants = build_FCI_determinants([p for p in alpha_orbitals if p not in frozen_orbitals], [p for p in beta_orbitals if p not in frozen_orbitals],
+                                          molecule.n_alpha - n_frozen_alpha, molecule.n_beta - n_frozen_beta, frozen_orbitals)
+
+    log("[Done]", calculation, 1, silent)
+
+    n_determinants = len(determinants)
+
+    # Storing and diagonalising the Hamiltonian both scale very badly with the number of determinants
+
+    if n_determinants > 30000:
+
+        error(f"Full diagonalisation of the Hamiltonian requested with {n_determinants} determinants!")
+
+    log(f"\n  Number of determinants:                {n_determinants:10}\n", calculation, 1, silent)
+
+    log("  Building FCI Hamiltonian...                ", calculation, 1, silent, end="")
+
+    H = build_FCI_Hamiltonian(determinants, H_core_SO, g, molecule.n_SO, molecule.n_electrons)
+
+    log("[Done]", calculation, 1, silent)
+
+    log("  Diagonalising FCI Hamiltonian...           ", calculation, 1, silent, end="")
+
+    # The ground state is the lowest eigenvalue of the Hamiltonian, with the CI coefficients as its eigenvector
+
+    energies, CI_vectors = np.linalg.eigh(H)
+
+    log("[Done]", calculation, 1, silent)
+
+    # The energy of the reference determinant is its diagonal element, so nuclear repulsion cancels in the correlation energy
+
+    E_HF = calculate_FCI_matrix_element(reference_determinant, reference_determinant, H_core_SO, g)
+
+    E_FCI = energies[0] - E_HF
+
+    # We get all the excited states for free (ignoring the cost)
+
+    excitation_energy = energies[calculation.root] - energies[0]
+
+    # A small weight on the reference determinant means the reference is a poor starting point for single-reference methods
+
+    reference_weight = CI_vectors[determinants.index(reference_determinant), 0] ** 2
+
+    log(f"\n  Weight of reference determinant:       {reference_weight:10.5f}", calculation, 2, silent)
+    log(f"\n  Excitation energy to state {calculation.root}:    {excitation_energy:16.10f}", calculation, 2, silent)
+
+    log_spacer(calculation, 1, silent)
+
+    return E_FCI

@@ -784,7 +784,7 @@ def calculate_and_print_rotational_constant(reduced_mass: float, bond_length: fl
 
 
 
-def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> str:
+def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> Method:
 
     """
     
@@ -803,6 +803,10 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> st
 
     updated_method = calculation.method
 
+    if calculation.force_method:
+
+        return updated_method
+
     unrestricted = calculation.reference == "UHF"
 
     # Skips any correlation if this is a one-electron system - allows it for DFT
@@ -815,7 +819,7 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> st
 
     elif molecule.n_electrons == 2:
 
-        if calculation.method.name in ["CCSD[T]", "CCSD(T)", "QCISD[T]", "QCISD(T)", "CISDT", "CCSDT", "CCSDT[Q]", "CCSDT(Q)", "CCSDTQ"]: 
+        if calculation.method.name in ["CCSD[T]", "CCSD(T)", "QCISD[T]", "QCISD(T)", "CISDT", "CCSDT", "CCSDT[Q]", "CCSDT(Q)", "CCSDTQ", "FCI"]: 
             
             updated_method = Method("CISD", "configuration interaction singles and doubles", method_base = "CC", unrestricted = unrestricted) 
 
@@ -823,9 +827,20 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> st
 
     elif molecule.n_electrons == 3:
 
-        if calculation.method.name in ["CCSDT[Q]", "CCSDT(Q)", "CCSDTQ"]: 
+        if calculation.method.name in ["CCSDT[Q]", "CCSDT(Q)", "CCSDTQ", "FCI"]: 
             
             updated_method = Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", unrestricted = unrestricted) 
+
+    # Ignores quintuple excitations if this is a three-electron system
+
+    elif molecule.n_electrons == 4:
+
+        if calculation.method.name in ["FCI"]: 
             
+            updated_method = Method("CCSDTQ", "coupled cluster singles, doubles, triples and quadruples", unrestricted_available = False, method_base = "CC")
+
+            # The CCSDTQ method is only available for restricted references
+
+            calculation.reference = "RHF"
 
     return updated_method

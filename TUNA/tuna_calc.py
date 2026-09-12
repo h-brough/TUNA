@@ -90,6 +90,7 @@ KEYWORDS = [
     Keyword("DECONTRACT", "decontract"),
     Keyword("CARTHARM", "cartesian_harmonics"),
     Keyword("EXTRAPOLATE", "extrapolate"),
+    Keyword("FORCEMETHOD", "force_method"),
 
     Keyword("NOROTATE", "no_rotate_guess"),
     Keyword("COREGUESS", "core_guess_requested"),

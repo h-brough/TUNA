@@ -1151,6 +1151,12 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # If a direct RPA calculation is requested, calculates the ground state correlation energy
 
+    elif method.method_base == "FCI":
+
+        E_FCI = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
+
+    # Calculates the full configuration interaction energy
+    
     elif method.method_base == "RPA" or calculation.do_rpa:
 
         E_RPA = mp.calculate_RPA_energy(molecule, SCF_output, calculation, silent = silent)
@@ -1285,6 +1291,12 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         final_energy += E_RPA
 
         log(f" Correlation energy from RPA:      " + f"{E_RPA:16.10f}\n", calculation, 1, silent = silent)
+
+    elif method.method_base == "FCI":
+
+        final_energy += E_FCI
+
+        log(f" Correlation energy from FCI:      " + f"{E_FCI:16.10f}\n", calculation, 1, silent = silent)
 
     # Prints CIS energy of state of interest
 
