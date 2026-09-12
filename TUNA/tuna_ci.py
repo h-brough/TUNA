@@ -2633,6 +2633,76 @@ def build_FCI_Hamiltonian(determinants: list, H_core_SO: ndarray, g: ndarray, n_
 
 
 
+def calculate_FCI_density_matrix(determinants: list, CI_vector: ndarray, n_SO: int, n_electrons: int) -> ndarray:
+
+    """
+
+    Calculates the one-particle reduced density matrix of a determinant expansion, in the spin orbital basis.
+
+    Args:
+        determinants (list): Occupied spin orbitals of each determinant, in ascending order
+        CI_vector (array): Coefficient of each determinant in the wavefunction
+        n_SO (int): Number of spin orbitals
+        n_electrons (int): Number of electrons in each determinant
+
+    Returns:
+        P (array): One-particle reduced density matrix in the spin orbital basis
+
+    """
+
+    P = np.zeros((n_SO, n_SO))
+
+    # Occupation number vector of each determinant, exactly as in the Hamiltonian build
+
+    occupations = np.zeros((len(determinants), n_SO), dtype = int)
+
+    for I, determinant in enumerate(determinants):
+
+        occupations[I, list(determinant)] = 1
+
+    for I in range(len(determinants)):
+
+        # Only determinants differing by one spin orbital or fewer contribute to a one-particle density matrix
+
+        n_excitations = n_electrons - occupations[I:] @ occupations[I]
+
+        for J in I + np.flatnonzero(n_excitations <= 1):
+
+            holes = [p for p in determinants[I] if p not in determinants[J]]
+            particles = [p for p in determinants[J] if p not in determinants[I]]
+
+            if len(holes) == 0:
+
+                # A determinant gives its own weight to the occupation of each spin orbital it occupies
+
+                P[list(determinants[I]), list(determinants[I])] += CI_vector[I] ** 2
+
+            else:
+
+                i = holes[0]
+                a = particles[0]
+
+                # Same sign as a one-electron matrix element between these two determinants
+
+                sign = (-1) ** (determinants[I].index(i) + determinants[J].index(a))
+
+                # The pair of determinants contributes in both orders, which makes the density matrix symmetric
+
+                P[i, a] += sign * CI_vector[I] * CI_vector[J]
+                P[a, i] += sign * CI_vector[I] * CI_vector[J]
+
+
+    return P
+
+
+
+
+
+
+
+
+
+
 def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals, SCF_output: Output, calculation: Calculation, silent: bool = False) -> float:
 
     """
@@ -2649,6 +2719,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     Returns:
         E_FCI (float): Full configuration interaction correlation energy
+        density_matrices (tuple): Total, alpha and beta density matrices in AO basis
 
     """
 
@@ -2656,18 +2727,18 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     g, C_spin_block, _, _, _, _, spin_labels, _, _ = begin_spin_orbital_calculation(molecule, integrals.ERI_AO, SCF_output, calculation, silent=silent)
 
-    log_spacer(calculation, 1, silent, start = "\n")
-    log("           Full Configuration Interaction", calculation, 1, silent, colour = "white")
-    log_spacer(calculation, 1, silent)
-
     # Transforms the core Hamiltonian into the spin orbital basis
 
-    H_core_SO = transform_matrix_AO_to_SO(spin_block_core_Hamiltonian(integrals.H_core), C_spin_block)
+    h = transform_matrix_AO_to_SO(spin_block_core_Hamiltonian(integrals.H_core), C_spin_block)
 
     # Spin orbitals of each spin, in order of increasing orbital energy
 
     alpha_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "a"]
     beta_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "b"]
+
+    log_spacer(calculation, 1, silent, start = "\n")
+    log("           Full Configuration Interaction", calculation, 1, silent, colour = "white")
+    log_spacer(calculation, 1, silent)
 
     # The Hartree-Fock determinant occupies the lowest energy spin orbitals of each spin
 
@@ -2691,7 +2762,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     # Storing and diagonalising the Hamiltonian both scale very badly with the number of determinants
 
-    if n_determinants > 30000:
+    if n_determinants > 20000:
 
         error(f"Full diagonalisation of the Hamiltonian requested with {n_determinants} determinants!")
 
@@ -2699,7 +2770,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     log("  Building FCI Hamiltonian...                ", calculation, 1, silent, end="")
 
-    H = build_FCI_Hamiltonian(determinants, H_core_SO, g, molecule.n_SO, molecule.n_electrons)
+    H = build_FCI_Hamiltonian(determinants, h, g, molecule.n_SO, molecule.n_electrons)
 
     log("[Done]", calculation, 1, silent)
 
@@ -2711,23 +2782,26 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     log("[Done]", calculation, 1, silent)
 
+    log("  Building FCI density matrix...             ", calculation, 1, silent, end="")
+
+    # One-particle density matrix of the ground state, transformed into the AO basis for molecular properties
+
+    P_SO = calculate_FCI_density_matrix(determinants, CI_vectors[:, 0], molecule.n_SO, molecule.n_electrons)
+
+    density_matrices = transform_P_SO_to_AO(P_SO, C_spin_block, molecule.n_SO)
+
+    log("[Done]", calculation, 1, silent)
+
     # The energy of the reference determinant is its diagonal element, so nuclear repulsion cancels in the correlation energy
 
-    E_HF = calculate_FCI_matrix_element(reference_determinant, reference_determinant, H_core_SO, g)
-
-    E_FCI = energies[0] - E_HF
-
-    # We get all the excited states for free (ignoring the cost)
-
-    excitation_energy = energies[calculation.root] - energies[0]
+    E_FCI = energies[0] - calculate_FCI_matrix_element(reference_determinant, reference_determinant, h, g)
 
     # A small weight on the reference determinant means the reference is a poor starting point for single-reference methods
 
     reference_weight = CI_vectors[determinants.index(reference_determinant), 0] ** 2
 
     log(f"\n  Weight of reference determinant:       {reference_weight:10.5f}", calculation, 2, silent)
-    log(f"\n  Excitation energy to state {calculation.root}:    {excitation_energy:16.10f}", calculation, 2, silent)
 
     log_spacer(calculation, 1, silent)
 
-    return E_FCI
+    return E_FCI, density_matrices

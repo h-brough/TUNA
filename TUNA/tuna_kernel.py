@@ -1153,7 +1153,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     elif method.method_base == "FCI":
 
-        E_FCI = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
+        E_FCI, (P, P_alpha, P_beta) = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
 
     # Calculates the full configuration interaction energy
     
