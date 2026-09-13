@@ -2729,7 +2729,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     # Transforms the core Hamiltonian into the spin orbital basis
 
-    h = transform_matrix_AO_to_SO(spin_block_core_Hamiltonian(integrals.H_core), C_spin_block)
+    H_core_SO = transform_matrix_AO_to_SO(spin_block_core_Hamiltonian(integrals.H_core), C_spin_block)
 
     # Spin orbitals of each spin, in order of increasing orbital energy
 
@@ -2739,6 +2739,8 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
     log_spacer(calculation, 1, silent, start = "\n")
     log("           Full Configuration Interaction", calculation, 1, silent, colour = "white")
     log_spacer(calculation, 1, silent)
+
+    timer("Full configuration interaction", 0)
 
     # The Hartree-Fock determinant occupies the lowest energy spin orbitals of each spin
 
@@ -2753,7 +2755,8 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     log("  Building determinants...                   ", calculation, 1, silent, end="")
 
-    determinants = build_FCI_determinants([p for p in alpha_orbitals if p not in frozen_orbitals], [p for p in beta_orbitals if p not in frozen_orbitals],
+    determinants = build_FCI_determinants([p for p in alpha_orbitals if p not in frozen_orbitals], 
+                                          [p for p in beta_orbitals if p not in frozen_orbitals],
                                           molecule.n_alpha - n_frozen_alpha, molecule.n_beta - n_frozen_beta, frozen_orbitals)
 
     log("[Done]", calculation, 1, silent)
@@ -2762,15 +2765,15 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     # Storing and diagonalising the Hamiltonian both scale very badly with the number of determinants
 
-    if n_determinants > 20000:
+    if n_determinants > constants.MAX_N_DETERMINANTS:
 
-        error(f"Full diagonalisation of the Hamiltonian requested with {n_determinants} determinants!")
+        error(f"Full diagonalisation of the Hamiltonian requested with too many determinants!")
 
     log(f"\n  Number of determinants:                {n_determinants:10}\n", calculation, 1, silent)
 
     log("  Building FCI Hamiltonian...                ", calculation, 1, silent, end="")
 
-    H = build_FCI_Hamiltonian(determinants, h, g, molecule.n_SO, molecule.n_electrons)
+    H = build_FCI_Hamiltonian(determinants, H_core_SO, g, molecule.n_SO, molecule.n_electrons)
 
     log("[Done]", calculation, 1, silent)
 
@@ -2782,7 +2785,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     log("[Done]", calculation, 1, silent)
 
-    log("  Building FCI density matrix...             ", calculation, 1, silent, end="")
+    log("\n  Building FCI density matrix...             ", calculation, 1, silent, end="")
 
     # One-particle density matrix of the ground state, transformed into the AO basis for molecular properties
 
@@ -2794,7 +2797,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     # The energy of the reference determinant is its diagonal element, so nuclear repulsion cancels in the correlation energy
 
-    E_FCI = energies[0] - calculate_FCI_matrix_element(reference_determinant, reference_determinant, h, g)
+    E_FCI = energies[0] - calculate_FCI_matrix_element(reference_determinant, reference_determinant, H_core_SO, g)
 
     # A small weight on the reference determinant means the reference is a poor starting point for single-reference methods
 
@@ -2802,6 +2805,6 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     log(f"\n  Weight of reference determinant:       {reference_weight:10.5f}", calculation, 2, silent)
 
-    log_spacer(calculation, 1, silent)
-    
+    timer("Full configuration interaction", 1)
+
     return E_FCI, density_matrices

@@ -3,7 +3,6 @@
 Wishlist for next update:
 
 CASSCF
-CASCI
 XC kernels for (m)GGA functionals - try numerical derivatives for all including mGGA or Claude?
 Relaxed density matrix for double-hybrid functionals
 
@@ -12,6 +11,8 @@ Relaxed density matrix for double-hybrid functionals
 ### Added
 
 - Full configuration interaction energy and density with `FCI`
+- Complete active space configuration interaction with `CASCI`
+- Choose number of active orbitals and electrons with `NORB` and `NELEC` keywords
 - Random phase approximation correlation energy with `RPA`
 - Corrections to quasiparticle orbital energies with one-shot `GW`
 - Excited state spin contamination for CIS and TDA-KS states
@@ -23,6 +24,7 @@ Relaxed density matrix for double-hybrid functionals
 - Removed termcolor dependency
 - Now require at least NumPy 2.1
 - Recent and compatible versions of dependencies are forced on pip install
+- Simpler handling of rotation onto z-axis in molecular dynamics
 
 ### Fixed
 

@@ -192,8 +192,8 @@ KEYWORDS = [
     Keyword("MAXDP", "max_density_change_convergence", "V", 1e-9, float),
     Keyword("DIISERR", "commutator_convergence", "V", 1e-9, float),
     Keyword("CORRMAXITER", "correlated_max_iter", "V", 100, int),
-    Keyword("NORB", "cas_n_orbitals", "V", 0, int),
-    Keyword("NELEC", "cas_n_elec", "V", 0, int),
+    Keyword("NORB", "n_active_orbitals", "V", None, int),
+    Keyword("NELEC", "n_active_electrons", "V", None, int),
 
 
     # These keywords give two attributes, one boolean for "is this keyword requested", another for the value given

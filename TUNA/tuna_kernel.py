@@ -14,6 +14,7 @@ import TUNA.tuna_props as props
 import TUNA.tuna_mp as mp
 import TUNA.tuna_cc as cc
 import TUNA.tuna_out as out
+import TUNA.tuna_cas as cas
 
 
 """
@@ -1153,7 +1154,13 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     elif method.method_base == "FCI":
 
-        E_FCI, (P, P_alpha, P_beta) = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
+        if method.name == "FCI":
+
+            E_FCI, (P, P_alpha, P_beta) = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
+
+        else:
+
+            E_FCI, (P, P_alpha, P_beta) = cas.run_complete_active_space_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
 
         # If "NATORBS" is used, calculate and print the natural orbitals
 
@@ -1161,7 +1168,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
             natural_occupancies, natural_orbitals = mp.calculate_natural_orbitals(P, X, calculation, silent = silent)
 
-            log_spacer(calculation, 1, silent)
+        log_spacer(calculation, 1, silent)
 
     # Calculates the full configuration interaction energy
     
@@ -1304,7 +1311,9 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         final_energy += E_FCI
 
-        log(f" Correlation energy from FCI:      " + f"{E_FCI:16.10f}\n", calculation, 1, silent = silent)
+        space = " " * max(0, 8 - len(method.name))
+
+        log(f" Correlation energy from {method.name}: {space}" + f"{E_FCI:16.10f}\n", calculation, 1, silent = silent)
 
     # Prints CIS energy of state of interest
 

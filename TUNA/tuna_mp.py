@@ -2316,7 +2316,7 @@ def calculate_RPA_energy(molecule: Molecule, SCF_output: Output, calculation: Ca
 
     # Transforms the two-electron integrals, in physicists' notation without antisymmetrisation
 
-    g, epsilons, o, v, _, _, spin_labels, _, _ = begin_direct_RPA_calculation(molecule, SCF_output, calculation, silent = silent)
+    g, epsilons, o, v, _, _, spin_labels, _ = begin_direct_RPA_calculation(molecule, SCF_output, calculation, silent = silent)
 
     log_spacer(calculation, silent = silent, start = "\n")
     log("              Random Phase Approximation", calculation, 1, silent, colour = "white")

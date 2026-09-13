@@ -103,6 +103,8 @@ class Constants:
     COMPLEX_EIG_THRESH = 1e-5
     MOMENT_THRESH = 1e-5
 
+    MAX_N_DETERMINANTS = 20000
+
     # Convergence criteria for self-consistent field
 
     convergence_criteria_SCF: dict[str, dict[str, float | str]] = {
@@ -354,7 +356,7 @@ class Method:
     @property
     def correlated_method(self) -> bool:
 
-        return self.coupled_cluster_method or self.perturbative_method or self.method_base == "RPA" or self.method_base == "FCI"
+        return self.coupled_cluster_method or self.perturbative_method or self.method_base in ["FCI", "CASCI", "RPA"]
 
     @property
     def density_functional_method(self) -> bool:
