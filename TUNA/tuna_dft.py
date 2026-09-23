@@ -1071,6 +1071,67 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
 
 
+def construct_orbital_pair_products(orbitals_on_grid: ndarray) -> ndarray:
+
+    """
+    
+    Builds orbital pair products on the grid.
+
+    Args:
+        orbitals_on_grid (array): Molecular orbitals on the grid
+
+    Returns:
+
+        pair_products (array): Products of pairs of orbitals on the grid
+
+    """
+
+    pair_products = np.einsum("pmn,qmn->pqmn", orbitals_on_grid, orbitals_on_grid, optimize = True)
+
+    return pair_products
+
+
+
+
+
+
+
+
+
+
+def construct_orbital_pair_gradients(orbitals_on_grid: ndarray, orbital_gradients_on_grid: ndarray, cartesian: int) -> ndarray:
+
+    """
+    
+    Builds orbital pair products on the grid.
+
+    Args:
+        orbitals_on_grid (array): Molecular orbitals on the grid
+        orbital_gradients_on_grid (array): Molecular orbital gradients on the grid
+        cartesian (int): Either 0, 1, or 2
+
+    Returns:
+
+        pair_gradients (array): Gradients of pairs of orbitals on the grid
+
+    """
+
+    # Product rule, so each component picks up a term from each orbital of the pair
+
+    pair_gradients = np.einsum("pmn,qmn->pqmn", orbital_gradients_on_grid[cartesian], orbitals_on_grid, optimize = True)
+    pair_gradients += np.einsum("pmn,qmn->pqmn", orbitals_on_grid, orbital_gradients_on_grid[cartesian], optimize = True)
+
+    return pair_gradients
+
+
+
+
+
+
+
+
+
+
 def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
 
     """
@@ -1157,7 +1218,7 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
         n_doubly_occ, n_doubly_virt = T.shape[:2]
         n_basis = molecular_orbitals_on_grid.shape[0]
 
-        # We form flattened tensors and use BLAS3, which is much faster than einsum heree
+        # We form flattened tensors and use BLAS3, which is much faster than einsum here
 
         T_flat = T.reshape(n_doubly_occ * n_doubly_virt, -1)
         phi_flat = molecular_orbitals_on_grid.reshape(n_basis, -1)
