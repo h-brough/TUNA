@@ -3,6 +3,7 @@
 Wishlist for next update:
 
 EOM-CCSD
+Consider hooking up FCI/CASCI/CASSCF to excited state functionality
 XC kernels for (m)GGA functionals
 Relaxed density matrix for double-hybrid functionals
 
@@ -11,8 +12,8 @@ Relaxed density matrix for double-hybrid functionals
 ### Added
 
 - Full configuration interaction energy and density with `FCI`
-- Complete active space self-consistent field with `CASSCF`
-- Complete active space configuration interaction with `CASCI`
+- Complete active space self-consistent field energy and density with `CASSCF`
+- Complete active space configuration interaction energy and density with `CASCI`
 - Choose number of active orbitals and electrons with `NORB` and `NELEC` keywords
 - Random phase approximation correlation energy with `RPA`
 - Corrections to quasiparticle orbital energies with one-shot `GW`

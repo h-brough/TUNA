@@ -2,7 +2,6 @@ import numpy as np
 from numpy import ndarray
 from math import comb
 import scipy
-
 import TUNA.tuna_ci as ci
 from TUNA.tuna_molecule import Molecule
 from TUNA.tuna_calc import Calculation
@@ -13,12 +12,14 @@ from TUNA.tuna_util import error, log, log_spacer, Integrals, Output, constants,
 
 This is the TUNA module for complete active space methods, written for version 0.12.0.
 
-The configuration interaction module is used here but with a defined active space, consisting of active occupied and virtual orbitals.
+The configuration interaction module is used here but with a defined active space, consisting of active occupied and virtual orbitals. These orbitals
+can either be fixed, in CAS configuration interaction, or optimised by the orbital gradient in CAS self-consistent field.
 
 The module contains:
 
-1. Functions for complete active space configuration interaction (validate_active_space, run_complete_active_space_configuration_interaction, etc.)
-1. Functions for complete active space self-consistent field (calculate_orbital_rotation, run_complete_active_space_self_consistent_field, etc.)
+1. Functions shared by CASCI and CASSCF, which set up and solve the active space problem (validate_active_space, calculate_CASCI_ground_state, etc.)
+2. Functions for complete active space configuration interaction (run_complete_active_space_configuration_interaction)
+3. Functions for complete active space self-consistent field (calculate_orbital_rotation, run_complete_active_space_self_consistent_field)
 
 """
 
@@ -28,7 +29,7 @@ def validate_active_space(molecule: Molecule, calculation: Calculation) -> tuple
 
     """
 
-    Checks the requested active space can be built, and counts the orbitals and electrons which go into it.
+    Checks the requested active space can be built, and counts the orbitals, electrons and determinants which go into it.
 
     Args:
         molecule (Molecule): Molecule object
@@ -39,8 +40,15 @@ def validate_active_space(molecule: Molecule, calculation: Calculation) -> tuple
         n_active_alpha (int): Number of alpha electrons to distribute in the active space
         n_active_beta (int): Number of beta electrons to distribute in the active space
         n_inactive (int): Number of doubly occupied inactive spatial orbitals
+        n_determinants (int): Number of determinants in the active space
 
     """
+
+    # Freezing core orbitals and choosing an active space are two ways of doing the same thing, so only one is allowed
+
+    if calculation.freeze_core:
+
+        error("Frozen core orbitals cannot be combined with an active space! Use the active space to choose which electrons are correlated.")
 
     n_active_electrons = calculation.n_active_electrons
     n_active_orbitals = calculation.n_active_orbitals
@@ -94,8 +102,18 @@ def validate_active_space(molecule: Molecule, calculation: Calculation) -> tuple
 
         error(f"An active space of {n_active_orbitals} orbitals on top of {n_inactive} inactive orbitals needs a larger basis set!")
 
+    # Every way of choosing the occupied active orbitals of each spin, independently of the other spin
 
-    return n_active_orbitals, n_active_alpha, n_active_beta, n_inactive
+    n_determinants = comb(n_active_orbitals, n_active_alpha) * comb(n_active_orbitals, n_active_beta)
+
+    # Storing and diagonalising the Hamiltonian both scale very badly with the number of determinants
+
+    if n_determinants > constants.MAX_N_DETERMINANTS:
+
+        error(f"This active space needs {n_determinants} determinants, which is too many to diagonalise! Try a smaller active space?")
+
+
+    return n_active_orbitals, n_active_alpha, n_active_beta, n_inactive, n_determinants
 
 
 
@@ -151,6 +169,196 @@ def determine_active_space(molecule: Molecule, spin_labels: list, n_active_orbit
 
 
 
+def build_active_space_determinants(molecule: Molecule, calculation: Calculation, n_active_orbitals: int, n_active_alpha: int, n_active_beta: int, n_inactive: int, n_determinants: int, title: str, silent: bool = False) -> tuple:
+
+    """
+
+    Prints the active space, then builds every determinant which distributes the active electrons amongst the active orbitals.
+
+    The spin orbitals are in the same order as in build_spin_orbital_integrals, with the alpha and beta spin orbitals of each
+    molecular orbital next to each other.
+
+    Args:
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        n_active_orbitals (int): Number of active spatial orbitals
+        n_active_alpha (int): Number of alpha electrons to distribute in the active space
+        n_active_beta (int): Number of beta electrons to distribute in the active space
+        n_inactive (int): Number of doubly occupied inactive spatial orbitals
+        n_determinants (int): Number of determinants in the active space
+        title (str): Heading printed above the active space
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        determinants (list): Occupied spin orbitals of each determinant, in ascending order
+        reference_determinant (tuple): Occupied spin orbitals of the SCF determinant
+
+    """
+
+    log_spacer(calculation, 1, silent, start = "\n")
+    log(title, calculation, 1, silent, colour = "white")
+    log_spacer(calculation, 1, silent)
+
+    log(f"  Active electrons:                      {n_active_alpha + n_active_beta:10}", calculation, 1, silent)
+    log(f"  Active orbitals:                       {n_active_orbitals:10}", calculation, 1, silent)
+
+    log(f"\n  Doubly occupied orbitals:              {n_inactive:10}", calculation, 1, silent)
+    log(f"  Secondary orbitals:                    {molecule.n_basis - n_inactive - n_active_orbitals:10}\n", calculation, 1, silent)
+
+    # Even spin orbitals are alpha and odd spin orbitals are beta, both in the order of the molecular orbitals
+
+    spin_labels = ["a", "b"] * molecule.n_basis
+
+    alpha_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "a"]
+    beta_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "b"]
+
+    active_alpha, active_beta, inactive_orbitals = determine_active_space(molecule, spin_labels, n_active_orbitals, n_inactive)
+
+    # The SCF determinant occupies the lowest spin orbitals of each spin, so it is always in the expansion
+
+    reference_determinant = tuple(sorted(alpha_orbitals[:molecule.n_alpha] + beta_orbitals[:molecule.n_beta]))
+
+    log("  Building determinants...                   ", calculation, 1, silent, end = "")
+
+    # Every way of distributing the active electrons of each spin amongst the active orbitals of that spin
+
+    determinants = ci.build_FCI_determinants(active_alpha, active_beta, n_active_alpha, n_active_beta, inactive_orbitals)
+
+    log("[Done]", calculation, 1, silent)
+
+    log(f"\n  Number of determinants:                {n_determinants:10}\n", calculation, 1, silent)
+
+    return determinants, reference_determinant
+
+
+
+
+
+
+
+
+
+
+def build_spin_orbital_integrals(molecular_orbitals_alpha: ndarray, molecular_orbitals_beta: ndarray, integrals: Integrals, calculation: Calculation, silent: bool = False) -> tuple:
+
+    """
+
+    Transforms the core Hamiltonian and two-electron integrals into the spin orbital basis, keeping the order of the molecular orbitals.
+
+    Each molecular orbital keeps its place, with its alpha spin orbital directly before its beta spin orbital, so the inactive and
+    active spin orbitals always come first however the orbitals have been rotated.
+
+    Args:
+        molecular_orbitals_alpha (array): Alpha molecular orbitals in AO basis
+        molecular_orbitals_beta (array): Beta molecular orbitals in AO basis
+        integrals (Integrals): Molecular integrals
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
+        H_core_SO (array): Core Hamiltonian in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
+
+    """
+
+    log("\n Preparing transformation to spin orbital basis...", calculation, 1, silent)
+
+    n_orbitals = molecular_orbitals_alpha.shape[1]
+
+    # The orbital indices stand in for orbital energies, which interleaves the alpha and beta spin orbitals in the original order
+
+    orbital_order = np.append(np.arange(n_orbitals), np.arange(n_orbitals) + 0.5)
+
+    C_spin_block = ci.spin_block_molecular_orbitals(molecular_orbitals_alpha, molecular_orbitals_beta, orbital_order)
+
+    # Spin blocks the integrals exactly as in begin_spin_orbital_calculation, then transforms them
+
+    H_core_spin_block = ci.spin_block_core_Hamiltonian(integrals.H_core)
+    ERI_spin_block = np.kron(np.eye(2), np.kron(np.eye(2), integrals.ERI_AO).T)
+
+    H_core_SO = ci.transform_matrix_AO_to_SO(H_core_spin_block, C_spin_block)
+
+    ERI_SO = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block, calculation, silent)
+
+    log(" Antisymmetrising two-electron integrals...  ", calculation, 1, silent, end = "")
+
+    g = ci.antisymmetrise_integrals(ERI_SO)
+
+    log("[Done]", calculation, 1, silent)
+
+    return C_spin_block, H_core_SO, g
+
+
+
+
+
+
+
+
+
+
+def calculate_CASCI_ground_state(determinants: list, H_core_SO: ndarray, g: ndarray, C_spin_block: ndarray, molecule: Molecule, calculation: Calculation, silent: bool = False) -> tuple:
+
+    """
+
+    Builds and diagonalises the Hamiltonian in the basis of the active space determinants, and calculates the density of the ground state.
+
+    Args:
+        determinants (list): Occupied spin orbitals of each determinant, in ascending order
+        H_core_SO (array): Core Hamiltonian in SO basis
+        g (array): Antisymmetrised electron repulsion integrals in SO basis
+        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        E_electronic (float): Electronic energy of the ground state
+        CI_vector (array): Coefficient of each determinant in the ground state
+        P_SO (array): One-particle density matrix of the ground state in SO basis
+        density_matrices (tuple): Total, alpha and beta density matrices in AO basis
+
+    """
+
+    log("  Building CASCI Hamiltonian...              ", calculation, 1, silent, end = "")
+
+    H = ci.build_FCI_Hamiltonian(determinants, H_core_SO, g, molecule.n_SO, molecule.n_electrons)
+
+    log("[Done]", calculation, 1, silent)
+
+    log("  Diagonalising CASCI Hamiltonian...         ", calculation, 1, silent, end = "")
+
+    # The ground state is the lowest eigenvalue of the Hamiltonian, with the CI coefficients as its eigenvector
+
+    energies, CI_vectors = np.linalg.eigh(H)
+
+    E_electronic = energies[0]
+    CI_vector = CI_vectors[:, 0]
+
+    log("[Done]", calculation, 1, silent)
+
+    log("\n  Building CASCI density matrix...           ", calculation, 1, silent, end = "")
+
+    # One-particle density matrix of the ground state, transformed into the AO basis for molecular properties
+
+    P_SO = ci.calculate_FCI_density_matrix(determinants, CI_vector, molecule.n_SO, molecule.n_electrons)
+
+    density_matrices = ci.transform_P_SO_to_AO(P_SO, C_spin_block, molecule.n_SO)
+
+    log("[Done]", calculation, 1, silent)
+
+    return E_electronic, CI_vector, P_SO, density_matrices
+
+
+
+
+
+
+
+
+
+
 def run_complete_active_space_configuration_interaction(molecule: Molecule, integrals: Integrals, SCF_output: Output, calculation: Calculation, silent: bool = False) -> tuple:
 
     """
@@ -171,147 +379,27 @@ def run_complete_active_space_configuration_interaction(molecule: Molecule, inte
 
     """
 
-    # Freezing core orbitals and choosing an active space are two ways of doing the same thing, so only one is allowed
-
-    if calculation.freeze_core:
-
-        error("Frozen core orbitals cannot be combined with an active space! Use the active space to choose which electrons are correlated.")
-
     # Checks the active space makes sense
 
-    n_active_orbitals, n_active_alpha, n_active_beta, n_inactive = validate_active_space(molecule, calculation)
+    n_active_orbitals, n_active_alpha, n_active_beta, n_inactive, n_determinants = validate_active_space(molecule, calculation)
 
-    n_active_electrons = n_active_alpha + n_active_beta
+    # Transforms the integrals into the spin orbital basis of the SCF orbitals, which can be different for each spin
 
-    # Every way of choosing the occupied active orbitals of each spin, independently of the other spin
-
-    n_determinants = comb(n_active_orbitals, n_active_alpha) * comb(n_active_orbitals, n_active_beta)
-
-    # Storing and diagonalising the Hamiltonian both scale very badly with the number of determinants
-
-    if n_determinants > constants.MAX_N_DETERMINANTS:
-
-        error(f"Active space of needs {n_determinants} determinants, which is too many to diagonalise! Try a smaller active space?")
-
-    # Transforms the two-electron integrals into the antisymmetrised spin orbital basis, in physicists' notation
-
-    g, C_spin_block, _, _, _, _, spin_labels, _, _ = ci.begin_spin_orbital_calculation(molecule, integrals.ERI_AO, SCF_output, calculation, silent = silent)
+    C_spin_block, H_core_SO, g = build_spin_orbital_integrals(SCF_output.molecular_orbitals_alpha, SCF_output.molecular_orbitals_beta, integrals, calculation, silent)
 
     timer("Complete active space CI", 0)
 
-    # Transforms the core Hamiltonian into the spin orbital basis
+    determinants, reference_determinant = build_active_space_determinants(molecule, calculation, n_active_orbitals, n_active_alpha, n_active_beta, n_inactive, n_determinants, "   Complete Active Space Configuration Interaction", silent)
 
-    H_core_SO = ci.transform_matrix_AO_to_SO(ci.spin_block_core_Hamiltonian(integrals.H_core), C_spin_block)
-
-    # Spin orbitals of each spin, in order of increasing orbital energy
-
-    alpha_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "a"]
-    beta_orbitals = [p for p in range(molecule.n_SO) if spin_labels[p] == "b"]
-
-    log_spacer(calculation, 1, silent, start = "\n")
-    log("   Complete Active Space Configuration Interaction", calculation, 1, silent, colour = "white")
-    log_spacer(calculation, 1, silent)
-
-    log(f"  Active electrons:                      {n_active_electrons:10}", calculation, 1, silent)
-    log(f"  Active orbitals:                       {n_active_orbitals:10}", calculation, 1, silent)
-
-    log(f"\n  Doubly occupied orbitals:              {n_inactive:10}", calculation, 1, silent)
-    log(f"  Secondary orbitals:                    {molecule.n_basis - n_inactive - n_active_orbitals:10}\n", calculation, 1, silent)
-
-    # Picks out which spin orbitals are inactive and which are active, now the orbital energies are known
-
-    active_alpha, active_beta, inactive_orbitals = determine_active_space(molecule, spin_labels, n_active_orbitals, n_inactive)
-
-    # The Hartree-Fock determinant occupies the lowest energy spin orbitals of each spin, so it is always in the expansion
-
-    reference_determinant = tuple(sorted(alpha_orbitals[:molecule.n_alpha] + beta_orbitals[:molecule.n_beta]))
-
-    log("  Building determinants...                   ", calculation, 1, silent, end = "")
-
-    # Every way of distributing the active electrons of each spin amongst the active orbitals of that spin
-
-    determinants = ci.build_FCI_determinants(active_alpha, active_beta, n_active_alpha, n_active_beta, inactive_orbitals)
-
-    log("[Done]", calculation, 1, silent)
-
-    log(f"\n  Number of determinants:                {n_determinants:10}\n", calculation, 1, silent)
-
-    log("  Building CASCI Hamiltonian...              ", calculation, 1, silent, end = "")
-
-    H = ci.build_FCI_Hamiltonian(determinants, H_core_SO, g, molecule.n_SO, molecule.n_electrons)
-
-    log("[Done]", calculation, 1, silent)
-
-    log("  Diagonalising CASCI Hamiltonian...         ", calculation, 1, silent, end = "")
-
-    # The ground state is the lowest eigenvalue of the Hamiltonian, with the CI coefficients as its eigenvector
-
-    energies, CI_vectors = np.linalg.eigh(H)
-
-    log("[Done]", calculation, 1, silent)
-
-    log("\n  Building CASCI density matrix...           ", calculation, 1, silent, end = "")
-
-    # One-particle density matrix of the ground state, transformed into the AO basis for molecular properties
-
-    P_SO = ci.calculate_FCI_density_matrix(determinants, CI_vectors[:, 0], molecule.n_SO, molecule.n_electrons)
-
-    density_matrices = ci.transform_P_SO_to_AO(P_SO, C_spin_block, molecule.n_SO)
-
-    log("[Done]", calculation, 1, silent)
+    E_electronic, _, _, density_matrices = calculate_CASCI_ground_state(determinants, H_core_SO, g, C_spin_block, molecule, calculation, silent)
 
     # The energy of the reference determinant is its diagonal element, so nuclear repulsion cancels in the correlation energy
 
-    E_CASCI = energies[0] - ci.calculate_FCI_matrix_element(reference_determinant, reference_determinant, H_core_SO, g)
+    E_CASCI = E_electronic - ci.calculate_FCI_matrix_element(reference_determinant, reference_determinant, H_core_SO, g)
 
     timer("Complete active space CI", 1)
 
     return E_CASCI, density_matrices
-
-
-
-
-def build_restricted_spin_orbital_integrals(molecular_orbitals: ndarray, H_core_spin_block: ndarray, ERI_spin_block: ndarray, calculation: Calculation) -> tuple:
-
-    """
-
-    Transforms the core Hamiltonian and two-electron integrals into the spin orbital basis built from one set of spatial orbitals.
-
-    Each spatial orbital keeps its place, with its alpha spin orbital directly before its beta spin orbital, so the inactive and
-    active spin orbitals always come first however the orbitals have been rotated.
-
-    Args:
-        molecular_orbitals (array): Spatial molecular orbitals in AO basis
-        H_core_spin_block (array): Spin-blocked core Hamiltonian in AO basis
-        ERI_spin_block (array): Spin-blocked electron repulsion integrals in AO basis
-        calculation (Calculation): Calculation object
-
-    Returns:
-        C_spin_block (array): Spin-blocked molecular orbitals in AO basis
-        H_core_SO (array): Core Hamiltonian in SO basis
-        g (array): Antisymmetrised electron repulsion integrals in SO basis
-
-    """
-
-    n_orbitals = molecular_orbitals.shape[1]
-
-    # The orbital indices stand in for orbital energies, which interleaves the alpha and beta spin orbitals in the original order
-
-    orbital_order = np.append(np.arange(n_orbitals), np.arange(n_orbitals) + 0.5)
-
-    C_spin_block = ci.spin_block_molecular_orbitals(molecular_orbitals, molecular_orbitals, orbital_order)
-
-    # Transforms the integrals without logging every step
-
-    H_core_SO = ci.transform_matrix_AO_to_SO(H_core_spin_block, C_spin_block)
-
-    ERI_SO = ci.transform_ERI_AO_to_SO(ERI_spin_block, C_spin_block, C_spin_block, calculation, True)
-
-    # Antisymmetrises spin orbital integrals
-
-    g = ci.antisymmetrise_integrals(ERI_SO)
-
-    return C_spin_block, H_core_SO, g
 
 
 
@@ -442,72 +530,32 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
 
     """
 
-    # Freezing core orbitals and choosing an active space are two ways of doing the same thing, so only one is allowed
-
-    if calculation.freeze_core:
-
-        error("Frozen core orbitals cannot be combined with an active space! Use the active space to choose which electrons are correlated.")
-
     # Checks the active space makes sense
 
-    n_active_orbitals, n_active_alpha, n_active_beta, n_inactive = validate_active_space(molecule, calculation)
-
-    n_active_electrons = n_active_alpha + n_active_beta
-    n_secondary = molecule.n_basis - n_inactive - n_active_orbitals
-
-    # Every way of choosing the occupied active orbitals of each spin, independently of the other spin
-
-    n_determinants = comb(n_active_orbitals, n_active_alpha) * comb(n_active_orbitals, n_active_beta)
-
-    # Storing and diagonalising the Hamiltonian both scale very badly with the number of determinants
-
-    if n_determinants > constants.MAX_N_DETERMINANTS:
-
-        error(f"This active space needs {n_determinants} determinants, which is too many to diagonalise! Try a smaller active space?")
+    n_active_orbitals, n_active_alpha, n_active_beta, n_inactive, n_determinants = validate_active_space(molecule, calculation)
 
     timer("Complete active space SCF", 0)
 
-    log_spacer(calculation, 1, silent, start = "\n")
-    log("     Complete Active Space Self-consistent Field", calculation, 1, silent, colour = "white")
-    log_spacer(calculation, 1, silent)
+    # The same determinants are used throughout, as only the orbitals they are built from change
 
-    log(f"  Active electrons:                      {n_active_electrons:10}", calculation, 1, silent)
-    log(f"  Active orbitals:                       {n_active_orbitals:10}", calculation, 1, silent)
-
-    log(f"\n  Doubly occupied orbitals:              {n_inactive:10}", calculation, 1, silent)
-    log(f"  Secondary orbitals:                    {n_secondary:10}", calculation, 1, silent)
-
-    log(f"\n  Number of determinants:                {n_determinants:10}", calculation, 1, silent)
+    determinants, _ = build_active_space_determinants(molecule, calculation, n_active_orbitals, n_active_alpha, n_active_beta, n_inactive, n_determinants, "     Complete Active Space Self-consistent Field", silent)
 
     # The orbital gradient uses the SCF commutator threshold, as both measure how far the orbitals are from converged
 
     gradient_convergence = calculation.SCF_conv["commutator"]
 
-    log(f"\n  Energy convergence tolerance:    {calculation.energy_convergence:16.10f}", calculation, 1, silent)
+    log(f"  Energy convergence tolerance:    {calculation.energy_convergence:16.10f}", calculation, 1, silent)
     log(f"  Gradient convergence tolerance:  {gradient_convergence:16.10f}", calculation, 1, silent)
 
     # The orbitals are shared by both spins, so an unrestricted reference only provides its alpha orbitals as a starting guess
 
     molecular_orbitals = SCF_output.molecular_orbitals if calculation.reference == "RHF" else SCF_output.molecular_orbitals_alpha
 
-    # The spin-blocked AO integrals never change, only the orbitals they are transformed into
-
-    H_core_spin_block = ci.spin_block_core_Hamiltonian(integrals.H_core)
-    ERI_spin_block = np.kron(np.eye(2), np.kron(np.eye(2), integrals.ERI_AO).T)
-
-    # Even spin orbitals are alpha and odd spin orbitals are beta, so the inactive and active spin orbitals are the first ones
-
-    spin_labels = ["a", "b"] * molecule.n_basis
-
-    active_alpha, active_beta, inactive_orbitals = determine_active_space(molecule, spin_labels, n_active_orbitals, n_inactive)
+    # The inactive and active spin orbitals come first, and each spatial orbital is inactive (0), active (1) or secondary (2)
 
     o = slice(0, 2 * (n_inactive + n_active_orbitals))
 
-    orbital_spaces = np.array([0] * n_inactive + [1] * n_active_orbitals + [2] * n_secondary)
-
-    # The same determinants are used throughout, as only the orbitals they are built from change
-
-    determinants = ci.build_FCI_determinants(active_alpha, active_beta, n_active_alpha, n_active_beta, inactive_orbitals)
+    orbital_spaces = np.array([0] * n_inactive + [1] * n_active_orbitals + [2] * (molecule.n_basis - n_inactive - n_active_orbitals))
 
     log("\n  Starting CASSCF iterations...\n", calculation, 1, silent)
 
@@ -519,20 +567,17 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
 
     for iteration in range(1, calculation.correlated_max_iter + 1):
 
-        # Solves the CASCI problem in the current orbitals, with the ground state as the lowest eigenvector
+        # Solves the CASCI problem in the current orbitals, exactly as for CASCI but without printing
 
-        C_spin_block, H_core_SO, g = build_restricted_spin_orbital_integrals(molecular_orbitals, H_core_spin_block, ERI_spin_block, calculation)
+        C_spin_block, H_core_SO, g = build_spin_orbital_integrals(molecular_orbitals, molecular_orbitals, integrals, calculation, True)
 
-        H = ci.build_FCI_Hamiltonian(determinants, H_core_SO, g, molecule.n_SO, molecule.n_electrons)
+        E_electronic, CI_vector, P_SO, density_matrices = calculate_CASCI_ground_state(determinants, H_core_SO, g, C_spin_block, molecule, calculation, True)
 
-        energies, CI_vectors = np.linalg.eigh(H)
+        E_CASSCF_total = E_electronic + V_NN
 
-        E_CASSCF_total = energies[0] + V_NN
+        # Two-particle density matrix of the ground state, which with the one-particle density matrix gives the orbital gradient
 
-        # One- and two-particle density matrices of the ground state, which give the orbital gradient
-
-        P_SO = ci.calculate_FCI_density_matrix(determinants, CI_vectors[:, 0], molecule.n_SO, molecule.n_electrons)
-        D_SO = ci.calculate_FCI_two_particle_density_matrix(determinants, CI_vectors[:, 0], o.stop, molecule.n_electrons)
+        D_SO = ci.calculate_FCI_two_particle_density_matrix(determinants, CI_vector, o.stop, molecule.n_electrons)
 
         kappa, orbital_gradient = calculate_orbital_rotation(H_core_SO, g, P_SO, D_SO, o, orbital_spaces)
 
@@ -543,7 +588,7 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
 
         E_old = E_CASSCF_total
 
-        # Converged orbitals need no further rotation, so the density matrices below belong to them
+        # Converged orbitals need no further rotation, so the density matrices from this iteration belong to them
 
         if abs(delta_E) < calculation.energy_convergence and max_gradient < gradient_convergence:
 
@@ -560,12 +605,6 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
     log_spacer(calculation, 1, silent)
 
     log(f"\n  CASSCF energy:                   {E_CASSCF_total:16.10f}", calculation, 1, silent)
-
-    log("\n  Building CASSCF density matrix...          ", calculation, 1, silent, end = "")
-
-    density_matrices = ci.transform_P_SO_to_AO(P_SO, C_spin_block, molecule.n_SO)
-
-    log("[Done]", calculation, 1, silent)
 
     # The correlation energy is measured from the SCF energy, as the orbitals have moved away from the reference
 
