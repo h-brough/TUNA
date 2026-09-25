@@ -193,7 +193,7 @@ KEYWORDS = [
     Keyword("DIISERR", "commutator_convergence", "V", 1e-9, float),
     Keyword("CORRMAXITER", "correlated_max_iter", "V", 100, int),
     Keyword("NORB", "n_active_orbitals", "V", None, int),
-    Keyword("NELEC", "n_active_electrons", "V", None, int),
+    Keyword("NEL", "n_active_electrons", "V", None, int),
 
 
     # These keywords give two attributes, one boolean for "is this keyword requested", another for the value given
@@ -240,7 +240,7 @@ colour_map = {
     "YELLOW": "y",
     "BLACK": "k",
     "WHITE": "w",
-    
+
 }
 
 

@@ -55,7 +55,7 @@ def validate_active_space(molecule: Molecule, calculation: Calculation) -> tuple
 
     if n_active_electrons is None or n_active_orbitals is None:
 
-        error("Complete active space calculation requested without an active space! Define one with \"NELEC\" and \"NORB\".")
+        error("Complete active space calculation requested without an active space! Define one with \"NEL\" and \"NORB\".")
 
     if n_active_electrons < 1:
 

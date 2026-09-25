@@ -15,7 +15,7 @@ Relaxed density matrix for double-hybrid functionals
 - Full configuration interaction energy and density with `FCI`
 - Complete active space self-consistent field energy and density with `CASSCF`
 - Complete active space configuration interaction energy and density with `CASCI`
-- Choose number of active orbitals and electrons with `NORB` and `NELEC` keywords
+- Choose number of active orbitals and electrons with `NORB` and `NEL` keywords
 - Ground state random phase approximation correlation energy with `RPA` on a Hartree-Fock or Kohn-Sham reference
 - Corrections to Hartree-Fock or Kohn-Sham quasiparticle orbital energies with one-shot `GW`
 - Excited state spin contamination for CIS and TDA-KS states
