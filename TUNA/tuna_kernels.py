@@ -41,7 +41,7 @@ The module contains:
 def calculate_Slater_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the Slater exchange kernel.
 
     Args:
@@ -49,10 +49,10 @@ def calculate_Slater_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndar
         sigma (array): Square density gradient
         tau (array): Non-interacting kinetic energy density
         calculation (Calculation): Calculation object
-    
+
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
-    
+
     """
 
     # Modifiable with "XA" keyword
@@ -633,7 +633,7 @@ def calculate_mPW91_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarr
 
     # Sigma is cleaned at the square of the density floor, otherwise this breaks at zero gradient
 
-    sigma = clean(sigma, floor=constants.sigma_floor)
+    sigma = clean(sigma, floor = constants.sigma_floor)
 
     # These are the parameters for mPW exchange
 
@@ -922,15 +922,15 @@ def calculate_unrestricted_GGA_exchange_kernel(alpha_density: ndarray, beta_dens
 def calculate_restricted_VWN3_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the restricted VWN-III correlation kernel.
 
     Args:
         density (array): Electron density on integration grid
-    
+
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
-    
+
     """
 
     # Parameters for a restricted (paramagnetic) reference, with first and second Seitz-radius derivatives
@@ -959,7 +959,7 @@ def calculate_restricted_VWN3_correlation_kernel(density: ndarray, sigma: ndarra
 def calculate_restricted_VWN3_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the restricted VWN-III spin correlation kernel for triplet excitations.
 
     Args:
@@ -967,13 +967,13 @@ def calculate_restricted_VWN3_spin_correlation_kernel(density: ndarray, sigma: n
         sigma (array): Square density gradient (unused for LDA)
         tau (array): Non-interacting kinetic energy density (unused for LDA)
         calculation (Calculation): Calculation object
-    
+
     Returns:
         f_mm (array): Spin correlation kernel evaluated on the grid
-    
+
     """
 
-    # Parameters for a restricted (paramagnetic) and fully polarised (ferromagnetic) reference  
+    # Parameters for a restricted (paramagnetic) and fully polarised (ferromagnetic) reference
 
     _, e_C_0, _ = calculate_VWN_potential(density, -0.409286, 13.0720, 42.7198, 0.0310907)
     _, e_C_1, _ = calculate_VWN_potential(density, -0.743294, 20.1231, 101.578, 0.01554535)
@@ -1081,15 +1081,15 @@ def calculate_unrestricted_VWN3_correlation_kernel(alpha_density: ndarray, beta_
 def calculate_restricted_VWN5_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the restricted VWN-V correlation kernel.
 
     Args:
         density (array): Electron density on integration grid
-    
+
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
-    
+
     """
 
     x_0 = -0.10498
@@ -1115,7 +1115,7 @@ def calculate_restricted_VWN5_correlation_kernel(density: ndarray, sigma: ndarra
     X = r_s + b * x + c
     X_squared = X * X
 
-    # First derivative term 
+    # First derivative term
 
     combo = (2 / x + 2 * c_1 / x_minus_x_0 - (2 * x + b) * (1 + c_1) / X - (1 / 2) * c_2 * Q / X)
 
@@ -1141,7 +1141,7 @@ def calculate_restricted_VWN5_correlation_kernel(density: ndarray, sigma: ndarra
 def calculate_restricted_VWN5_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the restricted VWN-V spin correlation kernel for triplet excitations.
 
     Args:
@@ -1149,10 +1149,10 @@ def calculate_restricted_VWN5_spin_correlation_kernel(density: ndarray, sigma: n
         sigma (array): Square density gradient (unused for LDA)
         tau (array): Non-interacting kinetic energy density (unused for LDA)
         calculation (Calculation): Calculation object
-    
+
     Returns:
         f_mm (array): Spin correlation kernel evaluated on the grid
-    
+
     """
 
     # Calculates the spin stiffness
@@ -1160,7 +1160,7 @@ def calculate_restricted_VWN5_spin_correlation_kernel(density: ndarray, sigma: n
     _, minus_alpha, _ = calculate_VWN_potential(density, -0.0047584, 1.13107, 13.0045, 1 / (6 * np.pi ** 2))
 
     # The spin stiffness alpha is the negative of minus_alpha
-    
+
     f_mm = - minus_alpha / density
 
     return f_mm
@@ -1379,15 +1379,15 @@ def calculate_VWN5_spin_interpolation_kernel(alpha_density: ndarray, beta_densit
 def calculate_restricted_PW_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the restricted PW92 correlation kernel.
 
     Args:
         density (array): Electron density on integration grid
-    
+
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
-    
+
     """
 
     # Parameters for a restricted (paramagnetic) reference, with first and second Seitz-radius derivatives
@@ -1416,7 +1416,7 @@ def calculate_restricted_PW_correlation_kernel(density: ndarray, sigma: ndarray,
 def calculate_restricted_PW_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the restricted PW92 spin correlation kernel for triplet excitations.
 
     Args:
@@ -1424,10 +1424,10 @@ def calculate_restricted_PW_spin_correlation_kernel(density: ndarray, sigma: nda
         sigma (array): Square density gradient (unused for LDA)
         tau (array): Non-interacting kinetic energy density (unused for LDA)
         calculation (Calculation): Calculation object
-    
+
     Returns:
         f_mm (array): Spin correlation kernel evaluated on the grid
-    
+
     """
 
     # Calculates the spin stiffness
@@ -1435,7 +1435,7 @@ def calculate_restricted_PW_spin_correlation_kernel(density: ndarray, sigma: nda
     _, minus_alpha, _ = calculate_PW_potential(density, 0.0168869, 0.11125, 10.357, 3.6231, 0.88026, 0.49671, 1)
 
     # The spin stiffness alpha is the negative of minus_alpha
-    
+
     f_mm = - minus_alpha / density
 
     return f_mm

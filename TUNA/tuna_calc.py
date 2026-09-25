@@ -240,6 +240,7 @@ colour_map = {
     "YELLOW": "y",
     "BLACK": "k",
     "WHITE": "w",
+    
 }
 
 

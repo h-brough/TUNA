@@ -1,4 +1,3 @@
-from numpy import ndarray
 import numpy as np
 from math import comb
 
@@ -12,7 +11,7 @@ from TUNA.tuna_util import error, log, log_spacer, Integrals, Output, constants,
 
 This is the TUNA module for complete active space methods, written for version 0.12.0.
 
-The configuration interaction module is used here but with a defined active space, consisting of active occupied and virtual orbitals. 
+The configuration interaction module is used here but with a defined active space, consisting of active occupied and virtual orbitals.
 
 The module contains:
 
@@ -45,7 +44,7 @@ def validate_active_space(molecule: Molecule, calculation: Calculation) -> tuple
 
     if n_active_electrons is None or n_active_orbitals is None:
 
-        error("Complete active space calculation requested without an active space! Define one with \"NEL\" and \"NORB\".")
+        error("Complete active space calculation requested without an active space! Define one with \"NELEC\" and \"NORB\".")
 
     if n_active_electrons < 1:
 
@@ -210,7 +209,7 @@ def run_complete_active_space_configuration_interaction(molecule: Molecule, inte
     log("   Complete Active Space Configuration Interaction", calculation, 1, silent, colour = "white")
     log_spacer(calculation, 1, silent)
 
-    log(f"\n  Active electrons:                      {n_active_electrons:10}", calculation, 1, silent)
+    log(f"  Active electrons:                      {n_active_electrons:10}", calculation, 1, silent)
     log(f"  Active orbitals:                       {n_active_orbitals:10}", calculation, 1, silent)
 
     log(f"\n  Doubly occupied orbitals:              {n_inactive:10}", calculation, 1, silent)

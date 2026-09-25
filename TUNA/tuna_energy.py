@@ -9,7 +9,7 @@ import TUNA.tuna_dft as dft
 from TUNA.tuna_integrals import tuna_integral as ints
 import TUNA.tuna_guess as guess
 import TUNA.tuna_mp as mp
-import TUNA.tuna_kernel as kern
+import TUNA.tuna_misc as kern
 import TUNA.tuna_out as out
 
 
@@ -18,7 +18,7 @@ import TUNA.tuna_out as out
 
 This is the TUNA module for calculating molecular energies, written first for version 0.1.0 and rewritten in version 0.10.0.
 
-Any mathematical functions that don't call calculate_energy should be in tuna_kernel - this is for wrappers only. Energy evaluations may
+Any mathematical functions that don't call calculate_energy should be in tuna_misc - this is for wrappers only. Energy evaluations may
 use extrapolation of the basis set, and begin by building the molecule then calculating the molecular integrals. The self-consistent field
 cycle is then entered within tuna_scf before correlated or excited state calculations are performed. Finally, properties are calculated
 in tuna_prop or numerical derivatives of the energy are calculated and the energy evaluation process is repeated.

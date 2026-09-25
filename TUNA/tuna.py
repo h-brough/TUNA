@@ -50,7 +50,7 @@ import TUNA.tuna_energy as energ
 import TUNA.tuna_opt as opt
 import TUNA.tuna_md as md
 import TUNA.tuna_freq as freq
-import TUNA.tuna_kernel as kern
+import TUNA.tuna_misc as kern
 
 
 print(coloured("[Done]\n", "light_grey"))

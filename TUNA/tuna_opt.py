@@ -6,7 +6,7 @@ import sys
 import TUNA.tuna_props as props
 import TUNA.tuna_out as out
 import TUNA.tuna_freq as freq
-import TUNA.tuna_kernel as kern
+import TUNA.tuna_misc as kern
 from TUNA.tuna_calc import Calculation
 
 

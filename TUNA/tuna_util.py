@@ -1408,6 +1408,7 @@ electronic_structure_methods: list[Method] = [
     Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", restricted_available = False),
     Method("FCI", "full configuration interaction", method_base = "FCI"),
     Method("CASCI", "complete active space configuration interaction", method_base = "FCI"),
+    Method("CASSCF", "complete active space self-consistent field", method_base = "FCI"),
     Method("TDHF", "time-dependent Hartree-Fock theory", excited_state_method = True),
     Method("RPA", "random phase approximation", method_base = "RPA"),
 
