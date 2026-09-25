@@ -104,6 +104,7 @@ class Constants:
     MOMENT_THRESH = 1e-5
 
     MAX_N_DETERMINANTS = 20000
+    CASSCF_MAX_STEP = 0.5
 
     # Convergence criteria for self-consistent field
 

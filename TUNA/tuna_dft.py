@@ -1,6 +1,7 @@
 from TUNA.tuna_util import log, warning, symmetrise, constants, timer, log_spacer, check
 from TUNA.tuna_calc import Calculation
 import TUNA.tuna_xc as xc
+import TUNA.tuna_kernels as kernels
 from TUNA.tuna_molecule import Molecule
 import numpy as np
 from numpy import ndarray
@@ -13,13 +14,14 @@ from scipy.spatial.distance import cdist
 This is the TUNA module for density functional theory (DFT), written first for version 0.9.0.
 
 The DFT integration grids are constructed by Legendre-Gauss quadrature for the radial parts and Lebedev quadrature for the angular parts, they
-have been optimised to some extent "by hand" but are not expected to be anywhere near as efficient as proper quantum chemistry codes. Exchange and 
-correlation matrices can be calculated for LDA, GGA and meta-GGA functionals, and a variety are implemented. The routines for hybrid and double-hybrid 
+have been optimised to some extent "by hand" but are not expected to be anywhere near as efficient as proper quantum chemistry codes. Exchange and
+correlation matrices can be calculated for LDA, GGA and meta-GGA functionals, and a variety are implemented. The routines for hybrid and double-hybrid
 functionals are found in the SCF module, not here.
 
 Updated in version 0.10.1 to allow expressing molecular orbitals on grid, and calculating the differential overlap integrals.
 Updated in version 0.11.0 to rotate Cartesian basis functions expressed on a grid onto spherical harmonics, add VV10 energy and exchange-correlation kernel matrix.
 Updated in version 0.11.1 to express molecular orbital gradients on the grid.
+Updated in version 0.12.0 to handle (meta-)GGA exchange-correlation kernels.
 
 The module contains:
 
@@ -103,7 +105,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
         P_guess_beta (array): Beta density matrix in AO basis for guess
         calculation (Calculation): Calculation object
         silent (bool): Should anything be printed
-    
+
     Returns:
         bfs_on_grid: Basis functions evaluated on grid, shape (n_basis, n_radial, n_angular)
         weights: Integration weights for grid points, shape (n_radial, n_angular)
@@ -111,18 +113,18 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
         points: Integration grid points, shape (n_radial, n_angular)
 
     """
-    
+
     timer("Integration grid setup", 0)
 
     log(f" Setting up DFT integration grid with \"{calculation.grid_conv["name"]}\" accuracy...  ", calculation, 1, end = "", silent = silent)
 
     # Reads the integration grid parameters from the requested convergence criteria
-    
+
     extent_multiplier = calculation.grid_conv["extent_multiplier"]
     integral_accuracy = calculation.grid_conv["integral_accuracy"] if not calculation.integral_accuracy_requested else calculation.integral_accuracy
 
     # The extent of the grid away from the nucleus is given by this function, which is homemade. It can be directly modified via the extent_multiplier.
-    
+
     extent = extent_multiplier * np.max([molecule.atoms[i].real_vdw_radius for i in range(molecule.n_atoms)]) / 6
 
     # Uses the integral accuracy to map to a particular Lebedev order
@@ -157,7 +159,7 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
     # Calculates the basis functions expressed on the integration grid
 
     bfs_on_grid = construct_basis_functions_on_grid(molecule.cartesian_basis_functions, points, molecule.spherical_harmonic_transformation_matrix)
-    
+
     # If a (meta-)GGA calculation has been requested, determines the basis functions expressed on the integration grid
 
     bf_gradients_on_grid = construct_basis_function_gradients_on_grid(molecule.cartesian_basis_functions, points, molecule.spherical_harmonic_transformation_matrix) if calculation.functional.functional_class in ["GGA", "meta-GGA"] or calculation.VV10 else None
@@ -190,10 +192,10 @@ def set_up_integration_grid(molecule: Molecule, P_guess_alpha: ndarray, P_guess_
         warning(" Integral of density is far from the number of electrons! Be careful with your results.")
 
         check(np.abs(n_electrons_DFT - molecule.n_electrons) < 0.5, "Integral for the density is completely wrong!")
-    
+
     log(f" Using {100 * calculation.DFX_prop:.1f}% density functional exchange and {100 * calculation.HFX_prop:.1f}% Hartree-Fock exchange.", calculation, 2, silent = silent)
     log(f" Using {100 * calculation.DFC_prop:.1f}% density functional correlation and {100 * calculation.MPC_prop:.1f}% Moller-Plesset correlation.\n", calculation, 2, silent = silent)
-    
+
     timer("Integration grid setup", 1)
 
     return bfs_on_grid, weights, bf_gradients_on_grid, points
@@ -232,16 +234,16 @@ def build_atomic_radial_and_angular_grid(radial_grid_cutoff: float, n_radial: in
 
     # Radial quadrature is mapped between 0 and 1
 
-    t = (t_nodes + 1) / 2  
+    t = (t_nodes + 1) / 2
     w_t = t_weights / 2
 
     # Multiplying by radial cutoff maps it to the radial grid cutoff, and the power term keeps points close to the nucleus
 
     r = radial_grid_cutoff * t ** radial_power
     dr_dt = radial_grid_cutoff * radial_power * t ** (radial_power - 1)
-    
-    weights_radial = w_t * dr_dt       
-    
+
+    weights_radial = w_t * dr_dt
+
     # Uses Lebedev quadrature to get the directions and weights
 
     unit_sphere_directions, weights_angular = lebedev_rule(lebedev_order)
@@ -284,7 +286,7 @@ def calculate_Becke_diatomic_weights(X: ndarray, Y: ndarray, Z: ndarray, bond_le
     Returns:
         weights_A (array): Weights for first atom in diatomic
         weights_B (array): Weights for second atom in diatomic
-    
+
     """
 
     # Distance to the atomic centres for each point on the Cartesian grid
@@ -310,8 +312,8 @@ def calculate_Becke_diatomic_weights(X: ndarray, Y: ndarray, Z: ndarray, bond_le
 
     for i in range(steepness):
 
-        s = (3 * s - s * s * s) / 2 
- 
+        s = (3 * s - s * s * s) / 2
+
     # These weights are 1 on atom A, 0 on atom B and 0.5 when the elliptical coordinate is zero. Vice versa for B.
 
     weights_A = (1 - s) / 2
@@ -362,7 +364,7 @@ def build_molecular_grid(radial_grid_cutoff: float, n_radial: int, lebedev_order
     if len(atoms) == 1 or len(atoms) == 2 and any(atom.ghost for atom in atoms):
 
         return points_A, atomic_weights_A
-    
+
     # For a diatomic, the grid will be the same (we don't optimize atomic grids for atomic species)
 
     X_B, Y_B, Z_B = X_A, Y_A, Z_A + bond_length
@@ -403,18 +405,18 @@ def build_molecular_grid(radial_grid_cutoff: float, n_radial: int, lebedev_order
 
 
 def construct_molecular_orbitals_on_grid(bfs_on_grid: ndarray, molecular_orbitals: ndarray) -> ndarray:
-    
+
     """
-    
+
     Expresses the molecular orbitals on the integration grid.
 
     Args:
         bfs_on_grid (array): Basis functions evaluated on integration grid
         molecular_orbitals (array): Molecular orbitals
-    
+
     Returns:
         mos_on_grid (array): Molecular orbitals evaluated on integration grid, shape (orbital, radial, angular)
-    
+
     """
 
     mos_on_grid = np.einsum("mp,mra->pra", molecular_orbitals, bfs_on_grid, optimize = True)
@@ -431,18 +433,18 @@ def construct_molecular_orbitals_on_grid(bfs_on_grid: ndarray, molecular_orbital
 
 
 def construct_molecular_orbital_gradients_on_grid(bf_gradients_on_grid: ndarray, molecular_orbitals: ndarray) -> ndarray:
-    
+
     """
-    
+
     Expresses the molecular orbital gradients on the integration grid.
 
     Args:
         bf_gradients_on_grid (array): Basis function gradients evaluated on integration grid
         molecular_orbitals (array): Molecular orbitals
-    
+
     Returns:
         mo_gradients_on_grid (array): Molecular orbital gradients evaluated on integration grid, shape (cartesian, orbital, radial, angular)
-    
+
     """
 
     mo_gradients_on_grid = np.einsum("mp,cmra->cpra", molecular_orbitals, bf_gradients_on_grid, optimize = True)
@@ -461,7 +463,7 @@ def construct_molecular_orbital_gradients_on_grid(bf_gradients_on_grid: ndarray,
 def calculate_differential_overlap_integrals(molecular_orbitals: ndarray, molecule: Molecule, bfs_on_grid: ndarray, weights: ndarray, calculation: Calculation) -> ndarray:
 
     """
-    
+
     Calculates the differential overlap integrals, (ia|ia), between the occupied and virtual real orbitals.
 
     Args:
@@ -473,7 +475,7 @@ def calculate_differential_overlap_integrals(molecular_orbitals: ndarray, molecu
 
     Returns:
         differential_overlap_integrals (array): Overlap of one-electron densities of occupied and molecular orbitals
-    
+
     """
 
     n_occ = molecule.n_occ if calculation.reference == "UHF" else molecule.n_doubly_occ
@@ -490,13 +492,13 @@ def calculate_differential_overlap_integrals(molecular_orbitals: ndarray, molecu
     for i in range(n_occ):
 
         for a in range(n_virt):
-            
+
             # Each term is squared to get the one-electron density, get rid of the phase
 
             occupied_density = np.abs(molecular_orbitals_on_grid[i, :, :]) * np.abs(molecular_orbitals_on_grid[i, :, :])
 
             virtual_density = np.abs(molecular_orbitals_on_grid[n_occ + a, :, :]) * np.abs(molecular_orbitals_on_grid[n_occ + a, :, :])
-            
+
             # The integral is square rooted to restore the norm
 
             differential_overlap_integrals[i, a] = integrate_on_grid(occupied_density * virtual_density, weights) ** (1 / 2)
@@ -514,19 +516,19 @@ def calculate_differential_overlap_integrals(molecular_orbitals: ndarray, molecu
 
 
 def construct_basis_functions_on_grid(basis_functions: list, points: ndarray, spherical_harmonic_transformation_matrix: ndarray) -> ndarray:
-    
+
     """
-    
+
     Expresses the basis functions on the integration grid.
 
     Args:
         basis_functions (list): List of basis function objects
         points (array): Integration grid points
         spherical_harmonic_transformation_matrix (array): Spherical harmonic transformation matrix
-    
+
     Returns:
         bfs_on_grid (array): Basis functions expressed on integration grid, shape (basis_size, radial_points, angular_points)
-    
+
     """
 
     # For DFT, points is three-dimensional but for plotting, it is two-dimensional (X, Z)
@@ -565,12 +567,12 @@ def construct_basis_functions_on_grid(basis_functions: list, points: ndarray, sp
         # Basis functions are a product of the coefficient, norm, angular part and radial exponent part
 
         contracted = np.einsum("i,i,ijk->jk", bf.coefs, bf.norm, exponent_term)
-        
+
         bfs_on_grid[i] = contracted * X_relative ** l * Y_relative ** m * Z_relative ** n
 
     # Transforms from Cartesian harmonics to spherical harmonics
 
-    bfs_on_grid = np.einsum("pq,qjk->pjk", spherical_harmonic_transformation_matrix, bfs_on_grid, optimize = True) 
+    bfs_on_grid = np.einsum("pq,qjk->pjk", spherical_harmonic_transformation_matrix, bfs_on_grid, optimize = True)
 
     return bfs_on_grid
 
@@ -584,19 +586,19 @@ def construct_basis_functions_on_grid(basis_functions: list, points: ndarray, sp
 
 
 def construct_basis_function_gradients_on_grid(basis_functions: list, points: ndarray, spherical_harmonic_transformation_matrix: ndarray) -> ndarray:
-    
+
     """
-    
+
     Expresses the analytic gradients of the basis functions on the integration grid.
 
     Args:
         basis_functions (list): List of basis function objects
         points (array): Integration grid points
         spherical_harmonic_transformation_matrix (array): Spherical harmonic transformation matrix
-    
+
     Returns:
         bf_gradients_on_grid (array): Basis function gradients on integration grid, shape (3, basis_size, radial_points, angular_points)
-    
+
     """
 
     # For DFT, points is three-dimensional but for plotting, it is two-dimensional (X, Z)
@@ -633,11 +635,11 @@ def construct_basis_function_gradients_on_grid(basis_functions: list, points: nd
 
         exponent_term = np.exp(-1 * np.einsum("i,jk->ijk", bf.exps, r_squared, optimize = True))
 
-        poly_x = X_relative ** l 
-        poly_y = Y_relative ** m 
+        poly_x = X_relative ** l
+        poly_y = Y_relative ** m
         poly_z = Z_relative ** n
 
-        P_poly = poly_x * poly_y * poly_z    
+        P_poly = poly_x * poly_y * poly_z
 
         # Derivative polynomials for x, y and z
 
@@ -661,7 +663,7 @@ def construct_basis_function_gradients_on_grid(basis_functions: list, points: nd
 
     # Transforms from Cartesian harmonics to spherical harmonics
 
-    bf_gradients_on_grid = np.einsum("pq,qajk->apjk", spherical_harmonic_transformation_matrix, bf_gradients_on_grid, optimize = True) 
+    bf_gradients_on_grid = np.einsum("pq,qajk->apjk", spherical_harmonic_transformation_matrix, bf_gradients_on_grid, optimize = True)
 
     return bf_gradients_on_grid
 
@@ -675,19 +677,19 @@ def construct_basis_function_gradients_on_grid(basis_functions: list, points: nd
 
 
 def construct_density_on_grid(P: ndarray, bfs_on_grid: ndarray, clean_density: bool = True) -> ndarray:
-    
+
     """
-    
+
     Constructs the electron density on the grid using the atomic orbitals, then cleans it up.
 
     Args:
         P (array): Density matrix in AO basis
         bfs_on_grid (array): Basis functions on integration grid
         clean_density (bool, optional): Should the density be cleaned
-    
+
     Returns:
         density (array): Electron density on molecular grid
-    
+
     """
 
     # Conventional expression for the electron density in terms of basis functions - using P encodes that only occupied orbitals are summed
@@ -697,7 +699,7 @@ def construct_density_on_grid(P: ndarray, bfs_on_grid: ndarray, clean_density: b
     # This is on by default to get rid of very small, zero and negative values that break functionals
 
     if clean_density:
-        
+
         density = xc.clean(density)
 
     return density
@@ -721,7 +723,7 @@ def calculate_density_gradient(P: ndarray, bfs_on_grid: ndarray, bf_gradients_on
         P (array): Density matrix in AO basis
         bfs_on_grid (array): Basis functions evaluated on grid
         bf_gradients_on_grid (array): Basis function gradients evaluated on grid
-    
+
     Returns:
         sigma (array): Square density gradient, shape (n_radial, n_angular)
         density_gradient (array): Gradient of density on grid, shape (3, n_radial, n_angular)
@@ -760,7 +762,7 @@ def calculate_kinetic_energy_density(P: ndarray, bf_gradients_on_grid: ndarray) 
     Args:
         P (array): Density matrix in AO basis
         bf_gradients_on_grid (array): Basis function gradients evaluated on grid
-    
+
     Returns:
         tau (array): Non-interacting kinetic energy density, shape (n_radial, n_angular)
 
@@ -769,7 +771,7 @@ def calculate_kinetic_energy_density(P: ndarray, bf_gradients_on_grid: ndarray) 
     # Conventional expression, with factor of a half, for non-interacting kinetic energy density used in meta-GGA functionals
 
     tau = (1 / 2) * np.einsum("ij,aikl,ajkl->kl", P, bf_gradients_on_grid, bf_gradients_on_grid, optimize = True)
-    
+
     # This needs to be cleaned with the same floor as the density, higher than sigma
 
     tau = xc.clean(tau, floor = constants.density_floor)
@@ -786,23 +788,23 @@ def calculate_kinetic_energy_density(P: ndarray, bf_gradients_on_grid: ndarray) 
 
 
 def calculate_V_X(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds: ndarray, df_dt: ndarray, bf_gradients_on_grid: ndarray, density_gradient: ndarray) -> ndarray:
-    
+
     """
-    
+
     Calculates the density functional theory exchange matrix. Separately integrates the LDA, GGA and meta-GGA contributions.
 
     Args:
-        weights (array): Integration weights 
+        weights (array): Integration weights
         bfs_on_grid (array): Basis functions evaluated on integration grid
         df_dn (array): Derivative of n * e_X with respect to the density
         df_ds (array): Derivative of n * e_X with respect to the square density gradient, sigma
         df_dt (array): Derivative of n * e_X with respect to the kinetic energy density, tau
         bf_gradients_on_grid (array): Gradient of basis functions evaluated on integration grid
-        density_gradient (array): Gradient of density evaluated on integration grid      
+        density_gradient (array): Gradient of density evaluated on integration grid
 
     Returns:
-        V_X (array): Symmetrised density functional theory exchange matrix in AO basis  
-    
+        V_X (array): Symmetrised density functional theory exchange matrix in AO basis
+
     """
 
     # Contribution to exchange matrix from LDA part of functional
@@ -816,7 +818,7 @@ def calculate_V_X(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
         V_X += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
     if df_dt is not None:
-        
+
         # Contribution to exchange matrix from meta-GGA part of functional
 
         V_X += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize = True)
@@ -837,25 +839,25 @@ def calculate_V_X(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
 
 
 def calculate_V_C(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds: ndarray, df_dt: ndarray, bf_gradients_on_grid: ndarray, density_gradient: ndarray, density_gradient_other_spin: ndarray = None, df_ds_ab: ndarray = None) -> ndarray:
-    
+
     """
-    
+
     Calculates the density functional theory correlation matrix. Separately integrates the LDA, GGA and meta-GGA contributions.
 
     Args:
-        weights (array): Integration weights 
+        weights (array): Integration weights
         bfs_on_grid (array): Basis functions evaluated on integration grid
         df_dn (array): Derivative of n * e_C with respect to the density
         df_ds (array): Derivative of n * e_C with respect to the square density gradient, sigma
         df_dt (array): Derivative of n * e_C with respect to the kinetic energy density, tau
         bf_gradients_on_grid (array): Gradient of basis functions evaluated on integration grid
-        density_gradient (array): Gradient of density evaluated on integration grid      
-        density_gradient_other_spin (array, optional): Gradient of density of other spin evaluated on integration grid      
-        df_ds_ab (array, optional): Derivative of n * e_C with respect to densgrad_alpha dot densgrad_beta 
+        density_gradient (array): Gradient of density evaluated on integration grid
+        density_gradient_other_spin (array, optional): Gradient of density of other spin evaluated on integration grid
+        df_ds_ab (array, optional): Derivative of n * e_C with respect to densgrad_alpha dot densgrad_beta
 
     Returns:
-        V_C (array): Symmetrised density functional theory correlation matrix in AO basis  
-    
+        V_C (array): Symmetrised density functional theory correlation matrix in AO basis
+
     """
 
     # Contribution to exchange matrix from LDA part of functional
@@ -867,7 +869,7 @@ def calculate_V_C(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
         # Contribution to exchange matrix from GGA part of functional
 
         if df_ds_ab is not None:
-        
+
             V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
             V_C += 2 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds_ab, density_gradient_other_spin, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
@@ -876,7 +878,7 @@ def calculate_V_C(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
             V_C += 4 * np.einsum("kl,akl,mkl,ankl,kl->mn", df_ds, density_gradient, bfs_on_grid, bf_gradients_on_grid, weights, optimize = True)
 
     if df_dt is not None:
-        
+
         # Contribution to exchange matrix from meta-GGA part of functional
 
         V_C += (1 / 2) * np.einsum("kl,amkl,ankl,kl->mn", df_dt, bf_gradients_on_grid, bf_gradients_on_grid, weights, optimize = True)
@@ -901,7 +903,7 @@ def calculate_V_C(weights: ndarray, bfs_on_grid: ndarray, df_dn: ndarray, df_ds:
 def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarray, density: ndarray, chunk: int = 192) -> ndarray:
 
     """
-    
+
     Calculates the inner integral by looping over blocks for the VV10 energy.
 
     Args:
@@ -910,10 +912,10 @@ def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarra
         kappa (array): Kappa values
         density (array): Electron density on grid
         chunk (int, optional): Chunk size
-    
+
     Returns:
         inner_integral (array): Inner VV10 integral
-    
+
     """
 
     inner_integral = np.zeros(points.shape[0])
@@ -924,7 +926,7 @@ def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarra
 
     GJ = np.empty((chunk, chunk))
     SM = np.empty((chunk, chunk))
-    
+
     # Unfortunately this can't be done as a NumPy operation as the arrays are four-dimensional, which is too big for grids
 
     for block in range(n_blocks):
@@ -932,11 +934,11 @@ def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarra
         i0, i1 = block * chunk, min((block + 1) * chunk, points.shape[0])
 
         ci = i1 - i0
-        
+
         for jc in range(block, n_blocks):
 
             j0, j1 = jc * chunk, min((jc + 1) * chunk, points.shape[0])
-            
+
             cj = j1 - j0
 
             # Determines the distance between points
@@ -955,10 +957,10 @@ def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarra
             # Kernel calculations
 
             np.add(d2, gj, out = sm)
-            
+
             d2 *= gj
             d2 *= sm
-            
+
             np.divide(-1.5, d2, out = d2)
 
             inner_integral[i0:i1] += d2 @ density[j0:j1]
@@ -983,7 +985,7 @@ def calculate_VV10_inner_integral(points: ndarray, omega: ndarray, kappa: ndarra
 def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calculation, silent: bool) -> float:
 
     """
-    
+
     Calculates the non-local VV10 dispersion energy.
 
     Args:
@@ -991,10 +993,10 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
         grid_container (tuple): Integration grid information
         calculation (Calculation): Calculation object
         silent (bool): Cancel logging
-    
+
     Returns:
         E_VV10 (float): Non-local dispersion energy
-    
+
     """
 
     bfs, weights, bf_grads, points = grid_container
@@ -1051,7 +1053,7 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
     # Final integration is done with a matrix multiplication for BLAS3 speedups
 
     E_VV10 = weighted_density @ (beta + (1 / 2) * inner_integral) * calculation.functional.VV10_scaling
-    
+
     log("[Done]", calculation, 1, silent)
 
     log(f"\n  Energy from VV10:                {E_VV10:16.10f}", calculation, 1, silent)
@@ -1074,7 +1076,7 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 def construct_orbital_pair_products(orbitals_on_grid: ndarray) -> ndarray:
 
     """
-    
+
     Builds orbital pair products on the grid.
 
     Args:
@@ -1102,7 +1104,7 @@ def construct_orbital_pair_products(orbitals_on_grid: ndarray) -> ndarray:
 def construct_orbital_pair_gradients(orbitals_on_grid: ndarray, orbital_gradients_on_grid: ndarray, cartesian: int) -> ndarray:
 
     """
-    
+
     Builds orbital pair products on the grid.
 
     Args:
@@ -1135,7 +1137,7 @@ def construct_orbital_pair_gradients(orbitals_on_grid: ndarray, orbital_gradient
 def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
 
     """
-    
+
     Calculates the matrix elements of the exchange correlation kernel.
 
     Args:
@@ -1152,7 +1154,7 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
         K_XC_singlet (array): Singlet exchange-correlation kernel matrix
         K_XC_triplet (array): Triplet exchange-correlation kernel matrix
         K_XC_full (array): Unsliced singlet exchange-correlation kernel matrix
-    
+
     """
 
     # Builds molecular orbitals on the integration grid
@@ -1162,20 +1164,20 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
     molecular_orbitals_on_grid = construct_molecular_orbitals_on_grid(bfs_on_grid, molecular_orbitals)
 
     log("[Done]", calculation, 1, silent)
-    
+
     log(" Evaluating exchange-correlation kernel...   ", calculation, 1, silent, end = "")
 
     # Calculates the second derivative of the exchange-correlation energy wrt. the density
 
-    exchange_kernel = xc.exchange_kernels.get(calculation.functional.x_functional)
+    exchange_kernel = kernels.exchange_kernels.get(calculation.functional.x_functional)
 
-    correlation_density_kernel = xc.correlation_density_kernels.get(calculation.functional.c_functional)
-    correlation_spin_kernel = xc.correlation_spin_kernels.get(calculation.functional.c_functional)
+    correlation_density_kernel = kernels.correlation_density_kernels.get(calculation.functional.c_functional)
+    correlation_spin_kernel = kernels.correlation_spin_kernels.get(calculation.functional.c_functional)
 
     # Calculates the exchange kernel
 
     f_X = 2 * exchange_kernel(density, None, None, calculation)
-    
+
     # Calculates the singlet correlation kernel
 
     f_C_singlet = 2 * correlation_density_kernel(density, None, None, calculation)
@@ -1183,7 +1185,7 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
     # Calculates the triplet correlation kernel
 
     f_C_triplet = 2 * correlation_spin_kernel(density, None, None, calculation)
-    
+
     log("[Done]", calculation, 1, silent)
 
     log(" Calculating matrix elements...              ", calculation, 1, silent, end = "")
@@ -1196,17 +1198,17 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
     # Calculate the transition density for the matrix elements of the exchange-correlation kernel
 
     T = np.einsum("imn,amn->iamn", occupied_orbitals, virtual_orbitals, optimize = True)
-    
+
     # Contract the transition density with itself and the weights
-    
+
     K_X = np.einsum("iamn,jbmn,mn->iajb", T, T, f_X * weights, optimize = True)
 
     K_C_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_singlet * weights, optimize = True)
     K_C_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_triplet * weights, optimize = True)
-    
+
     K_XC_singlet = K_X * calculation.DFX_prop + K_C_singlet * calculation.DFC_prop
     K_XC_triplet = K_X * calculation.DFX_prop + K_C_triplet * calculation.DFC_prop
-    
+
     # Need to do this faster somehow, takes ages
 
     if calculation.DFT_calculation:
@@ -1253,11 +1255,11 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
 
 
 def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool, return_full_kernel: bool = False) -> ndarray:
- 
+
     """
-    
+
     Calculates the matrix elements of the spin-resolved exchange-correlation kernel for an unrestricted reference.
- 
+
     Args:
         o (slice): Occupied spin orbital slice
         v (slice): Virtual spin orbital slice
@@ -1270,52 +1272,52 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
         weights (array): Integration weights
         silent (bool): Cancel logging
         return_full_kernel (bool, optional): Should the unsliced kernel also be returned, for coupled-perturbed Kohn-Sham equations
- 
+
     Returns:
         K_XC (array): Spin orbital exchange-correlation kernel matrix
         K_XC_full (array): Unsliced exchange-correlation kernel matrix, only if return_full_kernel is used
- 
+
     """
- 
-    # Builds the spin orbitals on the integration grid 
- 
+
+    # Builds the spin orbitals on the integration grid
+
     log("\n Evaluating molecular orbitals on grid...    ", calculation, 1, silent, end = "")
- 
+
     basis_functions_spin_blocked = np.concatenate([bfs_on_grid, bfs_on_grid], axis = 0)
- 
+
     molecular_orbitals_on_grid = construct_molecular_orbitals_on_grid(basis_functions_spin_blocked, C_spin_block)
- 
+
     log("[Done]", calculation, 1, silent)
-    
+
     log(" Evaluating exchange-correlation kernel...   ", calculation, 1, silent, end = "")
- 
+
     # Constructs the alpha and beta densities on the grid, including any frozen-core electrons
- 
+
     alpha_density = construct_density_on_grid(P_alpha, bfs_on_grid)
     beta_density = construct_density_on_grid(P_beta, bfs_on_grid)
- 
+
     total_density = alpha_density + beta_density
- 
+
     # The exchange kernel follows from the spin-scaling relation
- 
-    exchange_kernel = xc.exchange_kernels.get(calculation.functional.x_functional)
-    correlation_kernel = xc.unrestricted_correlation_kernels.get(calculation.functional.c_functional)
+
+    exchange_kernel = kernels.exchange_kernels.get(calculation.functional.x_functional)
+    correlation_kernel = kernels.unrestricted_correlation_kernels.get(calculation.functional.c_functional)
 
     f_X_aa = 2 * exchange_kernel(2 * alpha_density, None, None, calculation)
     f_X_bb = 2 * exchange_kernel(2 * beta_density, None, None, calculation)
- 
+
     # The correlation kernel is evaluated analytically as the spin-resolved second derivatives of the correlation energy
- 
+
     f_C_aa, f_C_ab, f_C_bb = correlation_kernel(alpha_density, beta_density, total_density, None, None, None, None, None, calculation)
- 
+
     # The same-spin blocks combine the analytic exchange and correlation; the opposite-spin block is correlation only
-  
+
     log("[Done]", calculation, 1, silent)
- 
+
     log(" Calculating matrix elements...              ", calculation, 1, silent, end = "")
- 
+
     # Slice out occupied and virtual spin orbitals on the grid
- 
+
     occupied_orbitals = molecular_orbitals_on_grid[o]
     virtual_orbitals  = molecular_orbitals_on_grid[v]
 
@@ -1338,7 +1340,7 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
     K_C += np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_beta,  f_C_ab * weights, optimize = True)
     K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_alpha, f_C_ab * weights, optimize = True)
     K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_C_bb * weights, optimize = True)
-    
+
     K_XC = K_X * calculation.DFX_prop + K_C * calculation.DFC_prop
 
     # Optionally builds the kernel matrices needed for coupled-perturbed Kohn-Sham equations over the full spin orbital space

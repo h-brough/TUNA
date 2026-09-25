@@ -1158,9 +1158,13 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
             E_FCI, (P, P_alpha, P_beta) = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
 
-        else:
+        elif method.name == "CASCI":
 
             E_FCI, (P, P_alpha, P_beta) = cas.run_complete_active_space_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
+
+        else:
+
+            E_FCI, (P, P_alpha, P_beta) = cas.run_complete_active_space_self_consistent_field(molecule, integrals, SCF_output, calculation, V_NN, silent)
 
         # If "NATORBS" is used, calculate and print the natural orbitals
 
@@ -1171,7 +1175,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
         log_spacer(calculation, 1, silent)
 
     # Calculates the full configuration interaction energy
-    
+
     elif method.method_base == "RPA" or calculation.do_rpa:
 
         E_RPA = mp.calculate_RPA_energy(molecule, SCF_output, calculation, silent = silent)

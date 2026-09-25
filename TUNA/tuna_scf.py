@@ -1370,7 +1370,7 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
         if reference == "RHF":
 
             # Runs an SCF step
-            
+
             E, E_old, P, P_old, commutator, damping_factor, molecular_orbitals, epsilons, energy_components, F, density = run_restricted_SCF_cycle(step, E, P, P_old, P_before_damping, DIIS_error_vector, Fock_vector, calculation, molecule, integrals, X, molecule.n_doubly_occ, silent, bfs_on_grid, bf_gradients_on_grid, exchange_functional, correlation_functional, weights)
 
             # For restricted references, the spin channels are just half the full matrices

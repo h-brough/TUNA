@@ -1906,7 +1906,7 @@ def print_excited_state_contributions(calculation: Calculation, silent: bool, ex
         else:
 
             log(f"\n  ~~~~~ State {state + 1} ~~~~~    <S^2> = {s_squared[state]:.5f}", calculation, 2, silent = silent)
-      
+
 
         log(f"\n  Excitation energy: {excitation_energies[state]:16.10f}\n", calculation, 2, silent = silent)
 
@@ -1926,7 +1926,7 @@ def print_excited_state_contributions(calculation: Calculation, silent: bool, ex
 
             # The list is sorted, so once one transition falls below the threshold the rest do too
 
-            if contributions[i, a] <= calculation.excited_state_contribution_threshold: 
+            if contributions[i, a] <= calculation.excited_state_contribution_threshold:
 
                 break
 
@@ -2562,7 +2562,7 @@ def calculate_FCI_matrix_element(determinant_1: tuple, determinant_2: tuple, H_c
 
         # This sums over all the shared two-electron integrals
 
-        matrix_element = np.sum(H_core_SO[occupied_orbitals, occupied_orbitals]) 
+        matrix_element = np.sum(H_core_SO[occupied_orbitals, occupied_orbitals])
         matrix_element += 0.5 * np.sum(g[occupied_orbitals[:, None], occupied_orbitals, occupied_orbitals[:, None], occupied_orbitals])
 
 
@@ -2703,6 +2703,104 @@ def calculate_FCI_density_matrix(determinants: list, CI_vector: ndarray, n_SO: i
 
 
 
+def calculate_FCI_two_particle_density_matrix(determinants: list, CI_vector: ndarray, n_SO: int, n_electrons: int) -> ndarray:
+
+    """
+
+    Calculates the two-particle reduced density matrix of a determinant expansion, in the spin orbital basis.
+
+    Args:
+        determinants (list): Occupied spin orbitals of each determinant, in ascending order
+        CI_vector (array): Coefficient of each determinant in the wavefunction
+        n_SO (int): Number of spin orbitals
+        n_electrons (int): Number of electrons in each determinant
+
+    Returns:
+        D (array): Two-particle reduced density matrix in the spin orbital basis
+
+    """
+
+    timer("Two-particle density matrix", 0)
+
+    D = np.zeros((n_SO, n_SO, n_SO, n_SO))
+
+    # Occupation number vector of each determinant, exactly as in the Hamiltonian build
+
+    occupations = np.zeros((len(determinants), n_SO), dtype = int)
+
+    for I, determinant in enumerate(determinants):
+
+        occupations[I, list(determinant)] = 1
+
+    for I in range(len(determinants)):
+
+        # Only determinants differing by two spin orbitals or fewer contribute to a two-particle density matrix
+
+        n_excitations = n_electrons - occupations[I:] @ occupations[I]
+
+        for J in I + np.flatnonzero(n_excitations <= 2):
+
+            holes = [p for p in determinants[I] if p not in determinants[J]]
+            particles = [p for p in determinants[J] if p not in determinants[I]]
+
+            # Same sign as a Hamiltonian matrix element between these two determinants
+
+            sign = (-1) ** (sum(determinants[I].index(p) for p in holes) + sum(determinants[J].index(p) for p in particles))
+
+            weight = sign * CI_vector[I] * CI_vector[J]
+
+            if len(holes) == 0:
+
+                # A determinant gives its own weight to every pair of spin orbitals it occupies, in both orders
+
+                occupied = np.array(determinants[I])
+
+                D[occupied[:, None], occupied, occupied[:, None], occupied] += weight
+                D[occupied[:, None], occupied, occupied, occupied[:, None]] -= weight
+
+            elif len(holes) == 1:
+
+                i = holes[0]
+                a = particles[0]
+
+                # The excited electron pairs with every spin orbital occupied in both determinants
+
+                common = np.array([p for p in determinants[I] if p in determinants[J]], dtype = int)
+
+                for p, q in [(i, a), (a, i)]:
+
+                    D[p, common, q, common] += weight
+                    D[common, p, common, q] += weight
+                    D[p, common, common, q] -= weight
+                    D[common, p, q, common] -= weight
+
+            else:
+
+                i, j = holes
+                a, b = particles
+
+                # The pair of determinants contributes in both orders, which makes the density matrix Hermitian
+
+                for p, q, r, s in [(i, j, a, b), (a, b, i, j)]:
+
+                    D[p, q, r, s] += weight
+                    D[q, p, r, s] -= weight
+                    D[p, q, s, r] -= weight
+                    D[q, p, s, r] += weight
+
+    timer("Two-particle density matrix", 1)
+
+    return D
+
+
+
+
+
+
+
+
+
+
 def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals, SCF_output: Output, calculation: Calculation, silent: bool = False) -> tuple:
 
     """
@@ -2755,7 +2853,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     log("  Building determinants...                   ", calculation, 1, silent, end="")
 
-    determinants = build_FCI_determinants([p for p in alpha_orbitals if p not in frozen_orbitals], 
+    determinants = build_FCI_determinants([p for p in alpha_orbitals if p not in frozen_orbitals],
                                           [p for p in beta_orbitals if p not in frozen_orbitals],
                                           molecule.n_alpha - n_frozen_alpha, molecule.n_beta - n_frozen_beta, frozen_orbitals)
 
