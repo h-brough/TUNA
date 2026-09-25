@@ -286,7 +286,6 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
             energ.scan_coordinate(calculation, atomic_symbols, coordinates)
 
-
         # Geometry optimisation
 
         case "OPT" | "FORCE":
@@ -301,7 +300,6 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
             freq.calculate_harmonic_frequency(calculation, atomic_symbols=atomic_symbols, coordinates=coordinates)
 
-
         # Anharmonic frequency
 
         case "ANHARM":
@@ -312,7 +310,6 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
 
             freq.calculate_anharmonic_frequency(calculation, atomic_symbols, harmonic_frequency_per_cm, optimised_molecule)
 
-
         # Geometry optimisation and harmonic frequency
 
         case "OPTFREQ":
@@ -320,7 +317,6 @@ def run_calculation(calculation_type: str, calculation: Calculation, atomic_symb
             optimised_molecule, optimised_energy = opt.optimise_geometry(calculation, atomic_symbols, coordinates)
 
             freq.calculate_harmonic_frequency(calculation, molecule=optimised_molecule, energy=optimised_energy)
-
 
         # Ab initio molecular dynamics
 
@@ -406,7 +402,7 @@ def main() -> int:
     """
 
     Entry point for the command line, used by the "tuna" and "TUNA" commands. Runs the requested
-    calculation and turns an error into an exit code rather than a traceback.
+    calculation and returns an error as an exit code.
 
     Returns:
         exit_code (int): Zero if the calculation finished, non-zero otherwise
@@ -419,7 +415,7 @@ def main() -> int:
 
     except KeyboardInterrupt:
 
-        print(coloured("\nThe TUNA calculation has been interrupted by the user. Goodbye!\n", "light_red"))
+        print(coloured("\n ERROR: The TUNA calculation has been interrupted by the user. Goodbye!\n", "light_red"))
 
         return 130
 

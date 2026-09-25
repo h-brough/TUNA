@@ -11,10 +11,11 @@ from TUNA.tuna_calc import Calculation
 
 This is the TUNA module for molecule and atom management, written first for version 0.5.0 and rewritten for version 0.10.1.
 
-At the start of every energy evaluation, a Molecule object is made. This contains information inherited from Calculation, as well as structural information, 
+At the start of every energy evaluation, a Molecule object is made. This contains information inherited from Calculation, as well as structural information,
 data about the number of electrons, orbitals, etc. and is used to update the reference stored in Calculation (restricted or unrestricted).
 
 Updated in version 0.11.0 to make more consistent x, y and z grouping for Cartesian Gaussian subshells, and make automatic full CI use CI instead of CC.
+Updated in version 0.12.0 to include FCI in the method complexity reduction hierarchy.
 
 This module contains:
 
@@ -38,40 +39,40 @@ class Atom:
 
     # Relative nuclear charge for basis set formation
 
-    basis_charge: int   
+    basis_charge: int
 
     # Atomic mass in AMU
 
-    mass: float   
+    mass: float
 
     # Coordinates
 
-    origin: ndarray  
+    origin: ndarray
 
     # Parameters for D2 dispersion
 
-    C6: float   
-    vdw_radius: float  
+    C6: float
+    vdw_radius: float
 
     # Size of atom for DFT grid formation for heteronuclear diatomics
 
-    real_vdw_radius: float  
-    
+    real_vdw_radius: float
+
     # Atomic symbol in capitals
 
-    symbol: str  
+    symbol: str
 
     # How many orbitals are core
 
-    core_orbitals: int   
+    core_orbitals: int
 
     # Atomic spherically averaged HF/STO-3G density matrix
 
-    density: ndarray  
+    density: ndarray
 
     # Is the atom a ghost atom
 
-    ghost: bool   
+    ghost: bool
 
     @property
     def charge(self):
@@ -96,11 +97,11 @@ class Atom:
 class Molecule:
 
     """
-    
+
     Defines a molecule to be used in a TUNA calculation and calculates several commonly used parameters.
 
     Various default values for parameters are specified here. This object is created once per energy evaluation.
-    
+
     """
 
     # List of atomic symbols
@@ -143,7 +144,7 @@ class Molecule:
         self.bond_length = 0.0
 
         if self.diatomic:
-            
+
             # Determines structure based values if this is a molecule
 
             self.bond_length = calculate_bond_length(self.coordinates)
@@ -162,13 +163,13 @@ class Molecule:
     def prepare_molecule(self, calculation: Calculation) -> None:
 
         """
-        
+
         Sets up an initial Molecule object.
 
         Args:
             self (Molecule): Molecule object
             calculation (Calculation): Calculation object
-        
+
         """
 
         # Builds a list of Atom objects
@@ -190,23 +191,23 @@ class Molecule:
 
         # If two types of atom are present, generate data for both and combine them into one dictionary
 
-        if self.n_atoms == 2 and self.basis_charges[0] != self.basis_charges[1]: 
-            
+        if self.n_atoms == 2 and self.basis_charges[0] != self.basis_charges[1]:
+
             self.basis_data = self.basis_data | bas.generate_basis(self.basis, self.basis_charges[1], calculation)
 
         # Number of, and list of, basis functions accounting for "DECONTRACT"
 
         self.n_cartesian_basis, self.cartesian_basis_functions = form_basis(self.atoms, self.basis_data, calculation.decontract)
-        
+
         # Linear map from Cartesian to spherical harmonics
 
         self.spherical_harmonic_transformation_matrix = np.eye(self.n_cartesian_basis)
 
         # Builds a list of all the primitive Gaussians
-        
+
         self.primitive_Gaussians = [basis_function.num_exps for basis_function in self.cartesian_basis_functions]
         self.angular_momentum_list = generate_angular_momentum_list(self.cartesian_basis_functions)
-        
+
         # Initialises the centre of mass to the origin for now
 
         self.centre_of_mass = 0
@@ -223,12 +224,12 @@ class Molecule:
 
         self.n_electrons = np.sum(self.charges) - self.charge
 
-        if self.n_electrons < 0: 
-            
+        if self.n_electrons < 0:
+
             error("Negative number of electrons specified!")
 
-        elif self.n_electrons == 0: 
-            
+        elif self.n_electrons == 0:
+
             error("Zero electrons specified!")
 
         # Checks if there are any X-prefixed ghost atoms present, as a boolean
@@ -240,7 +241,7 @@ class Molecule:
         self.point_group, self.homonuclear, self.heteronuclear = determine_point_group(self.atoms, self.ghost_atom_present)
 
         self.molecular_structure = determine_molecular_structure(self.atoms)
-        
+
 
         return
 
@@ -254,16 +255,16 @@ class Molecule:
 
 
     def process_basis_functions(self, calculation: Calculation, integrals: Integrals) -> None:
-        
+
         """
-        
+
         Processes the reference for a Molecule (restricted or unrestricted).
 
         Args:
             self (Molecule): Molecule object
             calculation (Calculation): Calculation object
             integrals (Integrals): Integrals object
-        
+
         """
 
         self.n_basis = integrals.n_basis
@@ -271,7 +272,7 @@ class Molecule:
         # The partitioning of the basis set into atoms is done here, by checking which basis functions are located on which atoms
 
         self.partitioned_basis_functions = [[bf for bf in self.cartesian_basis_functions if np.allclose(bf.origin, atom.origin)] for atom in self.atoms]
-        
+
         # Builds the partition ranges for spherical harmonics, as long as Cartesian harmonics aren't requested
 
         if calculation.cartesian_harmonics:
@@ -308,8 +309,8 @@ class Molecule:
 
         # Some methods are only available for spin orbitals
 
-        if not calculation.method.restricted_available: 
-            
+        if not calculation.method.restricted_available:
+
             calculation.reference = "UHF"
 
         # Sets information about alpha and beta electrons and occupied and virtual orbitals
@@ -328,9 +329,9 @@ class Molecule:
         self.n_orbitals = self.n_SO if calculation.reference == "UHF" else self.n_basis
 
         # Adds up total number of core orbitals from atomic data
-        
+
         self.n_core_orbitals = sum(atom.core_orbitals for atom in self.atoms) if calculation.freeze_core else 0
-        
+
         # Number of core electrons is the same as number of orbitals for UHF, double for RHF
 
         self.n_core_alpha_electrons = self.n_core_orbitals
@@ -341,9 +342,9 @@ class Molecule:
 
         self.n_core_spin_orbitals = calculation.freeze_n_orbitals if isinstance(calculation.freeze_n_orbitals, int) else self.n_core_spin_orbitals
         self.n_core_orbitals = calculation.freeze_n_orbitals if isinstance(calculation.freeze_n_orbitals, int) else self.n_core_orbitals
-        
+
         # Sets two electrons per orbital for RHF, one for UHF
-        
+
         calculation.n_electrons_per_orbital = 2 if calculation.reference == "RHF" else 1
 
         # Determines whether the density should be read in between steps - stored in Calculation object
@@ -352,10 +353,10 @@ class Molecule:
 
         # The OMP2 method is only implemented for spin orbitals, so the number of core spin orbitals needs to be doubled
 
-        if "OMP2" in calculation.method.name and calculation.reference == "RHF": 
-            
+        if "OMP2" in calculation.method.name and calculation.reference == "RHF":
+
             self.n_core_spin_orbitals *= 2
-        
+
         # Makes sure the molecule is set up correctly
 
         self.assert_charge_and_multiplicity_errors(calculation)
@@ -379,55 +380,55 @@ class Molecule:
     def assert_charge_and_multiplicity_errors(self, calculation: Calculation) -> None:
 
         """
-        
+
         Sends off errors and closes the program if anything is wrong with the molecular setup.
 
         Args:
             self (Molecule): Molecule object
             calculation (Calculation): Calculation object
-        
+
         """
 
         # Sets off errors for invalid molecular configurations
 
-        if self.n_electrons % 2 == 0 and self.multiplicity % 2 == 0: 
-            
+        if self.n_electrons % 2 == 0 and self.multiplicity % 2 == 0:
+
             error("Impossible charge and multiplicity combination (both even)!")
-        
-        if self.n_electrons % 2 != 0 and self.multiplicity % 2 != 0: 
-            
+
+        if self.n_electrons % 2 != 0 and self.multiplicity % 2 != 0:
+
             error("Impossible charge and multiplicity combination (both odd)!")
 
-        if self.n_electrons - self.multiplicity < -1: 
-            
+        if self.n_electrons - self.multiplicity < -1:
+
             error("Multiplicity too high for number of electrons!")
 
-        if self.multiplicity < 1: 
-            
+        if self.multiplicity < 1:
+
             error("Multiplicity must be at least 1!")
 
-        if self.n_electrons > self.n_SO: 
-            
+        if self.n_electrons > self.n_SO:
+
             error("Too many electrons for size of basis set!")
 
-        if calculation.reference == "UHF" and self.n_electrons > self.n_basis and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons: 
-            
+        if calculation.reference == "UHF" and self.n_electrons > self.n_basis and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons:
+
             error("Too many electrons for size of basis set!")
 
         # Sets off errors for invalid use of restricted Hartree-Fock
 
         if calculation.reference == "RHF" or calculation.method.name == "RHF":
 
-            if self.n_electrons % 2 != 0: 
-                
+            if self.n_electrons % 2 != 0:
+
                 error("Restricted Hartree-Fock is not compatible with an odd number of electrons!")
-            
-            if self.multiplicity != 1: 
-                
+
+            if self.multiplicity != 1:
+
                 error("Restricted Hartree-Fock is not compatible non-singlet states!")
 
         return
-        
+
 
 
 
@@ -440,15 +441,15 @@ class Molecule:
 def build_atom_list(molecule: Molecule) -> list[Atom]:
 
     """
-    
+
     Builds a list of Atom objects.
 
     Args:
         molecule (Molecule): Molecule object
-    
+
     Returns:
         atoms (list): List of Atoms
-    
+
     """
 
     atoms = []
@@ -458,9 +459,9 @@ def build_atom_list(molecule: Molecule) -> list[Atom]:
         # Handles ghost atoms
 
         if "X" in symbol:
-            
-            if symbol == "X": 
-                
+
+            if symbol == "X":
+
                 error("One or more atom types not recognised! Check the manual for available atoms.")
 
             atom_data = atomic_properties["X"]
@@ -470,16 +471,16 @@ def build_atom_list(molecule: Molecule) -> list[Atom]:
             which_ghost = atomic_properties[symbol.split("X")[1]]
 
             atom = Atom(which_ghost["charge"], atom_data["mass"], molecule.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], atom_data["density"], ghost = True)
-        
+
         else:
 
             atom_data = atomic_properties[symbol]
 
             atom = Atom(atom_data["charge"], atom_data["mass"], molecule.coordinates[i], atom_data["C6"], atom_data["vdw_radius"], atom_data["real_vdw_radius"], symbol, atom_data["core_orbitals"], atom_data["density"], ghost = False)
-            
+
         atoms.append(atom)
 
-    return atoms 
+    return atoms
 
 
 
@@ -493,12 +494,12 @@ def build_atom_list(molecule: Molecule) -> list[Atom]:
 def generate_angular_momentum_list(cartesian_basis_functions: list) -> list:
 
     """
-    
+
     Generates a list of angular momentum letters for the subshells in a basis set.
 
     Args:
         cartesian_basis_functions (list): Array of basis functions
-    
+
     Returns:
         angular_momentum_list (list): List of angular momentum letters
 
@@ -523,7 +524,7 @@ def generate_angular_momentum_list(cartesian_basis_functions: list) -> list:
 
 
 
-        
+
 
 
 
@@ -532,7 +533,7 @@ def generate_angular_momentum_list(cartesian_basis_functions: list) -> list:
 def form_basis(atoms: list, basis_data: dict, decontract: bool) -> tuple:
 
     """
-    
+
     Builds the basis functions for the molecule.
 
     Args:
@@ -568,11 +569,11 @@ def form_basis(atoms: list, basis_data: dict, decontract: bool) -> tuple:
                             # Coefficients of 1, length of 1 exponent per basis function
 
                             cartesian_basis_functions.append(ints.Basis(atom.origin, shell, 1, [e], [1.0]))
-                            
-                    else: 
-                        
+
+                    else:
+
                         cartesian_basis_functions.append(ints.Basis(atom.origin, shell, len(exps), exps, coeffs))
-    
+
     except:
 
         error("Basis set malformed! If using a custom basis set, check the file format carefully.")
@@ -596,12 +597,12 @@ def form_basis(atoms: list, basis_data: dict, decontract: bool) -> tuple:
 def convert_angular_momentum_to_subshell(angular_momentum_string: str) -> list:
 
     """
-    
+
     Converts angular momentum string from basis data into array of subshells, for Cartesian harmonics.
 
     Args:
         angular_momentum_string (str): Angular momentum, ie. "S", "P", "D", etc.
-    
+
     Returns:
         exponent_list (list): List of triples of subshells
 
@@ -614,7 +615,7 @@ def convert_angular_momentum_to_subshell(angular_momentum_string: str) -> list:
     L = shells.find(angular_momentum_string.upper())
 
     if L == -1:
-    
+
         error("Only up to \"H\" type basis functions are implemented!")
 
     # This orders exponents as x^n, ..., y^n, ... z^n
@@ -688,19 +689,19 @@ def determine_molecular_structure(atoms: list[Atom]) -> str:
     molecular_structure = atoms[0].symbol_formatted
 
     if len(atoms) == 2:
-        
+
         # Puts a line between two atoms if two atoms are given, formats symbols nicely
 
         if atoms[0].ghost:
-            
+
             molecular_structure = atoms[1].symbol_formatted
 
         elif atoms[1].ghost:
-           
+
             molecular_structure = atoms[0].symbol_formatted
 
-        else: 
-            
+        else:
+
             molecular_structure = atoms[0].symbol_formatted + " --- " + atoms[1].symbol_formatted
 
 
@@ -715,13 +716,13 @@ def determine_molecular_structure(atoms: list[Atom]) -> str:
 
 
 
-def calculate_reduced_mass(masses: ndarray) -> float: 
+def calculate_reduced_mass(masses: ndarray) -> float:
 
     """
 
     Calculates the reduced mass.
 
-    Args:   
+    Args:
         masses (array): Mass array in atomic units
 
     Returns:
@@ -729,7 +730,7 @@ def calculate_reduced_mass(masses: ndarray) -> float:
 
     """
 
-    reduced_mass = np.prod(masses) / np.sum(masses) 
+    reduced_mass = np.prod(masses) / np.sum(masses)
 
     return reduced_mass
 
@@ -748,7 +749,7 @@ def calculate_and_print_rotational_constant(reduced_mass: float, bond_length: fl
 
     Calculates the rotational constant of a molecule.
 
-    Args:   
+    Args:
         reduced_mass (float): Reduced mass in atomic units
         bond_length (float): Bond length in bohr
         calculation (Calculation): Calculation object
@@ -759,20 +760,20 @@ def calculate_and_print_rotational_constant(reduced_mass: float, bond_length: fl
         rotational_constant_GHz (float): Rotational constant in GHz
 
     """
-    
+
     # Standard equation for linear molecule's rotational constant
 
     rotational_constant_hartree = 1 / (2 * reduced_mass * bond_length ** 2)
 
-    # Various unit conversions  
-    
+    # Various unit conversions
+
     rotational_constant_per_bohr = rotational_constant_hartree / (constants.h * constants.c)
     rotational_constant_per_cm = rotational_constant_per_bohr / (100 * constants.bohr_in_metres)
     rotational_constant_GHz = constants.per_cm_in_GHz * rotational_constant_per_cm
-                    
+
     log(f"\n Rotational constant (GHz):            {rotational_constant_GHz:12.6f}", calculation, 2, silent = silent)
     log(f" Rotational constant (per cm):         {rotational_constant_per_cm:12.6f}", calculation, 2, silent = silent)
-    
+
     return rotational_constant_per_cm, rotational_constant_GHz
 
 
@@ -787,13 +788,13 @@ def calculate_and_print_rotational_constant(reduced_mass: float, bond_length: fl
 def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> Method:
 
     """
-    
-    In a situation where full configuration interaction can be done and a more complicated method requested, simplify it.
-    
+
+    When full configuration interaction can be done and a more complicated method has been requested, simplify it.
+
     Args:
         molecule (Molecule): Molecule object
         calculation (Calculation): Calculation object
-    
+
     Returns:
         updated_method (str): Method with reduced complexity
 
@@ -813,30 +814,30 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> Me
 
     if molecule.n_electrons == 1 and calculation.method.correlated_method:
 
-        updated_method = Method("HF", "Hartree-Fock theory", unrestricted = unrestricted) 
+        updated_method = Method("HF", "Hartree-Fock theory", unrestricted = unrestricted)
 
     # Ignores triple excitations if this is a two-electron system
 
     elif molecule.n_electrons == 2:
 
-        if calculation.method.name in ["CCSD[T]", "CCSD(T)", "QCISD[T]", "QCISD(T)", "CISDT", "CCSDT", "CCSDT[Q]", "CCSDT(Q)", "CCSDTQ", "FCI"]: 
-            
-            updated_method = Method("CISD", "configuration interaction singles and doubles", method_base = "CC", unrestricted = unrestricted) 
+        if calculation.method.name in ["CCSD[T]", "CCSD(T)", "QCISD[T]", "QCISD(T)", "CISDT", "CCSDT", "CCSDT[Q]", "CCSDT(Q)", "CCSDTQ", "FCI"]:
+
+            updated_method = Method("CISD", "configuration interaction singles and doubles", method_base = "CC", unrestricted = unrestricted)
 
     # Ignores quadruple excitations if this is a two-electron system
 
     elif molecule.n_electrons == 3:
 
-        if calculation.method.name in ["CCSDT[Q]", "CCSDT(Q)", "CCSDTQ", "FCI"]: 
-            
-            updated_method = Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", unrestricted = unrestricted) 
+        if calculation.method.name in ["CCSDT[Q]", "CCSDT(Q)", "CCSDTQ", "FCI"]:
+
+            updated_method = Method("CISDT", "configuration interaction singles, doubles and triples", method_base = "CC", unrestricted = unrestricted)
 
     # Ignores quintuple excitations if this is a three-electron system
 
     elif molecule.n_electrons == 4:
 
-        if calculation.method.name in ["FCI"]: 
-            
+        if calculation.method.name in ["FCI"]:
+
             updated_method = Method("CCSDTQ", "coupled cluster singles, doubles, triples and quadruples", unrestricted_available = False, method_base = "CC")
 
             # The CCSDTQ method is only available for restricted references
