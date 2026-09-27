@@ -1195,6 +1195,10 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
             error("Excited state calculation requested on system with no virtual orbitals!")
 
+        if molecule.n_electrons == 1:
+
+            error("Excited state calculation requested on system with one electron!")
+
         # Calculates the CIS excited states energy and density
 
         E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_excited_state_calculation(molecule, calculation, SCF_output, bfs_on_grid, weights, silent)

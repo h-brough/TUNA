@@ -35,6 +35,8 @@ Relaxed density matrix for double-hybrid functionals
 - Removed spin contamination for coupled cluster and perturbative calculations
 - Unrestricted surface scans with `SCFGUESS` are no longer bumpy
 - Quadrupole moments were calculated incorrectly for pi-symmetry states
+- Absorbance spectra were not generating for single atoms
+- Time-dependent calculations were crashing on one-electron systems
 
 <br>
 

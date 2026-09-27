@@ -2903,6 +2903,8 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     log(f"\n  Weight of reference determinant:       {reference_weight:10.5f}", calculation, 2, silent)
 
+    log(f"\n  Energy from FCI:                 {E_FCI:16.10f}", calculation, 1, silent)
+
     timer("Full configuration interaction", 1)
 
     return E_FCI, density_matrices

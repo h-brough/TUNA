@@ -103,7 +103,7 @@ class Constants:
     COMPLEX_EIG_THRESH = 1e-5
     MOMENT_THRESH = 1e-5
 
-    MAX_N_DETERMINANTS = 20000
+    MAX_N_DETERMINANTS = 50000
     CASSCF_MAX_STEP = 0.5
 
     # Convergence criteria for self-consistent field
@@ -536,7 +536,7 @@ def three_dimensions_to_one(coordinates_3D: ndarray) -> ndarray:
         coordinates_3D (array): Coordinates in three dimensions
 
     Returns:
-        coordinates_1D (array) : Coordinates in one dimension
+        coordinates_1D (array): Coordinates in one dimension
 
     """
 

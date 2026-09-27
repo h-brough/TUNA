@@ -560,7 +560,6 @@ def calculate_natural_orbitals(P: ndarray, X: ndarray, calculation: Calculation,
         log(f"    {(i + 1):2.0f}. {natural_orbital_occupancies[i]:12.8f}", calculation, 2, silent = silent)
 
     log(f"\n  Trace of density matrix:               {np.trace(P_orthogonal):10.5f}", calculation, 2, silent = silent)
-    log(f"  Sum of natural orbital occupancies:    {sum_of_occupancies:10.5f}", calculation, 3, silent = silent)
 
 
     return natural_orbital_occupancies, natural_orbitals

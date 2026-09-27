@@ -397,6 +397,8 @@ def run_complete_active_space_configuration_interaction(molecule: Molecule, inte
 
     E_CASCI = E_electronic - ci.calculate_FCI_matrix_element(reference_determinant, reference_determinant, H_core_SO, g)
 
+    log(f"\n  Energy from CASCI:               {E_CASCI:16.10f}", calculation, 1, silent)
+
     timer("Complete active space CI", 1)
 
     return E_CASCI, density_matrices
@@ -584,7 +586,7 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
         delta_E = E_CASSCF_total - E_old
         max_gradient = np.max(np.abs(orbital_gradient))
 
-        log(f"  {iteration:3.0f}  {E_CASSCF_total:16.10f} {delta_E:16.10f}  {max_gradient:9.6f}", calculation, 1, silent)
+        log(f"  {iteration:3.0f}  {E_CASSCF_total - SCF_output.energy:16.10f} {delta_E:16.10f}  {max_gradient:9.6f}", calculation, 1, silent)
 
         E_old = E_CASSCF_total
 
@@ -604,11 +606,11 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
 
     log_spacer(calculation, 1, silent)
 
-    log(f"\n  CASSCF energy:                   {E_CASSCF_total:16.10f}", calculation, 1, silent)
-
     # The correlation energy is measured from the SCF energy, as the orbitals have moved away from the reference
 
     E_CASSCF = E_CASSCF_total - SCF_output.energy
+
+    log(f"\n  Energy from CASSCF:              {E_CASSCF:16.10f}", calculation, 1, silent)
 
     timer("Complete active space SCF", 1)
 
