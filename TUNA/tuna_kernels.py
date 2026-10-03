@@ -17,14 +17,7 @@ meta-GGAs, the kinetic energy densities, which TD-DFT contracts with the transit
 from are imported from tuna_xc, and the same conventions are used here, so ** (1 / 2) for square rooting and np.cbrt() for cube rooting.
 
 Each kernel comes in a singlet form for a restricted reference, a triplet form for the same reference and a spin-resolved form for an unrestricted
-one. Exchange spin scales exactly, so for exchange a single pair of generic functions rescales the restricted kernel into the other two. Note that
-PBE, PW91 and P86 correlation only see the total square gradient, so their triplet kernels are a single density block, and that the B88, mPW91 and
-P86 kernels clean sigma at the square of the density floor.
-
-The meta-GGA kernels (TPSS, revTPSS, SCAN, rSCAN, r2SCAN and B97M) come in the same three forms, with the kinetic energy density blocks after the
-GGA ones. Their correlation kernels are derived in the spin-resolved form, and the restricted singlet and triplet kernels are the combinations of
-those blocks for a closed shell. Like PBE, SCAN, rSCAN and r2SCAN correlation only see the total square gradient and kinetic energy density, so
-their triplet kernels are a single density block, and their unrestricted kernels are with respect to the total sigma and tau.
+one. Exchange spin scales exactly, so for exchange a single pair of generic functions rescales the restricted kernel into the other two.
 
 The module contains:
 
