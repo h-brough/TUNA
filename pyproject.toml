@@ -60,6 +60,9 @@ markers = [
   "slow: takes many energy evaluations, deselect with -m 'not slow'",
 ]
 
+[tool.setuptools.dynamic]
+version = {attr = "TUNA.__version__"}
+
 [project.urls]
 Repository = "https://github.com/h-brough/TUNA"
 Documentation = "https://github.com/h-brough/TUNA/blob/main/docs/TUNA%20Manual.pdf"
