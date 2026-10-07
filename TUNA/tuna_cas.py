@@ -567,6 +567,8 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
 
     E_old = SCF_output.energy
 
+    check(calculation.correlated_max_iter > 0, "The maximum number of correlated iterations must be positive!")
+
     for iteration in range(1, calculation.correlated_max_iter + 1):
 
         # Solves the CASCI problem in the current orbitals, exactly as for CASCI but without printing

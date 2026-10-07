@@ -411,6 +411,10 @@ class Molecule:
 
             error("Too many electrons for size of basis set!")
 
+        if self.n_alpha > self.n_basis or self.n_beta > self.n_basis:
+
+            error("Too many electrons of one spin for the size of the basis set!")
+
         if calculation.reference == "UHF" and self.n_electrons > self.n_basis and self.n_electrons % 2 == 0 and self.multiplicity > self.n_electrons:
 
             error("Too many electrons for size of basis set!")
@@ -836,7 +840,7 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> Me
 
     elif molecule.n_electrons == 4:
 
-        if calculation.method.name in ["FCI"]:
+        if calculation.method.name in ["FCI"] and calculation.reference == "RHF":
 
             updated_method = Method("CCSDTQ", "coupled cluster singles, doubles, triples and quadruples", unrestricted_available = False, method_base = "CC")
 

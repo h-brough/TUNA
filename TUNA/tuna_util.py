@@ -174,11 +174,17 @@ class Integrals:
     @property
     def H_core(self):
 
+        H_core = self.T + self.V_NE
+
         if self.F is not None:
 
-            return self.T + self.V_NE + self.F
+            H_core = H_core + self.F
 
-        return self.T + self.V_NE
+        if self.G is not None:
+
+            H_core = H_core + self.G
+
+        return H_core
 
     @property
     def one_electron_integrals(self):
@@ -1455,8 +1461,6 @@ electronic_structure_methods: list[Method] = [
     Method("MPWPW", "density functional theory with modified Perdew-Wang exchange and Perdew-Wang correlation", method_base = "DFT"),
     Method("MPWLYP", "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
     Method("BP86", "density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
-    Method("MPWLYP", "density functional theory with modified Perdew-Wang exchange and Lee-Yang-Parr correlation", method_base = "DFT"),
-    Method("BP86", "density functional theory with Becke exchange and Perdew 1986 correlation", method_base = "DFT"),
 
     Method("TPSS", "density functional theory with TPSS exchange and correlation", method_base = "DFT"),
     Method("REVTPSS", "density functional theory with revised TPSS exchange and correlation", method_base = "DFT"),
@@ -1642,16 +1646,16 @@ basis_types: dict[str, str] = {
     "DEF2-QZVPPD" : "def2-QZVPPD",
     "6-31G[D]" : "6-31G(d)",
     "6-31G(D)" : "6-31G(d)",
-    "6-31+G[D]" : "6-31+G(d,p)",
-    "6-31+G(D)" : "6-31+G(d,p)",
-    "6-31++G[D]" : "6-31++G(d,p)",
-    "6-31++G(D)" : "6-31++G(d,p)",
-    "6-311G[D]" : "6-311G(d,p)",
-    "6-311G(D)" : "6-311G(d,p)",
-    "6-311+G[D]" : "6-311+G(d,p)",
-    "6-311+G(D)" : "6-311+G(d,p)",
-    "6-311++G[D]" : "6-311++G(d,p)",
-    "6-311++G(D)" : "6-311++G(d,p)",
+    "6-31+G[D]" : "6-31+G(d)",
+    "6-31+G(D)" : "6-31+G(d)",
+    "6-31++G[D]" : "6-31++G(d)",
+    "6-31++G(D)" : "6-31++G(d)",
+    "6-311G[D]" : "6-311G(d)",
+    "6-311G(D)" : "6-311G(d)",
+    "6-311+G[D]" : "6-311+G(d)",
+    "6-311+G(D)" : "6-311+G(d)",
+    "6-311++G[D]" : "6-311++G(d)",
+    "6-311++G(D)" : "6-311++G(d)",
     "6-31G[D,P]" : "6-31G(d,p)",
     "6-31G(D,P)" : "6-31G(d,p)",
     "6-31+G[D,P]" : "6-31+G(d,p)",

@@ -6,7 +6,7 @@ from TUNA.tuna_calc import Calculation
 
 """
 
-This is the TUNA module for calculating thermochemical corrections to the molecular energy, written first for version 0.4.0 
+This is the TUNA module for calculating thermochemical corrections to the molecular energy, written first for version 0.4.0
 and rewritten for version 0.10.0. All the contributions to the enthalpy and free energy are calculated here, from their various
 equations involving the partition functions.
 
@@ -29,7 +29,7 @@ h = constants.h
 
 
 
-def calculate_translational_internal_energy(temperature: float) -> float: 
+def calculate_translational_internal_energy(temperature: float) -> float:
 
     """
 
@@ -56,8 +56,8 @@ def calculate_translational_internal_energy(temperature: float) -> float:
 
 
 
-def calculate_rotational_internal_energy(temperature: float) -> float: 
-    
+def calculate_rotational_internal_energy(temperature: float) -> float:
+
     """
 
     Calculates rotational contribution to internal energy.
@@ -69,7 +69,7 @@ def calculate_rotational_internal_energy(temperature: float) -> float:
        rotational_internal_energy (float): Rotational internal energy
 
     """
-    
+
     rotational_internal_energy = k * temperature
 
     return rotational_internal_energy
@@ -83,13 +83,13 @@ def calculate_rotational_internal_energy(temperature: float) -> float:
 
 
 
-def calculate_vibrational_internal_energy(vibrational_frequency: float, temperature: float) -> float: 
-    
+def calculate_vibrational_internal_energy(vibrational_frequency: float, temperature: float) -> float:
+
     """
 
     Calculates vibrational contribution to internal energy.
 
-    Args:   
+    Args:
         vibrational_frequency (float): Frequency in hartree
         temperature (float): Temperature in kelvin
 
@@ -97,13 +97,13 @@ def calculate_vibrational_internal_energy(vibrational_frequency: float, temperat
         vibrational_internal_energy (float): Vibrational internal energy
 
     """
-     
+
     vibrational_temperature = calculate_vibrational_temperature(vibrational_frequency)
-    
+
     # Makes sure an error message isn't printed when dividing by a very small number
 
     with np.errstate(divide="ignore"):
-        
+
         vibrational_internal_energy = k * vibrational_temperature / (np.exp(vibrational_temperature / temperature) - 1)
 
 
@@ -124,7 +124,7 @@ def calculate_internal_energy(energy: float, zero_point_energy: float, temperatu
 
     Calculates total internal energy.
 
-    Args:   
+    Args:
         energy (float): Molecular energy
         zero_point_energy (float): Zero-point energy
         temperature (float): Temperature in kelvin
@@ -135,7 +135,7 @@ def calculate_internal_energy(energy: float, zero_point_energy: float, temperatu
         translational_internal_energy (float): Translational internal energy
         rotational_internal_energy (float): Rotational internal energy
         vibrational_internal_energy (float): Vibrational internal energy
-    
+
     """
 
     translational_internal_energy = calculate_translational_internal_energy(temperature)
@@ -163,7 +163,7 @@ def calculate_translational_entropy(temperature: float, pressure: float, mass: f
 
     Calculates translational contribution to entropy.
 
-    Args:   
+    Args:
         temperature (float): Temperature in kelvin
         pressure (float): Pressure in atomic units
         mass (float): Total molecular mass in atomic units
@@ -189,12 +189,12 @@ def calculate_translational_entropy(temperature: float, pressure: float, mass: f
 
 
 def calculate_rotational_entropy(point_group: str, temperature: float, rotational_constant_per_m: float) -> float:
-    
+
     """
 
     Calculates rotational contribution to entropy.
 
-    Args:   
+    Args:
         point_group (string): Molecular point group
         temperature (float): Temperature in kelvin
         rotational_constant_per_m (float): Rotational constant in per m
@@ -227,7 +227,7 @@ def calculate_vibrational_entropy(vibrational_frequency: float, temperature: flo
 
     Calculates vibrational contribution to entropy.
 
-    Args:   
+    Args:
         vibrational_frequency (float): Frequency in hartree
         temperature (float): Temperature in kelvin
 
@@ -251,20 +251,20 @@ def calculate_vibrational_entropy(vibrational_frequency: float, temperature: flo
 
 
 
-def calculate_electronic_entropy(multiplicity: int) -> float: 
-    
+def calculate_electronic_entropy(multiplicity: int) -> float:
+
     """
 
     Calculates electronic contribution to entropy. Assumes molecule is only in the ground state.
 
-    Args:   
+    Args:
         multiplicity (int) : Multiplicity
 
     Returns:
         electronic_entropy (float) : Electronic contribution to entropy
 
     """
-    
+
     electronic_entropy = k * np.log(multiplicity)
 
     return electronic_entropy
@@ -279,12 +279,12 @@ def calculate_electronic_entropy(multiplicity: int) -> float:
 
 
 def calculate_entropy(temperature: float, vibrational_frequency: float, point_group: str, rotational_constant_per_m: float, masses: np.ndarray, pressure: float, multiplicity: int) -> tuple[float, float, float, float, float]:
-    
+
     """
 
     Calculates total entropy.
 
-    Args:   
+    Args:
         temperature (float): Temperature in kelvin
         vibrational_frequency (float): Frequency in hartree
         point_group (string): Molecular point group
@@ -331,7 +331,7 @@ def calculate_vibrational_temperature(vibrational_frequency: float) -> float:
 
     Calculates vibrational temperature.
 
-    Args:   
+    Args:
         vibrational_frequency (float): Frequency in hartree
 
     Returns:
@@ -352,13 +352,13 @@ def calculate_vibrational_temperature(vibrational_frequency: float) -> float:
 
 
 
-def calculate_enthalpy(internal_energy: float, temperature: float) -> float: 
-    
+def calculate_enthalpy(internal_energy: float, temperature: float) -> float:
+
     """
 
     Calculates enthalpy.
 
-    Args:   
+    Args:
         internal_energy (float): Internal energy
         temperature (float): Temperature in kelvin
 
@@ -381,12 +381,12 @@ def calculate_enthalpy(internal_energy: float, temperature: float) -> float:
 
 
 def calculate_free_energy(H: float, temperature: float, S: float) -> float:
-        
+
     """
 
     Calculates Gibbs free energy.
 
-    Args:   
+    Args:
         H (float): Enthalpy in hartree
         temperature (float): Temperature in kelvin
         S (float): Entropy in hartree per kelvin
@@ -397,7 +397,7 @@ def calculate_free_energy(H: float, temperature: float, S: float) -> float:
     """
 
     G = H - temperature * S
-    
+
     return G
 
 
@@ -426,7 +426,7 @@ def calculate_thermochemical_corrections(molecule: Molecule, calculation: Calcul
         G (float): Gibbs free energy in hartree
 
     """
-    
+
     point_group = molecule.point_group
     rotational_constant_per_cm = molecule.rotational_constant_per_cm
     masses = molecule.masses
@@ -435,18 +435,22 @@ def calculate_thermochemical_corrections(molecule: Molecule, calculation: Calcul
     temperature = calculation.temperature
     pressure = calculation.pressure
 
-    # Prints thermochemical information unless terse keyword is used 
-    
+    # Prints thermochemical information unless terse keyword is used
+
     log(f"\n Temperature used is {temperature:.2f} K, pressure used is {pressure:.0f} Pa.", calculation, 2)
     log("\n Entropies multiplied by temperature to give units of energy.", calculation, 2)
     log(f" Using symmetry number derived from {point_group} point group for rotational entropy.", calculation, 2)
+
+    # Temperature must be positive
+
+    check(temperature > 0, "Temperature must be greater than zero for thermochemical calculations!")
 
     internal_energy, translational_internal_energy, rotational_internal_energy, vibrational_internal_energy = calculate_internal_energy(energy, zero_point_energy, temperature, vibrational_frequency)
 
     H = calculate_enthalpy(internal_energy, temperature)
 
     S, translational_entropy, rotational_entropy, vibrational_entropy, electronic_entropy = calculate_entropy(temperature, vibrational_frequency, point_group, rotational_constant_per_cm * 100, masses, pressure, multiplicity)
-    
+
     G = calculate_free_energy(H, temperature, S)
 
     # All values are printed in units of hartree, for consistency

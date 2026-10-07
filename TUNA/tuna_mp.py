@@ -262,7 +262,7 @@ def calculate_restricted_relaxed_MP2_density_matrix(P_unrelaxed: ndarray, w_ijab
 
     A_ia_jb = ci.calculate_A_matrix(calculation, g, epsilons, o_occ, v, K_XC, "singlet")
 
-    B_ia_jb = ci.calculate_B_matrix(calculation, g, o, v, K_XC, "singlet")
+    B_ia_jb = ci.calculate_B_matrix(calculation, g, o_occ, v, K_XC, "singlet")
 
     # Solves the system of equations for the Z-vector
 

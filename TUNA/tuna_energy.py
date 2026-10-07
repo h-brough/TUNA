@@ -204,12 +204,16 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
     E_SCF_small = SCF_output_small.energy
     E_SCF_large = SCF_output_large.energy
 
-    E_corr_small = E_total_small - E_SCF_small
-    E_corr_large = E_total_large - E_SCF_large
+    E_corr_small = E_total_small - E_SCF_small - SCF_output_small.dispersion_energy
+    E_corr_large = E_total_large - E_SCF_large - SCF_output_large.dispersion_energy
 
     # Extrapolates the energies
 
     E_extrapolated = kern.calculate_extrapolated_energy(small_basis, E_SCF_small, E_SCF_large, E_corr_small, E_corr_large, calculation, silent, small_basis_zeta, SCF_output_large.dispersion_energy)
+
+    # Adds on the semi-empirical dispersion energy once to the final energy before response properties
+
+    E_extrapolated += SCF_output_large.dispersion_energy
 
     # Uses the extrapolated energy as the central point in a polarisability calculation
 
@@ -234,10 +238,6 @@ def extrapolate_energy(calculation: Calculation, atomic_symbols: list, coordinat
         mp.calculate_G0W0(molecule_small, SCF_output_small, calculation)
 
     calculation.basis = small_basis
-
-    # Adds on the semi-empirical dispersion energy once to the final energy
-
-    E_extrapolated += SCF_output_large.dispersion_energy
 
     return SCF_output_small, molecule_small, E_extrapolated, P_small
 

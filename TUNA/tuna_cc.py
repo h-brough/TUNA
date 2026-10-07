@@ -1852,13 +1852,18 @@ def run_restricted_CC2_iteration(o: slice, v: slice, t_amplitudes: tuple, e_deno
     g_vovo = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, v], Y[:, o], X[:, v], Y[:, o], integrals.ERI_AO, optimize = True)
     g_ovvv = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, v], X[:, v], Y[:, v], integrals.ERI_AO, optimize = True)
     g_ooov = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, o], X[:, o], Y[:, v], integrals.ERI_AO, optimize = True)
-    g_oovo = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, o], X[:, v], Y[:, o], integrals.ERI_AO, optimize = True)
-    g_ovoo = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, o], Y[:, v], X[:, o], Y[:, o], integrals.ERI_AO, optimize = True)
+
+    k = slice(0, o.stop)
+
+    g_kkvo = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, k], Y[:, k], X[:, v], Y[:, o], integrals.ERI_AO, optimize = True)
+    g_kovk = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, k], Y[:, o], X[:, v], Y[:, k], integrals.ERI_AO, optimize = True)
+    g_kkov = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, k], Y[:, k], X[:, o], Y[:, v], integrals.ERI_AO, optimize = True)
+    g_kvok = np.einsum("ap,bq,gr,ds,abgd->pqrs", X[:, k], Y[:, v], X[:, o], Y[:, k], integrals.ERI_AO, optimize = True)
 
     # Build only the needed F_hat blocks
 
-    F_vo = h_hat[v, o] + 2 * np.einsum("kkai->ai", g_oovo, optimize = True) - np.einsum("kiak->ai", g_oovo, optimize = True)
-    F_ov = h_hat[o, v] + 2 * np.einsum("kkia->ia", g_ooov, optimize = True) - np.einsum("kaik->ia", g_ovoo, optimize = True)
+    F_vo = h_hat[v, o] + 2 * np.einsum("kkai->ai", g_kkvo, optimize = True) - np.einsum("kiak->ai", g_kovk, optimize = True)
+    F_ov = h_hat[o, v] + 2 * np.einsum("kkia->ia", g_kkov, optimize = True) - np.einsum("kaik->ia", g_kvok, optimize = True)
 
     # CC2 doubles amplitudes are perturbative, not iteratively updated like CCSD, uses MP2-like expression
 

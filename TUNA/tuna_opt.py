@@ -453,9 +453,11 @@ def optimise_geometry(calculation: Calculation, atomic_symbols: list, coordinate
 
         else:
 
-            if np.abs(step) > calculation.max_step:
+            # Convert the given maximum step in angstrom to bohr for maths
 
-                step = np.sign(step) * calculation.max_step
+            if np.abs(step) > angstrom_to_bohr(calculation.max_step):
+
+                step = np.sign(step) * angstrom_to_bohr(calculation.max_step)
 
                 warning("Calculated step is outside of trust radius, taking maximum step instead.")
 

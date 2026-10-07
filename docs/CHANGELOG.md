@@ -28,6 +28,7 @@ Relaxed density matrix for double-hybrid functionals
 - Now require at least NumPy 2.1
 - Recent and compatible versions of dependencies are forced on pip install
 - Simpler handling of rotation onto z-axis in molecular dynamics
+- The temperature is now forced to be positive for thermochemistry
 
 ### Fixed
 
@@ -37,6 +38,12 @@ Relaxed density matrix for double-hybrid functionals
 - Quadrupole moments were calculated incorrectly for pi-symmetry states
 - Absorbance spectra were not generating for single atoms
 - Time-dependent calculations were crashing on one-electron systems
+- The 6-31g(d,p) and 6-311g(d,p) basis sets were aliased to the wrong data
+- Some basis set display names were printing incorrectly
+- Unrestricted PW91 correlation had numerical issues due to lack of density conditioning
+- Basis set extrapolation with dispersion was double counting
+- Units for the `MAXSTEP` keyword were incorrect
+- Frozen core was not working with CC2
 
 <br>
 
