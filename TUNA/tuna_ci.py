@@ -1049,7 +1049,7 @@ def perform_unrestricted_stability_analysis(g: ndarray, epsilons: ndarray, o: sl
 
 
 
-def determine_self_consistent_field_stability(molecule: Molecule, calculation: Calculation, ERI_AO: ndarray, SCF_output: Output, bfs_on_grid: ndarray = None, weights: ndarray = None, silent: bool = False) -> None:
+def determine_self_consistent_field_stability(molecule: Molecule, calculation: Calculation, ERI_AO: ndarray, SCF_output: Output, bfs_on_grid: ndarray = None, bf_gradients_on_grid: ndarray = None, weights: ndarray = None, silent: bool = False) -> None:
 
     """
 
@@ -1061,6 +1061,7 @@ def determine_self_consistent_field_stability(molecule: Molecule, calculation: C
         ERI_AO (array): Electron repulsion integrals in AO basis
         SCF_output (Output): Output from SCF calculation
         bfs_on_grid (array, optional): Basis functions on grid
+        bf_gradients_on_grid (array, optional): Basis function gradients on grid
         weights (array, optional): Integration weights for DFT
         silent (bool, optional): Cancel logging
 
@@ -1080,7 +1081,7 @@ def determine_self_consistent_field_stability(molecule: Molecule, calculation: C
 
         if calculation.method.density_functional_method:   # Handles the DFT case
 
-            K_XC_singlet, K_XC_triplet, _ = calculate_restricted_exchange_correlation_kernel_matrices(o, v, SCF_output.density, bfs_on_grid, SCF_output.molecular_orbitals, calculation, weights, silent)
+            K_XC_singlet, K_XC_triplet, _ = calculate_restricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P, bfs_on_grid, bf_gradients_on_grid, SCF_output.molecular_orbitals, calculation, weights, silent)
 
     else:   # Handles the spin-unrestricted case
 
@@ -1090,7 +1091,7 @@ def determine_self_consistent_field_stability(molecule: Molecule, calculation: C
 
         if calculation.method.density_functional_method:   # Handles the DFT case
 
-            K_XC = calculate_unrestricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P_alpha, SCF_output.P_beta, bfs_on_grid, C_spin_block, spin_labels, calculation, weights, silent)
+            K_XC = calculate_unrestricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P_alpha, SCF_output.P_beta, bfs_on_grid, bf_gradients_on_grid, C_spin_block, spin_labels, calculation, weights, silent)
 
     log_spacer(calculation, 1, silent, start = "\n")
     log("                  Stability Analysis", calculation, 1, silent, colour = "white")
@@ -2291,7 +2292,7 @@ def build_direct_RPA_matrices(calculation: Calculation, g: ndarray, epsilons: nd
 
 
 
-def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, SCF_output: Output, bfs_on_grid: ndarray = None, weights: ndarray = None, silent: bool = False) -> tuple:
+def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, SCF_output: Output, bfs_on_grid: ndarray = None, bf_gradients_on_grid: ndarray = None, weights: ndarray = None, silent: bool = False) -> tuple:
 
     """
 
@@ -2302,6 +2303,7 @@ def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, 
         calculation (Calculation): Calculation object
         SCF_output (Output): Output object
         bfs_on_grid (array, optional): Basis functions on integration grid
+        bf_gradients_on_grid (array, optional): Basis function gradients on integration grid
         weights (array, optional): Integration weights
         silent (bool, optional): Supress logging
 
@@ -2342,7 +2344,7 @@ def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, 
 
         if calculation.method.density_functional_method:
 
-            K_XC_singlet, K_XC_triplet, _ = calculate_restricted_exchange_correlation_kernel_matrices(o, v, SCF_output.density, bfs_on_grid, molecular_orbitals, calculation, weights, silent)
+            K_XC_singlet, K_XC_triplet, _ = calculate_restricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P, bfs_on_grid, bf_gradients_on_grid, molecular_orbitals, calculation, weights, silent)
 
         # Calculates the singlet and triplet state energies and weight vectors
 
@@ -2370,7 +2372,7 @@ def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, 
 
         if calculation.method.density_functional_method:
 
-            K_XC = calculate_unrestricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P_alpha, SCF_output.P_beta, bfs_on_grid, C_spin_block, spin_labels, calculation, weights, silent)
+            K_XC = calculate_unrestricted_exchange_correlation_kernel_matrices(o, v, SCF_output.P_alpha, SCF_output.P_beta, bfs_on_grid, bf_gradients_on_grid, C_spin_block, spin_labels, calculation, weights, silent)
 
         # Antisymmetrised integrals scaled by HFX
 

@@ -412,7 +412,7 @@ class Functional:
 
     # Has the exchange-correlation kernel been implemented for TD-DFT?
 
-    time_dependent_available: bool = False
+    time_dependent_available: bool = True
 
     # Dispersion S6 value for D2 correction and b and C values for VV10 correction
 
@@ -1522,14 +1522,14 @@ electronic_structure_methods: list[Method] = [
 
 exchange_correlation_functionals: dict[str, Functional] = {
 
-    "HF"           :     Functional(None, None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
-    "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9, time_dependent_available = True),
-    "SVWN"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
-    "LSDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
-    "LDA"          :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
-    "SVWN3"        :     Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
-    "SVWN5"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
-    "SPW"          :     Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA", time_dependent_available = True),
+    "HF"           :     Functional(None, None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9),
+    "HFS"          :     Functional("S", None, DFX=1, HFX=0, DFC=0, MPC=0, functional_class="LDA", VV10_b=3.9),
+    "SVWN"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LSDA"         :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "LDA"          :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN3"        :     Functional("S", "VWN3", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SVWN5"        :     Functional("S", "VWN5", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
+    "SPW"          :     Functional("S", "PW", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="LDA"),
     "PBE"          :     Functional("PBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", D2_S6=0.75, VV10_b=6.4),
     "RPBE"         :     Functional("RPBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", VV10_b=4.0),
     "REVPBE"       :     Functional("REVPBE", "PBE", DFX=1, HFX=0, DFC=1, MPC=0, functional_class="GGA", VV10_b=3.7),

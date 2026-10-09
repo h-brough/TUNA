@@ -29,6 +29,7 @@ The module contains:
 2. Functions to set up the integration grid (set_up_integration_grid, build_molecular_grid, etc.)
 3. Functions to evaluate the density, gradient, and kinetic energy density on the grid (construct_density_on_grid, etc.)
 4. Functions to evaluate the exchange and correlation matrices (calculate_V_X, calculate_V_C, etc.)
+5. Functions to evaluate the exchange-correlation kernel matrices for TD-DFT (construct_transition_variables_on_grid, etc.)
 
 """
 
@@ -1073,22 +1074,22 @@ def calculate_VV10_energy(P: ndarray, grid_container: tuple, calculation: Calcul
 
 
 
-def construct_orbital_pair_products(orbitals_on_grid: ndarray) -> ndarray:
+def construct_orbital_pair_products(first_orbitals: ndarray, second_orbitals: ndarray) -> ndarray:
 
     """
 
-    Builds orbital pair products on the grid.
+    Builds orbital pair products on the grid, the change in the density from rotating each orbital of the first set into each of the second.
 
     Args:
-        orbitals_on_grid (array): Molecular orbitals on the grid
+        first_orbitals (array): Molecular orbitals on the grid
+        second_orbitals (array): Molecular orbitals on the grid
 
     Returns:
-
         pair_products (array): Products of pairs of orbitals on the grid
 
     """
 
-    pair_products = np.einsum("pmn,qmn->pqmn", orbitals_on_grid, orbitals_on_grid, optimize = True)
+    pair_products = np.einsum("pmn,qmn->pqmn", first_orbitals, second_orbitals, optimize = True)
 
     return pair_products
 
@@ -1101,27 +1102,28 @@ def construct_orbital_pair_products(orbitals_on_grid: ndarray) -> ndarray:
 
 
 
-def construct_orbital_pair_gradients(orbitals_on_grid: ndarray, orbital_gradients_on_grid: ndarray, cartesian: int) -> ndarray:
+def construct_orbital_pair_gradients(first_orbitals: ndarray, first_orbital_gradients: ndarray, second_orbitals: ndarray, second_orbital_gradients: ndarray, cartesian: int) -> ndarray:
 
     """
 
-    Builds orbital pair products on the grid.
+    Builds one Cartesian component of the gradients of orbital pair products on the grid.
 
     Args:
-        orbitals_on_grid (array): Molecular orbitals on the grid
-        orbital_gradients_on_grid (array): Molecular orbital gradients on the grid
+        first_orbitals (array): Molecular orbitals on the grid
+        first_orbital_gradients (array): Molecular orbital gradients on the grid
+        second_orbitals (array): Molecular orbitals on the grid
+        second_orbital_gradients (array): Molecular orbital gradients on the grid
         cartesian (int): Either 0, 1, or 2
 
     Returns:
-
-        pair_gradients (array): Gradients of pairs of orbitals on the grid
+        pair_gradients (array): Gradients of pairs of orbitals on the grid, shape (orbital 1, orbital 2, radial, angular)
 
     """
 
     # Product rule, so each component picks up a term from each orbital of the pair
 
-    pair_gradients = np.einsum("pmn,qmn->pqmn", orbital_gradients_on_grid[cartesian], orbitals_on_grid, optimize = True)
-    pair_gradients += np.einsum("pmn,qmn->pqmn", orbitals_on_grid, orbital_gradients_on_grid[cartesian], optimize = True)
+    pair_gradients = np.einsum("pmn,qmn->pqmn", first_orbital_gradients[cartesian], second_orbitals, optimize = True)
+    pair_gradients += np.einsum("pmn,qmn->pqmn", first_orbitals, second_orbital_gradients[cartesian], optimize = True)
 
     return pair_gradients
 
@@ -1134,112 +1136,288 @@ def construct_orbital_pair_gradients(orbitals_on_grid: ndarray, orbital_gradient
 
 
 
-def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice, density: ndarray, bfs_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray, silent: bool) -> ndarray:
+def construct_transition_variables_on_grid(first_orbitals: ndarray, first_orbital_gradients: ndarray, second_orbitals: ndarray, second_orbital_gradients: ndarray, density_gradients: list, functional_class: str) -> tuple:
 
     """
 
-    Calculates the matrix elements of the exchange correlation kernel.
+    Builds the changes in the variables of the exchange-correlation functional caused by rotating each orbital of the first set into each of the
+    second, which the kernel is contracted with. The density changes by the pair product, each square gradient by the dot product of a density
+    gradient with the gradient of the pair product, and the kinetic energy density by half the dot product of the orbital gradients.
+
+    Args:
+        first_orbitals (array): Molecular orbitals on the grid
+        first_orbital_gradients (array): Molecular orbital gradients on the grid
+        second_orbitals (array): Molecular orbitals on the grid
+        second_orbital_gradients (array): Molecular orbital gradients on the grid
+        density_gradients (list): Density gradients the square gradient variables are built from, each scaled by the factor its square gradient changes by
+        functional_class (str): Either "LDA", "GGA" or "meta-GGA"
+
+    Returns:
+        U (array): Changes in the density, square gradients and kinetic energy density, shape (variable, orbital 1, orbital 2, radial, angular)
+        T_gradient (array): Gradient of the pair products, shape (cartesian, orbital 1, orbital 2, radial, angular), or None for an LDA
+
+    """
+
+    U = [construct_orbital_pair_products(first_orbitals, second_orbitals)]
+
+    T_gradient = None
+
+    if functional_class in ["GGA", "meta-GGA"]:
+
+        T_gradient = np.array([construct_orbital_pair_gradients(first_orbitals, first_orbital_gradients, second_orbitals, second_orbital_gradients, cartesian) for cartesian in range(3)])
+
+        for density_gradient in density_gradients:
+
+            U.append(np.einsum("cmn,cpqmn->pqmn", density_gradient, T_gradient, optimize = True))
+
+    # The kinetic energy density changes by half the dot product of the orbital gradients, as it carries a factor of a half
+
+    if functional_class == "meta-GGA":
+
+        U.append((1 / 2) * np.einsum("cpmn,cqmn->pqmn", first_orbital_gradients, second_orbital_gradients, optimize = True))
+
+    U = np.array(U)
+
+    return U, T_gradient
+
+
+
+
+
+
+
+
+
+
+def contract_kernel_with_transition_variables(f_XC: ndarray, df_ds_XC: ndarray, U_1: ndarray, T_gradient_1: ndarray, U_2: ndarray, T_gradient_2: ndarray) -> ndarray:
+
+    """
+
+    Calculates the matrix elements of the exchange-correlation kernel between two sets of orbital rotations.
+
+    The second derivatives of the functional are contracted with the linear changes in its variables. As the square gradient is quadratic in the
+    density, the first derivative with respect to it also enters, contracted with the gradients of the two pair products.
+
+    Args:
+        f_XC (array): Second derivatives of the functional with respect to its variables, with integration weights folded in
+        df_ds_XC (array): First derivative of the functional with respect to the square gradient, with integration weights folded in
+        U_1 (array): Changes in the variables from the first set of orbital rotations
+        T_gradient_1 (array): Gradients of the pair products of the first set of orbital rotations
+        U_2 (array): Changes in the variables from the second set of orbital rotations
+        T_gradient_2 (array): Gradients of the pair products of the second set of orbital rotations
+
+    Returns:
+        K_XC (array): Exchange-correlation kernel matrix, shape (orbital 1, orbital 2, orbital 1, orbital 2)
+
+    """
+
+    # This also accounts for the kinetic energy density and square gradients terms for (meta-)GGA functionals
+
+    K_XC = np.einsum("upqmn,uvmn,vrsmn->pqrs", U_1, f_XC, U_2, optimize = True)
+
+    if T_gradient_1 is not None:
+
+        K_XC += np.einsum("cpqmn,crsmn,mn->pqrs", T_gradient_1, T_gradient_2, df_ds_XC, optimize = True)
+
+    return K_XC
+
+
+
+
+
+
+
+
+
+
+def contract_kernel_with_orbital_pairs(f_XC: ndarray, df_ds_XC: ndarray, U: ndarray, T_gradient: ndarray, orbitals: ndarray, orbital_gradients: ndarray, density_gradients: list, functional_class: str) -> ndarray:
+
+    """
+
+    Calculates the matrix elements of the exchange-correlation kernel between a set of orbital rotations and every pair of orbitals, for
+    coupled-perturbed Kohn-Sham equations. The changes in the variables from the orbital pairs are built one at a time to limit memory use.
+
+    Args:
+        f_XC (array): Second derivatives of the functional with respect to its variables, with integration weights folded in
+        df_ds_XC (array): First derivative of the functional with respect to the square gradient, with integration weights folded in
+        U (array): Changes in the variables from the orbital rotations
+        T_gradient (array): Gradients of the pair products of the orbital rotations
+        orbitals (array): Molecular orbitals on the grid
+        orbital_gradients (array): Molecular orbital gradients on the grid
+        density_gradients (list): Density gradients the square gradient variables are built from, each scaled by the factor its square gradient changes by
+        functional_class (str): Either "LDA", "GGA" or "meta-GGA"
+
+    Returns:
+        K_XC_full (array): Exchange-correlation kernel matrix, shape (orbital 1, orbital 2, orbital, orbital)
+
+    """
+
+    # Contracts the kernel with the orbital rotations first, leaving one array per variable to integrate against the orbital pairs
+
+    A = np.einsum("upqmn,uvmn->vpqmn", U, f_XC, optimize = True)
+
+    K_XC_full = np.einsum("pqmn,rsmn->pqrs", A[0], construct_orbital_pair_products(orbitals, orbitals), optimize = True)
+
+    if functional_class in ["GGA", "meta-GGA"]:
+
+        for variable, density_gradient in enumerate(density_gradients, start = 1):
+
+            # The change in a square gradient from a pair has the same product rule structure as the pair gradient, with grad(n) . grad(phi) in place of grad(phi)
+
+            orbital_density_gradients = np.einsum("cmn,cpmn->pmn", density_gradient, orbital_gradients, optimize = True)[None]
+
+            K_XC_full += np.einsum("pqmn,rsmn->pqrs", A[variable], construct_orbital_pair_gradients(orbitals, orbital_density_gradients, orbitals, orbital_density_gradients, 0), optimize = True)
+
+        for cartesian in range(3):
+
+            K_XC_full += np.einsum("pqmn,rsmn->pqrs", T_gradient[cartesian] * df_ds_XC, construct_orbital_pair_gradients(orbitals, orbital_gradients, orbitals, orbital_gradients, cartesian), optimize = True)
+
+    if functional_class == "meta-GGA":
+
+        K_XC_full += np.einsum("pqmn,rsmn->pqrs", A[-1], (1 / 2) * np.einsum("cpmn,cqmn->pqmn", orbital_gradients, orbital_gradients, optimize = True), optimize = True)
+
+    return K_XC_full
+
+
+
+
+
+
+
+
+
+
+def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice, P: ndarray, bfs_on_grid: ndarray, bf_gradients_on_grid: ndarray, molecular_orbitals: ndarray, calculation: Calculation, weights: ndarray, silent: bool, return_full_kernel: bool = False) -> tuple:
+
+    """
+
+    Calculates the matrix elements of the exchange-correlation kernel for a restricted reference.
+
+    For singlet excitations both spin densities change together, so the kernel is the second derivative of the functional with respect to the
+    total density, square gradient and kinetic energy density, contracted with the changes rho_ia, 2 grad(n)grad(rho_ia) and
+    grad(phi_i)grad(phi_a). For triplets the spin densities change oppositely, so the second derivatives with respect to the spin density,
+    grad(n)grad(m) and the spin kinetic energy density are used instead, contracted with rho_ia, grad(n)grad(rho_ia) and grad(phi_i)grad(phi_a).
 
     Args:
         o (slice): Occupied slice
         v (slice): Virtual slice
-        density (array): Density on grid
+        P (array): Density matrix in AO basis
         bfs_on_grid (array): Basis functions on grid
+        bf_gradients_on_grid (array): Basis function gradients on grid, or None for an LDA
         molecular_orbitals (array): Molecular orbitals
         calculation (Calculation): Calculation object
         weights (array): Integration weights
         silent (bool): Cancel logging
+        return_full_kernel (bool, optional): Should the unsliced kernel also be returned, for coupled-perturbed Kohn-Sham equations
 
     Returns:
         K_XC_singlet (array): Singlet exchange-correlation kernel matrix
         K_XC_triplet (array): Triplet exchange-correlation kernel matrix
-        K_XC_full (array): Unsliced singlet exchange-correlation kernel matrix
+        K_XC_full (array): Unsliced singlet exchange-correlation kernel matrix, None unless return_full_kernel is used
 
     """
 
-    # Builds molecular orbitals on the integration grid
+    functional_class = calculation.functional.functional_class
+
+    # Builds molecular orbitals, and their gradients, on the integration grid
 
     log("\n Evaluating molecular orbitals on grid...    ", calculation, 1, silent, end = "")
 
     molecular_orbitals_on_grid = construct_molecular_orbitals_on_grid(bfs_on_grid, molecular_orbitals)
 
+    # Constructs the density, square gradient and kinetic energy density on the grid, as in the SCF, including any frozen-core electrons
+
+    density = construct_density_on_grid(P, bfs_on_grid)
+
+    sigma, tau, density_gradient, molecular_orbital_gradients_on_grid = None, None, None, None
+
+    if functional_class in ["GGA", "meta-GGA"]:
+
+        sigma, density_gradient = calculate_density_gradient(P, bfs_on_grid, bf_gradients_on_grid)
+
+        molecular_orbital_gradients_on_grid = construct_molecular_orbital_gradients_on_grid(bf_gradients_on_grid, molecular_orbitals)
+
+        if functional_class == "meta-GGA":
+
+            tau = calculate_kinetic_energy_density(P, bf_gradients_on_grid)
+
     log("[Done]", calculation, 1, silent)
 
     log(" Evaluating exchange-correlation kernel...   ", calculation, 1, silent, end = "")
 
-    # Calculates the second derivative of the exchange-correlation energy wrt. the density
+    # Looks up the kernels and functional - exchange-only functionals have no correlation kernel, so all its blocks are None
 
-    exchange_kernel = kernels.exchange_kernels.get(calculation.functional.x_functional)
-
-    correlation_density_kernel = kernels.correlation_density_kernels.get(calculation.functional.c_functional)
+    exchange_kernel = kernels.exchange_kernels[calculation.functional.x_functional]
+    correlation_kernel = kernels.correlation_density_kernels.get(calculation.functional.c_functional)
     correlation_spin_kernel = kernels.correlation_spin_kernels.get(calculation.functional.c_functional)
 
-    # Calculates the exchange kernel
+    exchange_functional = xc.exchange_functionals[calculation.functional.x_functional]
+    correlation_functional = xc.correlation_functionals.get(calculation.functional.c_functional)
 
-    f_X = 2 * exchange_kernel(density, None, None, calculation)
+    # Second derivatives of the exchange and correlation energies for singlet excitations, with respect to the density, sigma and tau, and the
+    # first derivatives with respect to sigma, which enter as sigma is quadratic in the density
 
-    # Calculates the singlet correlation kernel
+    f_X_singlet = kernels.arrange_restricted_kernel_blocks(exchange_kernel(density, sigma, tau, calculation), density)
+    f_C_singlet = kernels.arrange_restricted_kernel_blocks(correlation_kernel(density, sigma, tau, calculation) if correlation_kernel is not None else (None,) * 6, density)
 
-    f_C_singlet = 2 * correlation_density_kernel(density, None, None, calculation)
+    _, df_ds_X_singlet, _, _ = exchange_functional(density, sigma, tau, calculation)
+    _, df_ds_C_singlet, _, _ = correlation_functional(density, sigma, tau, calculation) if correlation_functional is not None else (None,) * 4
 
-    # Calculates the triplet correlation kernel
+    # Second derivatives for triplet excitations, with respect to the spin density, grad(n) . grad(m) and the spin kinetic energy density, and the
+    # first derivatives with respect to grad(m)grad(m), which the spin kernels return last
 
-    f_C_triplet = 2 * correlation_spin_kernel(density, None, None, calculation)
+    *f_X_triplet, df_ds_X_triplet = kernels.calculate_exchange_spin_kernel(density, sigma, tau, calculation)
+    *f_C_triplet, df_ds_C_triplet = correlation_spin_kernel(density, sigma, tau, calculation) if correlation_spin_kernel is not None else (None,) * 7
+
+    f_X_triplet = kernels.arrange_restricted_kernel_blocks(f_X_triplet, density)
+    f_C_triplet = kernels.arrange_restricted_kernel_blocks(f_C_triplet, density)
+
+    df_ds_X_singlet, df_ds_C_singlet, df_ds_X_triplet, df_ds_C_triplet = (np.zeros_like(density) if derivative is None else derivative for derivative in (df_ds_X_singlet, df_ds_C_singlet, df_ds_X_triplet, df_ds_C_triplet))
+
+    # Folds in the DFX and DFC proportions, and the integration weights. The sum over the spin of the second transition density gives a factor
+    # of two, and the quadratic change in sigma a factor of four
+
+    n_variables = {"LDA": 1, "GGA": 2, "meta-GGA": 3}[functional_class]
+
+    f_XC_singlet = 2 * (f_X_singlet * calculation.DFX_prop + f_C_singlet * calculation.DFC_prop)[:n_variables, :n_variables] * weights
+    f_XC_triplet = 2 * (f_X_triplet * calculation.DFX_prop + f_C_triplet * calculation.DFC_prop)[:n_variables, :n_variables] * weights
+
+    df_ds_XC_singlet = 4 * (df_ds_X_singlet * calculation.DFX_prop + df_ds_C_singlet * calculation.DFC_prop) * weights
+    df_ds_XC_triplet = 4 * (df_ds_X_triplet * calculation.DFX_prop + df_ds_C_triplet * calculation.DFC_prop) * weights
+
+    # Singlets see the change in sigma, 2 grad(n)grad(rho_ia), and triplets the change in grad(n)grad(m), grad(n)grad(rho_ia). The same
+    # transition variables are used for both, with the factor of two folded into the singlet kernel blocks
+
+    sigma_scaling = np.array([1, 2, 1])[:n_variables]
+
+    f_XC_singlet = f_XC_singlet * sigma_scaling[:, None, None, None] * sigma_scaling[None, :, None, None]
 
     log("[Done]", calculation, 1, silent)
 
     log(" Calculating matrix elements...              ", calculation, 1, silent, end = "")
 
-    # Slice out occupied and virtual orbitals on a grid
+    # Slice out occupied and virtual orbitals, and their gradients, on the grid
 
-    occupied_orbitals = molecular_orbitals_on_grid[o]
-    virtual_orbitals = molecular_orbitals_on_grid[v]
+    occupied_orbitals, virtual_orbitals = molecular_orbitals_on_grid[o], molecular_orbitals_on_grid[v]
 
-    # Calculate the transition density for the matrix elements of the exchange-correlation kernel
+    occupied_gradients, virtual_gradients = (molecular_orbital_gradients_on_grid[:, o], molecular_orbital_gradients_on_grid[:, v]) if functional_class != "LDA" else (None, None)
 
-    T = np.einsum("imn,amn->iamn", occupied_orbitals, virtual_orbitals, optimize = True)
+    # Changes in the variables from each occupied-virtual rotation, and the gradients of the transition densities
 
-    # Contract the transition density with itself and the weights
+    U, T_gradient = construct_transition_variables_on_grid(occupied_orbitals, occupied_gradients, virtual_orbitals, virtual_gradients, [density_gradient], functional_class)
 
-    K_X = np.einsum("iamn,jbmn,mn->iajb", T, T, f_X * weights, optimize = True)
+    # Contracts the kernels with the changes in the variables
 
-    K_C_singlet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_singlet * weights, optimize = True)
-    K_C_triplet = np.einsum("iamn,jbmn,mn->iajb", T, T, f_C_triplet * weights, optimize = True)
+    K_XC_singlet = contract_kernel_with_transition_variables(f_XC_singlet, df_ds_XC_singlet, U, T_gradient, U, T_gradient)
+    K_XC_triplet = contract_kernel_with_transition_variables(f_XC_triplet, df_ds_XC_triplet, U, T_gradient, U, T_gradient)
 
-    K_XC_singlet = K_X * calculation.DFX_prop + K_C_singlet * calculation.DFC_prop
-    K_XC_triplet = K_X * calculation.DFX_prop + K_C_triplet * calculation.DFC_prop
+    # Optionally builds the singlet kernel matrix over the full orbital space, for relaxed double-hybrid densities
 
-    # Need to do this faster somehow, takes ages
+    K_XC_full = None
 
-    if calculation.DFT_calculation:
+    if return_full_kernel:
 
-        # Folds in the HFX and DFX proportions
-
-        weighted_f_XC = weights * (f_X * calculation.DFX_prop + f_C_singlet * calculation.DFC_prop)
-
-        n_doubly_occ, n_doubly_virt = T.shape[:2]
-        n_basis = molecular_orbitals_on_grid.shape[0]
-
-        # We form flattened tensors and use BLAS3, which is much faster than einsum here
-
-        T_flat = T.reshape(n_doubly_occ * n_doubly_virt, -1)
-        phi_flat = molecular_orbitals_on_grid.reshape(n_basis, -1)
-
-        phi_W = phi_flat * weighted_f_XC.ravel()
-
-        # Most memory intensive step
-
-        pair_densities = phi_flat[:, None, :] * phi_W[None, :, :]
-
-        pair_densities_flat = pair_densities.reshape(n_basis ** 2, -1)
-
-        K_flat = T_flat @ pair_densities_flat.T
-
-        K_XC_full = K_flat.reshape(n_doubly_occ, n_doubly_virt, n_basis, n_basis)
-
-    else:
-
-        K_XC_full = None
+        K_XC_full = contract_kernel_with_orbital_pairs(f_XC_singlet, df_ds_XC_singlet, U, T_gradient, molecular_orbitals_on_grid, molecular_orbital_gradients_on_grid, [density_gradient], functional_class)
 
     log("[Done]", calculation, 1, silent)
 
@@ -1254,11 +1432,15 @@ def calculate_restricted_exchange_correlation_kernel_matrices(o: slice, v: slice
 
 
 
-def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool, return_full_kernel: bool = False) -> ndarray:
+def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: slice, P_alpha: ndarray, P_beta: ndarray, bfs_on_grid: ndarray, bf_gradients_on_grid: ndarray, C_spin_block: ndarray, spin_labels: list, calculation: Calculation, weights: ndarray, silent: bool, return_full_kernel: bool = False) -> ndarray:
 
     """
 
     Calculates the matrix elements of the spin-resolved exchange-correlation kernel for an unrestricted reference.
+
+    Rotating an occupied spin orbital of spin sigma into a virtual one changes the density of that spin by rho_ia, the same-spin square gradient
+    by 2 grad(n_sigma) . grad(rho_ia), the opposite-spin square gradient by grad(n_sigma') . grad(rho_ia) and the kinetic energy density of that
+    spin by grad(phi_i) . grad(phi_a). Only spin-conserving rotations are considered, so the spin-flip blocks of the kernel matrix are zero.
 
     Args:
         o (slice): Occupied spin orbital slice
@@ -1266,6 +1448,7 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
         P_alpha (array): Alpha density matrix in AO basis
         P_beta (array): Beta density matrix in AO basis
         bfs_on_grid (array): Basis functions on grid
+        bf_gradients_on_grid (array): Basis function gradients on grid, or None for an LDA
         C_spin_block (array): Spin-blocked molecular orbitals in AO basis
         spin_labels (list): Spin ("a" or "b") of each spin orbital, in ascending energy order
         calculation (Calculation): Calculation object
@@ -1279,7 +1462,9 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
 
     """
 
-    # Builds the spin orbitals on the integration grid
+    functional_class = calculation.functional.functional_class
+
+    # Builds the spin orbitals, and their gradients, on the integration grid
 
     log("\n Evaluating molecular orbitals on grid...    ", calculation, 1, silent, end = "")
 
@@ -1287,100 +1472,141 @@ def calculate_unrestricted_exchange_correlation_kernel_matrices(o: slice, v: sli
 
     molecular_orbitals_on_grid = construct_molecular_orbitals_on_grid(basis_functions_spin_blocked, C_spin_block)
 
-    log("[Done]", calculation, 1, silent)
-
-    log(" Evaluating exchange-correlation kernel...   ", calculation, 1, silent, end = "")
-
-    # Constructs the alpha and beta densities on the grid, including any frozen-core electrons
+    # Constructs the alpha and beta densities, square gradients and kinetic energy densities on the grid, as in the SCF, including any frozen-core electrons
 
     alpha_density = construct_density_on_grid(P_alpha, bfs_on_grid)
     beta_density = construct_density_on_grid(P_beta, bfs_on_grid)
 
-    total_density = alpha_density + beta_density
+    density = alpha_density + beta_density
 
-    # The exchange kernel follows from the spin-scaling relation
+    sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, molecular_orbital_gradients_on_grid = None, None, None, None, None, None
+    density_gradients = {"a": None, "b": None}
 
-    exchange_kernel = kernels.exchange_kernels.get(calculation.functional.x_functional)
+    if functional_class in ["GGA", "meta-GGA"]:
+
+        sigma_aa, density_gradients["a"] = calculate_density_gradient(P_alpha, bfs_on_grid, bf_gradients_on_grid)
+        sigma_bb, density_gradients["b"] = calculate_density_gradient(P_beta, bfs_on_grid, bf_gradients_on_grid)
+
+        # This sigma is made here as the others are cleaned in calculate_density_gradient - do NOT clean this
+
+        sigma_ab = np.einsum("akl,akl->kl", density_gradients["a"], density_gradients["b"], optimize = True)
+
+        molecular_orbital_gradients_on_grid = construct_molecular_orbital_gradients_on_grid(np.concatenate([bf_gradients_on_grid, bf_gradients_on_grid], axis = 1), C_spin_block)
+
+        if functional_class == "meta-GGA":
+
+            tau_alpha = calculate_kinetic_energy_density(P_alpha, bf_gradients_on_grid)
+            tau_beta = calculate_kinetic_energy_density(P_beta, bf_gradients_on_grid)
+
+    log("[Done]", calculation, 1, silent)
+
+    log(" Evaluating exchange-correlation kernel...   ", calculation, 1, silent, end = "")
+
+    # Looks up the kernel and functional - exchange-only functionals have no correlation kernel, so all its blocks are None
+
     correlation_kernel = kernels.unrestricted_correlation_kernels.get(calculation.functional.c_functional)
 
-    f_X_aa = 2 * exchange_kernel(2 * alpha_density, None, None, calculation)
-    f_X_bb = 2 * exchange_kernel(2 * beta_density, None, None, calculation)
+    exchange_functional = xc.exchange_functionals[calculation.functional.x_functional]
+    correlation_functional = xc.correlation_functionals.get("U" + str(calculation.functional.c_functional))
 
-    # The correlation kernel is evaluated analytically as the spin-resolved second derivatives of the correlation energy
+    # Second derivatives of the exchange and correlation energies with respect to the alpha and beta densities, the three square gradients and the
+    # two kinetic energy densities, in the order (n_a, n_b, sigma_aa, sigma_bb, sigma_ab, tau_a, tau_b)
 
-    f_C_aa, f_C_ab, f_C_bb = correlation_kernel(alpha_density, beta_density, total_density, None, None, None, None, None, calculation)
+    f_X = kernels.arrange_unrestricted_kernel_blocks(kernels.calculate_unrestricted_exchange_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation), density)
+    f_C = kernels.arrange_unrestricted_kernel_blocks(correlation_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation) if correlation_kernel is not None else (None,) * 28, density)
 
-    # The same-spin blocks combine the analytic exchange and correlation; the opposite-spin block is correlation only
+    # The first derivatives with respect to the three square gradients, which enter as these are quadratic in the densities. Exchange spin scales,
+    # so its derivative with respect to a same-spin square gradient is twice the restricted derivative at twice the spin density
+
+    sigma_aa_scaled, sigma_bb_scaled = (4 * sigma_aa, 4 * sigma_bb) if sigma_aa is not None else (None, None)
+    tau_alpha_scaled, tau_beta_scaled = (2 * tau_alpha, 2 * tau_beta) if tau_alpha is not None else (None, None)
+
+    _, df_ds_X_aa, _, _ = exchange_functional(2 * alpha_density, sigma_aa_scaled, tau_alpha_scaled, calculation)
+    _, df_ds_X_bb, _, _ = exchange_functional(2 * beta_density, sigma_bb_scaled, tau_beta_scaled, calculation)
+
+    _, _, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab, _, _, _ = correlation_functional(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation) if correlation_functional is not None else (None,) * 8
+
+    df_ds_X_aa, df_ds_X_bb, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab = (np.zeros_like(density) if derivative is None else derivative for derivative in (df_ds_X_aa, df_ds_X_bb, df_ds_C_aa, df_ds_C_bb, df_ds_C_ab))
+
+    # Folds in the DFX and DFC proportions, and the integration weights. The same-spin square gradients are quadratic in one density, so their
+    # quadratic change is 2 grad(rho_ia) . grad(rho_jb), while the opposite-spin square gradient changes by grad(rho_ia) . grad(rho_jb)
+
+    f_XC = (f_X * calculation.DFX_prop + f_C * calculation.DFC_prop) * weights
+
+    df_ds_XC = {
+
+        "aa": 2 * (2 * df_ds_X_aa * calculation.DFX_prop + df_ds_C_aa * calculation.DFC_prop) * weights,
+        "ab": df_ds_C_ab * calculation.DFC_prop * weights,
+        "bb": 2 * (2 * df_ds_X_bb * calculation.DFX_prop + df_ds_C_bb * calculation.DFC_prop) * weights
+
+    }
 
     log("[Done]", calculation, 1, silent)
 
     log(" Calculating matrix elements...              ", calculation, 1, silent, end = "")
 
-    # Slice out occupied and virtual spin orbitals on the grid
+    spin_labels = np.array(spin_labels)
 
-    occupied_orbitals = molecular_orbitals_on_grid[o]
-    virtual_orbitals  = molecular_orbitals_on_grid[v]
+    # Indices of the spin orbitals of each spin in the full, occupied and virtual spaces, and the variables each spin sees in the order (n, same-spin sigma, opposite-spin sigma, tau)
 
-    # Transition densities, split by the spin of the occupied spin orbital
+    spin_orbitals = {"a": np.where(spin_labels == "a")[0], "b": np.where(spin_labels == "b")[0]}
 
-    T = np.einsum("imn,amn->iamn", occupied_orbitals, virtual_orbitals, optimize = True)
+    occupied = {spin: np.where(spin_labels[o] == spin)[0] for spin in "ab"}
+    virtual = {spin: np.where(spin_labels[v] == spin)[0] for spin in "ab"}
 
-    alpha_occupied = np.array(spin_labels)[o] == "a"
-    beta_occupied = np.array(spin_labels)[o] == "b"
+    variables = {"a": [0, 2, 4, 5], "b": [1, 3, 4, 6]}
 
-    T_alpha = T * alpha_occupied[:, None, None, None]
-    T_beta  = T * beta_occupied[:, None, None, None]
+    # The number of variables a spin sees, and the scaled density gradients the same- and opposite-spin square gradient changes are built from
 
-    # Contracts each spin block of the kernel with the appropriate transition densities
+    n_variables = {"LDA": 1, "GGA": 3, "meta-GGA": 4}[functional_class]
 
-    K_X = np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_alpha, f_X_aa * weights, optimize = True)
-    K_X += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_X_bb * weights, optimize = True)
+    spin_density_gradients = {spin: [2 * density_gradients[spin], density_gradients[other]] if functional_class != "LDA" else [] for spin, other in (("a", "b"), ("b", "a"))}
 
-    K_C = np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_alpha, f_C_aa * weights, optimize = True)
-    K_C += np.einsum("iamn,jbmn,mn->iajb", T_alpha, T_beta,  f_C_ab * weights, optimize = True)
-    K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_alpha, f_C_ab * weights, optimize = True)
-    K_C += np.einsum("iamn,jbmn,mn->iajb", T_beta,  T_beta,  f_C_bb * weights, optimize = True)
+    # Changes in the variables from the spin-conserving rotations of each spin, and the gradients of the transition densities
 
-    K_XC = K_X * calculation.DFX_prop + K_C * calculation.DFC_prop
+    U, T_gradient = {}, {}
 
-    # Optionally builds the kernel matrices needed for coupled-perturbed Kohn-Sham equations over the full spin orbital space
+    for spin in "ab":
+
+        occupied_orbitals = molecular_orbitals_on_grid[o][occupied[spin]]
+        virtual_orbitals = molecular_orbitals_on_grid[v][virtual[spin]]
+
+        occupied_gradients, virtual_gradients = (molecular_orbital_gradients_on_grid[:, o][:, occupied[spin]], molecular_orbital_gradients_on_grid[:, v][:, virtual[spin]]) if functional_class != "LDA" else (None, None)
+
+        U[spin], T_gradient[spin] = construct_transition_variables_on_grid(occupied_orbitals, occupied_gradients, virtual_orbitals, virtual_gradients, spin_density_gradients[spin], functional_class)
+
+    # Contracts each spin block of the kernel with the appropriate changes in the variables, where the two spins see different variables
+
+    n_occ, n_virt = len(spin_labels[o]), len(spin_labels[v])
+
+    K_XC = np.zeros((n_occ, n_virt, n_occ, n_virt))
+
+    for spin_1 in "ab":
+
+        for spin_2 in "ab":
+
+            f_XC_block = f_XC[np.ix_(variables[spin_1][:n_variables], variables[spin_2][:n_variables])]
+
+            K_XC[np.ix_(occupied[spin_1], virtual[spin_1], occupied[spin_2], virtual[spin_2])] = contract_kernel_with_transition_variables(f_XC_block, df_ds_XC["".join(sorted(spin_1 + spin_2))], U[spin_1], T_gradient[spin_1], U[spin_2], T_gradient[spin_2])
+
+    # Optionally builds the kernel matrix over the full spin orbital space, for coupled-perturbed Kohn-Sham equations, one spin block at a time to limit memory use
 
     if return_full_kernel:
 
-        alpha_virtual = np.array(spin_labels)[v] == "a"
-        beta_virtual = np.array(spin_labels)[v] == "b"
+        n_spin_orbitals = len(spin_labels)
 
-        # Opposite-spin orbitals have overlapping spatial parts on the grid, giving spurious matrix elements for spin-flip pairs, so these are masked out
+        K_XC_full = np.zeros((n_occ, n_virt, n_spin_orbitals, n_spin_orbitals))
 
-        spin_conserving = alpha_occupied[:, None] * alpha_virtual[None, :] + beta_occupied[:, None] * beta_virtual[None, :]
+        for spin_1 in "ab":
 
-        K_XC = K_XC * spin_conserving[:, :, None, None] * spin_conserving[None, None, :, :]
+            for spin_2 in "ab":
 
-        # Spin-resolved kernels on the grid, folding in the integration weights and the DFX and DFC proportions
+                f_XC_block = f_XC[np.ix_(variables[spin_1][:n_variables], variables[spin_2][:n_variables])]
 
-        f_aa = weights * (f_X_aa * calculation.DFX_prop + f_C_aa * calculation.DFC_prop)
-        f_ab = weights * f_C_ab * calculation.DFC_prop
-        f_bb = weights * (f_X_bb * calculation.DFX_prop + f_C_bb * calculation.DFC_prop)
+                orbitals = molecular_orbitals_on_grid[spin_orbitals[spin_2]]
+                orbital_gradients = molecular_orbital_gradients_on_grid[:, spin_orbitals[spin_2]] if functional_class != "LDA" else None
 
-        # Spin-conserving occupied-virtual transition densities
-
-        T_alpha_conserving = T_alpha * alpha_virtual[None, :, None, None]
-        T_beta_conserving = T_beta * beta_virtual[None, :, None, None]
-
-        spin_labels_array = np.array(spin_labels)
-        n_spin_orbitals = molecular_orbitals_on_grid.shape[0]
-
-        K_XC_full = np.zeros((T.shape[0], T.shape[1], n_spin_orbitals, n_spin_orbitals))
-
-        # Contracts the transition densities with the products of pairs of spin orbitals, one spin block at a time to limit memory use
-
-        for spin, f_same, f_opposite, T_same, T_opposite in (("a", f_aa, f_ab, T_alpha_conserving, T_beta_conserving), ("b", f_bb, f_ab, T_beta_conserving, T_alpha_conserving)):
-
-            indices = np.where(spin_labels_array == spin)[0]
-
-            pair_products = np.einsum("pmn,qmn->pqmn", molecular_orbitals_on_grid[indices], molecular_orbitals_on_grid[indices], optimize = True)
-
-            K_XC_full[:, :, indices[:, None], indices[None, :]] = np.einsum("iamn,pqmn,mn->iapq", T_same, pair_products, f_same, optimize = True) + np.einsum("iamn,pqmn,mn->iapq", T_opposite, pair_products, f_opposite, optimize = True)
+                K_XC_full[np.ix_(occupied[spin_1], virtual[spin_1], spin_orbitals[spin_2], spin_orbitals[spin_2])] = contract_kernel_with_orbital_pairs(f_XC_block, df_ds_XC["".join(sorted(spin_1 + spin_2))], U[spin_1], T_gradient[spin_1], orbitals, orbital_gradients, spin_density_gradients[spin_2], functional_class)
 
     log("[Done]", calculation, 1, silent)
 

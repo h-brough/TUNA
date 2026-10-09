@@ -5,7 +5,7 @@ from TUNA.tuna_util import constants
 from TUNA.tuna_xc import clean, calculate_zeta, calculate_f_zeta, calculate_f_prime_zeta, calculate_seitz_radius, calculate_Fermi_wavevector
 from TUNA.tuna_xc import calculate_Slater_exchange, calculate_VWN_potential, calculate_PW_potential
 from TUNA.tuna_xc import calculate_restricted_PW_correlation, calculate_unrestricted_PW_correlation
-from TUNA.tuna_xc import calculate_unrestricted_TPSS_correlation, calculate_unrestricted_revTPSS_correlation, calculate_unrestricted_B97M_correlation
+from TUNA.tuna_xc import exchange_functionals, correlation_functionals
 
 
 """
@@ -21,7 +21,7 @@ one. Exchange spin scales exactly, so for exchange a single pair of generic func
 
 The module contains:
 
-1. The exchange kernels, including the generic triplet and unrestricted ones (calculate_B88_exchange_kernel, calculate_GGA_exchange_spin_kernel, etc.)
+1. The exchange kernels, including the generic triplet and unrestricted ones (calculate_B88_exchange_kernel, calculate_exchange_spin_kernel, etc.)
 2. The correlation kernels, and their helper functions (calculate_restricted_VWN5_correlation_kernel, calculate_unrestricted_LYP_correlation_kernel, etc.)
 3. Some dictionaries for all the implemented kernels
 
@@ -32,6 +32,132 @@ The module contains:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ E X C H A N G E    K E R N E L S ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+
+
+
+def scale_block(block: ndarray, factor: float) -> ndarray:
+
+    """
+
+    Scales a kernel block by a factor, leaving a block that vanishes identically as None.
+
+    Args:
+        block (array): Kernel block, or None
+        factor (float): Factor to scale by
+
+    Returns:
+        scaled_block (array): Scaled kernel block, or None
+
+    """
+
+    scaled_block = factor * block if block is not None else None
+
+    return scaled_block
+
+
+
+
+
+
+
+
+
+
+def calculate_exchange_spin_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
+
+    """
+
+    Calculates the restricted exchange spin kernel for triplet excitations, for whichever exchange functional the calculation selects.
+
+    Args:
+        density (array): Electron density on integration grid
+        sigma (array): Square density gradient
+        tau (array): Non-interacting kinetic energy density
+        calculation (Calculation): Calculation object
+
+    Returns:
+        f_mm (array): Second derivative of f = n * e_X with respect to the spin density
+        f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
+        f_sigma_nm_sigma_nm (array): Second derivative with respect to grad(n) . grad(m)
+        f_m_tau_m (array): Mixed second derivative with respect to the spin density and the spin kinetic energy density, tau_alpha - tau_beta
+        f_sigma_nm_tau_m (array): Mixed second derivative with respect to grad(n) . grad(m) and the spin kinetic energy density
+        f_tau_m_tau_m (array): Second derivative with respect to the spin kinetic energy density
+        f_sigma_mm (array): Derivative with respect to grad(m) . grad(m), which spin scaling makes the derivative with respect to sigma
+
+    """
+
+    # Exchange spin scales exactly, so the triplet kernel is a rescaled singlet kernel, with zero blocks staying None
+
+    d2f_dn2, d2f_dnds, d2f_ds2, d2f_dndt, d2f_dsdt, d2f_dt2 = exchange_kernels[calculation.functional.x_functional](density, sigma, tau, calculation)
+
+    f_mm = d2f_dn2
+    f_m_sigma_nm = scale_block(d2f_dnds, 2)
+    f_sigma_nm_sigma_nm = scale_block(d2f_ds2, 4)
+
+    # The spin kinetic energy density enters each channel as tau does, with no extra factors
+
+    f_m_tau_m = d2f_dndt
+    f_sigma_nm_tau_m = scale_block(d2f_dsdt, 2)
+    f_tau_m_tau_m = d2f_dt2
+
+    # As grad(m) . grad(m) is quadratic in the response, only its first derivative enters, which is the derivative with respect to sigma
+
+    _, f_sigma_mm, _, _ = exchange_functionals[calculation.functional.x_functional](density, sigma, tau, calculation)
+
+    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm, f_m_tau_m, f_sigma_nm_tau_m, f_tau_m_tau_m, f_sigma_mm
+
+
+
+
+
+
+
+
+
+
+def calculate_unrestricted_exchange_kernel(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
+
+    """
+
+    Calculates the spin-resolved exchange kernel for an unrestricted reference, for whichever exchange functional the calculation selects.
+
+    Args:
+        alpha_density (array): Alpha electron density on integration grid
+        beta_density (array): Beta electron density on integration grid
+        density (array): Electron density on integration grid
+        sigma_aa (array): Alpha-alpha square density gradient
+        sigma_bb (array): Beta-beta square density gradient
+        sigma_ab (array): Alpha-beta square density gradient
+        tau_alpha (array): Alpha kinetic energy density
+        tau_beta (array): Beta kinetic energy density
+        calculation (Calculation): Calculation object
+
+    Returns:
+        blocks (tuple): The twenty-eight blocks of the spin-resolved kernel in the standard order, all those mixing alpha and beta being None
+
+    """
+
+    # By spin scaling, each channel is the restricted kernel at twice the spin density and kinetic energy density, and four times the square gradient
+
+    f_aa, f_a_saa, f_saa_saa, f_a_ta, f_saa_ta, f_ta_ta = exchange_kernels[calculation.functional.x_functional](2 * alpha_density, scale_block(sigma_aa, 4), scale_block(tau_alpha, 2), calculation)
+    f_bb, f_b_sbb, f_sbb_sbb, f_b_tb, f_sbb_tb, f_tb_tb = exchange_kernels[calculation.functional.x_functional](2 * beta_density, scale_block(sigma_bb, 4), scale_block(tau_beta, 2), calculation)
+
+    # Chain rule factors from spin scaling
+
+    f_aa, f_bb = scale_block(f_aa, 2), scale_block(f_bb, 2)
+    f_a_saa, f_b_sbb = scale_block(f_a_saa, 4), scale_block(f_b_sbb, 4)
+    f_saa_saa, f_sbb_sbb = scale_block(f_saa_saa, 8), scale_block(f_sbb_sbb, 8)
+    f_a_ta, f_b_tb = scale_block(f_a_ta, 2), scale_block(f_b_tb, 2)
+    f_saa_ta, f_sbb_tb = scale_block(f_saa_ta, 4), scale_block(f_sbb_tb, 4)
+    f_ta_ta, f_tb_tb = scale_block(f_ta_ta, 2), scale_block(f_tb_tb, 2)
+
+    return f_aa, None, f_bb, f_a_saa, None, None, None, f_b_sbb, None, f_saa_saa, None, None, f_sbb_sbb, None, None, f_a_ta, None, None, f_b_tb, f_saa_ta, None, None, f_sbb_tb, None, None, f_ta_ta, None, f_tb_tb
+
+
+
+
 
 
 
@@ -51,6 +177,11 @@ def calculate_Slater_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndar
 
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
+        d2f_dnds (None): Slater exchange has no gradient blocks
+        d2f_ds2 (None): Slater exchange has no gradient blocks
+        d2f_dndt (None): Slater exchange has no kinetic energy density blocks
+        d2f_dsdt (None): Slater exchange has no kinetic energy density blocks
+        d2f_dt2 (None): Slater exchange has no kinetic energy density blocks
 
     """
 
@@ -64,7 +195,7 @@ def calculate_Slater_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndar
 
     d2f_dn2 = - (alpha / 2) * np.cbrt(3 / np.pi) * inv_cbrt_density * inv_cbrt_density
 
-    return d2f_dn2
+    return d2f_dn2, None, None, None, None, None
 
 
 
@@ -290,7 +421,7 @@ def calculate_B88_exchange_channel_kernel(spin_density: ndarray, spin_sigma: nda
 
     # Local density exchange kernel for this channel, scaled as in the B88 energy
 
-    d2g_dp2_LDA = np.cbrt(2) * calculate_Slater_exchange_kernel(spin_density, None, None, calculation)
+    d2g_dp2_LDA = np.cbrt(2) * calculate_Slater_exchange_kernel(spin_density, None, None, calculation)[0]
 
     # Second derivatives of g, where the inverse powers of sigma cancel
 
@@ -327,6 +458,9 @@ def calculate_B88_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
+        d2f_dndt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dsdt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dt2 (None): GGA exchange has no kinetic energy density blocks
 
     """
 
@@ -344,7 +478,7 @@ def calculate_B88_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray
     d2f_dnds = d2g_dpds / 4
     d2f_ds2 = d2g_ds2 / 8
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -371,16 +505,19 @@ def calculate_B3_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray,
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
+        d2f_dndt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dsdt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dt2 (None): GGA exchange has no kinetic energy density blocks
 
     """
 
     # Calculates the local density exchange kernel
 
-    d2f_dn2_LDA = calculate_Slater_exchange_kernel(density, sigma, tau, calculation)
+    d2f_dn2_LDA, *_ = calculate_Slater_exchange_kernel(density, sigma, tau, calculation)
 
     # Calculates the Becke 1988 GGA exchange kernel
 
-    d2f_dn2_B88, d2f_dnds_B88, d2f_ds2_B88 = calculate_B88_exchange_kernel(density, sigma, tau, calculation)
+    d2f_dn2_B88, d2f_dnds_B88, d2f_ds2_B88, *_ = calculate_B88_exchange_kernel(density, sigma, tau, calculation)
 
     # The factors here are chosen such that when combined with the multiplicative factors for Hartree-Fock exchange proportion, the B3LYP coefficients are used
 
@@ -390,7 +527,7 @@ def calculate_B3_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray,
 
     d2f_ds2 = 0.9 * d2f_ds2_B88
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -417,6 +554,9 @@ def calculate_PBE_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
+        d2f_dndt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dsdt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dt2 (None): GGA exchange has no kinetic energy density blocks
 
     """
 
@@ -460,7 +600,7 @@ def calculate_PBE_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray
 
     d2f_ds2 = f_LDA * d2F_dt2 * ds_squared_ds * ds_squared_ds
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -487,6 +627,9 @@ def calculate_RPBE_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarra
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
+        d2f_dndt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dsdt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dt2 (None): GGA exchange has no kinetic energy density blocks
 
     """
 
@@ -518,7 +661,7 @@ def calculate_RPBE_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarra
 
     d2f_dn2, d2f_dnds, d2f_ds2 = calculate_GGA_exchange_kernel_blocks(density, s_squared, ds_squared_ds, F_X, dF_dt, d2F_dt2, density * e_X_LDA)
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -545,6 +688,9 @@ def calculate_PW91_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarra
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
+        d2f_dndt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dsdt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dt2 (None): GGA exchange has no kinetic energy density blocks
 
     """
 
@@ -600,7 +746,7 @@ def calculate_PW91_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarra
 
     d2f_dn2, d2f_dnds, d2f_ds2 = calculate_GGA_exchange_kernel_blocks(density, s_squared, ds_squared_ds, F_X, dF_dt, d2F_dt2, density * e_X_LDA)
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -627,6 +773,9 @@ def calculate_mPW91_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarr
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
+        d2f_dndt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dsdt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dt2 (None): GGA exchange has no kinetic energy density blocks
 
     """
 
@@ -695,7 +844,7 @@ def calculate_mPW91_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarr
 
     d2f_dn2, d2f_dnds, d2f_ds2 = calculate_GGA_exchange_kernel_blocks(density, x_squared, dx_squared_ds, F_X, dF_X_dt, d2F_X_dt2, density * e_X_LDA)
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -722,6 +871,9 @@ def calculate_B97_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray
         d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
+        d2f_dndt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dsdt (None): GGA exchange has no kinetic energy density blocks
+        d2f_dt2 (None): GGA exchange has no kinetic energy density blocks
 
     """
 
@@ -764,149 +916,7 @@ def calculate_B97_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarray
 
     d2f_dn2, d2f_dnds, d2f_ds2 = calculate_GGA_exchange_kernel_blocks(density, s_squared, ds_squared_ds, F_X, dF_dt, d2F_dt2, density * e_X_LDA)
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
-
-
-
-
-
-
-
-
-
-
-def calculate_restricted_exchange_kernel_blocks(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
-
-    """
-
-    Looks up and evaluates the restricted exchange kernel for whichever exchange functional the calculation selects.
-
-    Args:
-        density (array): Electron density on integration grid
-        sigma (array): Square density gradient
-        tau (array): Non-interacting kinetic energy density
-        calculation (Calculation): Calculation object
-
-    Returns:
-        d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
-        d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
-        d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
-
-    """
-
-    # Picks the exchange kernel depending on the functional
-
-    blocks = exchange_kernels[calculation.functional.x_functional](density, sigma, tau, calculation)
-
-    zeros = np.zeros_like(density)
-
-    # Slater exchange has no gradient blocks, so these are zeros
-
-    if not isinstance(blocks, tuple):
-
-        return blocks, zeros, zeros
-
-    d2f_dn2, d2f_dnds, d2f_ds2 = blocks
-
-    # Any block that vanishes identically is also replaced by zeros
-
-    d2f_dnds = zeros if d2f_dnds is None else d2f_dnds
-    d2f_ds2 = zeros if d2f_ds2 is None else d2f_ds2
-
-    return d2f_dn2, d2f_dnds, d2f_ds2
-
-
-
-
-
-
-
-
-
-
-def calculate_GGA_exchange_spin_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
-
-    """
-
-    Calculates the restricted exchange spin kernel for triplet excitations, for any GGA exchange functional.
-
-    Args:
-        density (array): Electron density on integration grid
-        sigma (array): Square density gradient
-        tau (array): Non-interacting kinetic energy density
-        calculation (Calculation): Calculation object
-
-    Returns:
-        f_mm (array): Second derivative of f = n * e_X with respect to the spin density
-        f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
-        f_sigma_nm_sigma_nm (array): Second derivative with respect to grad(n) . grad(m)
-
-    """
-
-    # Exchange spin scales exactly, so the triplet kernel is a rescaled singlet kernel
-
-    d2f_dn2, d2f_dnds, d2f_ds2 = calculate_restricted_exchange_kernel_blocks(density, sigma, tau, calculation)
-
-    f_mm = d2f_dn2
-    f_m_sigma_nm = 2 * d2f_dnds
-    f_sigma_nm_sigma_nm = 4 * d2f_ds2
-
-    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm
-
-
-
-
-
-
-
-
-
-
-def calculate_unrestricted_GGA_exchange_kernel(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
-
-    """
-
-    Calculates the spin-resolved exchange kernel for an unrestricted reference, for any GGA exchange functional.
-
-    Args:
-        alpha_density (array): Alpha electron density on integration grid
-        beta_density (array): Beta electron density on integration grid
-        density (array): Electron density on integration grid
-        sigma_aa (array): Alpha-alpha square density gradient
-        sigma_bb (array): Beta-beta square density gradient
-        sigma_ab (array): Alpha-beta square density gradient
-        tau_alpha (array): Alpha kinetic energy density
-        tau_beta (array): Beta kinetic energy density
-        calculation (Calculation): Calculation object
-
-    Returns:
-        f_X_alpha_alpha (array): Second derivative of f = n * e_X with respect to the alpha density
-        f_X_beta_beta (array): Second derivative with respect to the beta density
-        f_X_alpha_sigma_aa (array): Mixed second derivative with respect to the alpha density and sigma alpha-alpha
-        f_X_beta_sigma_bb (array): Mixed second derivative with respect to the beta density and sigma beta-beta
-        f_X_sigma_aa_sigma_aa (array): Second derivative with respect to sigma alpha-alpha
-        f_X_sigma_bb_sigma_bb (array): Second derivative with respect to sigma beta-beta
-
-    """
-
-    # By spin scaling, each channel is the restricted kernel at twice the spin density
-
-    d2f_dn2_alpha, d2f_dnds_alpha, d2f_ds2_alpha = calculate_restricted_exchange_kernel_blocks(2 * alpha_density, 4 * sigma_aa, tau_alpha, calculation)
-
-    d2f_dn2_beta, d2f_dnds_beta, d2f_ds2_beta = calculate_restricted_exchange_kernel_blocks(2 * beta_density, 4 * sigma_bb, tau_beta, calculation)
-
-    # Chain rule factors from spin scaling - blocks mixing alpha and beta vanish
-
-    f_X_alpha_alpha = 2 * d2f_dn2_alpha
-    f_X_beta_beta = 2 * d2f_dn2_beta
-
-    f_X_alpha_sigma_aa = 4 * d2f_dnds_alpha
-    f_X_beta_sigma_bb = 4 * d2f_dnds_beta
-
-    f_X_sigma_aa_sigma_aa = 8 * d2f_ds2_alpha
-    f_X_sigma_bb_sigma_bb = 8 * d2f_ds2_beta
-
-    return f_X_alpha_alpha, f_X_beta_beta, f_X_alpha_sigma_aa, f_X_beta_sigma_bb, f_X_sigma_aa_sigma_aa, f_X_sigma_bb_sigma_bb
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -1633,46 +1643,49 @@ def calculate_B97M_exchange_kernel(density: ndarray, sigma: ndarray, tau: ndarra
 
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ C O R R E L A T I O N    K E R N E L S ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-def calculate_restricted_meta_GGA_exchange_kernel_blocks(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
+
+
+
+
+def calculate_restricted_kernel_from_unrestricted(unrestricted_kernel: callable, density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
 
     """
 
-    Looks up and evaluates the restricted exchange kernel for whichever exchange functional the calculation selects, with all six meta-GGA blocks.
+    Builds a restricted kernel for singlet excitations from a spin-resolved one, evaluated at the closed shell where each spin density is half
+    the density, each of the three square gradients is a quarter of sigma and each kinetic energy density is half of tau. For singlet excitations
+    each spin density changes by half, each square gradient by a quarter and each kinetic energy density by half of the change in the total.
 
     Args:
+        unrestricted_kernel (callable): Spin-resolved kernel to evaluate
         density (array): Electron density on integration grid
         sigma (array): Square density gradient
         tau (array): Non-interacting kinetic energy density
         calculation (Calculation): Calculation object
 
     Returns:
-        d2f_dn2 (array): Second derivative of f = n * e_X with respect to density
-        d2f_dnds (array): Mixed second derivative of f = n * e_X with respect to density and sigma
-        d2f_ds2 (array): Second derivative of f = n * e_X with respect to sigma
-        d2f_dndt (array): Mixed second derivative of f = n * e_X with respect to density and tau
-        d2f_dsdt (array): Mixed second derivative of f = n * e_X with respect to sigma and tau
-        d2f_dt2 (array): Second derivative of f = n * e_X with respect to tau
+        d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
+        d2f_dnds (array): Mixed second derivative of f = n * e_C with respect to density and sigma
+        d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma
+        d2f_dndt (array): Mixed second derivative of f = n * e_C with respect to density and tau
+        d2f_dsdt (array): Mixed second derivative of f = n * e_C with respect to sigma and tau
+        d2f_dt2 (array): Second derivative of f = n * e_C with respect to tau
 
     """
 
-    # Picks the exchange kernel depending on the functional
+    blocks = unrestricted_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
 
-    blocks = exchange_kernels[calculation.functional.x_functional](density, sigma, tau, calculation)
+    # Blocks that vanish identically are None, which count as zero here
 
-    zeros = np.zeros_like(density)
+    f_aa, f_ab, f_bb, f_a_saa, f_a_sbb, f_a_sab, f_b_saa, f_b_sbb, f_b_sab, f_saa_saa, f_saa_sbb, f_saa_sab, f_sbb_sbb, f_sbb_sab, f_sab_sab, f_a_ta, f_a_tb, f_b_ta, f_b_tb, f_saa_ta, f_saa_tb, f_sbb_ta, f_sbb_tb, f_sab_ta, f_sab_tb, f_ta_ta, f_ta_tb, f_tb_tb = (np.zeros_like(density) if block is None else block for block in blocks)
 
-    # Slater exchange has no gradient or kinetic energy density blocks, so these are zeros
-
-    if not isinstance(blocks, tuple):
-
-        return blocks, zeros, zeros, zeros, zeros, zeros
-
-    # Any block that vanishes identically is replaced by zeros, as are the kinetic energy density blocks that a GGA kernel does not return
-
-    blocks = tuple(zeros if block is None else block for block in blocks)
-
-    d2f_dn2, d2f_dnds, d2f_ds2, d2f_dndt, d2f_dsdt, d2f_dt2 = blocks + (zeros,) * (6 - len(blocks))
+    d2f_dn2 = (f_aa + 2 * f_ab + f_bb) / 4
+    d2f_dnds = (f_a_saa + f_a_sbb + f_a_sab + f_b_saa + f_b_sbb + f_b_sab) / 8
+    d2f_ds2 = (f_saa_saa + f_sbb_sbb + f_sab_sab + 2 * (f_saa_sbb + f_saa_sab + f_sbb_sab)) / 16
+    d2f_dndt = (f_a_ta + f_a_tb + f_b_ta + f_b_tb) / 4
+    d2f_dsdt = (f_saa_ta + f_saa_tb + f_sbb_ta + f_sbb_tb + f_sab_ta + f_sab_tb) / 8
+    d2f_dt2 = (f_ta_ta + 2 * f_ta_tb + f_tb_tb) / 4
 
     return d2f_dn2, d2f_dnds, d2f_ds2, d2f_dndt, d2f_dsdt, d2f_dt2
 
@@ -1685,119 +1698,57 @@ def calculate_restricted_meta_GGA_exchange_kernel_blocks(density: ndarray, sigma
 
 
 
-def calculate_meta_GGA_exchange_spin_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
+def calculate_restricted_spin_kernel_from_unrestricted(unrestricted_kernel: callable, density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
 
     """
 
-    Calculates the restricted exchange spin kernel for triplet excitations, for any meta-GGA exchange functional.
+    Builds a restricted spin kernel for triplet excitations from a spin-resolved one, evaluated at the closed shell. For triplet excitations the
+    two spin densities, same-spin square gradients and kinetic energy densities change in opposite directions, by half the changes in the spin
+    density, grad(n) . grad(m) and the spin kinetic energy density, while sigma_ab does not change to first order.
 
     Args:
+        unrestricted_kernel (callable): Spin-resolved kernel to evaluate
         density (array): Electron density on integration grid
         sigma (array): Square density gradient
         tau (array): Non-interacting kinetic energy density
         calculation (Calculation): Calculation object
 
     Returns:
-        f_mm (array): Second derivative of f = n * e_X with respect to the spin density
+        f_mm (array): Second derivative of f = n * e_C with respect to the spin density
         f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
         f_sigma_nm_sigma_nm (array): Second derivative with respect to grad(n) . grad(m)
         f_m_tau_m (array): Mixed second derivative with respect to the spin density and the spin kinetic energy density, tau_alpha - tau_beta
         f_sigma_nm_tau_m (array): Mixed second derivative with respect to grad(n) . grad(m) and the spin kinetic energy density
         f_tau_m_tau_m (array): Second derivative with respect to the spin kinetic energy density
+        f_sigma_mm (array): Derivative with respect to grad(m) . grad(m)
 
     """
 
-    # Exchange spin scales exactly, so the triplet kernel is a rescaled singlet kernel
+    blocks = unrestricted_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
 
-    d2f_dn2, d2f_dnds, d2f_ds2, d2f_dndt, d2f_dsdt, d2f_dt2 = calculate_restricted_meta_GGA_exchange_kernel_blocks(density, sigma, tau, calculation)
+    # Blocks that vanish identically are None, which count as zero here
 
-    f_mm = d2f_dn2
-    f_m_sigma_nm = 2 * d2f_dnds
-    f_sigma_nm_sigma_nm = 4 * d2f_ds2
+    f_aa, f_ab, f_bb, f_a_saa, f_a_sbb, _, f_b_saa, f_b_sbb, _, f_saa_saa, f_saa_sbb, _, f_sbb_sbb, _, _, f_a_ta, f_a_tb, f_b_ta, f_b_tb, f_saa_ta, f_saa_tb, f_sbb_ta, f_sbb_tb, _, _, f_ta_ta, f_ta_tb, f_tb_tb = (np.zeros_like(density) if block is None else block for block in blocks)
 
-    # The spin kinetic energy density enters each channel as tau does, with no extra factors
+    f_mm = (f_aa - 2 * f_ab + f_bb) / 4
+    f_m_sigma_nm = (f_a_saa - f_a_sbb - f_b_saa + f_b_sbb) / 4
+    f_sigma_nm_sigma_nm = (f_saa_saa - 2 * f_saa_sbb + f_sbb_sbb) / 4
+    f_m_tau_m = (f_a_ta - f_a_tb - f_b_ta + f_b_tb) / 4
+    f_sigma_nm_tau_m = (f_saa_ta - f_saa_tb - f_sbb_ta + f_sbb_tb) / 4
+    f_tau_m_tau_m = (f_ta_ta - 2 * f_ta_tb + f_tb_tb) / 4
 
-    f_m_tau_m = d2f_dndt
-    f_sigma_nm_tau_m = 2 * d2f_dsdt
-    f_tau_m_tau_m = d2f_dt2
+    # As grad(m) . grad(m) is quadratic in the response, only its first derivative enters - it adds a quarter to sigma_aa and sigma_bb and removes a quarter from sigma_ab
 
-    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm, f_m_tau_m, f_sigma_nm_tau_m, f_tau_m_tau_m
+    _, _, df_ds_aa, df_ds_bb, df_ds_ab, _, _, _ = correlation_functionals["U" + calculation.functional.c_functional](density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
 
+    f_sigma_mm = (df_ds_aa + df_ds_bb - df_ds_ab) / 4
 
-
-
-
-
-
-
-
-
-def calculate_unrestricted_meta_GGA_exchange_kernel(alpha_density: ndarray, beta_density: ndarray, density: ndarray, sigma_aa: ndarray, sigma_bb: ndarray, sigma_ab: ndarray, tau_alpha: ndarray, tau_beta: ndarray, calculation: Calculation) -> tuple:
-
-    """
-
-    Calculates the spin-resolved exchange kernel for an unrestricted reference, for any meta-GGA exchange functional.
-
-    Args:
-        alpha_density (array): Alpha electron density on integration grid
-        beta_density (array): Beta electron density on integration grid
-        density (array): Electron density on integration grid
-        sigma_aa (array): Alpha-alpha square density gradient
-        sigma_bb (array): Beta-beta square density gradient
-        sigma_ab (array): Alpha-beta square density gradient
-        tau_alpha (array): Alpha kinetic energy density
-        tau_beta (array): Beta kinetic energy density
-        calculation (Calculation): Calculation object
-
-    Returns:
-        f_X_alpha_alpha (array): Second derivative of f = n * e_X with respect to the alpha density
-        f_X_beta_beta (array): Second derivative with respect to the beta density
-        f_X_alpha_sigma_aa (array): Mixed second derivative with respect to the alpha density and sigma alpha-alpha
-        f_X_beta_sigma_bb (array): Mixed second derivative with respect to the beta density and sigma beta-beta
-        f_X_sigma_aa_sigma_aa (array): Second derivative with respect to sigma alpha-alpha
-        f_X_sigma_bb_sigma_bb (array): Second derivative with respect to sigma beta-beta
-        f_X_alpha_tau_alpha (array): Mixed second derivative with respect to the alpha density and tau alpha
-        f_X_beta_tau_beta (array): Mixed second derivative with respect to the beta density and tau beta
-        f_X_sigma_aa_tau_alpha (array): Mixed second derivative with respect to sigma alpha-alpha and tau alpha
-        f_X_sigma_bb_tau_beta (array): Mixed second derivative with respect to sigma beta-beta and tau beta
-        f_X_tau_alpha_tau_alpha (array): Second derivative with respect to tau alpha
-        f_X_tau_beta_tau_beta (array): Second derivative with respect to tau beta
-
-    """
-
-    # By spin scaling, each channel is the restricted kernel at twice the spin density and kinetic energy density, and four times the square gradient
-
-    d2f_dn2_alpha, d2f_dnds_alpha, d2f_ds2_alpha, d2f_dndt_alpha, d2f_dsdt_alpha, d2f_dt2_alpha = calculate_restricted_meta_GGA_exchange_kernel_blocks(2 * alpha_density, 4 * sigma_aa, 2 * tau_alpha, calculation)
-
-    d2f_dn2_beta, d2f_dnds_beta, d2f_ds2_beta, d2f_dndt_beta, d2f_dsdt_beta, d2f_dt2_beta = calculate_restricted_meta_GGA_exchange_kernel_blocks(2 * beta_density, 4 * sigma_bb, 2 * tau_beta, calculation)
-
-    # Chain rule factors from spin scaling - blocks mixing alpha and beta vanish
-
-    f_X_alpha_alpha = 2 * d2f_dn2_alpha
-    f_X_beta_beta = 2 * d2f_dn2_beta
-
-    f_X_alpha_sigma_aa = 4 * d2f_dnds_alpha
-    f_X_beta_sigma_bb = 4 * d2f_dnds_beta
-
-    f_X_sigma_aa_sigma_aa = 8 * d2f_ds2_alpha
-    f_X_sigma_bb_sigma_bb = 8 * d2f_ds2_beta
-
-    f_X_alpha_tau_alpha = 2 * d2f_dndt_alpha
-    f_X_beta_tau_beta = 2 * d2f_dndt_beta
-
-    f_X_sigma_aa_tau_alpha = 4 * d2f_dsdt_alpha
-    f_X_sigma_bb_tau_beta = 4 * d2f_dsdt_beta
-
-    f_X_tau_alpha_tau_alpha = 2 * d2f_dt2_alpha
-    f_X_tau_beta_tau_beta = 2 * d2f_dt2_beta
-
-    return f_X_alpha_alpha, f_X_beta_beta, f_X_alpha_sigma_aa, f_X_beta_sigma_bb, f_X_sigma_aa_sigma_aa, f_X_sigma_bb_sigma_bb, f_X_alpha_tau_alpha, f_X_beta_tau_beta, f_X_sigma_aa_tau_alpha, f_X_sigma_bb_tau_beta, f_X_tau_alpha_tau_alpha, f_X_tau_beta_tau_beta
+    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm, f_m_tau_m, f_sigma_nm_tau_m, f_tau_m_tau_m, f_sigma_mm
 
 
 
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ C O R R E L A T I O N    K E R N E L S ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
 
@@ -1814,6 +1765,11 @@ def calculate_restricted_VWN3_correlation_kernel(density: ndarray, sigma: ndarra
 
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
+        d2f_dnds (None): No gradient blocks
+        d2f_ds2 (None): No gradient blocks
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -1829,7 +1785,7 @@ def calculate_restricted_VWN3_correlation_kernel(density: ndarray, sigma: ndarra
 
     d2f_dn2 = (r_s ** 2 * d2e_C_dr2 - 2 * r_s * de_C_dr) / (9 * density)
 
-    return d2f_dn2
+    return d2f_dn2, None, None, None, None, None
 
 
 
@@ -1853,7 +1809,13 @@ def calculate_restricted_VWN3_spin_correlation_kernel(density: ndarray, sigma: n
         calculation (Calculation): Calculation object
 
     Returns:
-        f_mm (array): Spin correlation kernel evaluated on the grid
+        f_mm (array): Second derivative of f = n * e_C with respect to the spin density
+        f_m_sigma_nm (None): No gradient blocks
+        f_sigma_nm_sigma_nm (None): No gradient blocks
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_mm (None): No gradient blocks
 
     """
 
@@ -1870,7 +1832,7 @@ def calculate_restricted_VWN3_spin_correlation_kernel(density: ndarray, sigma: n
 
     f_mm = f_prime_prime_at_zero * (e_C_1 - e_C_0) / density
 
-    return f_mm
+    return f_mm, None, None, None, None, None, None
 
 
 
@@ -1896,6 +1858,7 @@ def calculate_unrestricted_VWN3_correlation_kernel(alpha_density: ndarray, beta_
         f_C_alpha_alpha (array): Alpha-alpha correlation kernel block
         f_C_alpha_beta (array): Alpha-beta correlation kernel block
         f_C_beta_beta (array): Beta-beta correlation kernel block
+        None: The twenty-five gradient and kinetic energy density blocks, which vanish for a local functional
 
     """
 
@@ -1951,7 +1914,7 @@ def calculate_unrestricted_VWN3_correlation_kernel(alpha_density: ndarray, beta_
     f_C_beta_beta = f_nn + 2 * f_nz * zeta_w + f_zz * zeta_w ** 2 + f_z * zeta_ww
     f_C_alpha_beta = f_nn + f_nz * (zeta_u + zeta_w) + f_zz * zeta_u * zeta_w + f_z * zeta_uw
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta) + (None,) * 25
 
 
 
@@ -1973,6 +1936,11 @@ def calculate_restricted_VWN5_correlation_kernel(density: ndarray, sigma: ndarra
 
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
+        d2f_dnds (None): No gradient blocks
+        d2f_ds2 (None): No gradient blocks
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -2011,7 +1979,7 @@ def calculate_restricted_VWN5_correlation_kernel(density: ndarray, sigma: ndarra
 
     d2f_dn2 = (x * A) / (36 * density) * (x * dcombo_dx - 5 * combo)
 
-    return d2f_dn2
+    return d2f_dn2, None, None, None, None, None
 
 
 
@@ -2035,7 +2003,13 @@ def calculate_restricted_VWN5_spin_correlation_kernel(density: ndarray, sigma: n
         calculation (Calculation): Calculation object
 
     Returns:
-        f_mm (array): Spin correlation kernel evaluated on the grid
+        f_mm (array): Second derivative of f = n * e_C with respect to the spin density
+        f_m_sigma_nm (None): No gradient blocks
+        f_sigma_nm_sigma_nm (None): No gradient blocks
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_mm (None): No gradient blocks
 
     """
 
@@ -2047,7 +2021,7 @@ def calculate_restricted_VWN5_spin_correlation_kernel(density: ndarray, sigma: n
 
     f_mm = - minus_alpha / density
 
-    return f_mm
+    return f_mm, None, None, None, None, None, None
 
 
 
@@ -2134,6 +2108,7 @@ def calculate_unrestricted_VWN5_correlation_kernel(alpha_density: ndarray, beta_
         f_C_alpha_alpha (array): Alpha-alpha correlation kernel block
         f_C_alpha_beta (array): Alpha-beta correlation kernel block
         f_C_beta_beta (array): Beta-beta correlation kernel block
+        None: The twenty-five gradient and kinetic energy density blocks, which vanish for a local functional
 
     """
 
@@ -2151,7 +2126,7 @@ def calculate_unrestricted_VWN5_correlation_kernel(alpha_density: ndarray, beta_
 
     f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta = calculate_VWN5_spin_interpolation_kernel(alpha_density, beta_density, density, alpha_C, dalpha_C_dr, d2alpha_C_dr2, e_C_0, de0_dr, d2e0_dr2, e_C_1, de1_dr, d2e1_dr2)
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta) + (None,) * 25
 
 
 
@@ -2271,6 +2246,11 @@ def calculate_restricted_PW_correlation_kernel(density: ndarray, sigma: ndarray,
 
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
+        d2f_dnds (None): No gradient blocks
+        d2f_ds2 (None): No gradient blocks
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -2286,7 +2266,7 @@ def calculate_restricted_PW_correlation_kernel(density: ndarray, sigma: ndarray,
 
     d2f_dn2 = (r_s ** 2 * d2e_C_dr2 - 2 * r_s * de_C_dr) / (9 * density)
 
-    return d2f_dn2
+    return d2f_dn2, None, None, None, None, None
 
 
 
@@ -2310,7 +2290,13 @@ def calculate_restricted_PW_spin_correlation_kernel(density: ndarray, sigma: nda
         calculation (Calculation): Calculation object
 
     Returns:
-        f_mm (array): Spin correlation kernel evaluated on the grid
+        f_mm (array): Second derivative of f = n * e_C with respect to the spin density
+        f_m_sigma_nm (None): No gradient blocks
+        f_sigma_nm_sigma_nm (None): No gradient blocks
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_mm (None): No gradient blocks
 
     """
 
@@ -2322,7 +2308,7 @@ def calculate_restricted_PW_spin_correlation_kernel(density: ndarray, sigma: nda
 
     f_mm = - minus_alpha / density
 
-    return f_mm
+    return f_mm, None, None, None, None, None, None
 
 
 
@@ -2415,6 +2401,7 @@ def calculate_unrestricted_PW_correlation_kernel(alpha_density: ndarray, beta_de
         f_C_alpha_alpha (array): Alpha-alpha correlation kernel block
         f_C_alpha_beta (array): Alpha-beta correlation kernel block
         f_C_beta_beta (array): Beta-beta correlation kernel block
+        None: The twenty-five gradient and kinetic energy density blocks, which vanish for a local functional
 
     """
 
@@ -2432,7 +2419,7 @@ def calculate_unrestricted_PW_correlation_kernel(alpha_density: ndarray, beta_de
 
     f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta = calculate_VWN5_spin_interpolation_kernel(alpha_density, beta_density, density, alpha_C, dalpha_C_dr, d2alpha_C_dr2, e_C_0, de0_dr, d2e0_dr2, e_C_1, de1_dr, d2e1_dr2)
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta) + (None,) * 25
 
 
 
@@ -2747,7 +2734,10 @@ def calculate_restricted_LYP_correlation_kernel(density: ndarray, sigma: ndarray
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_C with respect to density and sigma
-        d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma, identically zero for LYP
+        d2f_ds2 (None): Second derivative of f = n * e_C with respect to sigma, identically zero for LYP
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -2811,7 +2801,7 @@ def calculate_restricted_LYP_correlation_kernel(density: ndarray, sigma: ndarray
 
     # The energy is linear in sigma, so the second sigma derivative vanishes
 
-    return d2f_dn2, d2f_dnds, None
+    return d2f_dn2, d2f_dnds, None, None, None, None
 
 
 
@@ -2837,6 +2827,10 @@ def calculate_restricted_LYP_spin_correlation_kernel(density: ndarray, sigma: nd
     Returns:
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
         f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
+        f_sigma_nm_sigma_nm (None): Second derivative with respect to grad(n) . grad(m), identically zero for LYP
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
         f_sigma_mm (array): Derivative with respect to the square spin density gradient
 
     """
@@ -2875,7 +2869,9 @@ def calculate_restricted_LYP_spin_correlation_kernel(density: ndarray, sigma: nd
 
     f_sigma_mm = a * b * Q / 36
 
-    return f_mm, f_m_sigma_nm, f_sigma_mm
+    # LYP is linear in the square gradients, so the block quadratic in grad(n) . grad(m) vanishes
+
+    return f_mm, f_m_sigma_nm, None, None, None, None, f_sigma_mm
 
 
 
@@ -2913,6 +2909,7 @@ def calculate_unrestricted_LYP_correlation_kernel(alpha_density: ndarray, beta_d
         f_C_beta_sigma_aa (array): Mixed second derivative with respect to the beta density and sigma alpha-alpha
         f_C_beta_sigma_bb (array): Mixed second derivative with respect to the beta density and sigma beta-beta
         f_C_beta_sigma_ab (array): Mixed second derivative with respect to the beta density and sigma alpha-beta
+        None: The six square gradient blocks, identically zero for LYP, and the thirteen kinetic energy density blocks
 
     """
 
@@ -3046,7 +3043,7 @@ def calculate_unrestricted_LYP_correlation_kernel(alpha_density: ndarray, beta_d
 
     # LYP is linear in the square gradients, so their second derivatives vanish
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, f_C_alpha_sigma_ab, f_C_beta_sigma_aa, f_C_beta_sigma_bb, f_C_beta_sigma_ab
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, f_C_alpha_sigma_ab, f_C_beta_sigma_aa, f_C_beta_sigma_bb, f_C_beta_sigma_ab) + (None,) * 19
 
 
 
@@ -3073,6 +3070,9 @@ def calculate_restricted_PBE_correlation_kernel(density: ndarray, sigma: ndarray
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_C with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -3179,7 +3179,7 @@ def calculate_restricted_PBE_correlation_kernel(density: ndarray, sigma: ndarray
 
     d2f_ds2 = density * d2H_ds2
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -3206,6 +3206,12 @@ def calculate_restricted_PBE_spin_correlation_kernel(density: ndarray, sigma: nd
 
     Returns:
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
+        f_m_sigma_nm (None): No gradient blocks, as only the total square gradient is seen
+        f_sigma_nm_sigma_nm (None): No gradient blocks, as only the total square gradient is seen
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_mm (None): No gradient blocks, as only the total square gradient is seen
 
     """
 
@@ -3257,7 +3263,7 @@ def calculate_restricted_PBE_spin_correlation_kernel(density: ndarray, sigma: nd
 
     f_mm = (alpha_C + d2H_dzeta2) / density
 
-    return f_mm
+    return f_mm, None, None, None, None, None, None
 
 
 
@@ -3289,9 +3295,10 @@ def calculate_unrestricted_PBE_correlation_kernel(alpha_density: ndarray, beta_d
         f_C_alpha_alpha (array): Second derivative of f = n * e_C with respect to the alpha density
         f_C_alpha_beta (array): Mixed second derivative with respect to the alpha and beta densities
         f_C_beta_beta (array): Second derivative with respect to the beta density
-        f_C_alpha_sigma (array): Mixed second derivative with respect to the alpha density and the total square gradient
-        f_C_beta_sigma (array): Mixed second derivative with respect to the beta density and the total square gradient
-        f_C_sigma_sigma (array): Second derivative with respect to the total square gradient
+        f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, f_C_alpha_sigma_ab (array): Mixed second derivatives with respect to the alpha density and the square gradients
+        f_C_beta_sigma_aa, f_C_beta_sigma_bb, f_C_beta_sigma_ab (array): Mixed second derivatives with respect to the beta density and the square gradients
+        f_C_sigma_aa_sigma_aa, ... , f_C_sigma_ab_sigma_ab (array): Second derivatives with respect to the square gradients
+        None: The thirteen kinetic energy density blocks
 
     """
 
@@ -3449,7 +3456,12 @@ def calculate_unrestricted_PBE_correlation_kernel(alpha_density: ndarray, beta_d
 
     f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma, f_C_beta_sigma, f_C_sigma_sigma = calculate_spin_polarisation_transformation(zeta, density, df_dzeta, d2f_dn2, d2f_dndzeta, d2f_dzeta2, d2f_dnds, d2f_dzetads, d2f_ds2)
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma, f_C_beta_sigma, f_C_sigma_sigma
+    # Only the total square gradient is seen, so the chain rule spreads its blocks over sigma_aa, sigma_bb and sigma_ab
+
+    density_sigma_blocks = (f_C_alpha_sigma, f_C_alpha_sigma, 2 * f_C_alpha_sigma, f_C_beta_sigma, f_C_beta_sigma, 2 * f_C_beta_sigma)
+    sigma_sigma_blocks = (f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, 4 * f_C_sigma_sigma)
+
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta) + density_sigma_blocks + sigma_sigma_blocks + (None,) * 13
 
 
 
@@ -3571,6 +3583,9 @@ def calculate_restricted_PW91_correlation_kernel(density: ndarray, sigma: ndarra
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_C with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -3675,7 +3690,7 @@ def calculate_restricted_PW91_correlation_kernel(density: ndarray, sigma: ndarra
     d2f_dnds = (dH0_ds + dH1_ds) + density * (d2H0_dnds + d2H1_dnds)
     d2f_ds2 = density * (d2H0_ds2 + d2H1_ds2)
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -3702,6 +3717,12 @@ def calculate_restricted_PW91_spin_correlation_kernel(density: ndarray, sigma: n
 
     Returns:
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
+        f_m_sigma_nm (None): No gradient blocks, as only the total square gradient is seen
+        f_sigma_nm_sigma_nm (None): No gradient blocks, as only the total square gradient is seen
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_mm (None): No gradient blocks, as only the total square gradient is seen
 
     """
 
@@ -3756,7 +3777,7 @@ def calculate_restricted_PW91_spin_correlation_kernel(density: ndarray, sigma: n
 
     f_mm = (alpha_C + d2H0_dzeta2 + d2H1_dzeta2) / density
 
-    return f_mm
+    return f_mm, None, None, None, None, None, None
 
 
 
@@ -3788,9 +3809,10 @@ def calculate_unrestricted_PW91_correlation_kernel(alpha_density: ndarray, beta_
         f_C_alpha_alpha (array): Second derivative of f = n * e_C with respect to the alpha density
         f_C_alpha_beta (array): Mixed second derivative with respect to the alpha and beta densities
         f_C_beta_beta (array): Second derivative with respect to the beta density
-        f_C_alpha_sigma (array): Mixed second derivative with respect to the alpha density and the total square gradient
-        f_C_beta_sigma (array): Mixed second derivative with respect to the beta density and the total square gradient
-        f_C_sigma_sigma (array): Second derivative with respect to the total square gradient
+        f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, f_C_alpha_sigma_ab (array): Mixed second derivatives with respect to the alpha density and the square gradients
+        f_C_beta_sigma_aa, f_C_beta_sigma_bb, f_C_beta_sigma_ab (array): Mixed second derivatives with respect to the beta density and the square gradients
+        f_C_sigma_aa_sigma_aa, ... , f_C_sigma_ab_sigma_ab (array): Second derivatives with respect to the square gradients
+        None: The thirteen kinetic energy density blocks
 
     """
 
@@ -3952,7 +3974,12 @@ def calculate_unrestricted_PW91_correlation_kernel(alpha_density: ndarray, beta_
 
     f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma, f_C_beta_sigma, f_C_sigma_sigma = calculate_spin_polarisation_transformation(zeta, density, df_dzeta, d2f_dn2, d2f_dndzeta, d2f_dzeta2, d2f_dnds, d2f_dzetads, d2f_ds2)
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma, f_C_beta_sigma, f_C_sigma_sigma
+    # Only the total square gradient is seen, so the chain rule spreads its blocks over sigma_aa, sigma_bb and sigma_ab
+
+    density_sigma_blocks = (f_C_alpha_sigma, f_C_alpha_sigma, 2 * f_C_alpha_sigma, f_C_beta_sigma, f_C_beta_sigma, 2 * f_C_beta_sigma)
+    sigma_sigma_blocks = (f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, 4 * f_C_sigma_sigma)
+
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta) + density_sigma_blocks + sigma_sigma_blocks + (None,) * 13
 
 
 
@@ -4076,6 +4103,9 @@ def calculate_restricted_P86_correlation_kernel(density: ndarray, sigma: ndarray
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_C with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -4125,7 +4155,7 @@ def calculate_restricted_P86_correlation_kernel(density: ndarray, sigma: ndarray
     d2f_dnds = dH_ds + density * d2H_dnds
     d2f_ds2 = density * d2H_ds2
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -4152,6 +4182,12 @@ def calculate_restricted_P86_spin_correlation_kernel(density: ndarray, sigma: nd
 
     Returns:
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
+        f_m_sigma_nm (None): No gradient blocks, as only the total square gradient is seen
+        f_sigma_nm_sigma_nm (None): No gradient blocks, as only the total square gradient is seen
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_mm (None): No gradient blocks, as only the total square gradient is seen
 
     """
 
@@ -4169,7 +4205,7 @@ def calculate_restricted_P86_spin_correlation_kernel(density: ndarray, sigma: nd
 
     f_mm = (-minus_alpha - (5 / 9) * H) / density
 
-    return f_mm
+    return f_mm, None, None, None, None, None, None
 
 
 
@@ -4201,9 +4237,10 @@ def calculate_unrestricted_P86_correlation_kernel(alpha_density: ndarray, beta_d
         f_C_alpha_alpha (array): Second derivative of f = n * e_C with respect to the alpha density
         f_C_alpha_beta (array): Mixed second derivative with respect to the alpha and beta densities
         f_C_beta_beta (array): Second derivative with respect to the beta density
-        f_C_alpha_sigma (array): Mixed second derivative with respect to the alpha density and the total square gradient
-        f_C_beta_sigma (array): Mixed second derivative with respect to the beta density and the total square gradient
-        f_C_sigma_sigma (array): Second derivative with respect to the total square gradient
+        f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, f_C_alpha_sigma_ab (array): Mixed second derivatives with respect to the alpha density and the square gradients
+        f_C_beta_sigma_aa, f_C_beta_sigma_bb, f_C_beta_sigma_ab (array): Mixed second derivatives with respect to the beta density and the square gradients
+        f_C_sigma_aa_sigma_aa, ... , f_C_sigma_ab_sigma_ab (array): Second derivatives with respect to the square gradients
+        None: The thirteen kinetic energy density blocks
 
     """
 
@@ -4249,7 +4286,12 @@ def calculate_unrestricted_P86_correlation_kernel(alpha_density: ndarray, beta_d
 
     f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma, f_C_beta_sigma, f_C_sigma_sigma = calculate_spin_polarisation_transformation(zeta, density, df_dzeta, d2f_dn2, d2f_dndzeta, d2f_dzeta2, d2f_dnds, d2f_dzetads, d2f_ds2)
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma, f_C_beta_sigma, f_C_sigma_sigma
+    # Only the total square gradient is seen, so the chain rule spreads its blocks over sigma_aa, sigma_bb and sigma_ab
+
+    density_sigma_blocks = (f_C_alpha_sigma, f_C_alpha_sigma, 2 * f_C_alpha_sigma, f_C_beta_sigma, f_C_beta_sigma, 2 * f_C_beta_sigma)
+    sigma_sigma_blocks = (f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, 4 * f_C_sigma_sigma)
+
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta) + density_sigma_blocks + sigma_sigma_blocks + (None,) * 13
 
 
 
@@ -4434,6 +4476,9 @@ def calculate_restricted_B97_correlation_kernel(density: ndarray, sigma: ndarray
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_C with respect to density and sigma
         d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -4460,7 +4505,7 @@ def calculate_restricted_B97_correlation_kernel(density: ndarray, sigma: ndarray
 
     df_dn_LSDA, _, _, e_C_LSDA = calculate_restricted_PW_correlation(density, sigma, tau, calculation)
 
-    d2f_dn2_LSDA = calculate_restricted_PW_correlation_kernel(density, sigma, tau, calculation)
+    d2f_dn2_LSDA, *_ = calculate_restricted_PW_correlation_kernel(density, sigma, tau, calculation)
 
     V = density * e_C_LSDA - U
     dV_dn = df_dn_LSDA - dU_dn
@@ -4492,7 +4537,7 @@ def calculate_restricted_B97_correlation_kernel(density: ndarray, sigma: ndarray
 
     d2f_ds2 = second * dt_ds * dt_ds
 
-    return d2f_dn2, d2f_dnds, d2f_ds2
+    return d2f_dn2, d2f_dnds, d2f_ds2, None, None, None
 
 
 
@@ -4521,6 +4566,9 @@ def calculate_restricted_B97_spin_correlation_kernel(density: ndarray, sigma: nd
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
         f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
         f_sigma_nm_sigma_nm (array): Second derivative with respect to grad(n) . grad(m)
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
         f_sigma_mm (array): Derivative with respect to the square spin density gradient
 
     """
@@ -4545,7 +4593,7 @@ def calculate_restricted_B97_spin_correlation_kernel(density: ndarray, sigma: nd
 
     df_dn_LSDA, _, _, e_C_LSDA = calculate_restricted_PW_correlation(density, sigma, tau, calculation)
 
-    f_C_alpha_alpha, f_C_alpha_beta, _ = calculate_unrestricted_PW_correlation_kernel(spin_density, spin_density, density, None, None, None, None, None, calculation)
+    f_C_alpha_alpha, f_C_alpha_beta, *_ = calculate_unrestricted_PW_correlation_kernel(spin_density, spin_density, density, None, None, None, None, None, calculation)
 
     # Opposite-spin piece and its derivatives with respect to one spin density
 
@@ -4570,7 +4618,7 @@ def calculate_restricted_B97_spin_correlation_kernel(density: ndarray, sigma: nd
 
     f_sigma_mm = (dg_ss_dt * dt_ds * W + dg_ab_dt * (dt_ds / 2) * C) / 2
 
-    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm, f_sigma_mm
+    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm, None, None, None, f_sigma_mm
 
 
 
@@ -4609,6 +4657,7 @@ def calculate_unrestricted_B97_correlation_kernel(alpha_density: ndarray, beta_d
         f_C_sigma_aa_sigma_aa (array): Second derivative with respect to sigma alpha-alpha
         f_C_sigma_aa_sigma_bb (array): Mixed second derivative with respect to the two square gradients
         f_C_sigma_bb_sigma_bb (array): Second derivative with respect to sigma beta-beta
+        None: The blocks involving sigma alpha-beta, which B97 does not see, and the thirteen kinetic energy density blocks
 
     """
 
@@ -4642,7 +4691,7 @@ def calculate_unrestricted_B97_correlation_kernel(alpha_density: ndarray, beta_d
 
     df_dn_alpha, df_dn_beta, _, _, _, _, _, e_C_LSDA = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
 
-    F_aa, F_ab, F_bb = calculate_unrestricted_PW_correlation_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
+    F_aa, F_ab, F_bb, *_ = calculate_unrestricted_PW_correlation_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
 
     # Opposite-spin piece, which has no gradient dependence of its own
 
@@ -4690,7 +4739,7 @@ def calculate_unrestricted_B97_correlation_kernel(alpha_density: ndarray, beta_d
     f_C_sigma_aa_sigma_bb = R_saa_sbb
     f_C_sigma_bb_sigma_bb = Q_sbb_sbb + R_sbb_sbb
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, f_C_beta_sigma_aa, f_C_beta_sigma_bb, f_C_sigma_aa_sigma_aa, f_C_sigma_aa_sigma_bb, f_C_sigma_bb_sigma_bb
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, None, f_C_beta_sigma_aa, f_C_beta_sigma_bb, None, f_C_sigma_aa_sigma_aa, f_C_sigma_aa_sigma_bb, None, f_C_sigma_bb_sigma_bb, None, None) + (None,) * 13
 
 
 
@@ -4716,7 +4765,10 @@ def calculate_restricted_3P_correlation_kernel(density: ndarray, sigma: ndarray,
     Returns:
         d2f_dn2 (array): Second derivative of f = n * e_C with respect to density
         d2f_dnds (array): Mixed second derivative of f = n * e_C with respect to density and sigma
-        d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma
+        d2f_ds2 (array): Second derivative of f = n * e_C with respect to sigma, None for B3LYP
+        d2f_dndt (None): No kinetic energy density blocks
+        d2f_dsdt (None): No kinetic energy density blocks
+        d2f_dt2 (None): No kinetic energy density blocks
 
     """
 
@@ -4724,7 +4776,7 @@ def calculate_restricted_3P_correlation_kernel(density: ndarray, sigma: ndarray,
 
     # If "/G" is used, uses the Gaussian parameterisation for B3LYP with VWN-III instead of the more commonly used VWN-V
 
-    d2f_dn2_LDA = correlation_density_kernels["VWN3" if "G" in method else "VWN5"](density, sigma, tau, calculation)
+    d2f_dn2_LDA, _, _, _, _, _ = correlation_density_kernels["VWN3" if "G" in method else "VWN5"](density, sigma, tau, calculation)
 
     # Picks the GGA correlation kernel depending on the method
 
@@ -4732,20 +4784,15 @@ def calculate_restricted_3P_correlation_kernel(density: ndarray, sigma: ndarray,
     if "PW" in method: correlation_kernel = correlation_density_kernels["PW91"]
     if "P86" in method: correlation_kernel = correlation_density_kernels["P86"]
 
-    # Calculates the kernel for the GGA part
+    # Calculates the kernel for the GGA part, then applies the standard B3LYP coefficients for correlation, leaving vanishing blocks as None
 
-    d2f_dn2_GGA, d2f_dnds_GGA, d2f_ds2_GGA = correlation_kernel(density, sigma, tau, calculation)
-
-    # These parameters are the standard B3LYP coefficients for correlation
+    d2f_dn2_GGA, *gradient_blocks = correlation_kernel(density, sigma, tau, calculation)
 
     d2f_dn2 = 0.81 * d2f_dn2_GGA + 0.19 * d2f_dn2_LDA
 
-    d2f_dnds = 0.81 * d2f_dnds_GGA
+    gradient_blocks = tuple(0.81 * block if block is not None else None for block in gradient_blocks)
 
-    d2f_ds2 = None if d2f_ds2_GGA is None else 0.81 * d2f_ds2_GGA
-
-    return d2f_dn2, d2f_dnds, d2f_ds2
-
+    return (d2f_dn2,) + gradient_blocks
 
 
 
@@ -4761,7 +4808,7 @@ def calculate_restricted_3P_spin_correlation_kernel(density: ndarray, sigma: nda
 
     Calculates the restricted three-parameter spin correlation kernel for triplet excitations.
 
-    For B3PW91 and B3P86 the two gradient blocks are zero, as PW91 and P86 correlation only see the total square gradient.
+    For B3PW91 and B3P86 the gradient blocks are zero, as PW91 and P86 correlation only see the total square gradient.
 
     Args:
         density (array): Electron density on integration grid
@@ -4772,7 +4819,11 @@ def calculate_restricted_3P_spin_correlation_kernel(density: ndarray, sigma: nda
     Returns:
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
         f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
-        f_sigma_mm (array): Derivative with respect to the square spin density gradient
+        f_sigma_nm_sigma_nm (None): Second derivative with respect to grad(n) . grad(m), identically zero for LYP, PW91 and P86
+        f_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_nm_tau_m (None): No kinetic energy density blocks
+        f_tau_m_tau_m (None): No kinetic energy density blocks
+        f_sigma_mm (array): Derivative with respect to the square spin density gradient, None for B3PW91 and B3P86
 
     """
 
@@ -4780,7 +4831,7 @@ def calculate_restricted_3P_spin_correlation_kernel(density: ndarray, sigma: nda
 
     # If "/G" is used, uses the Gaussian parameterisation for B3LYP with VWN-III instead of the more commonly used VWN-V
 
-    f_mm_LDA = correlation_spin_kernels["VWN3" if "G" in method else "VWN5"](density, sigma, tau, calculation)
+    f_mm_LDA, _, _, _, _, _, _ = correlation_spin_kernels["VWN3" if "G" in method else "VWN5"](density, sigma, tau, calculation)
 
     # Picks the GGA correlation kernel depending on the method
 
@@ -4788,28 +4839,15 @@ def calculate_restricted_3P_spin_correlation_kernel(density: ndarray, sigma: nda
     if "PW" in method: correlation_kernel = correlation_spin_kernels["PW91"]
     if "P86" in method: correlation_kernel = correlation_spin_kernels["P86"]
 
-    # Calculates the kernel for the GGA part
+    # Calculates the kernel for the GGA part, then applies the standard B3LYP coefficients for correlation, leaving vanishing blocks as None
 
-    blocks = correlation_kernel(density, sigma, tau, calculation)
-
-    # PW91 and P86 have no gradient blocks, so these are zeros
-
-    if not isinstance(blocks, tuple):
-
-        zeros = np.zeros_like(density)
-
-        blocks = blocks, zeros, zeros
-
-    f_mm_GGA, f_m_sigma_nm_GGA, f_sigma_mm_GGA = blocks
-
-    # These parameters are the standard B3LYP coefficients for correlation
+    f_mm_GGA, *gradient_blocks = correlation_kernel(density, sigma, tau, calculation)
 
     f_mm = 0.81 * f_mm_GGA + 0.19 * f_mm_LDA
-    f_m_sigma_nm = 0.81 * f_m_sigma_nm_GGA
-    f_sigma_mm = 0.81 * f_sigma_mm_GGA
 
-    return f_mm, f_m_sigma_nm, f_sigma_mm
+    gradient_blocks = tuple(0.81 * block if block is not None else None for block in gradient_blocks)
 
+    return (f_mm,) + gradient_blocks
 
 
 
@@ -4845,7 +4883,7 @@ def calculate_unrestricted_3P_correlation_kernel(alpha_density: ndarray, beta_de
 
     # If "/G" is used, uses the Gaussian parameterisation for B3LYP with VWN-III instead of the more commonly used VWN-V
 
-    f_aa_LDA, f_ab_LDA, f_bb_LDA = unrestricted_correlation_kernels["VWN3" if "G" in method else "VWN5"](alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
+    f_aa_LDA, f_ab_LDA, f_bb_LDA, *_ = unrestricted_correlation_kernels["VWN3" if "G" in method else "VWN5"](alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
 
     # Picks the GGA correlation kernel depending on the method
 
@@ -4853,26 +4891,17 @@ def calculate_unrestricted_3P_correlation_kernel(alpha_density: ndarray, beta_de
     if "PW" in method: correlation_kernel = unrestricted_correlation_kernels["PW91"]
     if "P86" in method: correlation_kernel = unrestricted_correlation_kernels["P86"]
 
-    # Calculates the kernel for the GGA part
+    # Calculates the kernel for the GGA part, then applies the standard B3LYP coefficients for correlation, leaving vanishing blocks as None
 
-    blocks_GGA = correlation_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
-
-    f_aa_GGA, f_ab_GGA, f_bb_GGA = blocks_GGA[0], blocks_GGA[1], blocks_GGA[2]
-
-    # These parameters are the standard B3LYP coefficients for correlation
+    f_aa_GGA, f_ab_GGA, f_bb_GGA, *gradient_blocks = correlation_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
 
     f_aa = 0.81 * f_aa_GGA + 0.19 * f_aa_LDA
     f_ab = 0.81 * f_ab_GGA + 0.19 * f_ab_LDA
     f_bb = 0.81 * f_bb_GGA + 0.19 * f_bb_LDA
 
-    # Gradient blocks from the GGA part, whose number depends on the functional
+    gradient_blocks = tuple(0.81 * block if block is not None else None for block in gradient_blocks)
 
-    gradient_blocks = [0.81 * block for block in blocks_GGA[3:]]
-
-    blocks = tuple([f_aa, f_ab, f_bb] + gradient_blocks)
-
-    return blocks
-
+    return (f_aa, f_ab, f_bb) + gradient_blocks
 
 
 
@@ -4963,13 +4992,12 @@ def calculate_unrestricted_SCAN_correlation_kernel(alpha_density: ndarray, beta_
         f_C_alpha_alpha (array): Second derivative of f = n * e_C with respect to the alpha density
         f_C_alpha_beta (array): Mixed second derivative with respect to the alpha and beta densities
         f_C_beta_beta (array): Second derivative with respect to the beta density
-        f_C_alpha_sigma (array): Mixed second derivative with respect to the alpha density and sigma
-        f_C_beta_sigma (array): Mixed second derivative with respect to the beta density and sigma
-        f_C_sigma_sigma (array): Second derivative with respect to sigma
-        f_C_alpha_tau (array): Mixed second derivative with respect to the alpha density and tau
-        f_C_beta_tau (array): Mixed second derivative with respect to the beta density and tau
-        f_C_sigma_tau (array): Mixed second derivative with respect to sigma and tau
-        f_C_tau_tau (array): Second derivative with respect to tau
+        f_C_alpha_sigma_aa, f_C_alpha_sigma_bb, f_C_alpha_sigma_ab (array): Mixed second derivatives with respect to the alpha density and the square gradients
+        f_C_beta_sigma_aa, f_C_beta_sigma_bb, f_C_beta_sigma_ab (array): Mixed second derivatives with respect to the beta density and the square gradients
+        f_C_sigma_aa_sigma_aa, ... , f_C_sigma_ab_sigma_ab (array): Second derivatives with respect to the square gradients
+        f_C_alpha_tau_alpha, ... , f_C_beta_tau_beta (array): Mixed second derivatives with respect to the densities and kinetic energy densities
+        f_C_sigma_aa_tau_alpha, ... , f_C_sigma_ab_tau_beta (array): Mixed second derivatives with respect to the square gradients and kinetic energy densities
+        f_C_tau_alpha_tau_alpha, f_C_tau_alpha_tau_beta, f_C_tau_beta_tau_beta (array): Second derivatives with respect to the kinetic energy densities
 
     """
 
@@ -5544,7 +5572,15 @@ def calculate_unrestricted_SCAN_correlation_kernel(alpha_density: ndarray, beta_
     f_C_alpha_tau = d2f_dndt + d2f_dzetadt * (1 - zeta) * inv_density
     f_C_beta_tau = d2f_dndt - d2f_dzetadt * (1 + zeta) * inv_density
 
-    return f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta, f_C_alpha_sigma, f_C_beta_sigma, f_C_sigma_sigma, f_C_alpha_tau, f_C_beta_tau, d2f_dsdt, d2f_dt2
+    # Only the total square gradient and kinetic energy density are seen, so the chain rule spreads their blocks over the spin-resolved variables
+
+    density_sigma_blocks = (f_C_alpha_sigma, f_C_alpha_sigma, 2 * f_C_alpha_sigma, f_C_beta_sigma, f_C_beta_sigma, 2 * f_C_beta_sigma)
+    sigma_sigma_blocks = (f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, f_C_sigma_sigma, 2 * f_C_sigma_sigma, 4 * f_C_sigma_sigma)
+    density_tau_blocks = (f_C_alpha_tau, f_C_alpha_tau, f_C_beta_tau, f_C_beta_tau)
+    sigma_tau_blocks = (d2f_dsdt, d2f_dsdt, d2f_dsdt, d2f_dsdt, 2 * d2f_dsdt, 2 * d2f_dsdt)
+    tau_tau_blocks = (d2f_dt2, d2f_dt2, d2f_dt2)
+
+    return (f_C_alpha_alpha, f_C_alpha_beta, f_C_beta_beta) + density_sigma_blocks + sigma_sigma_blocks + density_tau_blocks + sigma_tau_blocks + tau_tau_blocks
 
 
 
@@ -5577,20 +5613,7 @@ def calculate_restricted_SCAN_correlation_kernel(density: ndarray, sigma: ndarra
 
     """
 
-    # Spin-resolved blocks at the closed shell, where the total sigma and tau are those of the restricted reference
-
-    f_aa, f_ab, f_bb, f_a_s, f_b_s, f_ss, f_a_t, f_b_t, f_st, f_tt = calculate_unrestricted_SCAN_correlation_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
-
-    # For singlet excitations both spin densities change by half the density change
-
-    d2f_dn2 = (f_aa + 2 * f_ab + f_bb) / 4
-    d2f_dnds = (f_a_s + f_b_s) / 2
-    d2f_ds2 = f_ss
-    d2f_dndt = (f_a_t + f_b_t) / 2
-    d2f_dsdt = f_st
-    d2f_dt2 = f_tt
-
-    return d2f_dn2, d2f_dnds, d2f_ds2, d2f_dndt, d2f_dsdt, d2f_dt2
+    return calculate_restricted_kernel_from_unrestricted(calculate_unrestricted_SCAN_correlation_kernel, density, sigma, tau, calculation)
 
 
 
@@ -5600,8 +5623,7 @@ def calculate_restricted_SCAN_correlation_kernel(density: ndarray, sigma: ndarra
 
 
 
-
-def calculate_restricted_SCAN_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> ndarray:
+def calculate_restricted_SCAN_spin_correlation_kernel(density: ndarray, sigma: ndarray, tau: ndarray, calculation: Calculation) -> tuple:
 
     """
 
@@ -5616,17 +5638,16 @@ def calculate_restricted_SCAN_spin_correlation_kernel(density: ndarray, sigma: n
 
     Returns:
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
+        f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
+        f_sigma_nm_sigma_nm (array): Second derivative with respect to grad(n) . grad(m)
+        f_m_tau_m (array): Mixed second derivative with respect to the spin density and the spin kinetic energy density, tau_alpha - tau_beta
+        f_sigma_nm_tau_m (array): Mixed second derivative with respect to grad(n) . grad(m) and the spin kinetic energy density
+        f_tau_m_tau_m (array): Second derivative with respect to the spin kinetic energy density
+        f_sigma_mm (array): Derivative with respect to grad(m) . grad(m)
 
     """
 
-    f_aa, f_ab, f_bb, _, _, _, _, _, _, _ = calculate_unrestricted_SCAN_correlation_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
-
-    # For triplet excitations the spin densities change by plus and minus half the spin density change
-
-    f_mm = (f_aa - 2 * f_ab + f_bb) / 4
-
-    return f_mm
-
+    return calculate_restricted_spin_kernel_from_unrestricted(calculate_unrestricted_SCAN_correlation_kernel, density, sigma, tau, calculation)
 
 
 
@@ -5817,6 +5838,7 @@ def calculate_unrestricted_B97M_correlation_kernel(alpha_density: ndarray, beta_
         f_C_sigma_aa_sigma_aa (array): Second derivative with respect to sigma alpha-alpha
         f_C_sigma_aa_sigma_bb (array): Mixed second derivative with respect to the two square gradients
         f_C_sigma_bb_sigma_bb (array): Second derivative with respect to sigma beta-beta
+        None: The blocks involving sigma alpha-beta, which B97M does not see
         f_C_alpha_tau_alpha (array): Mixed second derivative with respect to the alpha density and tau alpha
         f_C_alpha_tau_beta (array): Mixed second derivative with respect to the alpha density and tau beta
         f_C_beta_tau_alpha (array): Mixed second derivative with respect to the beta density and tau alpha
@@ -5849,7 +5871,7 @@ def calculate_unrestricted_B97M_correlation_kernel(alpha_density: ndarray, beta_
     W_b, dW_b, d2W_b = calculate_PW_ferromagnetic_derivatives(beta_density)
 
     df_dn_alpha, df_dn_beta, _, _, _, _, _, e_C_LSDA = calculate_unrestricted_PW_correlation(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
-    F_aa, F_ab, F_bb = calculate_unrestricted_PW_correlation_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
+    F_aa, F_ab, F_bb, *_ = calculate_unrestricted_PW_correlation_kernel(alpha_density, beta_density, density, sigma_aa, sigma_bb, sigma_ab, tau_alpha, tau_beta, calculation)
 
     C = density * e_C_LSDA - W_a - W_b
 
@@ -5900,13 +5922,21 @@ def calculate_unrestricted_B97M_correlation_kernel(alpha_density: ndarray, beta_
 
     P = {(0, 0): P_a_nn, (0, 2): P_a_ns, (0, 4): P_a_nt, (2, 2): P_a_ss, (2, 4): P_a_st, (4, 4): P_a_tt, (1, 1): P_b_nn, (1, 3): P_b_ns, (1, 5): P_b_nt, (3, 3): P_b_ss, (3, 5): P_b_st, (5, 5): P_b_tt}
 
-    # The first ten blocks are ordered as for B97, and the kinetic energy density blocks follow
+    # The standard order of blocks over the six variables, with None wherever sigma alpha-beta appears
 
-    index_pairs = [(0, 0), (0, 1), (1, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 2), (2, 3), (3, 3), (0, 4), (0, 5), (1, 4), (1, 5), (2, 4), (2, 5), (3, 4), (3, 5), (4, 4), (4, 5), (5, 5)]
+    index_pairs = [(0, 0), (0, 1), (1, 1), (0, 2), (0, 3), None, (1, 2), (1, 3), None, (2, 2), (2, 3), None, (3, 3), None, None, (0, 4), (0, 5), (1, 4), (1, 5), (2, 4), (2, 5), (3, 4), (3, 5), None, None, (4, 4), (4, 5), (5, 5)]
 
     blocks = []
 
-    for i, j in index_pairs:
+    for pair in index_pairs:
+
+        if pair is None:
+
+            blocks.append(None)
+
+            continue
+
+        i, j = pair
 
         # First and second derivatives of w and u through the channel means
 
@@ -5960,21 +5990,7 @@ def calculate_restricted_B97M_correlation_kernel(density: ndarray, sigma: ndarra
 
     """
 
-    # Spin-resolved blocks at the closed shell
-
-    f_aa, f_ab, f_bb, f_a_saa, f_a_sbb, f_b_saa, f_b_sbb, f_saa_saa, f_saa_sbb, f_sbb_sbb, f_a_ta, f_a_tb, f_b_ta, f_b_tb, f_saa_ta, f_saa_tb, f_sbb_ta, f_sbb_tb, f_ta_ta, f_ta_tb, f_tb_tb = calculate_unrestricted_B97M_correlation_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
-
-    # For singlet excitations each channel gets half the density and kinetic energy density change and a quarter of the sigma change
-
-    d2f_dn2 = (f_aa + 2 * f_ab + f_bb) / 4
-    d2f_dnds = (f_a_saa + f_a_sbb + f_b_saa + f_b_sbb) / 8
-    d2f_ds2 = (f_saa_saa + 2 * f_saa_sbb + f_sbb_sbb) / 16
-    d2f_dndt = (f_a_ta + f_a_tb + f_b_ta + f_b_tb) / 4
-    d2f_dsdt = (f_saa_ta + f_saa_tb + f_sbb_ta + f_sbb_tb) / 8
-    d2f_dt2 = (f_ta_ta + 2 * f_ta_tb + f_tb_tb) / 4
-
-    return d2f_dn2, d2f_dnds, d2f_ds2, d2f_dndt, d2f_dsdt, d2f_dt2
-
+    return calculate_restricted_kernel_from_unrestricted(calculate_unrestricted_B97M_correlation_kernel, density, sigma, tau, calculation)
 
 
 
@@ -6000,34 +6016,14 @@ def calculate_restricted_B97M_spin_correlation_kernel(density: ndarray, sigma: n
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
         f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
         f_sigma_nm_sigma_nm (array): Second derivative with respect to grad(n) . grad(m)
-        f_sigma_mm (array): First derivative with respect to grad(m) . grad(m)
         f_m_tau_m (array): Mixed second derivative with respect to the spin density and the spin kinetic energy density, tau_alpha - tau_beta
         f_sigma_nm_tau_m (array): Mixed second derivative with respect to grad(n) . grad(m) and the spin kinetic energy density
         f_tau_m_tau_m (array): Second derivative with respect to the spin kinetic energy density
+        f_sigma_mm (array): Derivative with respect to grad(m) . grad(m)
 
     """
 
-    # Spin-resolved blocks at the closed shell
-
-    f_aa, f_ab, f_bb, f_a_saa, f_a_sbb, f_b_saa, f_b_sbb, f_saa_saa, f_saa_sbb, f_sbb_sbb, f_a_ta, f_a_tb, f_b_ta, f_b_tb, f_saa_ta, f_saa_tb, f_sbb_ta, f_sbb_tb, f_ta_ta, f_ta_tb, f_tb_tb = calculate_unrestricted_B97M_correlation_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
-
-    # For triplet excitations the two channels change in opposite directions, by half the spin density, grad(n) . grad(m) and tau_m changes
-
-    f_mm = (f_aa - 2 * f_ab + f_bb) / 4
-    f_m_sigma_nm = (f_a_saa - f_a_sbb - f_b_saa + f_b_sbb) / 4
-    f_sigma_nm_sigma_nm = (f_saa_saa - 2 * f_saa_sbb + f_sbb_sbb) / 4
-    f_m_tau_m = (f_a_ta - f_a_tb - f_b_ta + f_b_tb) / 4
-    f_sigma_nm_tau_m = (f_saa_ta - f_saa_tb - f_sbb_ta + f_sbb_tb) / 4
-    f_tau_m_tau_m = (f_ta_ta - 2 * f_ta_tb + f_tb_tb) / 4
-
-    # As grad(m) . grad(m) is quadratic in the response, only its first derivative enters, and it adds a quarter to each same-spin square gradient
-
-    _, _, df_ds_aa, df_ds_bb, _, _, _, _ = calculate_unrestricted_B97M_correlation(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
-
-    f_sigma_mm = (df_ds_aa + df_ds_bb) / 4
-
-    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm, f_sigma_mm, f_m_tau_m, f_sigma_nm_tau_m, f_tau_m_tau_m
-
+    return calculate_restricted_spin_kernel_from_unrestricted(calculate_unrestricted_B97M_correlation_kernel, density, sigma, tau, calculation)
 
 
 
@@ -6389,12 +6385,9 @@ def calculate_unrestricted_TPSS_correlation_kernel(alpha_density: ndarray, beta_
         f_C_sigma_bb_sigma_bb (array): Second derivative with respect to sigma beta-beta
         f_C_sigma_bb_sigma_ab (array): Mixed second derivative with respect to sigma beta-beta and sigma alpha-beta
         f_C_sigma_ab_sigma_ab (array): Second derivative with respect to sigma alpha-beta
-        f_C_alpha_tau (array): Mixed second derivative with respect to the alpha density and tau
-        f_C_beta_tau (array): Mixed second derivative with respect to the beta density and tau
-        f_C_sigma_aa_tau (array): Mixed second derivative with respect to sigma alpha-alpha and tau
-        f_C_sigma_bb_tau (array): Mixed second derivative with respect to sigma beta-beta and tau
-        f_C_sigma_ab_tau (array): Mixed second derivative with respect to sigma alpha-beta and tau
-        f_C_tau_tau (array): Second derivative with respect to tau
+        f_C_alpha_tau_alpha, ... , f_C_beta_tau_beta (array): Mixed second derivatives with respect to the densities and kinetic energy densities
+        f_C_sigma_aa_tau_alpha, ... , f_C_sigma_ab_tau_beta (array): Mixed second derivatives with respect to the square gradients and kinetic energy densities
+        f_C_tau_alpha_tau_alpha, f_C_tau_alpha_tau_beta, f_C_tau_beta_tau_beta (array): Second derivatives with respect to the kinetic energy densities
 
     """
 
@@ -6606,7 +6599,9 @@ def calculate_unrestricted_TPSS_correlation_kernel(alpha_density: ndarray, beta_
 
     density_weights = [1, 1, 0, 0, 0, 0]
 
-    index_pairs = [(0, 0), (0, 1), (1, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 2), (2, 3), (2, 4), (3, 3), (3, 4), (4, 4), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5)]
+    # The standard order of blocks, in which the total kinetic energy density blocks are shared between tau alpha and tau beta
+
+    index_pairs = [(0, 0), (0, 1), (1, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 2), (2, 3), (2, 4), (3, 3), (3, 4), (4, 4), (0, 5), (0, 5), (1, 5), (1, 5), (2, 5), (2, 5), (3, 5), (3, 5), (4, 5), (4, 5), (5, 5), (5, 5), (5, 5)]
 
     blocks = []
 
@@ -6649,21 +6644,7 @@ def calculate_restricted_TPSS_correlation_kernel(density: ndarray, sigma: ndarra
 
     """
 
-    # Spin-resolved blocks at the closed shell, where each of the three square gradients is a quarter of sigma
-
-    f_aa, f_ab, f_bb, f_a_saa, f_a_sbb, f_a_sab, f_b_saa, f_b_sbb, f_b_sab, f_saa_saa, f_saa_sbb, f_saa_sab, f_sbb_sbb, f_sbb_sab, f_sab_sab, f_a_t, f_b_t, f_saa_t, f_sbb_t, f_sab_t, f_tt = calculate_unrestricted_TPSS_correlation_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
-
-    # For singlet excitations each spin density changes by half, and each square gradient by a quarter, of the total change
-
-    d2f_dn2 = (f_aa + 2 * f_ab + f_bb) / 4
-    d2f_dnds = (f_a_saa + f_a_sbb + f_a_sab + f_b_saa + f_b_sbb + f_b_sab) / 8
-    d2f_ds2 = (f_saa_saa + f_sbb_sbb + f_sab_sab + 2 * (f_saa_sbb + f_saa_sab + f_sbb_sab)) / 16
-    d2f_dndt = (f_a_t + f_b_t) / 2
-    d2f_dsdt = (f_saa_t + f_sbb_t + f_sab_t) / 4
-    d2f_dt2 = f_tt
-
-    return d2f_dn2, d2f_dnds, d2f_ds2, d2f_dndt, d2f_dsdt, d2f_dt2
-
+    return calculate_restricted_kernel_from_unrestricted(calculate_unrestricted_TPSS_correlation_kernel, density, sigma, tau, calculation)
 
 
 
@@ -6689,29 +6670,18 @@ def calculate_restricted_TPSS_spin_correlation_kernel(density: ndarray, sigma: n
         f_mm (array): Second derivative of f = n * e_C with respect to the spin density
         f_m_sigma_nm (array): Mixed second derivative with respect to the spin density and grad(n) . grad(m)
         f_sigma_nm_sigma_nm (array): Second derivative with respect to grad(n) . grad(m)
-        f_sigma_mm (array): First derivative with respect to grad(m) . grad(m)
+        f_m_tau_m (array): Mixed second derivative with respect to the spin density and the spin kinetic energy density, tau_alpha - tau_beta
+        f_sigma_nm_tau_m (array): Mixed second derivative with respect to grad(n) . grad(m) and the spin kinetic energy density
+        f_tau_m_tau_m (array): Second derivative with respect to the spin kinetic energy density
+        f_sigma_mm (array): Derivative with respect to grad(m) . grad(m)
 
     """
 
-    # Spin-resolved blocks at the closed shell
+    return calculate_restricted_spin_kernel_from_unrestricted(calculate_unrestricted_TPSS_correlation_kernel, density, sigma, tau, calculation)
 
-    f_aa, f_ab, f_bb, f_a_saa, f_a_sbb, _, f_b_saa, f_b_sbb, _, f_saa_saa, f_saa_sbb, _, f_sbb_sbb, _, _, _, _, _, _, _, _ = calculate_unrestricted_TPSS_correlation_kernel(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
 
-    # For triplet excitations the spin densities and same-spin square gradients change in opposite directions, while sigma_ab and tau do not change
 
-    f_mm = (f_aa - 2 * f_ab + f_bb) / 4
-    f_m_sigma_nm = (f_a_saa - f_a_sbb - f_b_saa + f_b_sbb) / 4
-    f_sigma_nm_sigma_nm = (f_saa_saa - 2 * f_saa_sbb + f_sbb_sbb) / 4
 
-    # As grad(m) . grad(m) is quadratic in the response, only its first derivative enters - it adds a quarter to sigma_aa and sigma_bb and removes a quarter from sigma_ab
-
-    correlation_functional = calculate_unrestricted_revTPSS_correlation if calculation.functional.c_functional == "REVTPSS" else calculate_unrestricted_TPSS_correlation
-
-    _, _, df_ds_aa, df_ds_bb, df_ds_ab, _, _, _ = correlation_functional(density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
-
-    f_sigma_mm = (df_ds_aa + df_ds_bb - df_ds_ab) / 4
-
-    return f_mm, f_m_sigma_nm, f_sigma_nm_sigma_nm, f_sigma_mm
 
 
 
@@ -6829,3 +6799,83 @@ unrestricted_correlation_kernels = {
     "B97M": calculate_unrestricted_B97M_correlation_kernel,
 
 }
+
+
+
+
+
+
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ K E R N E L    B L O C K S ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+
+
+
+def arrange_restricted_kernel_blocks(blocks: tuple, density: ndarray) -> ndarray:
+
+    """
+
+    Arranges the six blocks of a restricted kernel into a symmetric (3, 3) array over the density,
+    square gradient and kinetic energy density.
+
+    Args:
+        blocks (tuple): Kernel blocks in the standard order nn, ns, ss, nt, st, tt, with None for any that vanish
+        density (array): Electron density on integration grid
+
+    Returns:
+        f (array): Kernel blocks, shape (3, 3, n_radial, n_angular)
+
+    """
+
+    f_nn, f_ns, f_ss, f_nt, f_st, f_tt = (np.zeros_like(density) if block is None else block for block in blocks)
+
+    f = np.array([[f_nn, f_ns, f_nt], [f_ns, f_ss, f_st], [f_nt, f_st, f_tt]])
+
+    return f
+
+
+
+
+
+
+
+
+
+
+def arrange_unrestricted_kernel_blocks(blocks: tuple, density: ndarray) -> ndarray:
+
+    """
+
+    Arranges the twenty-eight blocks of an unrestricted kernel into a symmetric (7, 7) array over the alpha and
+    beta densities, the three square gradients and the two kinetic energy densities, in the order (n_a, n_b, sigma_aa,
+    sigma_bb, sigma_ab, tau_a, tau_b).
+
+    Args:
+        blocks (tuple): Kernel blocks in the standard order, with None for any that vanish
+        density (array): Electron density on integration grid
+
+    Returns:
+        f (array): Kernel blocks, shape (7, 7, n_radial, n_angular)
+
+    """
+
+    # Position of each block in the standard order within the symmetric array
+
+    indices = [(0, 0), (0, 1), (1, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 2), (2, 3), (2, 4), (3, 3), (3, 4), (4, 4), (0, 5), (0, 6), (1, 5), (1, 6), (2, 5), (2, 6), (3, 5), (3, 6), (4, 5), (4, 6), (5, 5), (5, 6), (6, 6)]
+
+    f = np.zeros((7, 7) + density.shape)
+
+    for (u, v), block in zip(indices, blocks):
+
+        if block is not None:
+
+            f[u, v] = f[v, u] = block
+
+    return f
+
+
+
+

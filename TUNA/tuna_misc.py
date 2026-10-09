@@ -1091,7 +1091,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
     method = calculation.method
     do_DFT = calculation.DFT_calculation
 
-    bfs_on_grid, weights, _, _ = grid_container
+    bfs_on_grid, weights, bf_gradients_on_grid, _ = grid_container
 
     molecular_orbitals = SCF_output.molecular_orbitals
     P = SCF_output.P
@@ -1136,7 +1136,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     if calculation.stability_analysis:
 
-        ci.determine_self_consistent_field_stability(molecule, calculation, integrals.ERI_AO, SCF_output, bfs_on_grid, weights, silent)
+        ci.determine_self_consistent_field_stability(molecule, calculation, integrals.ERI_AO, SCF_output, bfs_on_grid, bf_gradients_on_grid, weights, silent)
 
     # If a Moller-Plesset calculation is requested, calculates the energy and density matrices
 
@@ -1201,7 +1201,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         # Calculates the CIS excited states energy and density
 
-        E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_excited_state_calculation(molecule, calculation, SCF_output, bfs_on_grid, weights, silent)
+        E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_excited_state_calculation(molecule, calculation, SCF_output, bfs_on_grid, bf_gradients_on_grid, weights, silent)
 
         if calculation.additional_print:
 

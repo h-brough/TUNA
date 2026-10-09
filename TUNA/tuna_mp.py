@@ -1756,7 +1756,7 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
                 error("The relaxed density is not yet available for this exchange-correlation functional!")
 
-            K_XC, K_XC_full = dft.calculate_unrestricted_exchange_correlation_kernel_matrices(slice(0, molecule.n_occ), v, P_alpha, P_beta, grid_container[0], C_spin_block, spin_labels, calculation, grid_container[1], silent, return_full_kernel = True)
+            K_XC, K_XC_full = dft.calculate_unrestricted_exchange_correlation_kernel_matrices(slice(0, molecule.n_occ), v, P_alpha, P_beta, grid_container[0], grid_container[2], C_spin_block, spin_labels, calculation, grid_container[1], silent, return_full_kernel = True)
 
     else:
 
@@ -1770,7 +1770,7 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
                 error("The relaxed density is not yet available for this exchange-correlation functional!")
 
-            K_XC, _, K_XC_full = dft.calculate_restricted_exchange_correlation_kernel_matrices(slice(0, molecule.n_doubly_occ), v, SCF_output.density, grid_container[0], molecular_orbitals, calculation, grid_container[1], silent)
+            K_XC, _, K_XC_full = dft.calculate_restricted_exchange_correlation_kernel_matrices(slice(0, molecule.n_doubly_occ), v, SCF_output.P, grid_container[0], grid_container[2], molecular_orbitals, calculation, grid_container[1], silent, return_full_kernel = True)
 
 
     # Sets off the assorted "not normal" MP2 methods
