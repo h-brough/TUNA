@@ -1799,6 +1799,61 @@ def print_excited_state_absorption_spectrum(molecule: Molecule, excitation_energ
 
 
 
+def build_spin_squared_operator(SCF_output: Output, C_spin_block: ndarray, n_alpha: int, n_beta: int) -> tuple:
+
+    """
+
+    Builds the S^2 = S_z (S_z + 1) + S_- S_+ operator in the spin orbital basis, normal ordered with respect to the reference determinant.
+
+    Args:
+        SCF_output (Output): Output object
+        C_spin_block (array): Spin blocked molecular orbitals in AO basis
+        n_alpha (int): Number of alpha electrons
+        n_beta (int): Number of beta electrons
+
+    Returns:
+        s_squared_reference (float): Expectation value of S^2 for the reference determinant
+        F_spin (array): Fock-like one-electron part of S^2
+        g_spin (array): Antisymmetrised two-electron part of S^2, in physicists' notation
+
+    """
+
+    n_AO = SCF_output.S.shape[0]
+
+    # Spatial overlap between molecular orbitals, which is zero unless the first is alpha and the second beta
+
+    D = C_spin_block[:n_AO].T @ SCF_output.S @ C_spin_block[n_AO:]
+
+    # Antisymmetrised two-electron part of S^2 in the spin orbital basis, in physicists' notation
+
+    g_spin = np.einsum("qs,rp->pqrs", D, D, optimize = True) + np.einsum("pr,sq->pqrs", D, D, optimize = True) \
+           - np.einsum("qr,sp->pqrs", D, D, optimize = True) - np.einsum("ps,rq->pqrs", D, D, optimize = True)
+
+    # Frozen core orbitals are still occupied, so the closed shell sums run over every occupied spin orbital
+
+    o_all = slice(0, n_alpha + n_beta)
+
+    S_z = (n_alpha - n_beta) / 2
+
+    # Expectation value over the reference determinant, which is the usual UHF spin contamination result
+
+    s_squared_reference = S_z * (S_z + 1) + n_beta + 0.5 * np.einsum("klkl->", g_spin[o_all, o_all, o_all, o_all], optimize = True)
+
+    # Fock-like matrix of the S^2 operator
+
+    F_spin = np.einsum("pkqk->pq", g_spin[:, o_all, :, o_all], optimize = True)
+
+    return s_squared_reference, F_spin, g_spin
+
+
+
+
+
+
+
+
+
+
 def calculate_excited_state_spin_contamination(SCF_output: Output, C_spin_block: ndarray, excitation_vectors: ndarray, n_alpha: int, n_beta: int, n_occ: int, n_virt: int, o: slice, v: slice) -> ndarray:
 
     """
@@ -1821,30 +1876,7 @@ def calculate_excited_state_spin_contamination(SCF_output: Output, C_spin_block:
 
     """
 
-    n_AO = SCF_output.S.shape[0]
-
-    # Spatial overlap between molecular orbitals, which is zero unless the first is alpha and the second beta
-
-    D = C_spin_block[:n_AO].T @ SCF_output.S @ C_spin_block[n_AO:]
-
-    # Antisymmetrised two-electron part of S^2 in the spin orbital basis, in physicists' notation
-
-    g_spin = np.einsum("qs,rp->pqrs", D, D, optimize = True) + np.einsum("pr,sq->pqrs", D, D, optimize = True) \
-           - np.einsum("qr,sp->pqrs", D, D, optimize = True) - np.einsum("ps,rq->pqrs", D, D, optimize = True)
-
-    # Frozen core orbitals are still occupied, so the closed shell sums run over every occupied spin orbital
-
-    o_all = slice(0, o.stop)
-
-    S_z = (n_alpha - n_beta) / 2
-
-    # Expectation value over the reference determinant, which is the usual UHF spin contamination result
-
-    s_squared_reference = S_z * (S_z + 1) + n_beta + 0.5 * np.einsum("klkl->", g_spin[o_all, o_all, o_all, o_all], optimize = True)
-
-    # Fock-like matrix of the S^2 operator
-
-    F_spin = np.einsum("pkqk->pq", g_spin[:, o_all, :, o_all], optimize = True)
+    s_squared_reference, F_spin, g_spin = build_spin_squared_operator(SCF_output, C_spin_block, n_alpha, n_beta)
 
     # Matrix elements between singly excited determinants, in the same form as the unrestricted A matrix
 
@@ -2943,7 +2975,7 @@ def run_configuration_interaction_excited_states(molecule: Molecule, calculation
 
     determinants, energies, CI_vectors, C_spin_block = CI_states
 
-    n_SO, n_electrons, n_basis = molecule.n_SO, molecule.n_electrons, molecule.n_basis
+    n_SO, n_electrons = molecule.n_SO, molecule.n_electrons
 
     if calculation.calculate_no_singlets and calculation.calculate_no_triplets:
 
@@ -2957,12 +2989,9 @@ def run_configuration_interaction_excited_states(molecule: Molecule, calculation
 
     log("  Calculating spin of each state...          ", calculation, 1, silent, end = "")
 
-    # Two-electron part of S^2 = S_z (S_z + 1) + S_- S_+, exactly as in calculate_excited_state_spin_contamination
+    # Two-electron part of S^2 = S_z (S_z + 1) + S_- S_+
 
-    D = C_spin_block[:n_basis].T @ SCF_output.S @ C_spin_block[n_basis:]
-
-    g_spin = np.einsum("qs,rp->pqrs", D, D, optimize = True) + np.einsum("pr,sq->pqrs", D, D, optimize = True) \
-           - np.einsum("qr,sp->pqrs", D, D, optimize = True) - np.einsum("ps,rq->pqrs", D, D, optimize = True)
+    _, _, g_spin = build_spin_squared_operator(SCF_output, C_spin_block, molecule.n_alpha, molecule.n_beta)
 
     # This is built in the determinant basis exactly like the Hamiltonian, as the one-electron part of S^2 is just the constant n_beta
 

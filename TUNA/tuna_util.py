@@ -1435,6 +1435,7 @@ electronic_structure_methods: list[Method] = [
     Method("CCSD", "coupled cluster singles and doubles", method_base = "CC"),
     Method("CCSD[T]", "coupled cluster singles, doubles and perturbative triples", method_base = "CC"),
     Method("CCSD(T)", "coupled cluster singles, doubles and perturbative triples", method_base = "CC"),
+    Method("EOM-CCSD", "equation-of-motion coupled cluster singles and doubles", method_base = "CC", excited_state_method = True),
     Method("CCSDT","coupled cluster singles, doubles and triples", method_base = "CC"),
     Method("CCSDT[Q]", "coupled cluster singles, doubles, triples and perturbative quadruples", unrestricted_available = False, method_base = "CC"),
     Method("CCSDT(Q)", "coupled cluster singles, doubles, triples and perturbative quadruples", unrestricted_available = False, method_base = "CC"),

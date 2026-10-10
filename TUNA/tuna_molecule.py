@@ -808,9 +808,9 @@ def reduce_method_complexity(molecule: Molecule, calculation: Calculation) -> Me
 
     updated_method = calculation.method
 
-    # Excited states need the requested method itself, as FCI is the only one of these with excited states
+    # Excited states need the requested method itself, as FCI and CCSD are the only ones of these with excited states
 
-    if calculation.force_method or calculation.time_dependent:
+    if calculation.force_method or calculation.time_dependent or calculation.method.excited_state_method:
 
         return updated_method
 

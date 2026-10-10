@@ -4,6 +4,7 @@ import TUNA.tuna_mp as mp
 from TUNA.tuna_util import *
 from TUNA.tuna_molecule import Molecule
 from TUNA.tuna_calc import Calculation
+from TUNA.tuna_out import generate_absorbance_spectrum
 
 
 """
@@ -26,7 +27,8 @@ The module contains:
 2. Useful utility functions (is_coupled_cluster_converged, permute)
 3. The amplitude update equations for all coupled cluster methods
 4. Perturbative triples and quadruples functions (calculate_restricted_CCSD_T_energy, calculate_restricted_CCSDT_Q_energy)
-4. The main routine to run coupled cluster energy calculations, and to apply the post-processing (begin_coupled_cluster_calculation)
+5. The main routine to run coupled cluster energy calculations, and to apply the post-processing (begin_coupled_cluster_calculation)
+6. The EOM-CCSD excited state functions (build_EOM_CCSD_effective_Hamiltonian, calculate_EOM_CCSD_sigma, run_EOM_CCSD_excited_states, etc.)
 
 """
 
@@ -2984,7 +2986,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
     calculate_iterative_triples = "CCSDT" in method.name or "CISDT" in method.name
     calculate_iterative_quadruples = "CCSDTQ" in method.name
 
-    # Chops of "[T]" or "[Q]" in the method name
+    # Chops of "[T]" or "[Q]" in the method name, and "EOM-" as the ground state of EOM-CCSD is just CCSD
 
     original_method_name = method.name
 
@@ -2992,6 +2994,7 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
     method.name = method.name.split("(T)")[0] if "(T)" in method.name else method.name
     method.name = method.name.split("[Q]")[0] if "[Q]" in method.name else method.name
     method.name = method.name.split("(Q)")[0] if "(Q)" in method.name else method.name
+    method.name = method.name.removeprefix("EOM-")
 
     # Sets up DIIS vectors
 
@@ -3214,6 +3217,7 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
         density_matrices (tuple): Total, alpha and beta density matrices in AO basis
         occupancies (array): Natural orbital occupancies
         natural_orbitals (array): Natural orbitals
+        t_amplitudes (tuple): Converged amplitudes, needed for excited states
 
     """
 
@@ -3330,5 +3334,548 @@ def begin_coupled_cluster_calculation(method: Method, molecule: Molecule, SCF_ou
 
     timer("Coupled cluster", 1)
 
-    return E_CC, E_perturbative, density_matrices, occupancies, natural_orbitals
+    return E_CC, E_perturbative, density_matrices, occupancies, natural_orbitals, t_amplitudes
+
+
+
+
+
+
+
+
+
+
+def convert_restricted_amplitudes_to_spin_orbitals(t_ia: ndarray, t_ijab: ndarray, SCF_output: Output, o: slice, v: slice) -> tuple:
+
+    """
+
+    Converts closed-shell spatial orbital amplitudes into antisymmetrised spin orbital amplitudes.
+
+    Args:
+        t_ia (array): Spatial orbital singles amplitudes
+        t_ijab (array): Spatial orbital doubles amplitudes, with an alpha electron going from i to a and a beta electron from j to b
+        SCF_output (Output): Output object
+        o (slice): Occupied spin orbital slice
+        v (slice): Virtual spin orbital slice
+
+    Returns:
+        t_ia (array): Spin orbital singles amplitudes
+        t_ijab (array): Antisymmetrised spin orbital doubles amplitudes
+
+    """
+
+    # Spin orbitals are sorted by energy in the same way as in spin_block_molecular_orbitals, which gives the spatial orbital and spin of each
+
+    order = np.argsort(SCF_output.epsilons_combined)
+
+    spatial_orbitals, spins = order % len(SCF_output.epsilons_alpha), order // len(SCF_output.epsilons_alpha)
+
+    # Indices of the active spin orbitals within the spatial orbital amplitudes, with two spin orbitals for each spatial orbital
+
+    i, a = spatial_orbitals[o] - o.start // 2, spatial_orbitals[v] - v.start // 2
+
+    # Excitations which change the spin of an electron have zero amplitude
+
+    same_spin = spins[o, np.newaxis] == spins[np.newaxis, v]
+
+    t_ia = t_ia[np.ix_(i, a)] * same_spin
+
+    # One electron goes from i to a and the other from j to b, then the amplitude is antisymmetrised by swapping a and b
+
+    t_ijab = permute(np.einsum("ijab,ia,jb->ijab", t_ijab[np.ix_(i, i, a, a)], same_spin, same_spin, optimize = True), 2, 3)
+
+    return t_ia, t_ijab
+
+
+
+
+
+
+
+
+
+
+def build_EOM_CCSD_effective_Hamiltonian(g: ndarray, F: ndarray, o: slice, v: slice, t_ia: ndarray, t_ijab: ndarray) -> tuple:
+
+    """
+
+    Builds the one- and two-body elements of the similarity-transformed Hamiltonian, exp(-T) H exp(T), needed for EOM-CCSD.
+
+    These are the spin orbital equations from the Stanton and Bartlett paper on EOM-CCSD (10.1063/1.464746), named like the CCSD intermediates.
+    With zero amplitudes they are just the integrals, so this works for any operator with one- and two-electron parts.
+
+    Args:
+        g (array): Antisymmetrised spin orbital two-electron integrals
+        F (array): Spin orbital Fock matrix
+        o (slice): Occupied spin orbital slice
+        v (slice): Virtual spin orbital slice
+        t_ia (array): Singles amplitudes
+        t_ijab (array): Doubles amplitudes
+
+    Returns:
+        H_bar (tuple): One-body (F_me, F_mi, F_ae) and two-body (W_mnij, W_abef, W_mbej, W_mnef, W_mnie, W_amef, W_mbij, W_abei) elements
+
+    """
+
+    # Doubles amplitudes together with the disconnected products of singles
+
+    tau_ijab = t_ijab + np.einsum("ia,jb->ijab", t_ia, t_ia, optimize = True) - np.einsum("ib,ja->ijab", t_ia, t_ia, optimize = True)
+
+    # One-body elements, which unlike the CCSD intermediates keep the diagonal of the Fock matrix
+
+    F_me = F[o, v] + np.einsum("nf,mnef->me", t_ia, g[o, o, v, v], optimize = True)
+
+    F_mi = F[o, o] + np.einsum("ie,me->mi", t_ia, F_me, optimize = True) + np.einsum("ne,mnie->mi", t_ia, g[o, o, o, v], optimize = True)
+    F_mi += (1 / 2) * np.einsum("inef,mnef->mi", t_ijab, g[o, o, v, v], optimize = True)
+
+    F_ae = F[v, v] - np.einsum("ma,me->ae", t_ia, F_me, optimize = True) + np.einsum("mf,amef->ae", t_ia, g[v, o, v, v], optimize = True)
+    F_ae += - (1 / 2) * np.einsum("mnaf,mnef->ae", t_ijab, g[o, o, v, v], optimize = True)
+
+    # Two-body elements with four occupied or four virtual indices
+
+    W_mnij = g[o, o, o, o] + permute(np.einsum("je,mnie->mnij", t_ia, g[o, o, o, v], optimize = True), 2, 3)
+    W_mnij += (1 / 2) * np.einsum("ijef,mnef->mnij", tau_ijab, g[o, o, v, v], optimize = True)
+
+    W_abef = g[v, v, v, v] - permute(np.einsum("mb,amef->abef", t_ia, g[v, o, v, v], optimize = True), 0, 1)
+    W_abef += (1 / 2) * np.einsum("mnab,mnef->abef", tau_ijab, g[o, o, v, v], optimize = True)
+
+    # Two-body elements with two occupied and two virtual indices
+
+    W_mbej = g[o, v, v, o] + np.einsum("jf,mbef->mbej", t_ia, g[o, v, v, v], optimize = True) - np.einsum("nb,mnej->mbej", t_ia, g[o, o, v, o], optimize = True)
+    W_mbej += -1 * np.einsum("jnfb,mnef->mbej", t_ijab + np.einsum("jf,nb->jnfb", t_ia, t_ia, optimize = True), g[o, o, v, v], optimize = True)
+
+    W_mnef = g[o, o, v, v]
+
+    # Two-body elements with three occupied or three virtual indices
+
+    W_mnie = g[o, o, o, v] + np.einsum("if,mnfe->mnie", t_ia, g[o, o, v, v], optimize = True)
+    W_amef = g[v, o, v, v] - np.einsum("na,nmef->amef", t_ia, g[o, o, v, v], optimize = True)
+
+    Z_mbej = g[o, v, v, o] - np.einsum("njbf,mnef->mbej", t_ijab, g[o, o, v, v], optimize = True)
+
+    W_mbij = g[o, v, o, o] - np.einsum("me,ijbe->mbij", F_me, t_ijab, optimize = True) - np.einsum("nb,mnij->mbij", t_ia, W_mnij, optimize = True)
+    W_mbij += (1 / 2) * np.einsum("mbef,ijef->mbij", g[o, v, v, v], tau_ijab, optimize = True)
+    W_mbij += permute(np.einsum("mnie,jnbe->mbij", g[o, o, o, v], t_ijab, optimize = True) + np.einsum("ie,mbej->mbij", t_ia, Z_mbej, optimize = True), 2, 3)
+
+    W_abei = g[v, v, v, o] - np.einsum("me,miab->abei", F_me, t_ijab, optimize = True) + np.einsum("if,abef->abei", t_ia, W_abef, optimize = True)
+    W_abei += (1 / 2) * np.einsum("mnei,mnab->abei", g[o, o, v, o], tau_ijab, optimize = True)
+    W_abei += -1 * permute(np.einsum("mbef,miaf->abei", g[o, v, v, v], t_ijab, optimize = True) + np.einsum("ma,mbei->abei", t_ia, Z_mbej, optimize = True), 0, 1)
+
+    H_bar = F_me, F_mi, F_ae, W_mnij, W_abef, W_mbej, W_mnef, W_mnie, W_amef, W_mbij, W_abei
+
+    return H_bar
+
+
+
+
+
+
+
+
+
+
+def calculate_EOM_CCSD_sigma(r_ia: ndarray, r_ijab: ndarray, H_bar: tuple, t_ijab: ndarray) -> tuple:
+
+    """
+
+    Multiplies a vector of singles and doubles by the similarity-transformed Hamiltonian, minus the CCSD ground state energy.
+
+    Only connected terms are included, which is what removes the ground state energy. Equations from the Stanton and Bartlett paper on EOM-CCSD.
+
+    Args:
+        r_ia (array): Singles part of the vector
+        r_ijab (array): Antisymmetrised doubles part of the vector
+        H_bar (tuple): Elements of the similarity-transformed Hamiltonian
+        t_ijab (array): Doubles amplitudes
+
+    Returns:
+        sigma_ia (array): Singles part of the sigma vector
+        sigma_ijab (array): Doubles part of the sigma vector
+
+    """
+
+    F_me, F_mi, F_ae, W_mnij, W_abef, W_mbej, W_mnef, W_mnie, W_amef, W_mbij, W_abei = H_bar
+
+    # Singles part of the sigma vector
+
+    sigma_ia = np.einsum("ae,ie->ia", F_ae, r_ia, optimize = True) - np.einsum("mi,ma->ia", F_mi, r_ia, optimize = True) + np.einsum("maei,me->ia", W_mbej, r_ia, optimize = True)
+    sigma_ia += np.einsum("me,imae->ia", F_me, r_ijab, optimize = True) + (1 / 2) * np.einsum("amef,imef->ia", W_amef, r_ijab, optimize = True) - (1 / 2) * np.einsum("mnie,mnae->ia", W_mnie, r_ijab, optimize = True)
+
+    # The three-body parts of the similarity-transformed Hamiltonian enter through these one-body intermediates, contracted with the amplitudes
+
+    X_ae = np.einsum("amef,mf->ae", W_amef, r_ia, optimize = True) - (1 / 2) * np.einsum("mnef,mnaf->ae", W_mnef, r_ijab, optimize = True)
+    X_mi = np.einsum("mnie,ne->mi", W_mnie, r_ia, optimize = True) + (1 / 2) * np.einsum("mnef,inef->mi", W_mnef, r_ijab, optimize = True)
+
+    # Doubles part of the sigma vector
+
+    sigma_ijab = permute(np.einsum("be,ijae->ijab", F_ae, r_ijab, optimize = True) + np.einsum("be,ijae->ijab", X_ae, t_ijab, optimize = True), 2, 3)
+    sigma_ijab += -1 * permute(np.einsum("mj,imab->ijab", F_mi, r_ijab, optimize = True) + np.einsum("mj,imab->ijab", X_mi, t_ijab, optimize = True), 0, 1)
+    sigma_ijab += (1 / 2) * np.einsum("mnij,mnab->ijab", W_mnij, r_ijab, optimize = True) + (1 / 2) * np.einsum("abef,ijef->ijab", W_abef, r_ijab, optimize = True)
+    sigma_ijab += permute(permute(np.einsum("mbej,imae->ijab", W_mbej, r_ijab, optimize = True), 0, 1), 2, 3)
+    sigma_ijab += permute(np.einsum("abej,ie->ijab", W_abei, r_ia, optimize = True), 0, 1) - permute(np.einsum("mbij,ma->ijab", W_mbij, r_ia, optimize = True), 2, 3)
+
+    return sigma_ia, sigma_ijab
+
+
+
+
+
+
+
+
+
+
+def run_EOM_CCSD_Davidson(calculate_sigma: callable, diagonal: ndarray, n_roots: int, calculation: Calculation, silent: bool) -> tuple:
+
+    """
+
+    Finds the lowest roots of the non-symmetric EOM-CCSD matrix with the Davidson method, without ever building the matrix.
+
+    Args:
+        calculate_sigma (callable): Multiplies a vector by the EOM-CCSD matrix
+        diagonal (array): Approximate diagonal of the EOM-CCSD matrix
+        n_roots (int): Number of roots to find
+        calculation (Calculation): Calculation object
+        silent (bool): Cancel logging
+
+    Returns:
+        excitation_energies (array): Lowest excitation energies
+        excitation_vectors (array): Normalised right eigenvectors, one per column
+
+    """
+
+    dimension = len(diagonal)
+    n_roots, n_guesses = min(n_roots, dimension), min(max(2 * n_roots, 20), dimension)
+
+    # Guesses are unit vectors on the smallest diagonal elements, twice as many as there are roots but at least 20
+
+    basis_vectors = np.zeros((dimension, n_guesses))
+    basis_vectors[np.argsort(diagonal)[:n_guesses], np.arange(n_guesses)] = 1
+
+    sigma_vectors = np.array([calculate_sigma(vector) for vector in basis_vectors.T]).T
+
+    log(f"\n  Using {n_roots} roots, from {n_guesses} Davidson guesses.\n", calculation, 1, silent = silent)
+
+    log_spacer(calculation, silent = silent)
+    log("  Step     Lowest root      Max Residual   Converged", calculation, 1, silent = silent)
+    log_spacer(calculation, silent = silent)
+
+    for step in range(1, calculation.correlated_max_iter + 1):
+
+        # A root can start out above the lowest roots if the guesses describe it badly, so one root is followed for each guess
+
+        eigenvalues, eigenvectors = np.linalg.eig(basis_vectors.T @ sigma_vectors)
+
+        lowest = np.argsort(eigenvalues.real)[:n_guesses]
+
+        excitation_energies, subspace_vectors = eigenvalues[lowest].real, eigenvectors[:, lowest]
+
+        # The residual of each approximate eigenvector shows how far it is from being converged, and is kept complex so that a complex pair of roots can converge
+
+        excitation_vectors = basis_vectors @ subspace_vectors
+        residuals = sigma_vectors @ subspace_vectors - excitation_vectors * eigenvalues[lowest]
+
+        residual_norms = np.linalg.norm(residuals, axis = 0)
+
+        # Only the roots that are needed are converged tightly, the others just closely enough to tell if they belong among them
+
+        unconverged = np.flatnonzero(residual_norms > np.where(np.arange(n_guesses) < n_roots, calculation.amp_conv, 1e-3))
+
+        n_converged = np.sum(residual_norms[:n_roots] <= calculation.amp_conv)
+
+        log(f"  {step:3.0f}     {excitation_energies[0]:13.10f}    {np.max(residual_norms[:n_roots]):13.10f}   {n_converged:3} / {n_roots}", calculation, 1, silent = silent)
+
+        if n_converged == n_roots:
+
+            break
+
+        if step >= calculation.correlated_max_iter:
+
+            error("The EOM-CCSD iterations failed to converge! Try increasing the maximum iterations with CORRMAXITER?")
+
+        # The subspace is collapsed onto the real and imaginary parts of the current approximate eigenvectors if it would get too big
+
+        if basis_vectors.shape[1] + len(unconverged) > 8 * n_guesses:
+
+            Q, _ = np.linalg.qr(np.column_stack((subspace_vectors.real, subspace_vectors.imag)))
+
+            basis_vectors, sigma_vectors = basis_vectors @ Q, sigma_vectors @ Q
+
+        # The new directions are the real and imaginary parts of the residuals divided by the shifted diagonal, which is the Davidson preconditioner
+
+        shifted_diagonals = diagonal[:, np.newaxis] - excitation_energies[unconverged]
+
+        new_vectors = residuals[:, unconverged] / np.where(np.abs(shifted_diagonals) > 1e-4, shifted_diagonals, 1e-4)
+
+        for new_vector in np.column_stack((new_vectors.real, new_vectors.imag)).T:
+
+            # Orthogonalises twice against the subspace for numerical stability, keeping only genuinely new directions, so a zero imaginary part is never added
+
+            orthogonal_vector = new_vector - basis_vectors @ (basis_vectors.T @ new_vector)
+            orthogonal_vector -= basis_vectors @ (basis_vectors.T @ orthogonal_vector)
+
+            if np.linalg.norm(orthogonal_vector) > 1e-4 * np.linalg.norm(new_vector):
+
+                basis_vectors = np.column_stack((basis_vectors, orthogonal_vector / np.linalg.norm(orthogonal_vector)))
+                sigma_vectors = np.column_stack((sigma_vectors, calculate_sigma(basis_vectors[:, -1])))
+
+
+    log_spacer(calculation, silent = silent)
+
+    if np.max(np.abs(eigenvalues[lowest[:n_roots]].imag)) > constants.COMPLEX_EIG_THRESH:
+
+        warning("Diagonalisation gave complex excitation energies - the reference may be unstable!", space = 2)
+
+    # Only the real part of each eigenvector is kept, which is all of it unless the root is one of a complex pair
+
+    excitation_vectors = excitation_vectors[:, :n_roots].real
+
+    return excitation_energies[:n_roots], excitation_vectors / np.linalg.norm(excitation_vectors, axis = 0)
+
+
+
+
+
+
+
+
+
+
+def run_EOM_CCSD_excited_states(molecule: Molecule, calculation: Calculation, SCF_output: Output, E_CC: float, t_amplitudes: tuple, density_matrices: tuple, silent: bool = False) -> tuple:
+
+    """
+
+    Calculates EOM-CCSD excited states on top of a converged CCSD ground state, and prints and returns them in the same way as a TD-HF calculation.
+
+    Both references are handled in spin orbitals. Only the right eigenvectors are found, so the oscillator strengths and density use the singles
+    part of each state like a CIS vector, as the proper EOM-CCSD properties would also need the left eigenvectors.
+
+    Args:
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        SCF_output (Output): SCF output object
+        E_CC (float): CCSD correlation energy
+        t_amplitudes (tuple): Converged CCSD amplitudes, in spatial orbitals for a restricted reference
+        density_matrices (tuple): Total, alpha and beta linearised CCSD density matrices in AO basis
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        state_of_interest_energies_and_densities (tuple): Energy and densities for chosen state
+
+    """
+
+    if calculation.method.name not in ["CCSD", "EOM-CCSD"]:
+
+        error(f"Excited states are not available with {calculation.method.name}, only with CCSD!")
+
+    if calculation.calculate_no_singlets and calculation.calculate_no_triplets:
+
+        error("There are no excited states to calculate!")
+
+    timer("Excited state calculation", 0)
+
+    log_spacer(calculation, 1, silent, start = "\n")
+    log("         Equation-of-Motion Coupled Cluster", calculation, 1, silent, colour = "white")
+    log_spacer(calculation, 1, silent)
+
+    log("  Transforming integrals to spin orbitals... ", calculation, 1, silent, end = "")
+
+    # Both references use spin orbitals here, and the frozen orbitals have already been printed in the coupled cluster calculation
+
+    g, C_spin_block, _, _, o, v, spin_labels, spin_orbital_labels, _ = ci.begin_spin_orbital_calculation(molecule, SCF_output.integrals.ERI_AO, SCF_output, calculation, silent = True)
+
+    H_core_SO = ci.transform_matrix_AO_to_SO(ci.spin_block_core_Hamiltonian(SCF_output.integrals.H_core), C_spin_block)
+
+    F = ci.build_spin_orbital_Fock_matrix(H_core_SO, g, slice(0, molecule.n_occ))
+
+    t_ia, t_ijab, _, _ = t_amplitudes
+
+    # The restricted ground state has spatial orbital amplitudes, and freezes whole spatial orbitals
+
+    if calculation.reference == "RHF":
+
+        o = slice(2 * molecule.n_core_orbitals, molecule.n_occ)
+
+        t_ia, t_ijab = convert_restricted_amplitudes_to_spin_orbitals(t_ia, t_ijab, SCF_output, o, v)
+
+    log("[Done]", calculation, 1, silent)
+
+    n_occ, n_virt = o.stop - o.start, molecule.n_virt
+
+    if n_occ == 0:
+
+        error("Excited state calculation requested with every occupied orbital frozen!")
+
+    log("  Building effective Hamiltonian...          ", calculation, 1, silent, end = "")
+
+    H_bar = build_EOM_CCSD_effective_Hamiltonian(g, F, o, v, t_ia, t_ijab)
+
+    # The spin of each state is <S^2> for R|0>, found by treating S^2 like a Hamiltonian with no amplitudes, which is exact for a restricted reference
+
+    s_squared_reference, F_spin, g_spin = ci.build_spin_squared_operator(SCF_output, C_spin_block, molecule.n_alpha, molecule.n_beta)
+
+    S_squared_bar = build_EOM_CCSD_effective_Hamiltonian(g_spin, F_spin, o, v, np.zeros_like(t_ia), np.zeros_like(t_ijab))
+
+    log("[Done]", calculation, 1, silent)
+
+    # Only excitations that keep the number of alpha and beta electrons are included, and each pair of doubles indices is stored once
+
+    n = np.newaxis
+
+    spin_projections = np.where(np.array(spin_labels) == "a", 1, -1)
+
+    singles_space = spin_projections[o, n] == spin_projections[n, v]
+
+    doubles_space = spin_projections[o, n, n, n] + spin_projections[n, o, n, n] == spin_projections[n, n, v, n] + spin_projections[n, n, n, v]
+    doubles_space &= np.triu(np.ones((n_occ, n_occ), dtype = bool), 1)[:, :, n, n] & np.triu(np.ones((n_virt, n_virt), dtype = bool), 1)[n, n, :, :]
+
+    n_singles = np.sum(singles_space)
+
+
+    def pack(r_ia: ndarray, r_ijab: ndarray) -> ndarray:
+
+        # Flattens singles and doubles into one vector
+
+        return np.concatenate((r_ia[singles_space], r_ijab[doubles_space]))
+
+
+    def unpack(vector: ndarray) -> tuple:
+
+        # Rebuilds the singles and the antisymmetrised doubles from one vector
+
+        r_ia, r_ijab = np.zeros(singles_space.shape), np.zeros(doubles_space.shape)
+        r_ia[singles_space], r_ijab[doubles_space] = vector[:n_singles], vector[n_singles:]
+
+        return r_ia, permute(permute(r_ijab, 0, 1), 2, 3)
+
+
+    def calculate_sigma(vector: ndarray) -> ndarray:
+
+        # Multiplies one vector by the EOM-CCSD matrix
+
+        return pack(*calculate_EOM_CCSD_sigma(*unpack(vector), H_bar, t_ijab))
+
+
+    def calculate_spin_squared(vector: ndarray) -> float:
+
+        # Expectation value of S^2 for one vector, adding the disconnected term that is not in the sigma vector, which is zero for a restricted reference
+
+        r_ia, r_ijab = unpack(vector)
+
+        sigma_ia, sigma_ijab = calculate_EOM_CCSD_sigma(r_ia, r_ijab, S_squared_bar, np.zeros_like(t_ijab))
+
+        sigma_ijab += permute(permute(np.einsum("ia,bj->ijab", r_ia, F_spin[v, o], optimize = True), 0, 1), 2, 3)
+
+        return s_squared_reference + vector @ pack(sigma_ia, sigma_ijab)
+
+
+    # The diagonal of the EOM-CCSD matrix, used for the guesses and preconditioner, is approximated by leaving out the three-body terms
+
+    _, F_mi, F_ae, W_mnij, W_abef, W_mbej, _, _, _, _, _ = H_bar
+
+    W_iaai = np.einsum("iaai->ia", W_mbej, optimize = True)
+
+    diagonal_ia = F_ae.diagonal()[n, :] - F_mi.diagonal()[:, n] + W_iaai
+    diagonal_ijab = diagonal_ia[:, n, :, n] + diagonal_ia[n, :, n, :] + W_iaai[:, n, n, :] + W_iaai[n, :, :, n]
+    diagonal_ijab += np.einsum("ijij->ij", W_mnij, optimize = True)[:, :, n, n] + np.einsum("abab->ab", W_abef, optimize = True)[n, n, :, :]
+
+    diagonal = pack(diagonal_ia, diagonal_ijab)
+
+    excluded_types = [state_type for state_type, flag in (("singlet", calculation.calculate_no_singlets), ("triplet", calculation.calculate_no_triplets)) if flag]
+
+    # Extra roots are found when a spin is left out, as how many roots of each spin are among the lowest is not known in advance
+
+    n_states = max(calculation.n_states, calculation.root)
+    n_roots = 2 * n_states if excluded_types else n_states
+
+    S_z = (molecule.n_alpha - molecule.n_beta) / 2
+
+    while True:
+
+        excitation_energies, excitation_vectors = run_EOM_CCSD_Davidson(calculate_sigma, diagonal, n_roots, calculation, silent)
+
+        log("\n  Calculating spin of each state...          ", calculation, 1, silent, end = "")
+
+        s_squared = np.array([calculate_spin_squared(vector) for vector in excitation_vectors.T])
+
+        # Every state has the S_z of the reference, so S is rounded to the nearest of S_z, S_z + 1 and so on, using <S^2> = S (S + 1)
+
+        spins = S_z + np.maximum(np.rint((np.sqrt(1 + 4 * np.abs(s_squared)) - 1) / 2 - S_z), 0)
+
+        multiplicities = (2 * spins + 1).astype(int)
+
+        state_types = np.array([{1: "singlet", 2: "doublet", 3: "triplet", 4: "quartet", 5: "quintet"}.get(m, str(m)) for m in multiplicities])
+
+        log("[Done]", calculation, 1, silent)
+
+        # A root with almost no excitation energy and the spin of the reference is another component of a degenerate ground state, split by the reference
+
+        ground = (np.abs(excitation_energies) < 5e-3) & (multiplicities == molecule.multiplicity)
+
+        requested = ~ground & np.isin(state_types, excluded_types, invert = True)
+
+        if np.sum(requested) >= n_states or n_roots >= len(diagonal):
+
+            break
+
+        # More roots are found if too many have been left out
+
+        log("\n  Too many roots were left out, so the search will be repeated for more roots.", calculation, 1, silent)
+
+        n_roots += 2 * (n_states - np.sum(requested))
+
+    # Says which roots are taken as the ground state, as a genuine excited state this close to the ground state would be left out too
+
+    for excitation_energy, s_squared_ground in zip(excitation_energies[ground], s_squared[ground]):
+
+        log(f"\n  Leaving out the root at {excitation_energy:.10f} with <S^2> = {s_squared_ground:.5f}, as another component of the ground state.", calculation, 1, silent)
+
+    # Leaves out the other components of the ground state and the states with a spin that has not been asked for
+
+    excitation_vectors = excitation_vectors[:, requested]
+
+    excitation_energies, s_squared, multiplicities, state_types = (array[requested] for array in (excitation_energies, s_squared, multiplicities, state_types))
+
+    log("\n  Calculating oscillator strengths...        ", calculation, 1, silent, end = "")
+
+    # The singles part of each normalised right eigenvector is used like a CIS vector for the transition dipoles and density, and transitions to a different spin are zero
+
+    singles_vectors = np.array([unpack(vector)[0].ravel() for vector in excitation_vectors.T]).T
+
+    transition_dipoles = ci.calculate_unrestricted_transition_dipoles(SCF_output, singles_vectors, n_occ, n_virt, o, v, C_spin_block) * (multiplicities == molecule.multiplicity)
+
+    oscillator_strengths = ci.calculate_oscillator_strengths(transition_dipoles, excitation_energies)
+
+    log("[Done]", calculation, 1, silent)
+
+    log("  Constructing density matrix...             ", calculation, 1, silent, end = "")
+
+    # The CIS-like difference density of the chosen state is added to the linearised CCSD density
+
+    _, E_transition, _, _, _, P_diff, P_diff_alpha, P_diff_beta = ci.determine_unrestricted_excited_state_energy_and_density(excitation_energies, singles_vectors, calculation.root - 1, n_occ, n_virt, SCF_output, o, v, C_spin_block)
+
+    P, P_alpha, P_beta = density_matrices
+
+    log("[Done]", calculation, 1, silent)
+
+    log("\n  Oscillator strengths and densities only use the singles part of each state, so are approximate.", calculation, 1, silent)
+
+    # Prints the spin, energy and orbital contributions of each excited state, then the absorption spectrum
+
+    ci.print_excited_state_contributions(calculation, silent, excitation_energies, singles_vectors, state_types, n_occ, n_virt, o, spin_orbital_labels, s_squared)
+
+    ci.print_excited_state_absorption_spectrum(molecule, excitation_energies, calculation, transition_dipoles, oscillator_strengths, state_types, silent)
+
+    # Plots an absorbance spectrum if "ABSPLOT" is used
+
+    if calculation.plot_absorbance_spectrum:
+
+        generate_absorbance_spectrum(calculation, excitation_energies, oscillator_strengths)
+
+    E_state = SCF_output.energy + E_CC + E_transition
+
+    timer("Excited state calculation", 1)
+
+
+    return E_state, E_transition, P + P_diff, P_alpha + P_diff_alpha, P_beta + P_diff_beta, P_diff, P_diff_alpha, P_diff_beta
 

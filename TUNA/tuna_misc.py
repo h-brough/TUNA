@@ -1148,7 +1148,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     elif method.method_base == "CC":
 
-        E_CC, E_CC_perturbative, (P, P_alpha, P_beta), natural_occupancies, natural_orbitals = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
+        E_CC, E_CC_perturbative, (P, P_alpha, P_beta), natural_occupancies, natural_orbitals, t_amplitudes = cc.begin_coupled_cluster_calculation(method, molecule, SCF_output, integrals, X, calculation, silent)
 
     # If a direct RPA calculation is requested, calculates the ground state correlation energy
 
@@ -1199,11 +1199,15 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
             error("Excited state calculation requested on system with one electron!")
 
-        # Calculates the CIS excited states energy and density, or takes them from the higher roots of the FCI or CAS Hamiltonian
+        # Calculates the CIS excited states energy and density, or takes them from the higher roots of the FCI or CAS Hamiltonian, or uses EOM-CCSD
 
         if method.method_base == "FCI":
 
             E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_configuration_interaction_excited_states(molecule, calculation, SCF_output, CI_states, V_NN, silent)
+
+        elif method.method_base == "CC":
+
+            E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = cc.run_EOM_CCSD_excited_states(molecule, calculation, SCF_output, E_CC, t_amplitudes, (P, P_alpha, P_beta), silent)
 
         else:
 
@@ -1287,7 +1291,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
     # Adds up and prints coupled cluster energies
 
-    elif method.method_base == "CC":
+    elif method.method_base == "CC" and not method.excited_state_method and not calculation.time_dependent:
 
         method.name = method.name.replace("[", "(").replace("]", ")")
 
@@ -1337,9 +1341,15 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         method.name = method.name.replace("[", "(").replace("]", ")")
 
+        # Coupled cluster excitation energies are from equation-of-motion theory, and are measured from the correlated ground state
+
+        if method.coupled_cluster_method:
+
+            log(f" Correlation energy from CCSD:     " + f"{E_CC:16.10f}", calculation, 1, silent = silent)
+
         log(f"\n Excitation energy is the energy difference to excited state {calculation.root}.", calculation, 1, silent = silent)
 
-        excited_method_name = method.name if method.excited_state_method else "TD-" + method.name
+        excited_method_name = method.name if method.excited_state_method else "EOM-" + method.name if method.coupled_cluster_method else "TD-" + method.name
 
         log(f"\n Excitation energy from {f"{excited_method_name}:":<11} {E_transition:15.10f}", calculation, 1, silent = silent)
 
