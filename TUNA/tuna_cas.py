@@ -5,7 +5,7 @@ import scipy
 import TUNA.tuna_ci as ci
 from TUNA.tuna_molecule import Molecule
 from TUNA.tuna_calc import Calculation
-from TUNA.tuna_util import error, log, log_spacer, Integrals, Output, constants, timer
+from TUNA.tuna_util import error, log, log_spacer, Integrals, Output, constants, timer, check
 
 
 """
@@ -318,6 +318,8 @@ def calculate_CASCI_ground_state(determinants: list, H_core_SO: ndarray, g: ndar
         CI_vector (array): Coefficient of each determinant in the ground state
         P_SO (array): One-particle density matrix of the ground state in SO basis
         density_matrices (tuple): Total, alpha and beta density matrices in AO basis
+        energies (array): Every eigenvalue of the Hamiltonian
+        CI_vectors (array): Every eigenvector of the Hamiltonian
 
     """
 
@@ -348,7 +350,7 @@ def calculate_CASCI_ground_state(determinants: list, H_core_SO: ndarray, g: ndar
 
     log("[Done]", calculation, 1, silent)
 
-    return E_electronic, CI_vector, P_SO, density_matrices
+    return E_electronic, CI_vector, P_SO, density_matrices, energies, CI_vectors
 
 
 
@@ -376,6 +378,7 @@ def run_complete_active_space_configuration_interaction(molecule: Molecule, inte
     Returns:
         E_CASCI (float): Complete active space configuration interaction correlation energy
         density_matrices (tuple): Total, alpha and beta density matrices in AO basis
+        CI_states (tuple): Determinants, every eigenvalue and eigenvector of the Hamiltonian, and spin-blocked molecular orbitals
 
     """
 
@@ -391,7 +394,7 @@ def run_complete_active_space_configuration_interaction(molecule: Molecule, inte
 
     determinants, reference_determinant = build_active_space_determinants(molecule, calculation, n_active_orbitals, n_active_alpha, n_active_beta, n_inactive, n_determinants, "   Complete Active Space Configuration Interaction", silent)
 
-    E_electronic, _, _, density_matrices = calculate_CASCI_ground_state(determinants, H_core_SO, g, C_spin_block, molecule, calculation, silent)
+    E_electronic, _, _, density_matrices, energies, CI_vectors = calculate_CASCI_ground_state(determinants, H_core_SO, g, C_spin_block, molecule, calculation, silent)
 
     # The energy of the reference determinant is its diagonal element, so nuclear repulsion cancels in the correlation energy
 
@@ -401,7 +404,7 @@ def run_complete_active_space_configuration_interaction(molecule: Molecule, inte
 
     timer("Complete active space CI", 1)
 
-    return E_CASCI, density_matrices
+    return E_CASCI, density_matrices, (determinants, energies, CI_vectors, C_spin_block)
 
 
 
@@ -529,6 +532,7 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
     Returns:
         E_CASSCF (float): Complete active space self-consistent field correlation energy
         density_matrices (tuple): Total, alpha and beta density matrices in AO basis
+        CI_states (tuple): Determinants, every eigenvalue and eigenvector of the Hamiltonian in the converged orbitals, and spin-blocked molecular orbitals
 
     """
 
@@ -575,7 +579,7 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
 
         C_spin_block, H_core_SO, g = build_spin_orbital_integrals(molecular_orbitals, molecular_orbitals, integrals, calculation, True)
 
-        E_electronic, CI_vector, P_SO, density_matrices = calculate_CASCI_ground_state(determinants, H_core_SO, g, C_spin_block, molecule, calculation, True)
+        E_electronic, CI_vector, P_SO, density_matrices, energies, CI_vectors = calculate_CASCI_ground_state(determinants, H_core_SO, g, C_spin_block, molecule, calculation, True)
 
         E_CASSCF_total = E_electronic + V_NN
 
@@ -616,4 +620,4 @@ def run_complete_active_space_self_consistent_field(molecule: Molecule, integral
 
     timer("Complete active space SCF", 1)
 
-    return E_CASSCF, density_matrices
+    return E_CASSCF, density_matrices, (determinants, energies, CI_vectors, C_spin_block)

@@ -1156,15 +1156,15 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         if method.name == "FCI":
 
-            E_FCI, (P, P_alpha, P_beta) = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
+            E_FCI, (P, P_alpha, P_beta), CI_states = ci.run_full_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
 
         elif method.name == "CASCI":
 
-            E_FCI, (P, P_alpha, P_beta) = cas.run_complete_active_space_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
+            E_FCI, (P, P_alpha, P_beta), CI_states = cas.run_complete_active_space_configuration_interaction(molecule, integrals, SCF_output, calculation, silent)
 
         else:
 
-            E_FCI, (P, P_alpha, P_beta) = cas.run_complete_active_space_self_consistent_field(molecule, integrals, SCF_output, calculation, V_NN, silent)
+            E_FCI, (P, P_alpha, P_beta), CI_states = cas.run_complete_active_space_self_consistent_field(molecule, integrals, SCF_output, calculation, V_NN, silent)
 
         # If "NATORBS" is used, calculate and print the natural orbitals
 
@@ -1199,9 +1199,15 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
             error("Excited state calculation requested on system with one electron!")
 
-        # Calculates the CIS excited states energy and density
+        # Calculates the CIS excited states energy and density, or takes them from the higher roots of the FCI or CAS Hamiltonian
 
-        E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_excited_state_calculation(molecule, calculation, SCF_output, bfs_on_grid, bf_gradients_on_grid, weights, silent)
+        if method.method_base == "FCI":
+
+            E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_configuration_interaction_excited_states(molecule, calculation, SCF_output, CI_states, V_NN, silent)
+
+        else:
+
+            E_excited_state, E_transition, P, P_alpha, P_beta, P_diff, P_diff_alpha, P_diff_beta = ci.run_excited_state_calculation(molecule, calculation, SCF_output, bfs_on_grid, bf_gradients_on_grid, weights, silent)
 
         if calculation.additional_print:
 
@@ -1315,7 +1321,7 @@ def run_post_SCF_energy_calculation(molecule: Molecule, integrals: Integrals, SC
 
         log(f" Correlation energy from RPA:      " + f"{E_RPA:16.10f}\n", calculation, 1, silent = silent)
 
-    elif method.method_base == "FCI":
+    elif method.method_base == "FCI" and not calculation.time_dependent:
 
         final_energy += E_FCI
 

@@ -719,6 +719,10 @@ def generate_absorbance_spectrum(calculation: Calculation, excitation_energies: 
 
     """
 
+    check(len(oscillator_strengths) > 0, "No excitation energies were found to be plotted!")
+
+    check(not np.all(oscillator_strengths == 0.0), "Cannot show absorbance spectrum when all states are dark!")
+
     # Padding for the edge of the plot
 
     excess_wavelength = 10 * calculation.peak_width

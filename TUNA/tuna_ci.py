@@ -2820,6 +2820,7 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
     Returns:
         E_FCI (float): Full configuration interaction correlation energy
         density_matrices (tuple): Total, alpha and beta density matrices in AO basis
+        CI_states (tuple): Determinants, every eigenvalue and eigenvector of the Hamiltonian, and spin-blocked molecular orbitals
 
     """
 
@@ -2909,4 +2910,141 @@ def run_full_configuration_interaction(molecule: Molecule, integrals: Integrals,
 
     timer("Full configuration interaction", 1)
 
-    return E_FCI, density_matrices
+    return E_FCI, density_matrices, (determinants, energies, CI_vectors, C_spin_block)
+
+
+
+
+
+
+
+
+
+
+def run_configuration_interaction_excited_states(molecule: Molecule, calculation: Calculation, SCF_output: Output, CI_states: tuple, V_NN: float, silent: bool = False) -> tuple:
+
+    """
+
+    Takes the excited states from the higher eigenvectors of a full or complete active space configuration interaction
+    Hamiltonian, and prints and returns them in the same way as a TD-HF calculation.
+
+    Args:
+        molecule (Molecule): Molecule object
+        calculation (Calculation): Calculation object
+        SCF_output (Output): SCF output object
+        CI_states (tuple): Determinants, every eigenvalue and eigenvector of the Hamiltonian, and spin-blocked molecular orbitals
+        V_NN (float): Nuclear-nuclear repulsion energy
+        silent (bool, optional): Should anything be printed
+
+    Returns:
+        state_of_interest_energies_and_densities (tuple): Energy and densities for chosen state
+
+    """
+
+    determinants, energies, CI_vectors, C_spin_block = CI_states
+
+    n_SO, n_electrons, n_basis = molecule.n_SO, molecule.n_electrons, molecule.n_basis
+
+    if calculation.calculate_no_singlets and calculation.calculate_no_triplets:
+
+        error("There are no excited states to calculate!")
+
+    log("\n Calculating spin of each state...          ", calculation, 1, silent, end = "")
+
+    # Two-electron part of S^2 = S_z (S_z + 1) + S_- S_+, exactly as in calculate_excited_state_spin_contamination
+
+    D = C_spin_block[:n_basis].T @ SCF_output.S @ C_spin_block[n_basis:]
+
+    g_spin = np.einsum("qs,rp->pqrs", D, D, optimize = True) + np.einsum("pr,sq->pqrs", D, D, optimize = True) \
+           - np.einsum("qr,sp->pqrs", D, D, optimize = True) - np.einsum("ps,rq->pqrs", D, D, optimize = True)
+
+    # This is built in the determinant basis exactly like the Hamiltonian, as the one-electron part of S^2 is just the constant n_beta
+
+    S_squared = build_FCI_Hamiltonian(determinants, np.zeros((n_SO, n_SO)), g_spin, n_SO, n_electrons)
+
+    # Exactly degenerate eigenvectors can come out as mixtures of different spins, so S^2 is diagonalised within each degenerate set
+
+    for degenerate_set in np.split(np.arange(len(energies)), np.flatnonzero(np.diff(energies) > 1e-8) + 1):
+
+        CI_vectors[:, degenerate_set] = CI_vectors[:, degenerate_set] @ np.linalg.eigh(CI_vectors[:, degenerate_set].T @ S_squared @ CI_vectors[:, degenerate_set])[1]
+
+    S_z = (molecule.n_alpha - molecule.n_beta) / 2
+
+    s_squared = np.einsum("Ik,IJ,Jk->k", CI_vectors, S_squared, CI_vectors, optimize = True) + S_z * (S_z + 1) + molecule.n_beta
+
+    # The multiplicity 2S + 1 is the square root of 1 + 4 <S^2>
+
+    multiplicities = np.rint(np.sqrt(1 + 4 * np.abs(s_squared))).astype(int)
+
+    state_types = np.array([{1: "singlet", 2: "doublet", 3: "triplet", 4: "quartet", 5: "quintet"}.get(m, str(m)) for m in multiplicities])
+
+    log("[Done]", calculation, 1, silent)
+
+    # Initial logging for the excited states, in the same style as TD-HF and TD-DFT
+
+    log_spacer(calculation, 1, silent, start = "\n")
+    log("      Time-dependent Configuration Interaction", calculation, 1, silent, colour = "white")
+    log_spacer(calculation, 1, silent)
+
+    # The ground state can be degenerate, and every other eigenvector is an excited state unless its spin has been left out
+
+    ground = [n for n in range(len(energies)) if energies[n] - energies[0] < 1e-8 and state_types[n] == state_types[0]]
+
+    excluded_types = [state_type for state_type, flag in (("singlet", calculation.calculate_no_singlets), ("triplet", calculation.calculate_no_triplets)) if flag]
+
+    excited = [n for n in range(len(energies)) if n not in ground and state_types[n] not in excluded_types]
+
+    if calculation.root > len(excited):
+
+        error(f"Specified root ({calculation.root}) does not exist!")
+
+    excitation_energies = energies[excited] - energies[0]
+
+    log("  Calculating oscillator strengths...        ", calculation, 1, silent, end = "")
+
+    # The dipole operator has no two-electron part, so its matrix between the ground and excited states is built like the Hamiltonian too
+
+    no_two_electron_part = np.zeros((n_SO, n_SO, n_SO, n_SO))
+
+    transition_dipoles_squared = sum((CI_vectors[:, ground].T @ build_FCI_Hamiltonian(determinants, transform_matrix_AO_to_SO(spin_block_core_Hamiltonian(M), C_spin_block), no_two_electron_part, n_SO, n_electrons) @ CI_vectors[:, excited]) ** 2 for M in SCF_output.D)
+
+    # Averages over the components of a degenerate ground state, and transitions to a different spin are exactly zero
+
+    transition_dipoles = np.sqrt(np.mean(transition_dipoles_squared, axis = 0)) * (state_types[excited] == state_types[0])
+
+    oscillator_strengths = calculate_oscillator_strengths(transition_dipoles, excitation_energies)
+
+    log("[Done]", calculation, 1, silent)
+
+    log("  Constructing density matrix...             ", calculation, 1, silent, end = "")
+
+    # Unrelaxed one-particle density matrices of the chosen state, and of the ground state averaged over its components
+
+    state = excited[calculation.root - 1]
+
+    P, P_alpha, P_beta = np.mean([transform_P_SO_to_AO(calculate_FCI_density_matrix(determinants, CI_vectors[:, n], n_SO, n_electrons), C_spin_block, n_SO) for n in ground], axis = 0)
+    P_state, P_state_alpha, P_state_beta = transform_P_SO_to_AO(calculate_FCI_density_matrix(determinants, CI_vectors[:, state], n_SO, n_electrons), C_spin_block, n_SO)
+
+    log("[Done]", calculation, 1, silent)
+
+    # Prints the spin and energy of each excited state, then the absorption spectrum
+
+    log("\n  Printing excited state information...", calculation, 2, silent = silent)
+
+    for k, n in enumerate(excited[:calculation.n_states]):
+
+        log(f"\n  ~~~~~ State {k + 1} ~~~~~  {state_types[n].capitalize():8}  <S^2> = {abs(s_squared[n]):.5f}", calculation, 2, silent = silent)
+        log(f"\n  Excitation energy: {excitation_energies[k]:16.10f}", calculation, 2, silent = silent)
+
+    print_excited_state_absorption_spectrum(molecule, excitation_energies, calculation, transition_dipoles, oscillator_strengths, state_types[excited], silent)
+
+    # Plots an absorbance spectrum if "ABSPLOT" is used
+
+    if calculation.plot_absorbance_spectrum:
+
+        generate_absorbance_spectrum(calculation, excitation_energies, oscillator_strengths)
+
+    E_transition = energies[state] - energies[0]
+
+
+    return energies[state] + V_NN, E_transition, P_state, P_state_alpha, P_state_beta, P_state - P, P_state_alpha - P_alpha, P_state_beta - P_beta

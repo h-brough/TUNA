@@ -806,7 +806,6 @@ def calculate_harmonic_frequency(calculation: Calculation, atomic_symbols: list[
     thermo.calculate_thermochemical_corrections(molecule, calculation, frequency_hartree, energy, zero_point_energy)
 
 
-
     return hessian, reduced_mass, frequency_per_cm, zero_point_energy
 
 
