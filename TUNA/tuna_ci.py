@@ -2949,7 +2949,13 @@ def run_configuration_interaction_excited_states(molecule: Molecule, calculation
 
         error("There are no excited states to calculate!")
 
-    log("\n Calculating spin of each state...          ", calculation, 1, silent, end = "")
+    # Initial logging for the excited states, in the same style as TD-HF and TD-DFT
+
+    log_spacer(calculation, 1, silent, start = "\n")
+    log("      Time-dependent Configuration Interaction", calculation, 1, silent, colour = "white")
+    log_spacer(calculation, 1, silent)
+
+    log("  Calculating spin of each state...          ", calculation, 1, silent, end = "")
 
     # Two-electron part of S^2 = S_z (S_z + 1) + S_- S_+, exactly as in calculate_excited_state_spin_contamination
 
@@ -2978,13 +2984,7 @@ def run_configuration_interaction_excited_states(molecule: Molecule, calculation
 
     state_types = np.array([{1: "singlet", 2: "doublet", 3: "triplet", 4: "quartet", 5: "quintet"}.get(m, str(m)) for m in multiplicities])
 
-    log("[Done]", calculation, 1, silent)
-
-    # Initial logging for the excited states, in the same style as TD-HF and TD-DFT
-
-    log_spacer(calculation, 1, silent, start = "\n")
-    log("      Time-dependent Configuration Interaction", calculation, 1, silent, colour = "white")
-    log_spacer(calculation, 1, silent)
+    log("[Done]\n", calculation, 1, silent)
 
     # The ground state can be degenerate, and every other eigenvector is an excited state unless its spin has been left out
 

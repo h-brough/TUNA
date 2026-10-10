@@ -3,7 +3,6 @@
 Wishlist for next update:
 
 EOM-CCSD
-Consider hooking up FCI/CASCI/CASSCF to excited state functionality
 Beautify program output to match C TUNA
 
 ## TUNA 0.12.0
@@ -15,6 +14,7 @@ Beautify program output to match C TUNA
 - Complete active space configuration interaction energy and density with `CASCI`
 - Choose number of active orbitals and electrons with `NORB` and `NEL` keywords
 - Exchange-correlation kernels for all (meta-)GGA functionals
+- Excited state spectra from configuration interactin methods with the `TD` keyword
 - Relaxed density matrix for all double-hybrid functionals with `RELAXED`
 - Ground state random phase approximation correlation energy with `RPA` on a Hartree-Fock or Kohn-Sham reference
 - Corrections to Hartree-Fock or Kohn-Sham quasiparticle orbital energies with one-shot `GW`
