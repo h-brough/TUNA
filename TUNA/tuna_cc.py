@@ -3675,10 +3675,10 @@ def run_EOM_CCSD_excited_states(molecule: Molecule, calculation: Calculation, SC
     timer("Excited state calculation", 0)
 
     log_spacer(calculation, 1, silent, start = "\n")
-    log("         Equation-of-Motion Coupled Cluster", calculation, 1, silent, colour = "white")
+    log("         Equation of Motion Coupled Cluster", calculation, 1, silent, colour = "white")
     log_spacer(calculation, 1, silent)
 
-    log("  Transforming integrals to spin orbitals... ", calculation, 1, silent, end = "")
+    log("  Transforming integrals...                ", calculation, 1, silent, end = "")
 
     # Both references use spin orbitals here, and the frozen orbitals have already been printed in the coupled cluster calculation
 
