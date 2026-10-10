@@ -2478,7 +2478,7 @@ def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, 
 
     # Plots an absorbance spectrum if "ABSPLOT" is used
 
-    if calculation.plot_absorbance_spectrum:
+    if calculation.plot_absorbance_spectrum and not silent:
 
         generate_absorbance_spectrum(calculation, excitation_energies, oscillator_strengths)
 
@@ -3069,7 +3069,7 @@ def run_configuration_interaction_excited_states(molecule: Molecule, calculation
 
     # Plots an absorbance spectrum if "ABSPLOT" is used
 
-    if calculation.plot_absorbance_spectrum:
+    if calculation.plot_absorbance_spectrum and not silent:
 
         generate_absorbance_spectrum(calculation, excitation_energies, oscillator_strengths)
 
