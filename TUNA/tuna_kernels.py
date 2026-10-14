@@ -1704,7 +1704,7 @@ def calculate_restricted_spin_kernel_from_unrestricted(unrestricted_kernel: call
 
     Builds a restricted spin kernel for triplet excitations from a spin-resolved one, evaluated at the closed shell. For triplet excitations the
     two spin densities, same-spin square gradients and kinetic energy densities change in opposite directions, by half the changes in the spin
-    density, grad(n) . grad(m) and the spin kinetic energy density, while sigma_ab does not change to first order.
+    density, grad(n)grad(m) and the spin kinetic energy density, while sigma_ab does not change to first order.
 
     Args:
         unrestricted_kernel (callable): Spin-resolved kernel to evaluate
@@ -1737,7 +1737,7 @@ def calculate_restricted_spin_kernel_from_unrestricted(unrestricted_kernel: call
     f_sigma_nm_tau_m = (f_saa_ta - f_saa_tb - f_sbb_ta + f_sbb_tb) / 4
     f_tau_m_tau_m = (f_ta_ta - 2 * f_ta_tb + f_tb_tb) / 4
 
-    # As grad(m) . grad(m) is quadratic in the response, only its first derivative enters - it adds a quarter to sigma_aa and sigma_bb and removes a quarter from sigma_ab
+    # As grad(m)grad(m) is quadratic in the response, only its first derivative enters - it adds a quarter to sigma_aa and sigma_bb and removes a quarter from sigma_ab
 
     _, _, df_ds_aa, df_ds_bb, df_ds_ab, _, _, _ = correlation_functionals["U" + calculation.functional.c_functional](density / 2, density / 2, density, sigma / 4, sigma / 4, sigma / 4, tau / 2, tau / 2, calculation)
 

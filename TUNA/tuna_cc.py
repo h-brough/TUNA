@@ -2990,10 +2990,10 @@ def calculate_coupled_cluster_energy(g: ndarray, o: slice, v: slice, t_amplitude
 
     original_method_name = method.name
 
-    method.name = method.name.split("[T]")[0] if "[T]" in method.name else method.name
-    method.name = method.name.split("(T)")[0] if "(T)" in method.name else method.name
-    method.name = method.name.split("[Q]")[0] if "[Q]" in method.name else method.name
-    method.name = method.name.split("(Q)")[0] if "(Q)" in method.name else method.name
+    method.name = method.name.removesuffix("[T]")
+    method.name = method.name.removesuffix("(T)")
+    method.name = method.name.removesuffix("[Q]")
+    method.name = method.name.removesuffix("(Q)")
     method.name = method.name.removeprefix("EOM-")
 
     # Sets up DIIS vectors
