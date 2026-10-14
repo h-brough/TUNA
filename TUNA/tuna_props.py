@@ -297,10 +297,10 @@ def calculate_koopmans_parameters(epsilons: ndarray, n_occ: int, calculation: Ca
 
     if not isinstance(electron_affinity, str):
 
-        electron_affinity = f"{electron_affinity:9.6f}"
-        band_gap = f"{band_gap:9.6f}"
+        electron_affinity = f"{electron_affinity:9.5f}"
+        band_gap = f"{band_gap:9.5f}"
 
-    log(f"\n Koopmans' theorem ionisation potential:  {ionisation_potential:9.6f}", calculation, 2)
+    log(f"\n Koopmans' theorem ionisation potential:  {ionisation_potential:9.5f}", calculation, 2)
     log(f" Koopmans' theorem electron affinity:     {electron_affinity}", calculation, 2)
     log(f" Energy gap between HOMO and LUMO:        {band_gap}", calculation, 2)
 

@@ -775,8 +775,8 @@ def calculate_and_print_rotational_constant(reduced_mass: float, bond_length: fl
     rotational_constant_per_cm = rotational_constant_per_bohr / (100 * constants.bohr_in_metres)
     rotational_constant_GHz = constants.per_cm_in_GHz * rotational_constant_per_cm
 
-    log(f"\n Rotational constant (GHz):            {rotational_constant_GHz:12.6f}", calculation, 2, silent = silent)
-    log(f" Rotational constant (per cm):         {rotational_constant_per_cm:12.6f}", calculation, 2, silent = silent)
+    log(f"\n Rotational constant (GHz):            {rotational_constant_GHz:12.5f}", calculation, 2, silent = silent)
+    log(f" Rotational constant (per cm):         {rotational_constant_per_cm:12.5f}", calculation, 2, silent = silent)
 
     return rotational_constant_per_cm, rotational_constant_GHz
 

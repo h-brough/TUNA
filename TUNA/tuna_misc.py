@@ -56,25 +56,25 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
     # Prints various information about the molecule
 
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent = silent)
-    log("    Molecule and Basis Information", calculation, 1, silent = silent, colour = "white")
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 1, silent = silent)
+    log_spacer(calculation, silent = silent, start = "\n")
+    log("           Molecule and Basis Information", calculation, 1, silent = silent, colour = "white")
+    log_spacer(calculation, silent = silent, start = "")
 
-    log("  Molecular structure: " + molecule.molecular_structure, calculation, 1, silent = silent)
-    log("\n  Number of basis functions: " + str(molecule.n_basis), calculation, 1, silent = silent)
-    log("  Number of primitive Gaussians: " + str(np.sum(molecule.primitive_Gaussians)), calculation, 1, silent = silent)
-    log("\n  Charge: " + str(molecule.charge), calculation, 1, silent = silent)
-    log("  Multiplicity: " + str(molecule.multiplicity), calculation, 1, silent = silent)
-    log("  Number of electrons: " + str(molecule.n_electrons), calculation, 1, silent = silent)
-    log("  Number of alpha electrons: " + str(molecule.n_alpha), calculation, 1, silent = silent)
-    log("  Number of beta electrons: " + str(molecule.n_beta), calculation, 1, silent = silent)
-    log("  Number of occupied orbitals: " + str(n_occ_print), calculation, 1, silent = silent)
-    log("  Number of virtual orbitals: " + str(n_virt_print), calculation, 1, silent = silent)
-    log(f"\n  Point group: {molecule.point_group}", calculation, 1, silent = silent)
+    log("  Molecular structure:                      " + molecule.molecular_structure, calculation, 1, silent = silent)
+    log("\n  Number of basis functions:                     " + str(molecule.n_basis), calculation, 1, silent = silent)
+    log("  Number of primitive Gaussians:                 " + str(np.sum(molecule.primitive_Gaussians)), calculation, 1, silent = silent)
+    log("\n  Charge:                                         " + str(molecule.charge), calculation, 1, silent = silent)
+    log("  Multiplicity:                                   " + str(molecule.multiplicity), calculation, 1, silent = silent)
+    log("\n  Number of electrons:                            " + str(molecule.n_electrons), calculation, 1, silent = silent)
+    log("  Number of alpha electrons:                      " + str(molecule.n_alpha), calculation, 1, silent = silent)
+    log("  Number of beta electrons:                       " + str(molecule.n_beta), calculation, 1, silent = silent)
+    log("\n  Number of occupied orbitals:                    " + str(n_occ_print), calculation, 1, silent = silent)
+    log("  Number of virtual orbitals:                     " + str(n_virt_print), calculation, 1, silent = silent)
+    log(f"\n  Point group:                                {molecule.point_group}", calculation, 1, silent = silent)
 
     if calculation.diatomic:
 
-        log(f"  Bond length: {bohr_to_angstrom(molecule.bond_length):.5f} ", calculation, 1, silent = silent)
+        log(f"  Bond length:                              {bohr_to_angstrom(molecule.bond_length):.5f} ", calculation, 1, silent = silent)
 
     for atom in molecule.atoms:
 
@@ -96,7 +96,7 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
                 log(f"      {exponent:15.10f}     {coefficient:10.10f}", calculation, 3, silent = silent)
 
-    log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", calculation, 1, silent = silent)
+    log_spacer(calculation, silent = silent, start = "")
 
 
     return
@@ -398,7 +398,7 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     # Calculates the one-electron integrals
 
-    log(" Calculating one-electron integrals...     ", calculation, 1, end = "", silent = silent)
+    log(" Calculating one-electron integrals...       ", calculation, 1, end = "", silent = silent)
 
     S_cart, T_cart, V_NE_cart, D_cart, Q_cart = calculate_one_electron_integrals(molecule.n_atoms, molecule.atoms, molecule.n_cartesian_basis, molecule.cartesian_basis_functions, molecule.centre_of_mass, calculation)
 
@@ -409,7 +409,7 @@ def calculate_analytical_integrals(molecule: Molecule, calculation: Calculation,
 
     # Makes sure the two-electron integrals can fit in memory, and calculate them
 
-    log(" Calculating two-electron integrals...     ", calculation, 1, end = "", silent = silent)
+    log(" Calculating two-electron integrals...       ", calculation, 1, end = "", silent = silent)
 
     try:
 
@@ -475,7 +475,7 @@ def transform_to_spherical_harmonics(S_cart: ndarray, T_cart: ndarray, V_NE_cart
 
     timer("Spherical harmonic transformation", 0)
 
-    log("\n Transforming to spherical harmonics...    ", calculation, 1, end = "", silent = silent)
+    log("\n Transforming to spherical harmonics...      ", calculation, 1, end = "", silent = silent)
 
     # Builds the Cartesian to spherical transformation matrix
 
@@ -725,13 +725,13 @@ def calculate_nuclear_repulsion_energy(charges: ndarray, coordinates: ndarray, c
 
     """
 
-    log(" Calculating nuclear repulsion energy...  ", calculation, 1, end = "", silent = silent)
+    log(" Calculating nuclear repulsion energy...     ", calculation, 1, end = "", silent = silent)
 
     # Does not rely on molecule being aligned on z axis
 
     V_NN = np.prod(charges) / np.linalg.norm(coordinates[1] - coordinates[0])
 
-    log(f"[Done]\n\n Nuclear repulsion energy: {V_NN:.10f}\n", calculation, 1, silent = silent)
+    log(f"[Done]\n\n Nuclear repulsion energy:             {V_NN:.10f}\n", calculation, 1, silent = silent)
 
     return V_NN
 
@@ -764,7 +764,7 @@ def calculate_orthogonalisation_matrix(S: ndarray, calculation: Calculation, sil
 
     timer("Fock orthogonalisation matrix", 0)
 
-    log(" Constructing Fock orthogonalisation matrix... ", calculation, 1, end = "", silent = silent)
+    log(" Calculating orthogonalisation matrix...     ", calculation, 1, end = "", silent = silent)
 
     # Symmetrise the overlap matrix
 
@@ -873,7 +873,7 @@ def check_overlap_eigenvalues(smallest_S_eigenvalue: float, calculation: Calcula
 
     """
 
-    log(f"\n Smallest overlap matrix eigenvalue is {smallest_S_eigenvalue:.8f}, threshold is {calculation.S_eigenvalue_threshold:.8f}.", calculation, 2, silent = silent)
+    log(f"\n Smallest overlap matrix eigenvalue is {smallest_S_eigenvalue:.8f}, threshold is {calculation.S_eigenvalue_threshold:.8f}.", calculation, 3, silent = silent)
 
     if smallest_S_eigenvalue < calculation.S_eigenvalue_threshold:
 

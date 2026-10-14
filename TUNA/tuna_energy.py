@@ -796,8 +796,8 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
         E_dispersion (float): Dispersion energy
 
     """
-
-    log("\n Setting up molecule...     ", calculation, 1, silent = silent, end = "")
+ 
+    log("\n Setting up molecule...                     ", calculation, 1, silent = silent, end = "")
 
     # Builds molecule object using calculation and atomic parameters
 

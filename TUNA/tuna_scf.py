@@ -1312,11 +1312,9 @@ def run_self_consistent_field_cycle(molecule: Molecule, calculation: Calculation
 
     timer("Self-consistent field", 0)
 
-    log(" Beginning self-consistent field cycle...\n", calculation, 1, silent = silent)
-
     # Prints convergence criteria specified
 
-    log(f" Using \"{calculation.SCF_conv["name"]}\" SCF convergence criteria.", calculation, 1, silent = silent)
+    log(f" Beginning self-consistent field cycle with \"{calculation.SCF_conv["name"]}\" SCF convergence criteria...\n", calculation, 1, silent = silent)
 
     # Prints the chosen SCF convergence acceleration options
 

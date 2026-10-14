@@ -38,8 +38,8 @@ from TUNA.tuna_util import coloured
 
 print(coloured("\n      _______ _    _ _   _                     ___           \n     |__   __| |  | | \\ | |   /\\            __/__/__  _      \n","white", True) + coloured(" ~~~~~~","light_grey")+coloured(" | |  | |  | |  \\| |  /  \\","white", True)+coloured(" ~~~~~~~~","light_grey")+coloured(" / .      \\/ ) ","white", True)+coloured("~~~~\n ~~~~~~","light_grey")+coloured(" | |  | |  | | . ` | / /\\ \\","white", True)+coloured(" ~~~~~~","light_grey")+coloured(" (     ))    (","white", True)+coloured(" ~~~~~\n ~~~~~~","light_grey")+coloured(" | |  | |__| | |\\  |/ ____ \\ ","white", True)+coloured("~~~~~~","light_grey")+coloured(" \\___  ___/\\_) ","white", True)+coloured("~~~~","light_grey")+coloured("\n        |_|   \\____/|_| \\_/_/    \\_\\          \\\\_\\           ", "white"))
 
-print(coloured(f"\n\nWelcome to version {VERSION} of TUNA!\n", "light_grey"))
-print(coloured("Importing required libraries...  ", "light_grey"), end = ""); sys.stdout.flush()
+print(coloured(f"\n\n Welcome to version {VERSION} of TUNA!\n", "light_grey"))
+print(coloured(" Importing required libraries...             ", "light_grey"), end = ""); sys.stdout.flush()
 
 import numpy as np
 from numpy import ndarray
@@ -360,23 +360,17 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
 
     if not suppress_output:
 
-        print(coloured(f"{calculation_types.get(calculation_type)} calculation in {basis_types.get(basis)} basis set requested.", "light_grey"))
+        print(coloured(f" {calculation_types.get(calculation_type)} calculation requested.", "light_grey"))
 
-        print(coloured(f"Electronic structure method is {method.long_name}.\n", "light_grey"))
+        print(coloured(f"\n Initialising {method.long_name} in {basis_types.get(basis)} basis set.\n", "light_grey"))
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
 
     calculation = Calculation(calculation_type, method, start_time, params, basis, atomic_symbols, suppress_output)
 
-    # If a decontracted basis has been requested, this is printed to the console
-
-    contraction = "fully decontracted" if calculation.decontract else "partially contracted"
-
     if not suppress_output:
 
-        print(coloured(f"Setting up calculation using {contraction} basis set.", "light_grey"))
-
-        print(coloured(f"\nDistances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey"))
+        print(coloured(f"\n Distances in angstroms and times in femtoseconds. Everything else in atomic units.", "light_grey"))
 
     # Sets off the desired calculation with the requested parameters
 
