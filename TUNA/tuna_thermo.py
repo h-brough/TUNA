@@ -465,7 +465,7 @@ def calculate_thermochemical_corrections(molecule: Molecule, calculation: Calcul
     log(f"  Zero-point energy:   {zero_point_energy:16.10f}", calculation, 2)
     log(f"\n  Internal energy:     {internal_energy:16.10f}", calculation, 2)
     log(f"  Enthalpy:            {H:16.10f}     Entropy:              {temperature * S:16.10f}", calculation, 2)
-    log(f"\n  Gibbs free energy:   {G:16.10f}     Non-electronic energy:{energy - G:16.10f}", calculation, 2)
+    log(f"\n  Gibbs free energy:   {G:16.10f}     Non-electronic energy:{G - energy:16.10f}", calculation, 2)
     log(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", calculation, 2)
 
     return G

@@ -1,10 +1,6 @@
 # Changelog
 
-Wishlist for next update:
-
-Beautify program output to match C TUNA
-
-## TUNA 0.12.0
+## TUNA 0.12.0 — 01/11/2026
 
 ### Added
 
@@ -14,7 +10,7 @@ Beautify program output to match C TUNA
 - Choose number of active orbitals and electrons with `NORB` and `NEL` keywords
 - Exchange-correlation kernels for all (meta-)GGA functionals
 - Equation of motion coupled cluster theory with `EOM-CCSD`
-- Excited state spectra from configuration interactin methods with the `TD` keyword
+- Excited state spectra from configuration interaction methods with the `TD` keyword
 - Relaxed density matrix for all double-hybrid functionals with `RELAXED`
 - Ground state random phase approximation correlation energy with `RPA` on a Hartree-Fock or Kohn-Sham reference
 - Corrections to Hartree-Fock or Kohn-Sham quasiparticle orbital energies with one-shot `GW`
@@ -29,6 +25,7 @@ Beautify program output to match C TUNA
 - Recent and compatible versions of dependencies are forced on pip install
 - Simpler handling of rotation onto z-axis in molecular dynamics
 - The temperature is now forced to be positive for thermochemistry
+- Further beautified the output
 
 ### Fixed
 
@@ -44,6 +41,7 @@ Beautify program output to match C TUNA
 - Basis set extrapolation with dispersion was double counting
 - Units for the `MAXSTEP` keyword were incorrect
 - Frozen core was not working with CC2
+- Wrong sign on non-electronic energy in thermochemistry output
 
 <br>
 
