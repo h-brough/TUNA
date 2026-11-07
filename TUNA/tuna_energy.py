@@ -796,8 +796,8 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
         E_dispersion (float): Dispersion energy
 
     """
- 
-    log("\n Setting up molecule...                     ", calculation, 1, silent = silent, end = "")
+
+    log("\n Setting up molecule...                      ", calculation, 1, silent = silent, end = "")
 
     # Builds molecule object using calculation and atomic parameters
 
@@ -817,13 +817,13 @@ def build_molecule_and_integrals(calculation: Calculation, atomic_symbols: list,
 
     molecule.process_basis_functions(calculation, integrals)
 
-    # Prints out the information about the molecule and calculation
-
-    kern.print_molecule_information(molecule, calculation, silent)
-
     # Prints "Beginning RHF/UHF/KS calculation..."
 
     kern.print_reference_type(calculation.method, calculation, silent)
+
+    # Prints out the information about the molecule and calculation
+
+    kern.print_molecule_information(molecule, calculation, silent)
 
     # Calculates nuclear repulsion energy
 

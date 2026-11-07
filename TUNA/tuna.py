@@ -362,7 +362,7 @@ def run(input_line: str = None, suppress_output: bool = False) -> None:
 
         print(coloured(f" {calculation_types.get(calculation_type)} calculation requested.", "light_grey"))
 
-        print(coloured(f"\n Initialising {method.long_name} in {basis_types.get(basis)} basis set.\n", "light_grey"))
+        print(coloured(f"\n Initialising {method.long_name} in the {basis_types.get(basis)} basis set.", "light_grey"))
 
     # Builds calculation object which holds onto all the fundamental and derived parameters, passed through most functions in TUNA
 

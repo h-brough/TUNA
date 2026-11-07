@@ -56,7 +56,7 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
     # Prints various information about the molecule
 
-    log_spacer(calculation, silent = silent, start = "\n")
+    log_spacer(calculation, silent = silent, start = "")
     log("           Molecule and Basis Information", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent, start = "")
 
@@ -96,7 +96,7 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
                 log(f"      {exponent:15.10f}     {coefficient:10.10f}", calculation, 3, silent = silent)
 
-    log_spacer(calculation, silent = silent, start = "")
+    log_spacer(calculation, silent = silent, start = "", end = "\n")
 
 
     return
