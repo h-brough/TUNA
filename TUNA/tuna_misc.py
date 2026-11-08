@@ -35,13 +35,10 @@ This module contains:
 
 """
 
-
-
 def print_molecule_information(molecule: Molecule, calculation: Calculation, silent: bool = False) -> None:
 
     """
-
-    Prints information about a molecule.
+    Prints information about the molecule.
 
     Args:
         molecule (Molecule): Molecule object
@@ -54,33 +51,48 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
     n_occ_print, n_virt_print = (molecule.n_occ, molecule.n_virt) if calculation.reference == "UHF" else (molecule.n_occ // 2, molecule.n_virt // 2)
 
+    # Sets the output width and defines a function to align information
+
+    info_width = 51
+
+    def log_info(label: str, value, blank_line: bool = False) -> None:
+
+        value = str(value)
+        line = f"{label:<{info_width - len(value)}}{value}"
+
+        if blank_line:
+            line = "\n" + line
+
+        log(line, calculation, 1, silent = silent)
+
     # Prints various information about the molecule
 
     log_spacer(calculation, silent = silent, start = "")
     log("           Molecule and Basis Information", calculation, 1, silent = silent, colour = "white")
     log_spacer(calculation, silent = silent, start = "")
 
-    log("  Molecular structure:                      " + molecule.molecular_structure, calculation, 1, silent = silent)
-    log("\n  Number of basis functions:                     " + str(molecule.n_basis), calculation, 1, silent = silent)
-    log("  Number of primitive Gaussians:                 " + str(np.sum(molecule.primitive_Gaussians)), calculation, 1, silent = silent)
-    log("\n  Charge:                                         " + str(molecule.charge), calculation, 1, silent = silent)
-    log("  Multiplicity:                                   " + str(molecule.multiplicity), calculation, 1, silent = silent)
-    log("\n  Number of electrons:                            " + str(molecule.n_electrons), calculation, 1, silent = silent)
-    log("  Number of alpha electrons:                      " + str(molecule.n_alpha), calculation, 1, silent = silent)
-    log("  Number of beta electrons:                       " + str(molecule.n_beta), calculation, 1, silent = silent)
-    log("\n  Number of occupied orbitals:                    " + str(n_occ_print), calculation, 1, silent = silent)
-    log("  Number of virtual orbitals:                     " + str(n_virt_print), calculation, 1, silent = silent)
-    log(f"\n  Point group:                                {molecule.point_group}", calculation, 1, silent = silent)
+    log_info("  Molecular structure:", molecule.molecular_structure)
+    log_info("  Number of basis functions:", molecule.n_basis, blank_line = True)
+    log_info("  Number of primitive Gaussians:", np.sum(molecule.primitive_Gaussians))
+    log_info("  Charge:", molecule.charge, blank_line = True)
+    log_info("  Multiplicity:", molecule.multiplicity)
+    log_info("  Number of electrons:", molecule.n_electrons, blank_line = True)
+    log_info("  Number of alpha electrons:", molecule.n_alpha)
+    log_info("  Number of beta electrons:", molecule.n_beta)
+    log_info("  Number of occupied orbitals:", n_occ_print, blank_line = True)
+    log_info("  Number of virtual orbitals:", n_virt_print)
+    log_info("  Point group:", molecule.point_group, blank_line = True)
 
     if calculation.diatomic:
 
-        log(f"  Bond length:                              {bohr_to_angstrom(molecule.bond_length):.5f} ", calculation, 1, silent = silent)
+        log_info("  Bond length:", f"{bohr_to_angstrom(molecule.bond_length):.5f}")
 
     for atom in molecule.atoms:
 
         # If the same atom makes up both atoms in the molecule, print the basis data only once
 
-        if molecule.n_atoms == 2 and molecule.atoms[0].basis_charge == molecule.atoms[1].basis_charge and atom is molecule.atoms[1]: break
+        if molecule.n_atoms == 2 and molecule.atoms[0].basis_charge == molecule.atoms[1].basis_charge and atom is molecule.atoms[1]:
+            break
 
         log(f"\n  Basis set for {atom.symbol_formatted} :\n", calculation, 3, silent = silent)
 
@@ -98,12 +110,7 @@ def print_molecule_information(molecule: Molecule, calculation: Calculation, sil
 
     log_spacer(calculation, silent = silent, start = "", end = "\n")
 
-
     return
-
-
-
-
 
 
 
@@ -731,7 +738,7 @@ def calculate_nuclear_repulsion_energy(charges: ndarray, coordinates: ndarray, c
 
     V_NN = np.prod(charges) / np.linalg.norm(coordinates[1] - coordinates[0])
 
-    log(f"[Done]\n\n Nuclear repulsion energy:             {V_NN:.10f}\n", calculation, 1, silent = silent)
+    log(f"[Done]\n\n Nuclear repulsion energy:         {V_NN:16.10f}\n", calculation, 1, silent = silent)
 
     return V_NN
 

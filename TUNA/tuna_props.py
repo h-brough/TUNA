@@ -356,7 +356,7 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
         log(f"  Correlation energy:               {SCF_output.correlation_energy:15.10f}", calculation, 2, silent = silent)
 
     log(f"  Nuclear repulsion energy:         {V_NN:15.10f}", calculation, 2, silent = silent)
-    log(f"  Nuclear attraction energy:        {SCF_output.nuclear_electron_energy:15.10f}", calculation, 2, silent = silent)
+    log(f"  Nuclear attraction energy:       {SCF_output.nuclear_electron_energy:16.10f}", calculation, 2, silent = silent)
 
     if np.linalg.norm(calculation.electric_field) > 0:
 
@@ -366,19 +366,19 @@ def print_energy_components(SCF_output: Output, V_NN: float, calculation: Calcul
 
         log(f"  Electric field gradient energy:   {SCF_output.electric_field_gradient_energy:15.10f}", calculation, 2, silent = silent)
 
-    log(f"\n  One-electron energy:              {one_electron_energy:15.10f}", calculation, 2, silent = silent)
-    log(f"  Two-electron energy:              {two_electron_energy:15.10f}", calculation, 2, silent = silent)
+    log(f"\n  One-electron energy:             {one_electron_energy:16.10f}", calculation, 2, silent = silent)
+    log(f"  Two-electron energy:             {two_electron_energy:16.10f}", calculation, 2, silent = silent)
 
     if calculation.method.density_functional_method:
 
         log(f"  Exchange-correlation energy:      {SCF_output.exchange_energy + SCF_output.correlation_energy:15.10f}", calculation, 2, silent = silent)
 
-    log(f"  Electronic energy:                {electronic_energy:15.10f}\n", calculation, 2, silent = silent)
-    log(f"  Virial ratio:                     {virial_ratio:15.10f}\n", calculation, 2, silent = silent)
+    log(f"  Electronic energy:               {electronic_energy:16.10f}\n", calculation, 2, silent = silent)
+    log(f"  Virial ratio:                    {virial_ratio:16.10f}\n", calculation, 2, silent = silent)
 
-    log(f"  Total energy:                     {total_energy:15.10f}", calculation, 2, silent = silent)
+    log(f"  Total energy:                    {total_energy:16.10f}", calculation, 2, silent = silent)
 
-    log_spacer(calculation, priority=2, silent = silent)
+    log_spacer(calculation, priority = 2, silent = silent)
 
     return
 
