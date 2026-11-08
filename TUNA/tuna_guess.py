@@ -5,7 +5,7 @@ from TUNA.tuna_calc import Calculation
 from scipy.linalg import block_diag
 from TUNA.tuna_integrals import tuna_integral as ints
 from TUNA.tuna_molecule import Molecule, Atom
-from TUNA.tuna_mp import calculate_natural_orbitals
+from TUNA.tuna_mbpt import calculate_natural_orbitals
 import numpy as np
 from numpy import ndarray
 
@@ -327,7 +327,7 @@ def calculate_core_guess(calculation: Calculation, H_core: ndarray, X: ndarray, 
 
     """
 
-    log("\n Diagonalising core Hamiltonian for guess...  ", calculation, end = "", silent = silent)
+    log("\n Diagonalising core Hamiltonian for guess... ", calculation, end = "", silent = silent)
 
     # Diagonalise core Hamiltonian for one-electron guess
 

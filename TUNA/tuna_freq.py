@@ -843,7 +843,7 @@ def calculate_vibrational_perturbation_theory_frequency(frequency_hartree: float
     log("\n Initialising vibrational perturbation theory..   \n", calculation)
 
     log_spacer(calculation)
-    log("              VPT2 Frequency Correction", calculation) if calculation.second_order_vpt else log("              VPT1 Frequency Correction", calculation)
+    log("              VPT2 Frequency Correction", calculation, colour = "white") if calculation.second_order_vpt else log("              VPT1 Frequency Correction", calculation)
     log_spacer(calculation)
 
     log(f"  Using finite difference of {constants.THIRD_GEOM_DERIVATIVE_STEP} a.u.   \n", calculation)

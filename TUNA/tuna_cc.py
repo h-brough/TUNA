@@ -1,6 +1,6 @@
 import numpy as np
 import TUNA.tuna_ci as ci
-import TUNA.tuna_mp as mp
+import TUNA.tuna_mbpt as mp
 from TUNA.tuna_util import *
 from TUNA.tuna_molecule import Molecule
 from TUNA.tuna_calc import Calculation
@@ -3557,7 +3557,7 @@ def run_EOM_CCSD_Davidson(calculate_sigma: callable, diagonal: ndarray, n_roots:
     log(f"\n  Using {n_roots} roots, from {n_guesses} Davidson guesses.\n", calculation, 1, silent = silent)
 
     log_spacer(calculation, silent = silent)
-    log("  Step     Lowest root      Max Residual   Converged", calculation, 1, silent = silent)
+    log("  Step     Lowest root      Max Residual  Converged", calculation, 1, silent = silent)
     log_spacer(calculation, silent = silent)
 
     for step in range(1, calculation.correlated_max_iter + 1):
@@ -3583,7 +3583,7 @@ def run_EOM_CCSD_Davidson(calculate_sigma: callable, diagonal: ndarray, n_roots:
 
         n_converged = np.sum(residual_norms[:n_roots] <= calculation.amp_conv)
 
-        log(f"  {step:3.0f}     {excitation_energies[0]:13.10f}    {np.max(residual_norms[:n_roots]):13.10f}   {n_converged:3} / {n_roots}", calculation, 1, silent = silent)
+        log(f"  {step:3.0f}     {excitation_energies[0]:13.10f}    {np.max(residual_norms[:n_roots]):13.10f}  {n_converged:3} / {n_roots}", calculation, 1, silent = silent)
 
         if n_converged == n_roots:
 
@@ -3858,7 +3858,7 @@ def run_EOM_CCSD_excited_states(molecule: Molecule, calculation: Calculation, SC
 
     log("[Done]", calculation, 1, silent)
 
-    log("\n  Oscillator strengths and densities only use the singles part of each state, so are approximate.", calculation, 1, silent)
+    log("\n  Oscillator strengths and densities only use the singles part of each state.", calculation, 1, silent)
 
     # Prints the spin, energy and orbital contributions of each excited state, then the absorption spectrum
 

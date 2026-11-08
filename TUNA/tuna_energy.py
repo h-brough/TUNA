@@ -8,7 +8,7 @@ from TUNA.tuna_molecule import Molecule
 import TUNA.tuna_dft as dft
 from TUNA.tuna_integrals import tuna_integral as ints
 import TUNA.tuna_guess as guess
-import TUNA.tuna_mp as mp
+import TUNA.tuna_mbpt as mp
 import TUNA.tuna_misc as kern
 import TUNA.tuna_out as out
 

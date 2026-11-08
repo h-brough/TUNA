@@ -11,7 +11,7 @@ import TUNA.tuna_dft as dft
 import sys
 import TUNA.tuna_ci as ci
 import TUNA.tuna_props as props
-import TUNA.tuna_mp as mp
+import TUNA.tuna_mbpt as mp
 import TUNA.tuna_cc as cc
 import TUNA.tuna_out as out
 import TUNA.tuna_cas as cas
