@@ -1741,7 +1741,6 @@ def run_perturbation_theory_calculation(method: str, molecule: Molecule, SCF_out
 
     K_XC, K_XC_full = None, None
 
-
     # Calculates useful quantities for all spin orbital or spatial orbital calculations
 
     if calculation.reference == "UHF" or method.name == "OMP2":
@@ -1903,7 +1902,7 @@ def print_G0W0_results(calculation: Calculation, molecule: Molecule, quasipartic
     log(f"\n  Original HOMO-LUMO gap:          {band_gap_original:16.10f}", calculation, 1, silent = silent)
     log(f"  Corrected HOMO-LUMO gap:         {band_gap_corrected:16.10f}", calculation, 1, silent = silent)
 
-    log_spacer(calculation, silent = silent, start = "\n")
+    log_spacer(calculation, silent = silent, start = "")
 
     return
 
@@ -2167,7 +2166,7 @@ def calculate_G0W0(molecule: Molecule, SCF_output: Output, calculation: Calculat
     log("                  GW Approximation", calculation, 1, silent, colour = "white")
     log_spacer(calculation, silent = silent)
 
-    log("\n  Building excited state Hamiltonian...      ", calculation, 1, silent, end = "")
+    log("  Building excited state Hamiltonian...      ", calculation, 1, silent, end = "")
 
     # Builds the (de)excitation matrices, throwing away the spin-flip block for an unrestricted reference
 
