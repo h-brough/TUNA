@@ -38,7 +38,7 @@ Then run ```TUNA --version``` which should print the current version if TUNA has
 The syntax of the command to run a TUNA calculation is:
 
 ```
-TUNA [Calculation] : [Atom A] [Atom B] [Distance] : [Method] [Basis]
+TUNA [Calculation] : [Atom A] [Atom B] [Distance] : [Method] [Basis Set]
 ```
 
 For example, a geometry optimisation on dihydrogen, starting at 1.0 angstroms with B3LYP/6-31G is:
