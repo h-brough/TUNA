@@ -2076,9 +2076,11 @@ def calculate_restricted_doubles_correction(excitation_energy: ndarray, epsilons
 
     log(f"     [Done]", calculation, 1, silent = silent)
 
-    log(f"\n  Calculating doubles correction...         ", calculation, 1, silent = silent, end = "")
+    log(f"\n  Calculating doubles correction...          ", calculation, 1, silent = silent, end = "")
 
     E_D = E_direct + np.einsum("ia,ia->", b_ia, v_ia, optimize = True)
+
+    log(f"[Done]", calculation, 1, silent)
 
     # Allows double-hybrid calculations with "MPC"
 
@@ -2472,7 +2474,7 @@ def run_excited_state_calculation(molecule: Molecule, calculation: Calculation, 
 
     # Optional (D) correction - we pass originalantisymmetrised g, not the HFX scaled version here
 
-    if calculation.do_perturbative_doubles or "[D]" in calculation.method.name or "(D)" in calculation.method.name:
+    if calculation.do_perturbative_doubles or "[D]" in calculation.method.name or "(D)" in calculation.method.name or (calculation.DFT_calculation and calculation.MPC_prop != 0):
 
         state_of_interest_energies_and_densities = run_perturbative_doubles(state, n_occ, n_virt, excitation_vectors, g, epsilons, o, v, state_types, state_of_interest_energies_and_densities, calculation, silent)
 

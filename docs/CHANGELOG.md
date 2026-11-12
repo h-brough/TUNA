@@ -10,7 +10,7 @@
 - Choose number of active orbitals and electrons with `NORB` and `NEL` keywords
 - Exchange-correlation kernels for all (meta-)GGA functionals
 - Equation of motion coupled cluster theory with `EOM-CCSD`
-- Excited state spectra from configuration interaction methods with the `TD` keyword
+- Excited state spectra from full configuration interaction methods with the `TD` keyword
 - Relaxed density matrix for all double-hybrid functionals with `RELAXED`
 - Ground state random phase approximation correlation energy with `RPA` on a Hartree-Fock or Kohn-Sham reference
 - Corrections to Hartree-Fock or Kohn-Sham quasiparticle orbital energies with one-shot `GW`
