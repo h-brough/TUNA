@@ -18,7 +18,8 @@ from numpy import ndarray
 This is the shared configuration module for the TUNA test suite, written for version 0.11.2.
 
 The suite runs against whichever TUNA is importable: an installed package if there is one, otherwise the
-checkout this file sits in. That choice is made here, once, together with the helpers that the test modules
+checkout this file sits in. An installed package must be the same version as the checkout, or the run stops
+before any test is collected. That choice is made here, once, together with the helpers that the test modules
 use to run a calculation and get numbers back out of it. Tests never import anything from TUNA themselves - they ask
 for the "tuna" fixture and go through the runner object, so there is only one place to fix if the way
 TUNA is driven ever changes.
@@ -79,6 +80,21 @@ except ImportError as import_error:
 finally:
 
     sys.argv = _saved_argv
+
+
+# An installed package of a different version from this checkout is almost always a stale copy left behind by an older install,
+# and it would be tested in place of the code here, so the whole run is stopped with instructions instead
+
+_CHECKOUT_VERSION_MATCH = re.search(r'__version__\s*=\s*"([^"]+)"', (TUNA_DIRECTORY / "__init__.py").read_text()) if (TUNA_DIRECTORY / "__init__.py").is_file() else None
+
+if _CHECKOUT_VERSION_MATCH is not None and tuna_main.VERSION != _CHECKOUT_VERSION_MATCH.group(1):
+
+    raise ImportError(
+        f"These tests are for TUNA {_CHECKOUT_VERSION_MATCH.group(1)}, but TUNA {tuna_main.VERSION} was imported from "
+        f"{Path(tuna_main.__file__).parent}. An older installation is shadowing this checkout - remove it with "
+        "\"python3 -m pip uninstall QuantumTUNA\", repeated until nothing is left, then reinstall this checkout with "
+        "\"python3 -m pip install -e .\" from the repository root."
+    )
 
 
 # Several TUNA functions edit the Method objects in the global "electronic_structure_methods" list in place
