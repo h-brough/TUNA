@@ -119,6 +119,18 @@ REFERENCE_ENERGIES = [
     Case("SPE : H F 0.9168 : TDHF 6-31G",                -99.5830159585, source = "PySCF RHF plus RPA triplet root 1"),
     Case("SPE : H F 0.9168 : TDHF 6-31G : NOTRIPLETS",   -99.5483697328, source = "PySCF RHF plus RPA singlet root 1"),
 
+    # TD-DFT with exact exchange only and the functional switched off has no exchange-correlation kernel left, so it is TDHF
+
+    Case("SPE : H F 0.9168 : B3LYP 6-31G : HFX 1 NOX NOC TD",  -99.5830159585, source = "PySCF RHF plus RPA triplet root 1"),
+
+    # Full configuration interaction is exact, so it has the energy of any other method that is exact for the system. FORCEMETHOD
+    # stops TUNA swapping it for one of those methods, and an active space of every orbital is the full space.
+
+    Case("SPE : H H 0.74 : FCI 6-31G : FORCEMETHOD",                -1.1516726783, source = "PySCF CCSD, exact for two electrons"),
+    Case("SPE : H H 0.74 : CASSCF 6-31G : NEL 2 NORB 4",            -1.1516726783, source = "PySCF CCSD, exact for two electrons"),
+    Case("SPE : H : UFCI CC-PVDZ : FORCEMETHOD",                    -0.4992784034, source = "PySCF UHF, exact for one electron"),
+    Case("SPE : H H 1.06 : UFCI 6-31G : CH 1 ML 2 FORCEMETHOD",     -0.5840274596, source = "PySCF UHF, exact for one electron"),
+
     ]
 
 
@@ -135,6 +147,22 @@ REGRESSION_ENERGIES = [
     Case("SPE : H F 0.9168 : CCSDT[Q] 6-31G",   -100.1156954865, 1e-7, "TUNA 0.12.0"),
     Case("SPE : H F 0.9168 : CIS(D) 6-31G",      -99.6140477484, 1e-7, "TUNA 0.12.0"),
     Case("SPE : H F 0.9168 : B2PLYP 6-31G : TIGHTGRID", -100.3079373546, 1e-6, "TUNA 0.12.0", slow = True),
+
+    # Methods new in TUNA 0.12.0
+
+    Case("SPE : BE : FCI 6-31G : FORCEMETHOD",                     -14.6135452853, 1e-7, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : CASCI 6-31G : NEL 6 NORB 5",          -99.9973416186, 1e-7, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : CASSCF 6-31G : NEL 6 NORB 5",        -100.0107788436, 1e-7, "TUNA 0.12.0"),
+    Case("SPE : LI H 1.595 : CASSCF 6-31G : NEL 2 NORB 2",          -7.9958333242, 1e-7, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : EOM-CCSD 6-31G",                      -99.7410934394, 1e-7, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : EOM-CCSD 6-31G : NOTRIPLETS",         -99.7172803121, 1e-7, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : RPA 6-31G",                          -100.1180148261, 1e-7, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : PBE 6-31G : RPA",                    -100.1619190987, 1e-6, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : PBE 6-31G : TD TDA",                  -99.9773301133, 1e-6, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : B3LYP 6-31G : TD",                   -100.0291396730, 1e-6, "TUNA 0.12.0"),
+    Case("SPE : H F 0.9168 : TPSS 6-31G : TD TDA",                -100.0664781269, 1e-6, "TUNA 0.12.0", slow = True),
+    Case("SPE : H F 0.9168 : B2PLYP 6-31G : TD TDA",               -99.9167689813, 1e-6, "TUNA 0.12.0, with the doubles correction"),
+    Case("SPE : H : UB3PW91 CC-PVDZ",                               -0.5032242230, 1e-6, "TUNA 0.12.0, spin-polarised PW91 correlation"),
 
     ]
 

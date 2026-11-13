@@ -223,3 +223,88 @@ def test_density_functional_energy_converges_with_the_grid(tuna):
 
     assert errors == sorted(errors, reverse = True)
     assert errors[-1] < 5e-5
+
+
+
+
+@pytest.mark.parametrize("alias, basis", [
+
+    ("6-31G(D,P)", "6-31G**"),
+    ("6-31G[D,P]", "6-31G**"),
+    ("6-311G(D,P)", "6-311G**"),
+    ("6-311G[D,P]", "6-311G**"),
+    ("6-31G(D)", "6-31G*"),
+
+    ])
+def test_basis_set_aliases_load_the_same_basis(tuna, alias, basis):
+
+    """
+
+    The bracketed names are other spellings of the starred Pople basis sets. Before TUNA 0.12.0, 6-31G(d,p) and 6-311G(d,p)
+    loaded the wrong data.
+
+    """
+
+    assert tuna.energy(f"SPE : H F 0.9168 : HF {alias}") == pytest.approx(tuna.energy(f"SPE : H F 0.9168 : HF {basis}"), abs = 1e-10)
+
+
+
+
+def test_double_and_triple_zeta_polarised_bases_are_different(tuna):
+
+    """
+
+    The triple-zeta valence basis is bigger, so it has to give a lower energy, rather than the same one.
+
+    """
+
+    assert tuna.energy("SPE : H F 0.9168 : HF 6-311G(D,P)") < tuna.energy("SPE : H F 0.9168 : HF 6-31G(D,P)") - 1e-3
+
+
+
+
+def test_dispersion_is_counted_once_in_basis_set_extrapolation(tuna):
+
+    """
+
+    The D2 dispersion energy depends only on the geometry, so it must shift the extrapolated energy by exactly what it shifts
+    a single-basis energy by. Before TUNA 0.12.0 it was added twice.
+
+    """
+
+    extrapolated_shift = tuna.energy("SPE : HE HE 3.0 : HF CC-PVDZ : EXTRAPOLATE D2") - tuna.energy("SPE : HE HE 3.0 : HF CC-PVDZ : EXTRAPOLATE")
+    single_basis_shift = tuna.energy("SPE : HE HE 3.0 : HF CC-PVTZ : D2") - tuna.energy("SPE : HE HE 3.0 : HF CC-PVTZ")
+
+    assert single_basis_shift < -1e-5
+    assert extrapolated_shift == pytest.approx(single_basis_shift, abs = 1e-10)
+
+
+
+
+def test_freezing_the_core_raises_the_cc2_energy(tuna):
+
+    """
+
+    The core electrons contribute correlation energy of their own, so leaving them out has to raise the energy. Before TUNA
+    0.12.0, FREEZECORE was ignored by CC2.
+
+    """
+
+    assert tuna.energy("SPE : H F 0.9168 : CC2 6-31G : FREEZECORE") > tuna.energy("SPE : H F 0.9168 : CC2 6-31G") + 1e-4
+
+
+
+
+@pytest.mark.parametrize("functional", ["B3PW91", "MPW1PW"])
+def test_unrestricted_pw91_correlation_matches_restricted_for_a_closed_shell(tuna, functional):
+
+    """
+
+    The spin-polarised PW91 correlation functional has to reduce to the unpolarised one when the spin densities are equal.
+
+    """
+
+    restricted = tuna.energy(f"SPE : H F 0.9168 : {functional} 6-31G")
+    unrestricted = tuna.energy(f"SPE : H F 0.9168 : U{functional} 6-31G")
+
+    assert unrestricted == pytest.approx(restricted, abs = 1e-7)

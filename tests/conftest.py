@@ -1,5 +1,6 @@
 import contextlib
 import importlib.util
+import inspect
 import io
 import re
 import subprocess
@@ -7,6 +8,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pytest
 from numpy import ndarray
 
@@ -25,7 +27,8 @@ The module contains:
 
 1. Path setup and a quiet import of the TUNA modules
 2. A function to undo TUNA's in-place edits of its global method table (reset_method_table)
-3. Containers for the results of a calculation (EnergyResult, FrequencyResult, CommandLineResult)
+3. Containers for the results of a calculation (EnergyResult, ExcitedStatesResult, QuasiparticleResult, FrequencyResult,
+   CommandLineResult)
 4. The runner object handed to tests by the fixture (TunaRunner)
 5. The fixtures themselves
 
@@ -54,8 +57,10 @@ try:
     with contextlib.redirect_stdout(io.StringIO()):
 
         import TUNA.tuna as tuna_main
+        import TUNA.tuna_ci as configuration_interaction_module
         import TUNA.tuna_energy as energy_module
         import TUNA.tuna_freq as frequency_module
+        import TUNA.tuna_mbpt as many_body_module
         import TUNA.tuna_opt as optimisation_module
         import TUNA.tuna_props as properties_module
         import TUNA.tuna_thermo as thermochemistry_module
@@ -127,6 +132,10 @@ class EnergyResult:
 
     density: ndarray
 
+    # The Calculation object, as TUNA left it - this records the method that actually ran, which TUNA may have simplified
+
+    calculation: object
+
     @property
     def scf_energy(self) -> float:
 
@@ -148,6 +157,78 @@ class EnergyResult:
     def orbital_energies(self) -> ndarray:
 
         return self.scf_output.epsilons
+
+
+
+
+@dataclass(frozen=True)
+class ExcitedStatesResult:
+
+    """
+
+    Holds every excited state an excited state calculation found, not only the one chosen with ROOT.
+
+    """
+
+    # Energy evaluation for the chosen state, whose energy is the total energy of that state
+
+    result: EnergyResult
+
+    # Every excitation energy in hartree, in the order TUNA reports them, lowest first
+
+    excitation_energies: ndarray
+
+    # Spin of each state ("singlet", "triplet" and so on), or an empty string where TUNA does not assign one
+
+    state_types: ndarray
+
+    # Oscillator strength of each transition from the ground state
+
+    oscillator_strengths: ndarray
+
+    # Expectation value of S^2 for each state, or None for the methods where TUNA does not calculate it
+
+    spin_squared: ndarray | None
+
+    @property
+    def energy(self) -> float:
+
+        return self.result.energy
+
+
+
+
+@dataclass(frozen=True)
+class QuasiparticleResult:
+
+    """
+
+    Holds the G0W0 quasiparticle energies alongside the orbital energies they correct.
+
+    """
+
+    # Quasiparticle energy of every orbital in hartree - spatial orbitals for a restricted reference, and spin orbitals in order
+    # of increasing orbital energy for an unrestricted one
+
+    quasiparticle_energies: ndarray
+
+    # Orbital energies of the reference in the same order
+
+    orbital_energies: ndarray
+
+    # Number of occupied orbitals in that same order
+
+    n_occupied: int
+
+    @property
+    def homo(self) -> float:
+
+        return self.quasiparticle_energies[self.n_occupied - 1]
+
+    @property
+    def lumo(self) -> float:
+
+        return self.quasiparticle_energies[self.n_occupied]
 
 
 
@@ -250,7 +331,7 @@ class TunaRunner:
 
         scf_output, molecule, energy, density = energy_module.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True)
 
-        return EnergyResult(float(energy), scf_output, molecule, density)
+        return EnergyResult(float(energy), scf_output, molecule, density, calculation)
 
 
     def energy(self, input_line: str) -> float:
@@ -268,6 +349,98 @@ class TunaRunner:
         """
 
         return self.run(input_line).energy
+
+
+    def excited_states(self, input_line: str) -> ExcitedStatesResult:
+
+        """
+
+        Runs an excited state calculation and collects every state it found.
+
+        TUNA only returns the state chosen with ROOT, so the full set is read from the arguments of the two functions every
+        excited state method hands its states to for printing. Those are wrapped for the duration of the calculation only.
+
+        Args:
+            input_line (str): TUNA input line for an excited state method, or with the TD keyword
+
+        Returns:
+            result (ExcitedStatesResult): Chosen state, and the energy, spin and intensity of every state
+
+        """
+
+        captured_arguments = {}
+        original_functions = {}
+
+
+        def make_recorder(function_name: str):
+
+            original_function = getattr(configuration_interaction_module, function_name)
+            signature = inspect.signature(original_function)
+
+            def recorder(*args, **kwargs):
+
+                captured_arguments[function_name] = signature.bind(*args, **kwargs).arguments
+
+                return original_function(*args, **kwargs)
+
+            return original_function, recorder
+
+
+        try:
+
+            for function_name in ("print_excited_state_absorption_spectrum", "print_excited_state_contributions"):
+
+                original_functions[function_name], recorder = make_recorder(function_name)
+
+                setattr(configuration_interaction_module, function_name, recorder)
+
+            result = self.run(input_line)
+
+        finally:
+
+            for function_name, original_function in original_functions.items():
+
+                setattr(configuration_interaction_module, function_name, original_function)
+
+        # Every excited state method reports its spectrum, while only the single-reference and EOM-CCSD methods report a spin for each state
+
+        spectrum = captured_arguments["print_excited_state_absorption_spectrum"]
+        spin_squared = captured_arguments.get("print_excited_state_contributions", {}).get("s_squared")
+
+        return ExcitedStatesResult(result, np.array(spectrum["excitation_energies"], dtype = float), np.array(spectrum["state_types"]),
+                                   np.array(spectrum["oscillator_strengths"], dtype = float), None if spin_squared is None else np.array(spin_squared, dtype = float))
+
+
+    def quasiparticle_energies(self, input_line: str) -> QuasiparticleResult:
+
+        """
+
+        Calculates the G0W0 quasiparticle energies on top of a Hartree-Fock or Kohn-Sham reference.
+
+        TUNA only runs G0W0 when it is printing, so it is called here directly on the converged reference, exactly as the
+        "GW" keyword would call it.
+
+        Args:
+            input_line (str): TUNA input line for the reference calculation
+
+        Returns:
+            result (QuasiparticleResult): Quasiparticle energies, the orbital energies they correct, and the number occupied
+
+        """
+
+        calculation, atomic_symbols, coordinates = self.calculation(input_line)
+
+        scf_output, molecule, _, _ = energy_module.evaluate_molecular_energy(calculation, atomic_symbols, coordinates, silent = True)
+
+        quasiparticle_energies = many_body_module.calculate_G0W0(molecule, scf_output, calculation, silent = True)
+
+        # An unrestricted reference works in spin orbitals, ordered by orbital energy
+
+        if calculation.reference == "UHF":
+
+            return QuasiparticleResult(np.array(quasiparticle_energies), np.sort(scf_output.epsilons_combined), molecule.n_occ)
+
+        return QuasiparticleResult(np.array(quasiparticle_energies), np.array(scf_output.epsilons), molecule.n_doubly_occ)
 
 
     def optimise(self, input_line: str) -> tuple:

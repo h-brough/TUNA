@@ -98,6 +98,12 @@ def test_a_ghost_atom_makes_the_calculation_monatomic(tuna):
     ("DECONTRACT", "decontract", True),
     ("FREEZECORE", "freeze_core", True),
     ("ROOT 3", "root", 3),
+    ("NEL 4", "n_active_electrons", 4),
+    ("NORB 6", "n_active_orbitals", 6),
+    ("FORCEMETHOD", "force_method", True),
+    ("RPA", "do_rpa", True),
+    ("GW", "g0w0", True),
+    ("G0W0", "g0w0", True),
 
     ])
 def test_keywords_set_calculation_attributes(tuna, keyword, attribute, expected):
@@ -141,6 +147,47 @@ def test_keyword_aliases_are_equivalent(tuna, first, second):
 
 
 
+def test_new_keywords_are_off_unless_requested(tuna):
+
+    """
+
+    An active space has to be asked for, and the method simplification, RPA and GW are all opt-in.
+
+    """
+
+    calculation, _, _ = tuna.calculation("SPE : H H 0.74 : HF STO-3G")
+
+    assert calculation.n_active_electrons is None
+    assert calculation.n_active_orbitals is None
+
+    assert not calculation.force_method
+    assert not calculation.do_rpa
+    assert not calculation.g0w0
+
+
+
+
+@pytest.mark.parametrize("method", ["FCI", "CASCI", "CASSCF", "EOM-CCSD", "RPA"])
+def test_new_methods_are_recognised(tuna, method):
+
+    """
+
+    The methods added in TUNA 0.12.0 are accepted with or without a leading U for an unrestricted reference.
+
+    """
+
+    calculation, _, _ = tuna.calculation(f"SPE : H H 0.74 : {method} 6-31G : NEL 2 NORB 2")
+
+    assert calculation.method.name == method
+    assert not calculation.method.unrestricted
+
+    calculation, _, _ = tuna.calculation(f"SPE : H H 0.74 : U{method} 6-31G : NEL 2 NORB 2")
+
+    assert calculation.method.unrestricted
+
+
+
+
 def test_an_unrestricted_method_is_flagged_as_unrestricted(tuna):
 
     """
@@ -170,6 +217,8 @@ def test_an_unrestricted_method_is_flagged_as_unrestricted(tuna):
     ("SPE : H H 0.001 : HF STO-3G",         "bond length below the minimum"),
     ("SPE : H H 0.74 : HF",                 "malformed input line"),
     ("SPE : H H 0.74 : ULMP2 STO-3G",       "unrestricted reference not available"),
+    ("SPE : H H 0.74 : CASCI 6-31G : NEL",  "active electrons keyword with no value"),
+    ("SPE : H H 0.74 : CASCI 6-31G : NEL TWO NORB 2",  "active electrons that are not a whole number"),
 
     ])
 def test_bad_input_is_rejected(tuna, input_line, problem):

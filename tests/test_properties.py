@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from conftest import constants, properties_module
@@ -186,6 +187,127 @@ def test_energy_components_add_up_to_the_total_energy(result):
     nuclear_repulsion = molecule.charges[0] * molecule.charges[1] / molecule.bond_length
 
     assert components + nuclear_repulsion == pytest.approx(scf_output.energy, abs = 1e-9)
+
+
+
+
+def with_keywords(input_line: str, *keywords: str) -> str:
+
+    """
+
+    Adds keywords to an input line that has no keyword section of its own, leaving out any that are empty.
+
+    Args:
+        input_line (str): TUNA input line with three sections
+        keywords (str): Keywords to add, any of which may be empty
+
+    Returns:
+        input_line (str): TUNA input line, with a keyword section if there are any keywords
+
+    """
+
+    keywords = " ".join(keyword for keyword in keywords if keyword)
+
+    return f"{input_line} : {keywords}" if keywords else input_line
+
+
+
+
+def electronic_dipole_from_the_energy(tuna, input_line: str, keywords: str = "", field: float = 0.0005) -> float:
+
+    """
+
+    Calculates minus the derivative of the energy with respect to an electric field along the bond.
+
+    Central differences at two field strengths are extrapolated to zero field, which removes the error from the cubic response
+    that a single central difference keeps. That error is around 1e-6 at this field strength, too big for these tests.
+
+    Args:
+        tuna (TunaRunner): The test runner
+        input_line (str): TUNA input line with three sections
+        keywords (str, optional): Any other keywords the calculation needs
+        field (float, optional): The smaller of the two field strengths, in atomic units
+
+    Returns:
+        dipole_moment (float): Electronic dipole moment in atomic units
+
+    """
+
+    def central_difference(strength: float) -> float:
+
+        forward = tuna.energy(with_keywords(input_line, keywords, f"EZ {strength}"))
+        backward = tuna.energy(with_keywords(input_line, keywords, f"EZ -{strength}"))
+
+        return -(forward - backward) / (2 * strength)
+
+    return (4 * central_difference(field) - central_difference(2 * field)) / 3
+
+
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("input_line, keywords", [
+
+    pytest.param("SPE : H F 0.9168 : B2PLYP 6-31G", "", id = "B2PLYP"),
+    pytest.param("SPE : H F 0.9168 : DSD-BLYP 6-31G", "", id = "spin-component-scaled"),
+    pytest.param("SPE : H F 0.9168 : PBE0-DH 6-31G", "", id = "PBE-based"),
+    pytest.param("SPE : H F 0.9168 : R2SCAN0-DH 6-31G", "", id = "meta-GGA"),
+    pytest.param("SPE : BE H 1.34 : UB2PLYP 6-31G", "ML 2 TIGHT", id = "open shell"),
+
+    ])
+def test_relaxed_double_hybrid_density_gives_the_energy_derivative(tuna, input_line, keywords):
+
+    """
+
+    The relaxed density of a double hybrid includes the response of the Kohn-Sham orbitals to the MP2 correlation, which goes
+    through the exchange-correlation kernel, so its dipole moment is exactly the derivative of the double-hybrid energy with
+    respect to an electric field. The unrelaxed density has no such property, which shows the comparison can tell the two apart.
+
+    A double-hybrid energy is not stationary with respect to the orbitals, so the open shell needs a tighter SCF than the default
+    before its finite differences are clean enough.
+
+    """
+
+    derivative = electronic_dipole_from_the_energy(tuna, input_line, keywords)
+
+    _, _, relaxed = dipole_moment(tuna.run(with_keywords(input_line, keywords, "RELAXED")))
+    _, _, unrelaxed = dipole_moment(tuna.run(with_keywords(input_line, keywords)))
+
+    assert relaxed == pytest.approx(derivative, abs = 1e-6)
+    assert abs(unrelaxed - derivative) > 1e-4
+
+
+
+
+def test_relaxed_double_hybrid_density_holds_every_electron(tuna):
+
+    """
+
+    Relaxing the density moves electrons between orbitals without creating or destroying any, and leaves it symmetric.
+
+    """
+
+    result = tuna.run("SPE : H F 0.9168 : B2PLYP 6-31G : RELAXED")
+
+    assert np.einsum("pq,pq->", result.density, result.integrals.S) == pytest.approx(10, abs = 1e-10)
+    assert result.density == pytest.approx(result.density.T, abs = 1e-12)
+
+
+
+
+def test_unrestricted_relaxed_double_hybrid_density_matches_restricted_for_a_closed_shell(tuna):
+
+    """
+
+    The unrestricted relaxed density is built from the spin-resolved kernel in spin orbitals, and the restricted one from the
+    singlet kernel in spatial orbitals, so they share no response code but must give the same dipole moment.
+
+    """
+
+    _, _, restricted = dipole_moment(tuna.run("SPE : H F 0.9168 : B2PLYP 6-31G : RELAXED"))
+    _, _, unrestricted = dipole_moment(tuna.run("SPE : H F 0.9168 : UB2PLYP 6-31G : RELAXED"))
+
+    assert unrestricted == pytest.approx(restricted, abs = 1e-7)
 
 
 

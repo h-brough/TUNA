@@ -8,6 +8,7 @@ From the repository root:
 
 ```
 pytest                           # Everything
+pytest -m "not slow"             # Skip the tests that need many energy evaluations
 pytest tests/test_energies.py    # One file
 ```
 
@@ -20,8 +21,11 @@ pytest tests/test_energies.py    # One file
 | `test_invariants.py` | Relations that must hold whatever the numbers are |
 | `test_input.py` | Input line parsing, keywords, error handling, and the command line |
 | `test_integrals.py` | One- and two-electron integrals from the compiled extension |
-| `test_properties.py` | Dipole moments, orbital energies, energy components, physical constants |
+| `test_properties.py` | Dipole moments, relaxed densities, orbital energies, energy components, physical constants |
 | `test_geometry.py` | Gradients, optimisation, harmonic frequencies, thermochemistry |
+| `test_configuration_interaction.py` | Full CI, CASCI and CASSCF, and the `FORCEMETHOD`, `NEL` and `NORB` keywords |
+| `test_excited_states.py` | Excited states from FCI, CASCI, EOM-CCSD and TD-DFT kernels, their spin, and double-hybrid (D) |
+| `test_rpa_and_gw.py` | RPA correlation energies and G0W0 quasiparticle energies |
 
 ## Adding a test
 
@@ -56,7 +60,9 @@ The `tuna` fixture gives you:
 | Call | Returns |
 | --- | --- |
 | `tuna.energy(line)` | Final total energy, as a float |
-| `tuna.run(line)` | Energy plus the `Molecule`, the SCF `Output`, the density and the integrals |
+| `tuna.run(line)` | Energy plus the `Molecule`, the SCF `Output`, the density, the integrals and the `Calculation` that ran |
+| `tuna.excited_states(line)` | Every excited state found: excitation energies, spins, oscillator strengths and <S<sup>2</sup>> |
+| `tuna.quasiparticle_energies(line)` | G0W0 quasiparticle energies next to the orbital energies they correct |
 | `tuna.calculation(line)` | The parsed `Calculation`, symbols and coordinates, without running anything |
 | `tuna.gradient(line)` | Derivative of the energy with respect to bond length |
 | `tuna.optimise(line)` | Optimised `Molecule` and its energy |
