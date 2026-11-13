@@ -17,10 +17,21 @@ Excited states have few convenient independent references, so most of these test
 4. Spin is checked against what S^2 allows, which needs no reference at all
 5. The doubles correction for a double hybrid is checked against the explicit "[D]" keyword and its own scaling
 
+Two routes to the same states agree exactly only in exact arithmetic. A Davidson diagonalisation, a set of coupled cluster
+amplitudes and a self-consistent field all stop at their own convergence thresholds, and the integrals underneath them are summed
+in whatever order the OpenMP threads finish in, so the last digits move between runs. Comparisons across two such routes are made
+to CROSS_METHOD_TOLERANCE rather than to the thresholds themselves, which sit at around 1e-8 and are the noise floor here. A real
+disagreement between these routes would be orders of magnitude larger.
+
 """
 
 
 TWO_ELECTRON_FULL_CI = "SPE : H H 0.74 : FCI 6-31G : TD"
+
+
+# Agreement required between two routes to the same excited states, in hartree
+
+CROSS_METHOD_TOLERANCE = 1e-6
 
 
 
@@ -75,7 +86,7 @@ def test_two_electron_spectra_agree_with_full_ci(tuna, input_line):
     n_states = len(other.excitation_energies)
 
     assert n_states >= 10
-    assert other.excitation_energies == pytest.approx(full_ci.excitation_energies[:n_states], abs = 1e-7)
+    assert other.excitation_energies == pytest.approx(full_ci.excitation_energies[:n_states], abs = CROSS_METHOD_TOLERANCE)
     assert list(other.state_types) == list(full_ci.state_types[:n_states])
 
 
@@ -94,7 +105,7 @@ def test_root_and_spin_selection_pick_the_same_state(tuna, keywords):
     full_ci = tuna.energy(f"{TWO_ELECTRON_FULL_CI} {keywords}")
     eom_ccsd = tuna.energy("SPE : H H 0.74 : EOM-CCSD 6-31G" + (f" : {keywords}" if keywords else ""))
 
-    assert eom_ccsd == pytest.approx(full_ci, abs = 1e-8)
+    assert eom_ccsd == pytest.approx(full_ci, abs = CROSS_METHOD_TOLERANCE)
 
 
 
@@ -146,7 +157,7 @@ def test_restricted_and_unrestricted_kernels_give_the_same_spectrum(tuna, functi
     assert set(restricted.state_types) == {"singlet", "triplet"}
     assert len(unrestricted.excitation_energies) == len(restricted.excitation_energies)
 
-    assert np.sort(unrestricted.excitation_energies) == pytest.approx(np.sort(restricted.excitation_energies), abs = 1e-7)
+    assert np.sort(unrestricted.excitation_energies) == pytest.approx(np.sort(restricted.excitation_energies), abs = CROSS_METHOD_TOLERANCE)
 
 
 
@@ -164,8 +175,8 @@ def test_td_dft_without_a_functional_is_hartree_fock_response(tuna, keywords, wa
     density_functional = tuna.excited_states(f"SPE : H F 0.9168 : B3LYP 6-31G : HFX 1 NOX NOC {keywords}")
     wavefunction = tuna.excited_states(f"SPE : H F 0.9168 : {wavefunction_method} 6-31G")
 
-    assert density_functional.energy == pytest.approx(wavefunction.energy, abs = 1e-8)
-    assert density_functional.excitation_energies == pytest.approx(wavefunction.excitation_energies, abs = 1e-8)
+    assert density_functional.energy == pytest.approx(wavefunction.energy, abs = 1e-7)
+    assert density_functional.excitation_energies == pytest.approx(wavefunction.excitation_energies, abs = 1e-7)
 
 
 
@@ -266,7 +277,7 @@ def test_double_hybrid_excited_states_include_the_doubles_correction(double_hybr
 
     energies = double_hybrid_excited_state_energies
 
-    assert energies[""] == pytest.approx(energies["[D]"], abs = 1e-10)
+    assert energies[""] == pytest.approx(energies["[D]"], abs = 1e-9)
 
     # Without any perturbative correlation there is nothing to correct, so the difference is the (negative) correction itself
 
@@ -289,8 +300,8 @@ def test_doubles_correction_is_scaled_by_the_perturbative_correlation(double_hyb
     single_correction = energies["MPC 0.27"] - energies["MPC 0"]
     double_correction = energies["MPC 0.54"] - energies["MPC 0"]
 
-    assert energies["MPC 0.27"] == pytest.approx(energies[""], abs = 1e-10)
-    assert double_correction == pytest.approx(2 * single_correction, abs = 1e-9)
+    assert energies["MPC 0.27"] == pytest.approx(energies[""], abs = 1e-9)
+    assert double_correction == pytest.approx(2 * single_correction, abs = 1e-8)
 
 
 

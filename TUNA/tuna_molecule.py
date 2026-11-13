@@ -340,7 +340,7 @@ class Molecule:
 
         # If "FREEZECORE [N]" has been requested, update the number of core orbitals
 
-        self.n_core_spin_orbitals = calculation.freeze_n_orbitals if isinstance(calculation.freeze_n_orbitals, int) else self.n_core_spin_orbitals
+        self.n_core_spin_orbitals = calculation.freeze_n_orbitals * 2 if isinstance(calculation.freeze_n_orbitals, int) else self.n_core_spin_orbitals
         self.n_core_orbitals = calculation.freeze_n_orbitals if isinstance(calculation.freeze_n_orbitals, int) else self.n_core_orbitals
 
         # Sets two electrons per orbital for RHF, one for UHF

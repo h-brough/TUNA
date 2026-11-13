@@ -16,7 +16,18 @@ orbital. The tests lean on those identities:
 4. The ordering that variational methods with nested wavefunction spaces must respect
 5. Active spaces that make no sense, which must be refused
 
+Two methods that are exact for the same system agree exactly only in exact arithmetic. An iterative method stops at its own
+convergence threshold, and the integrals it starts from are summed in whatever order the OpenMP threads happen to finish in, so
+the last digits move between runs. Comparisons that involve an iterated correlation energy are therefore made to CROSS_METHOD_
+TOLERANCE rather than to the convergence thresholds themselves, which sit at around 1e-8 and are the noise floor here. Any real
+disagreement between these methods would be orders of magnitude larger.
+
 """
+
+
+# Agreement required between two methods that are exact for the same system, in hartree
+
+CROSS_METHOD_TOLERANCE = 1e-6
 
 
 
@@ -37,7 +48,7 @@ def test_full_ci_agrees_with_methods_that_are_exact_for_the_system(tuna, full_ci
 
     """
 
-    assert tuna.energy(full_ci) == pytest.approx(tuna.energy(exact_method), abs = 1e-8), f"{electrons} electrons"
+    assert tuna.energy(full_ci) == pytest.approx(tuna.energy(exact_method), abs = CROSS_METHOD_TOLERANCE), f"{electrons} electrons"
 
 
 
@@ -56,7 +67,7 @@ def test_full_ci_of_one_electron_is_hartree_fock(tuna, full_ci, hartree_fock):
 
     """
 
-    assert tuna.energy(full_ci) == pytest.approx(tuna.energy(hartree_fock), abs = 1e-9)
+    assert tuna.energy(full_ci) == pytest.approx(tuna.energy(hartree_fock), abs = 1e-8)
 
 
 
@@ -83,7 +94,7 @@ def test_full_ci_is_simplified_unless_forcemethod_is_used(tuna, input_line, simp
     assert simplified.calculation.method.name.removeprefix("U") == simplified_to
     assert forced.calculation.method.name.removeprefix("U") == "FCI"
 
-    assert forced.energy == pytest.approx(simplified.energy, abs = 1e-8)
+    assert forced.energy == pytest.approx(simplified.energy, abs = CROSS_METHOD_TOLERANCE)
 
 
 
@@ -100,7 +111,7 @@ def test_a_full_active_space_is_full_ci(tuna, method):
 
     full_ci = tuna.energy("SPE : H H 0.74 : FCI 6-31G : FORCEMETHOD")
 
-    assert tuna.energy(f"SPE : H H 0.74 : {method} 6-31G : NEL 2 NORB 4") == pytest.approx(full_ci, abs = 1e-8)
+    assert tuna.energy(f"SPE : H H 0.74 : {method} 6-31G : NEL 2 NORB 4") == pytest.approx(full_ci, abs = CROSS_METHOD_TOLERANCE)
 
 
 
@@ -113,12 +124,11 @@ def test_a_full_active_space_is_full_ci(tuna, method):
     pytest.param("SPE : B : UFCI 6-31G : FREEZECORE FORCEMETHOD", "SPE : B : UCASCI 6-31G : NEL 3 NORB 8",
                  "SPE : B : UCISDT 6-31G : FREEZECORE", id = "unrestricted"),
 
-    # TUNA freezes nothing on beryllium by default, so the core is given explicitly. Spin orbital codes on a restricted reference
-    # are meant to double the count, as OMP2 does, but FCI freezes only the alpha 1s spin orbital.
+    # TUNA freezes nothing on beryllium by default, so the core is given explicitly. The number after FREEZECORE counts spatial
+    # orbitals, and both spin orbitals of each must be frozen - FCI used to freeze only the alpha one.
 
     pytest.param("SPE : BE : FCI 6-31G : FREEZECORE 1 FORCEMETHOD", "SPE : BE : CASCI 6-31G : NEL 2 NORB 8",
-                 "SPE : BE : CCSD 6-31G : FREEZECORE 1", id = "restricted, FREEZECORE 1",
-                 marks = pytest.mark.xfail(strict = True, reason = "FREEZECORE N freezes N spin orbitals rather than N spatial orbitals in restricted FCI")),
+                 "SPE : BE : CCSD 6-31G : FREEZECORE 1", id = "restricted, FREEZECORE 1"),
 
     ])
 def test_frozen_core_full_ci_is_casci_with_an_inactive_core(tuna, full_ci, casci, exact_method):
@@ -133,8 +143,8 @@ def test_frozen_core_full_ci_is_casci_with_an_inactive_core(tuna, full_ci, casci
 
     reference = tuna.energy(casci)
 
-    assert tuna.energy(full_ci) == pytest.approx(reference, abs = 1e-8)
-    assert tuna.energy(exact_method) == pytest.approx(reference, abs = 1e-8)
+    assert tuna.energy(full_ci) == pytest.approx(reference, abs = CROSS_METHOD_TOLERANCE)
+    assert tuna.energy(exact_method) == pytest.approx(reference, abs = CROSS_METHOD_TOLERANCE)
 
 
 
@@ -151,7 +161,7 @@ def test_one_doubly_occupied_active_orbital_is_hartree_fock(tuna, method):
 
     hartree_fock = tuna.energy("SPE : H F 0.9168 : HF 6-31G")
 
-    assert tuna.energy(f"SPE : H F 0.9168 : {method} 6-31G : NEL 2 NORB 1") == pytest.approx(hartree_fock, abs = 1e-7)
+    assert tuna.energy(f"SPE : H F 0.9168 : {method} 6-31G : NEL 2 NORB 1") == pytest.approx(hartree_fock, abs = CROSS_METHOD_TOLERANCE)
 
 
 

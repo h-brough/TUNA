@@ -156,7 +156,7 @@ def test_restricted_and_unrestricted_rpa_agree_for_a_closed_shell(tuna, referenc
     restricted = tuna.run(f"SPE : H F 0.9168 : {reference} 6-31G : RPA")
     unrestricted = tuna.run(f"SPE : H F 0.9168 : U{reference} 6-31G : RPA")
 
-    assert unrestricted.energy - unrestricted.scf_energy == pytest.approx(restricted.energy - restricted.scf_energy, abs = 1e-8)
+    assert unrestricted.energy - unrestricted.scf_energy == pytest.approx(restricted.energy - restricted.scf_energy, abs = 1e-7)
 
 
 

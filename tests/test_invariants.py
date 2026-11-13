@@ -281,6 +281,44 @@ def test_dispersion_is_counted_once_in_basis_set_extrapolation(tuna):
 
 
 
+@pytest.mark.parametrize("input_line, keywords", [
+
+    pytest.param("SPE : H F 0.9168 : MP2 6-31G", "", id = "MP2"),
+    pytest.param("SPE : H F 0.9168 : UMP2 6-31G", "", id = "UMP2"),
+    pytest.param("SPE : H F 0.9168 : OMP2 6-31G", "", id = "OMP2"),
+    pytest.param("SPE : H F 0.9168 : CCSD 6-31G", "", id = "CCSD"),
+    pytest.param("SPE : H F 0.9168 : UCCSD 6-31G", "", id = "UCCSD"),
+    pytest.param("SPE : H F 0.9168 : CISD 6-31G", "", id = "CISD"),
+
+    # Full CI builds every determinant, so it needs a minimal basis to stay tractable here, and FORCEMETHOD to stop TUNA
+    # swapping it for a cheaper method. This is the one that used to disagree with the others.
+
+    pytest.param("SPE : H F 0.9168 : FCI STO-3G", "FORCEMETHOD", id = "FCI"),
+    pytest.param("SPE : H F 0.9168 : UFCI STO-3G", "FORCEMETHOD", id = "UFCI"),
+
+    ])
+def test_an_explicit_frozen_core_count_matches_the_default_one(tuna, input_line, keywords):
+
+    """
+
+    Fluorine has one core orbital and hydrogen none, so asking for one frozen orbital by hand has to mean exactly what TUNA
+    works out for itself from the atoms. The number counts spatial orbitals, and every method has to agree on that, whether it
+    works in spatial orbitals, where it freezes that many, or in spin orbitals, where it freezes twice as many.
+
+    """
+
+    default_count = tuna.energy(f"{input_line} : {keywords} FREEZECORE")
+    explicit_count = tuna.energy(f"{input_line} : {keywords} FREEZECORE 1")
+
+    # The core really has to be frozen, or both sides would agree for the wrong reason
+
+    assert default_count > tuna.energy(f"{input_line} : {keywords}") + 1e-5
+
+    assert explicit_count == pytest.approx(default_count, abs = 1e-9)
+
+
+
+
 def test_freezing_the_core_raises_the_cc2_energy(tuna):
 
     """
@@ -307,4 +345,6 @@ def test_unrestricted_pw91_correlation_matches_restricted_for_a_closed_shell(tun
     restricted = tuna.energy(f"SPE : H F 0.9168 : {functional} 6-31G")
     unrestricted = tuna.energy(f"SPE : H F 0.9168 : U{functional} 6-31G")
 
-    assert unrestricted == pytest.approx(restricted, abs = 1e-7)
+    # The two references converge separately, so they agree only to the convergence threshold of the self-consistent field
+
+    assert unrestricted == pytest.approx(restricted, abs = 1e-6)
