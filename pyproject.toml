@@ -54,6 +54,11 @@ TUNA = "TUNA.tuna:main"
 [tool.setuptools.package-data]
 "TUNA" = ["*.pdf"]
 
+# The C file is generated from the .pyx at build time and is not needed once the extension is compiled
+
+[tool.setuptools.exclude-package-data]
+"TUNA.tuna_integrals" = ["*.c"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
