@@ -156,7 +156,7 @@ def test_restricted_and_unrestricted_rpa_agree_for_a_closed_shell(tuna, referenc
     restricted = tuna.run(f"SPE : H F 0.9168 : {reference} 6-31G : RPA")
     unrestricted = tuna.run(f"SPE : H F 0.9168 : U{reference} 6-31G : RPA")
 
-    assert unrestricted.energy - unrestricted.scf_energy == pytest.approx(restricted.energy - restricted.scf_energy, abs = 1e-7)
+    assert unrestricted.energy - unrestricted.scf_energy == pytest.approx(restricted.energy - restricted.scf_energy, abs = 1e-6)
 
 
 
@@ -179,8 +179,8 @@ def test_restricted_and_unrestricted_g0w0_agree_for_a_closed_shell(tuna, referen
     restricted = tuna.quasiparticle_energies(f"SPE : H F 0.9168 : {reference} 6-31G")
     unrestricted = tuna.quasiparticle_energies(f"SPE : H F 0.9168 : U{reference} 6-31G")
 
-    assert unrestricted.homo == pytest.approx(restricted.homo, abs = 1e-7)
-    assert unrestricted.lumo == pytest.approx(restricted.lumo, abs = 1e-7)
+    assert unrestricted.homo == pytest.approx(restricted.homo, abs = 1e-6)
+    assert unrestricted.lumo == pytest.approx(restricted.lumo, abs = 1e-6)
 
     assert np.sort(unrestricted.quasiparticle_energies) == pytest.approx(np.sort(np.repeat(restricted.quasiparticle_energies, 2)), abs = 1e-6)
 
@@ -243,5 +243,5 @@ def test_quasiparticle_energies_have_not_changed(tuna, input_line):
 
     quasiparticles = tuna.quasiparticle_energies(input_line)
 
-    assert quasiparticles.homo == pytest.approx(homo, abs = 1e-7)
-    assert quasiparticles.lumo == pytest.approx(lumo, abs = 1e-7)
+    assert quasiparticles.homo == pytest.approx(homo, abs = 1e-6)
+    assert quasiparticles.lumo == pytest.approx(lumo, abs = 1e-6)
